@@ -1,0 +1,735 @@
+/* assets/css/style.css */
+
+/* 
+    ================
+    VARIABLES GLOBALES
+    ================
+    Utilisées sur l'ensemble du site
+*/
+:root {
+    /* Couleur principale liée à ton logo */
+    --primary-color: #0097b2;
+    /* Couleur plus foncée pour les hover */
+    --primary-hover: #006f83;
+
+    /* Autres couleurs utiles */
+    --danger-color: #f44336;     /* Pour les messages d'erreur ou textes critiques */
+    --neutral-color: #f9f9f9;    /* Fond clair */
+    --text-color: #333;          /* Couleur de texte principal */
+    --secondary-text-color: #555;/* Couleur de texte secondaire */
+    --shadow-color: rgba(0, 0, 0, 0.1); /* Ombres légères */
+    --font-family: 'Montserrat', sans-serif; /* Police moderne par défaut */
+
+
+    /* Couleur accent (pour certains éléments spécifiques si besoin) */
+    --accent-color: #f5c518; 
+}
+
+
+/* 
+    ================
+    STYLE GLOBAL
+    ================
+    Correspond à toutes les pages (body, titres, liens, etc.)
+*/
+body {
+
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% de la hauteur de la vue */
+    height: 100%;
+    font-family: var(--font-family);
+    background-color: #F3F4F6;
+    background-size: cover; /* S'assure que l'image couvre tout l'arrière-plan */
+    background-repeat: no-repeat;
+    background-position: center;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+.container {
+    flex: 1;
+}
+.container h1 {
+    font-weight: 700;
+}
+/* Titres (h2, h4, h5) utilisés dans index.php, questionForm.php, etc. */
+h2, h4, h5 {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Liens (présent dans toutes les pages : index.php, questionForm.php, login.php, etc.) */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+
+/* 
+    ================
+    Translation
+    ================
+*/
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .navbar {
+    flex-direction: row-reverse;
+}
+
+        /* Loader */
+        #homeloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 3s ease-in-out;
+        }
+        #homeloader img {
+            width: 260px;
+            height: auto;
+            animation: zoomOut 3s ease forwards;
+        }
+        @keyframes zoomOut {
+            0% {
+                transform: scale(1);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 1;
+            }
+        }
+        /* Transition de disparition du fond */
+        @keyframes fadeOut {
+            0% {
+                background-color: white;
+                opacity: 1;
+            }
+            100% {
+                background-color: transparent;
+                opacity: 0;
+            }
+        }
+
+/*
+    ================
+    HOME PAGE
+    ================
+*/
+  /* Héros pleine page */
+.hero {
+    min-height: 95vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    color: white;
+    padding: 14rem;
+    position: relative;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    height: auto;
+    max-width:555px;
+}
+
+
+.hero h1 {
+    margin-top: 0px;
+    margin-bottom: 18px;
+    font-size: 52px;
+    font-weight: 700;
+    color: #415560;
+}
+
+.hero p{
+    font-size: 26px;
+    font-weight: 600;
+    color: #0097b2;
+}
+
+.hero ul {
+    margin-bottom: 2px;
+    list-style-type: none;
+    padding-left: 0rem;
+    font-size: 16px;
+    color: #415560;
+}
+
+.hero button {
+    margin-top: 26px;
+    padding: 11px 2rem;
+    border: 1px solid #0097b2;
+    border-radius: 50px;
+    background: #0097b2;
+    color: white;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+.hero button:hover {
+    background-color: transparent;
+    color: #0097b2;
+    transform: scale(1.05);
+}
+
+/* Styles généraux pour les sections */
+.homepage-section {
+    min-height: 98vh;
+    text-align: center;
+    padding: 5rem 1rem;
+}
+
+.homepage-section h1 {
+    font-size: 3em;
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.homepage-section h2 {
+    font-size: 1.5em;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.homepage-section img {
+    width: 100%;
+    max-width: 500px;
+    margin: 2rem 0;
+    border-radius: 20px;
+}
+
+.homepage-section .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.homepage-section .button {
+    padding: 11px 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Styles spécifiques pour la Quizz Section */
+.quizz-section {
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+    color: white;
+}
+
+/* Styles spécifiques pour la Summary Section */
+.summary-section {
+    background: linear-gradient(to bottom, #f9f9f9, #efeeee);
+    color: #0097b2;
+}
+
+/* Styles spécifiques pour la pairs Section */
+.pairs-section {
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+    color: white;
+}
+
+/* Styles spécifiques pour la flash Section */
+.flash-section {
+    background: linear-gradient(to bottom, #f9f9f9, #efeeee);
+    color: #0097b2;
+}
+
+/* Styles spécifiques pour la pairs Section */
+.miss-section {
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+    color: white;
+}
+
+/* Styles spécifiques pour la statistics Section */
+.statistics-section {
+    background: linear-gradient(to bottom, #f9f9f9, #efeeee);
+    color: #0097b2;
+}
+
+/* Styles spécifiques pour la exams Section */
+.exams-section {
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+    color: white;
+}
+
+.video-section-added {
+    padding: 3rem 1rem;
+    /* Pour centrer verticalement le contenu de cette section */
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+}
+.video-section-added .row {
+    align-items: center;
+}
+/* Colonne gauche: image en relief avec l’icône de lecture */
+.video-overlay-container {
+    max-width: 900px;  /* Augmenté de 600px à 900px, ou la valeur souhaitée */
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+.video-image {
+    width: 100%;
+    border-radius: 8px;
+    /* Ombre plus douce : intensité réduite (alpha 0.2 au lieu de 0.4) */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+.play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem; /* Icône plus grande */
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 25px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Modal vidéo Bootstrap (pour le MP4) */
+.modal-video .modal-dialog {
+    max-width: 800px;
+}
+.modal-video .modal-body {
+    padding: 30x;
+}
+.modal-video video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* 
+    ================
+    FOOTER
+    ================
+    Présent dans includes/footer.php, commun à toutes les pages
+*/
+footer {
+    color: #757575;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 14px;
+ 
+}
+
+footer a {
+    color: #757575;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #333;
+    font-weight: 700;
+    transition: color 0.3s ease;
+}
+footer {
+    padding: 15px 0;
+    font-size: 14px;
+}
+
+.partial-border {
+    border-top: 1px solid #757575;
+    width: 50%;
+    margin-bottom:18px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+
+/* 
+    ================
+    HEADER
+    ================
+    Présent dans includes/header.php, commun à toutes les pages
+*/
+/* Styles additionnels pour la barre de navigation (optionnel) */
+/* header.sticky{
+    position: sticky;
+    top: 0;
+    z-index: 999;
+} */
+/* Header personnalisé */
+.navbar-custom {
+    background-color: #ffffff; /* Couleur blanche pour le fond */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Effet d'ombre */ /* Effet d'ombre */
+    padding: 1px; /* Ajout d'un padding global */
+}
+
+/* Logo */
+.navbar-brand img {
+    height: 52px; /* Hauteur du logo pour une meilleure visibilité */
+    object-fit: contain; /* Empêche la déformation de l'image */
+}
+
+/* Liens de navigation */
+.navbar-nav .nav-link {
+    color: #333333;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 8px 15px; /* Espacement uniforme */
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #0097b2; /* Couleur d'accentuation */
+}
+
+/* Menu déroulant */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Effet d'ombre pour le sous-menu */
+    padding: 0;
+    background: #fff; /* Supprime l'arrière-plan par défaut */
+    width: 40px; /* Aligné à la taille du drapeau */
+}
+
+.dropdown-menu .dropdown-item {
+    padding: 5px; /* Espacement réduit pour un alignement compact */
+    text-align: center; /* Centrer les drapeaux */
+}
+
+.dropdown-menu .dropdown-item img {
+    width: 40px; /* Taille uniforme des drapeaux */
+    height: auto;
+}
+
+/* Style au survol des éléments du menu déroulant */
+.dropdown-menu .dropdown-item:hover {
+    background-color: #0097b2;
+    color: #ffffff;
+}
+
+/* Bouton de drapeau */
+.dropdown-toggle {
+    background: transparent !important; /* Supprime le fond par défaut */
+    border: none !important; /* Supprime la bordure */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.dropdown-toggle img {
+    width: 40px; /* Taille du drapeau */
+    height: auto;
+    margin-right: 0px; /* Espacement avec l'icône ou autre contenu */
+}
+
+/* Supprimer la petite flèche du bouton de drapeau */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Icône de profil */
+
+/* Supprimer la petite flèche du bouton de drapeau */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Style pour le profil */
+.profile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #dddddd;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 0px 18px 0px 18px;
+}
+
+.profile-icon:hover {
+    background-color: #0097b2; /* Accentuation sur survol */
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .navbar-brand img {
+        height: 40px; /* Taille plus petite du logo sur mobile */
+    }
+
+    .navbar-nav .nav-link {
+        font-size: 14px; /* Taille réduite des liens sur mobile */
+    }
+}
+
+
+
+/* Mobile et tablettes */
+@media (max-width: 1024px) {
+    .navbar .d-flex.align-items-center.order-lg-2 {
+        position: static; /* Position par défaut pour éviter les chevauchements */
+    }
+    /* Icônes à droite du logo */
+/* .navbar .d-flex.align-items-center.order-lg-2 {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    display: flex;
+    align-items: center;
+} */
+
+/* Ajustement des icônes */
+.navbar .flag-icon {
+    width: 36px;
+    height: auto;
+    margin-right: 0px;
+}
+
+.navbar .profile-icon {
+    width: 36px;
+    height: 36px;
+    background-color: #dddddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.navbar .profile-icon:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+}
+
+
+
+/* 
+    ================
+    MAIN CONTENT
+    ================
+    Utilisé dans questionForm.php, index.php, etc.
+*/
+
+.main-content {
+    margin-top: 20px;
+}
+
+
+
+/* ====================
+   Responsivité Globale
+   ==================== 
+*/
+
+
+/* Section Hero */
+.desktop-only {
+    display: flex; /* Cacher la section desktop */
+}
+
+.mobile-tablet-only {
+    display: none; /* Afficher la section tablette et appliquer flexbox */
+}
+
+/* Smartphones (moins de 768px) */
+@media (max-width: 767px) {
+    /* Loader */
+    #homeloader img {
+        width: 180px;
+    }
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centre verticalement */
+        align-items: center;    /* Centre horizontalement */
+        text-align: center;     /* Centre le texte */
+        min-height: 85vh;          /* Chaque section occupe toute la hauteur de la fenêtre */
+        padding: 1rem;          /* Padding interne pour éviter les débordements */
+        box-sizing: border-box; /* Inclure le padding dans la hauteur totale */
+    }
+    .homepage-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centre verticalement */
+        align-items: center;    /* Centre horizontalement */
+        text-align: center;     /* Centre le texte */
+        height: auto;          /* Chaque section occupe toute la hauteur de la fenêtre */
+        padding: 1rem;          /* Padding interne pour éviter les débordements */
+        box-sizing: border-box; /* Inclure le padding dans la hauteur totale */
+    }
+    /* Section Hero */
+    .desktop-only {
+        display: none; /* Cacher la section desktop */
+    }
+
+    .mobile-tablet-only {
+        display: flex; /* Afficher la section mobile et appliquer flexbox */
+    }
+
+    .hero img {
+        width: 100%;
+        max-width: 260px;
+        margin: 1rem 0;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .hero button {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .homepage-section h1 {
+        font-size: 2rem;
+    }
+
+    .homepage-section img {
+        width: 100%;
+        max-width:260px;
+        margin: 1rem 0;
+    }
+
+    .navbar-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 10px 0;
+        font-size: 14px;
+    }
+}
+
+/* Tablettes (768px à 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Loader */
+    #homeloader img {
+        width: 220px;
+    }
+    .hero, .homepage-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centre verticalement */
+        align-items: center;    /* Centre horizontalement */
+        text-align: center;     /* Centre le texte */
+        min-height: 90vh;          /* Chaque section occupe toute la hauteur de la fenêtre */
+        padding: 2rem;          /* Padding interne pour éviter les débordements */
+        box-sizing: border-box; /* Inclure le padding dans la hauteur totale */
+    }
+    /* Section Hero */
+    .desktop-only {
+        display: none; /* Cacher la section desktop */
+    }
+
+    .mobile-tablet-only {
+        display: flex; /* Afficher la section tablette et appliquer flexbox */
+    }
+
+    .hero img {
+        width: 80%;
+        max-width: 250px;
+        margin: 1rem 0;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.3rem;
+    }
+
+    .hero button {
+        width: auto;
+        padding: 10px 1.5rem;
+    }
+
+    .homepage-section {
+        padding: 3rem 2rem;
+    }
+
+    .homepage-section h1 {
+        font-size: 2.5rem;
+    }
+
+    .homepage-section img {
+        width: 100%;
+        max-width: 360px;
+    }
+
+
+
+    .navbar-nav {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 8px 10px;
+        font-size: 15px;
+    }
+}
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+/* Ordre des colonnes sur desktop */
+.video-section-added.video-left .col-video { order: 1; }
+.video-section-added.video-left .col-text { order: 2; }
+.video-section-added.video-right .col-video { order: 2; }
+.video-section-added.video-right .col-text { order: 1; }
+/* Sur mobile/tablette, forcer : texte en haut, vidéo en bas */
+@media (max-width: 1024px) {
+    .video-section-added .col-text { order: 1 !important; }
+    .video-section-added .col-video { order: 2 !important; }
+}

@@ -1,0 +1,72 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Uploads and logs
+uploads/
+logs/
+*.log
+
+# Vendor dependencies
+app/vendor/
+
+# Python virtual environment
+app/.venv/
+app/__pycache__/
+*.pyc
+
+# Cache directories
+app/.cache/
+.cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+*~
+
+# External tools
+ffmpeg/
+whisper.cpp/
+
+# Test and old files
+*copy*.php
+*OLD*.php
+*old*.php
+*test*.php
+*backup*.php
+todelete/
+**/OLD/
+**/tmp/
+
+# Google Cloud credentials
+app/config/*.json
+
+# Error logs
+error_log
+
+# Database files
+*.sql
+
+# Debian packages
+*.deb
+
+# Files with spaces (bad naming)
+*\ *.php

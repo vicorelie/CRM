@@ -1,0 +1,16 @@
+vicorelie_qcm/
+│
+├── vendor/                # Dépendances Composer
+├── uploads/               # Répertoire pour stocker les fichiers uploadés
+│   └── .htaccess          # Sécurité pour le répertoire uploads
+├── config.php             # Configuration de la base de données et autoload
+├── index.php              # Page principale pour télécharger des documents
+├── questionForm.php       # Formulaire pour répondre au QCM
+├── qcmResult.php          # Page de résultats du QCM
+├── viewSummary.php        # Afficher le résumé du document
+├── login.php              # Page de connexion
+├── logout.php             # Page de déconnexion
+├── openai_log.json        # Fichier de log pour les appels API OpenAI
+├── composer.json          # Fichier de configuration Composer
+├── composer.lock          # Fichier lock Composer
+└── .htaccess              # Fichier de configuration Apache pour le projet

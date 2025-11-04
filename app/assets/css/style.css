@@ -1,0 +1,1584 @@
+/* assets/css/style.css */
+
+/* 
+    ================
+    VARIABLES GLOBALES
+    ================
+    Utilisées sur l'ensemble du site
+*/
+:root {
+    /* Couleur principale liée à ton logo */
+    --primary-color: #0097b2;
+    /* Couleur plus foncée pour les hover */
+    --primary-hover: #006f83;
+
+    /* Autres couleurs utiles */
+    --danger-color: #f44336;     /* Pour les messages d'erreur ou textes critiques */
+    --neutral-color: #f9f9f9;    /* Fond clair */
+    --text-color: #333;          /* Couleur de texte principal */
+    --secondary-text-color: #555;/* Couleur de texte secondaire */
+    --shadow-color: rgba(0, 0, 0, 0.1); /* Ombres légères */
+    --font-family: 'Montserrat', sans-serif; /* Police moderne par défaut */
+
+
+    /* Couleur accent (pour certains éléments spécifiques si besoin) */
+    --accent-color: #f5c518; 
+}
+
+    #statisticsCollapse {
+        max-height: 500px; /* Limite la hauteur maximale */
+        overflow-y: auto;  /* Active le défilement vertical en cas de dépassement */
+    }
+
+
+/* 
+    ================
+    STYLE GLOBAL
+    ================
+    Correspond à toutes les pages (body, titres, liens, etc.)
+*/
+body {
+
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% de la hauteur de la vue */
+    height: 100%;
+    font-family: var(--font-family);
+    background-color: #F3F4F6;
+    background-size: cover; /* S'assure que l'image couvre tout l'arrière-plan */
+    background-repeat: no-repeat;
+    background-position: center;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+.container {
+    flex: 1;
+}
+.container h1 {
+    font-weight: 700;
+}
+/* Titres (h2, h4, h5) utilisés dans index.php, questionForm.php, etc. */
+h2, h4, h5 {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Liens (présent dans toutes les pages : index.php, questionForm.php, login.php, etc.) */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+.pagination .page-link {
+    background-color: #f8f9fa; /* Couleur de fond */
+    color: #0097b2; /* Couleur du texte */
+    border: 1px solid #dee2e6; /* Bordure */
+    transition: background-color 0.3s, color 0.3s; /* Animation */
+}
+
+.pagination .page-link:hover {
+    background-color: #006f83; /* Couleur de fond au survol */
+    color: #fff; /* Couleur du texte au survol */
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0097b2; /* Couleur de fond de l'élément actif */
+    color: #fff; /* Couleur du texte de l'élément actif */
+    border-color: #0097b2; /* Bordure de l'élément actif */
+}
+
+
+/* 
+    ================
+    BOUTONS
+    ================
+    Boutons dans index.php, questionForm.php, login.php, etc.
+*/
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border-radius: 6px; 
+}
+
+.btn-primary:hover {
+    border-color: var(--primary-hover);
+    background-color: var(--primary-hover);
+
+}
+
+/* Exemple de bouton secondaire si besoin */
+.btn-secondary {
+    background-color: #19d1f1;
+    border-color: #19d1f1;
+    color: #fff;
+    font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    border-color: #19d1f1;
+    background-color: #1dc2df;
+}
+
+.btn-outline-primary {
+
+    border: 2px solid #0097b2;
+    color: var(--primary-color);
+    font-weight: 300;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border-radius: 6px; /* Coins arrondis pour un design plus fun */
+}
+
+.btn-outline-primary:hover {
+
+    border: 2px solid #0097b2;
+    background-color: #0097b2;
+    color: #fff;
+}
+
+.btn-outline-secondary {
+
+    border: 2px solid #19d1f1;
+    color: #19d1f1;
+    font-weight: 300;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border-radius: 6px; /* Coins arrondis pour un design plus fun */
+}
+
+.btn-outline-secondary:hover {
+
+    border: 2px solid #19d1f1;
+    background-color: #19d1f1;
+    color: #fff;
+}
+
+.delete-icon {
+    color: #0097b2; /* Remplacez par la couleur souhaitée */
+    transition: color 0.3s;
+}
+.edit-icon {
+    color: #0097b2; /* Remplacez par la couleur souhaitée */
+    transition: color 0.3s;
+}
+/* 
+    ================
+    ALERTES
+    ================
+    Utilisées dans index.php, login.php (pour afficher erreurs ou infos)
+*/
+.alert {
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.alert-info {
+    background-color: #e8f5e9;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+/* 
+    ================
+    Translation
+    ================
+*/
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .navbar {
+    flex-direction: row-reverse;
+}
+
+/*
+    =======================
+    Login & Register PAGE
+    =======================
+*/
+
+/* Conteneur principal pour Login & Register */
+.auth-page-container {
+    background: linear-gradient(135deg, #0097b2, #19d1f1); /* Dégradé pour le fond */
+    font-family: 'Roboto', sans-serif;
+    color: #fff;
+    display: flex; /* Flexbox pour centrer */
+    justify-content: center; /* Centre horizontalement */
+    align-items: center; /* Centre verticalement */
+    min-height: 100vh; /* Hauteur minimale de l'écran */
+    margin: 0;
+    padding: 1rem; /* Ajout de padding pour éviter les débordements */
+    overflow: hidden; /* Empêche tout débordement visuel */
+}
+
+/* Contenu spécifique à Login & Register */
+.custom-container {
+    background: #fff;
+    color: #333;
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+    animation: fadeIn 0.8s ease;
+}
+
+/* Animation fade-in */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Logo */
+.custom-container .logo-container {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.custom-container .logo {
+    max-width: 150px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    transition: transform 0.3s ease;
+}
+
+.custom-container .logo:hover {
+    transform: scale(1.1);
+}
+
+/* Titre */
+.custom-container h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Formulaire */
+.custom-container .form-control {
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.custom-container .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(0, 151, 178, 0.4);
+}
+
+/* Boutons */
+.custom-container .btn-primary {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.custom-container .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 127, 145, 0.2);
+}
+
+/* Lien */
+.custom-container .btn-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.custom-container .btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Menu de langue */
+.custom-container .language-selector {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+
+.custom-container .flag-icon {
+    width: 24px;
+    height: auto;
+}
+
+.custom-container .dropdown-toggle {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.custom-container .dropdown-menu {
+    text-align: left;
+    padding: 0;
+}
+
+.custom-container .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* Responsivité */
+@media (max-width: 576px) {
+    .custom-container {
+        padding: 1.5rem;
+    }
+
+    .custom-container .logo {
+        max-width: 100px;
+    }
+
+    .custom-container h2 {
+        font-size: 1.8rem;
+    }
+
+    .custom-container .btn-primary {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+}
+
+/*
+    ================
+    HOME PAGE
+    ================
+*/
+  /* Héros pleine page */
+.hero {
+    min-height: 98vh;
+    background: url('assets/img/home-background.png') center/cover no-repeat;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    color: white;
+    padding: 14rem;
+    position: relative;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width:520px ;
+}
+
+
+.hero h1 {
+    margin-top: 0px;
+    margin-bottom: 18px;
+    font-size: 52px;
+    line-height: 52px;
+    font-weight: 700;
+    color: #415560;
+}
+
+.hero p{
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 36px;
+    color: #0097b2;
+}
+
+.hero ul {
+    margin-bottom: 2px;
+    list-style-type: none;
+    padding-left: 0rem;
+    font-size: 16px;
+    color: #415560;
+}
+
+.hero button {
+    margin-top: 26px;
+    padding: 11px 2rem;
+    border: 1px solid #0097b2;
+    border-radius: 50px;
+    background: #0097b2;
+    color: white;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+.hero button:hover {
+    background-color: transparent;
+    color: #0097b2;
+    transform: scale(1.05);
+}
+
+/* Styles généraux pour les sections */
+.homepage-section {
+    min-height: 98vh;
+    text-align: center;
+    padding: 5rem 1rem;
+}
+
+.homepage-section h1 {
+    font-size: 3em;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.homepage-section h2 {
+    font-size: 1.5em;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.homepage-section img {
+    width: 60%;
+    max-width: 300px;
+    margin: 2rem 0;
+    border-radius: 20px;
+}
+
+.homepage-section .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.homepage-section .button {
+    padding: 11px 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Styles spécifiques pour la Quizz Section */
+.quizz-section {
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+    color: white;
+}
+
+/* Styles spécifiques pour la Summary Section */
+.summary-section {
+    background: linear-gradient(to bottom, #f9f9f9, #efeeee);
+    color: #0097b2;
+}
+
+/* Styles spécifiques pour la statistics Section */
+.statistics-section {
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+    color: white;
+}
+
+/* Styles spécifiques pour la exams Section */
+.exams-section {
+    background: linear-gradient(to bottom, #f9f9f9, #efeeee);
+    color: #0097b2;
+}
+
+
+/* 
+    ================
+    Tarif Payment
+    ================
+  
+*/
+
+/* ===================================================================
+   WanaTest – Tarifs (payment.php)
+   Styles unifiés LTR / RTL grâce aux propriétés logiques CSS
+   =================================================================== */
+
+/* ---------- Titres de section ---------- */
+.pricing-title {
+    font-family: "Montserrat", sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0097b2;
+    margin-block-end: 15px;
+}
+
+.pricing-subtitle {
+    font-family: "Montserrat", sans-serif;
+    font-size: 1.1rem;
+    color: #0097b2;
+    margin-block-end: 40px;
+}
+
+/* ---------- Grille de cartes ---------- */
+.pricing-cards {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 36px;
+}
+
+/* ---------- Carte individuelle ---------- */
+.pricing-card {
+    width: 95%;
+    background: #fff;
+    border-radius: 12px;
+    padding: 35px;
+    /* aligne automatiquement à gauche (LTR) ou droite (RTL) */
+    text-align: start;                     /* propriété logique */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    max-width: 404px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.pricing-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.22);
+}
+
+/* ---------- En-tête et prix ---------- */
+.pricing-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-block-end: 15px;
+    color: #333;
+}
+
+.pricing-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0097b2;
+    display: inline-block;
+}
+
+.pricing-period {
+    font-size: 1rem;
+    color: #415660;
+    /* espace avant, quelle que soit la direction */
+    margin-inline-start: 5px;              /* logique LTR/RTL */
+}
+
+/* ---------- Description ---------- */
+.pricing-description {
+    font-size: 1rem;
+    color: #0097b2;
+    margin-block-end: 25px;
+}
+
+/* ---------- Liste des fonctionnalités ---------- */
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 30px 0;
+}
+
+.features-list li {
+    display: flex;
+    align-items: center;
+    margin-block-end: 10px;
+    font-size: 0.95rem;
+}
+
+.fa-check-icon {
+    color: #0097b2;
+    font-size: 1rem;
+    /* espace après l’icône selon la direction */
+    margin-inline-end: 8px;               /* logique LTR/RTL */
+}
+
+/* ---------- Boutons ---------- */
+.btn-subscribe {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #0097b2;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    border: 2px solid #0097b2;
+    color: #0097b2;
+    background: transparent;
+}
+
+.btn-outline-primary {
+    border: 2px solid #0097b2;
+    color: #0097b2;
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0097b2;
+    color: #fff;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 576px) {
+    .pricing-card {
+        width: 95%;
+        max-width: none;
+        padding: 25px;
+    }
+}
+
+
+
+/* 
+    ================
+    dashboard
+    ================
+*/
+  .welcome-message {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 2.5rem;
+    color: #0097b2;
+}
+.message-text {
+   margin-top:20px ;
+}
+
+.text-message {
+
+    color: #0097b2;
+    font-weight: 600;
+}
+
+.add-exam-icon {
+    font-size: 1.8rem;
+    color: #0097b2;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+.add-exam-icon:hover {
+    transform: scale(1.2);
+    color: #1ad1f1;
+}
+.view-more-link {
+    color: #0097b2;
+    cursor: pointer;
+}
+.view-more-link:hover {
+    color: #1ad1f1;
+}
+.clickable-card a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* 
+    ================
+    qcmResult
+    ================
+*/
+
+.list-container{
+    background-image: linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%);
+}
+
+.result-block {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    margin-bottom: 1.8rem;
+    transition: background-color 0.3s ease;
+   
+}
+
+.result-block .answer {
+
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: default;
+    user-select: none;
+}
+
+.result-title-backrgound{
+    background: linear-gradient(to bottom, #0097b2, #19d1f1);
+}
+
+.status-badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.75em;
+}
+
+
+
+.status-message {
+    display: flex;
+    align-items: center;
+}
+
+.status-message i {
+    margin-right: 0.5rem;
+}
+
+/* 
+    ================
+    LISTE DES QUESTIONS (QCM)
+    ================
+    Utilisée dans questionForm.php, qcmResult.php
+*/
+.list-group-item {
+    font-size: 16px;
+    line-height: 1.8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 15px;
+    background: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.list-group-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+/* Indication de bonne ou mauvaise réponse (questionForm.php, qcmResult.php) */
+.correct {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.incorrect {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.choice {
+    margin-left: 20px;
+    font-size: 15px;
+    color: var(--secondary-text-color);
+}
+.quiz-container{
+    background: linear-gradient(135deg, #dbe1f1, #dedffb);
+}
+.question-block {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    margin-bottom: 1.8rem;
+    transition: background-color 0.3s ease;
+}
+
+.question-block:hover {
+    /* background: #f1f1f1; */
+    transform: scale(1.02); /* Réduction de l'échelle */
+    transition: transform 0.3s ease; /* Ajout d'une transition douce */
+}
+
+
+.answer {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
+}
+
+.answer:hover {
+    background: #eaebef;
+}
+
+.answer.selected {
+    border-color: #032a34;
+    background: #0097b2;
+    transform: scale(1.01);
+    font-weight: 900;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+}
+
+.answer label {
+    margin: 0;
+    flex: 1;
+}
+
+/* 
+    ================
+    FORMULAIRES (champs select, etc.)
+    ================
+    Utilisé dans index.php (upload doc), login.php (form), register.php (form), etc.
+*/
+.form-select,
+.form-control {
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-select:focus,
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 4px rgba(49,152,178,0.3);
+}
+
+/* 
+    ================
+    DISPOSITION : ROW
+    ================
+    Utilisé dans index.php, questionForm.php, etc. 
+*/
+.row {
+    margin-bottom: 40px;
+}
+
+/* 
+    ================
+    FOOTER
+    ================
+    Présent dans includes/footer.php, commun à toutes les pages
+*/
+footer {
+    color: #757575;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 14px;
+ 
+}
+
+footer a {
+    color: #757575;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #333;
+    font-weight: 700;
+    transition: color 0.3s ease;
+}
+footer {
+    padding: 15px 0;
+    font-size: 14px;
+}
+
+.partial-border {
+    border-top: 1px solid #757575;
+    width: 50%;
+    margin-bottom:18px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+
+/* 
+    ================
+    HEADER
+    ================
+    Présent dans includes/header.php, commun à toutes les pages
+*/
+/* Styles additionnels pour la barre de navigation (optionnel) */
+
+/* Header personnalisé */
+.navbar-custom {
+    background-color: #ffffff; /* Couleur blanche pour le fond */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Effet d'ombre */ /* Effet d'ombre */
+    padding: 10px 20px; /* Ajout d'un padding global */
+}
+
+/* Logo */
+.navbar-brand img {
+    height: 52px; /* Hauteur du logo pour une meilleure visibilité */
+    object-fit: contain; /* Empêche la déformation de l'image */
+}
+
+/* Liens de navigation */
+.navbar-nav .nav-link {
+    color: #333333;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 8px 15px; /* Espacement uniforme */
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #0097b2; /* Couleur d'accentuation */
+}
+
+/* Menu déroulant */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Effet d'ombre pour le sous-menu */
+    padding: 0;
+    background: #fff; /* Supprime l'arrière-plan par défaut */
+    width: 40px; /* Aligné à la taille du drapeau */
+}
+
+.dropdown-menu .dropdown-item {
+    padding: 5px; /* Espacement réduit pour un alignement compact */
+    text-align: center; /* Centrer les drapeaux */
+}
+
+.dropdown-menu .dropdown-item img {
+    width: 40px; /* Taille uniforme des drapeaux */
+    height: auto;
+}
+
+/* Style au survol des éléments du menu déroulant */
+.dropdown-menu .dropdown-item:hover {
+    background-color: #0097b2;
+    color: #ffffff;
+}
+
+/* Bouton de drapeau */
+.dropdown-toggle {
+    background: transparent !important; /* Supprime le fond par défaut */
+    border: none !important; /* Supprime la bordure */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.dropdown-toggle img {
+    width: 40px; /* Taille du drapeau */
+    height: auto;
+    margin-right: 0px; /* Espacement avec l'icône ou autre contenu */
+}
+
+/* Supprimer la petite flèche du bouton de drapeau */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Icône de profil */
+
+/* Supprimer la petite flèche du bouton de drapeau */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Style pour le profil */
+.profile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #dddddd;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 0px 18px 0px 18px;
+}
+
+.profile-icon:hover {
+    background-color: #0097b2; /* Accentuation sur survol */
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .navbar-brand img {
+        height: 40px; /* Taille plus petite du logo sur mobile */
+    }
+
+    .navbar-nav .nav-link {
+        font-size: 14px; /* Taille réduite des liens sur mobile */
+    }
+}
+
+
+
+/* Mobile et tablettes */
+@media (max-width: 1024px) {
+    .navbar .d-flex.align-items-center.order-lg-2 {
+        position: static; /* Position par défaut pour éviter les chevauchements */
+    }
+    /* Icônes à droite du logo */
+/* .navbar .d-flex.align-items-center.order-lg-2 {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    display: flex;
+    align-items: center;
+} */
+
+/* Ajustement des icônes */
+.navbar .flag-icon {
+    width: 36px;
+    height: auto;
+    margin-right: 0px;
+}
+
+.navbar .profile-icon {
+    width: 36px;
+    height: 36px;
+    background-color: #dddddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.navbar .profile-icon:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+}
+
+
+/* 
+    ================
+    Filter
+    ================
+*/
+.hidden { display: none; }
+
+/* Animation pour l'affichage des filtres */
+#filtersContainer {
+    border-radius: 1rem;
+    background: #f3f3f3;
+}
+
+/* Styles pour les boutons de filtres */
+#toggleFilters i {
+    transition: transform 0.3s;
+}
+
+#toggleFilters.active i {
+    transform: rotate(180deg);
+}
+
+/* Styles pour le formulaire de filtres */
+.filter-form .form-control {
+    border-radius: 0.375rem;
+}
+
+/* 
+    ================
+    GRAPHIQUES
+    ================
+    Utilisé dans qcmResult.php (scoreChart, responseChart)
+*/
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 30px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    padding: 20px;
+}
+
+#scoreChart, 
+#responseChart {
+    width: 100%;
+    height: 400px;
+}
+
+.chart-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* 
+    ================
+    PROGRESS BAR
+    ================
+    Utilisé dans questionForm.php (timer)
+*/
+.progress-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #fff;
+    padding: 5px 0;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+}
+
+.progress-container.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.progress-bar {
+    height: 30px;
+    background-color: #28a745;
+    transition: width 1s linear, background-color 0.5s ease;
+}
+
+/* Timer container (questionForm.php) */
+.timer-container {
+    margin-bottom: 20px;
+}
+
+.timer-input {
+    width: 100px;
+    display: inline-block;
+}
+
+/* 
+    ================
+    MAIN CONTENT
+    ================
+    Utilisé dans questionForm.php, index.php, etc.
+*/
+.main-content {
+    margin-top: 20px;
+}
+
+/* 
+    ================
+    STYLES DIVERS (CARDS, etc.)
+    ================
+    Pour index.php (cards de documents), 
+    questionForm.php (bloc de questions), etc.
+*/
+
+
+.card {
+    border: none;
+    border-radius: 1rem;
+
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.card-body {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    line-height: 36px;
+    /* Transition hover si besoin */
+}
+
+ /* Troncature du nom du fichier avec ellipses */
+ .card-title.text-truncate {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Optionnel : Limiter la hauteur du titre si nécessaire */
+.card-title {
+    height: 1.5em; /* Ajuster en fonction de la taille de la police */
+    color: #0097b2;
+}
+.card-header {
+    background-color: #f3f3f3;
+}
+.navbar {
+    margin: 0px;
+    padding: 0px;
+}
+.dashboard-card-title {
+    height: 1em; /* Ajuster en fonction de la taille de la police */
+    color: #0097b2;
+}
+.dashboard-card-body {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    line-height: 26px;
+    /* Transition hover si besoin */
+}
+
+/* Style pour les icônes d'action */
+.action-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Effet d'agrandissement au survol */
+.action-icon:hover {
+    transform: scale(1.2);
+}
+
+/* Styles pour les icônes désactivées */
+.disabled-icon {
+    filter: grayscale(100%);
+    opacity: 0.6;
+    pointer-events: none; /* Empêche les clics */
+}
+
+/* Styles pour les boutons de formulaire contenant des images */
+.form-button {
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+.form-button img {
+    cursor: pointer;
+}
+
+/* Optionnel : Ajout d'un léger effet de survol pour les images désactivées */
+.disabled-icon:hover {
+    transform: none;
+}
+
+ /* Utiliser les classes utilitaires de Bootstrap */
+ .upload-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+.upload-button {
+    margin-top:10px;
+    width: 100%;
+    background: linear-gradient(90deg, #0097b2, #19d1f1);
+    display: none; /* Cache le bouton par défaut */
+}
+
+.upload-button:hover {
+    background: linear-gradient(90deg, #19d1f1, #0097b2);
+
+}
+.upload-button.visible {
+    display: block; /* Affiche le bouton lorsque la classe 'visible' est ajoutée */
+}
+
+.upload-icon {
+    color: #0097b2 !important;
+    transition: color 0.3s;
+}
+.upload-button.visible {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Styles supplémentaires pour améliorer l'apparence */
+.upload-dropzone {
+    border: 2px dashed #0097b2;
+    border-radius: 5px;
+    padding: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.upload-dropzone:hover {
+    border-color: #19d1f1;
+}
+.upload-dropzone.dragover {
+    background-color: #e9ecef;
+}
+.upload-dropzone.dragover {
+    background-color: #e6f7ff;
+    border-color: #19d1f1;
+}
+
+.quizz-card-button {
+    position: relative;
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #0097b2;
+    color: #fff;
+    font-weight: 360;
+    font-size: 13px;
+    text-align: center;
+    border: 2px solid #0097b2;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.3s, color 0.3s;
+    text-decoration: none; /* Supprime le soulignement */
+}
+
+.quizz-card-button:hover {
+    background-color: #fff;
+    color: #0097b2;
+}
+
+.summary-card-button {
+    position: relative;
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #19d1f1;
+    color: #fff;
+    font-weight: 360;
+    font-size: 13px;
+    text-align: center;
+    border: 2px solid #19d1f1;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.3s, color 0.3s;
+    text-decoration: none; /* Supprime le soulignement */
+}
+
+.summary-card-button:hover {
+    background-color: #fff;
+    color: #19d1f1;
+}
+
+
+/* ====================
+   Responsivité Globale
+   ==================== */
+
+/* Styles communs pour centrer les sections */
+
+/* Section Hero */
+.desktop-only {
+    display: flex; /* Cacher la section desktop */
+}
+
+.mobile-tablet-only {
+    display: none; /* Afficher la section tablette et appliquer flexbox */
+}
+
+/* Smartphones (moins de 768px) */
+@media (max-width: 767px) {
+    /* Loader */
+    #homeloader img {
+        width: 180px;
+    }
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centre verticalement */
+        align-items: center;    /* Centre horizontalement */
+        text-align: center;     /* Centre le texte */
+        min-height: 80vh;          /* Chaque section occupe toute la hauteur de la fenêtre */
+        padding: 2rem;          /* Padding interne pour éviter les débordements */
+        box-sizing: border-box; /* Inclure le padding dans la hauteur totale */
+    }
+    .homepage-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centre verticalement */
+        align-items: center;    /* Centre horizontalement */
+        text-align: center;     /* Centre le texte */
+        min-height: 90vh;          /* Chaque section occupe toute la hauteur de la fenêtre */
+        padding: 2rem;          /* Padding interne pour éviter les débordements */
+        box-sizing: border-box; /* Inclure le padding dans la hauteur totale */
+    }
+    /* Section Hero */
+    .desktop-only {
+        display: none; /* Cacher la section desktop */
+    }
+
+    .mobile-tablet-only {
+        display: flex; /* Afficher la section mobile et appliquer flexbox */
+    }
+
+    .hero img {
+        width: 80%;
+        max-width: 250px;
+        margin: 1rem 0;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.2rem;
+    }
+
+    .hero button {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .homepage-section {
+        padding: 2rem 1rem;
+    }
+
+    .homepage-section h1 {
+        font-size: 2rem;
+    }
+
+    .homepage-section img {
+        width: 80%;
+        max-width: 250px;
+        margin: 1rem 0;
+    }
+
+    .homepage-section .buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .homepage-section .button {
+        width: 100%;
+        padding: 10px 90px;
+    }
+
+
+
+    .navbar-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 10px 0;
+        font-size: 14px;
+    }
+}
+
+/* Tablettes (768px à 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Loader */
+    #homeloader img {
+        width: 220px;
+    }
+    .hero, .homepage-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centre verticalement */
+        align-items: center;    /* Centre horizontalement */
+        text-align: center;     /* Centre le texte */
+        min-height: 90vh;          /* Chaque section occupe toute la hauteur de la fenêtre */
+        padding: 2rem;          /* Padding interne pour éviter les débordements */
+        box-sizing: border-box; /* Inclure le padding dans la hauteur totale */
+    }
+    /* Section Hero */
+    .desktop-only {
+        display: none; /* Cacher la section desktop */
+    }
+
+    .mobile-tablet-only {
+        display: flex; /* Afficher la section tablette et appliquer flexbox */
+    }
+
+    .hero img {
+        width: 80%;
+        max-width: 250px;
+        margin: 1rem 0;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.3rem;
+    }
+
+    .hero button {
+        width: auto;
+        padding: 10px 1.5rem;
+    }
+
+    .homepage-section {
+        padding: 3rem 2rem;
+    }
+
+    .homepage-section h1 {
+        font-size: 2.5rem;
+    }
+
+    .homepage-section img {
+        width: 70%;
+        max-width: 280px;
+    }
+
+    .homepage-section .buttons {
+        flex-direction: row;
+        gap: 1.5rem;
+    }
+
+    .homepage-section .button {
+        width: auto;
+        padding: 10px 1.5rem;
+    }
+
+
+
+    .navbar-nav {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 8px 10px;
+        font-size: 15px;
+    }
+}
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+/* Style du Spinner */
+.spinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);      /* Semi-transparent */
+    display: flex;
+    flex-direction: column;                     /* <<< empile les éléments */
+    justify-content: center;
+    align-items: center;
+    text-align: center;                         /* optionnel : centre le texte */
+    color: #0097b2;
+    z-index: 9999;                              /* au-dessus du contenu */
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.4rem;
+}
+
+.visually-hidden {
+    visibility: hidden;
+}
+
+.icon img {
+    height: 70px;
+}

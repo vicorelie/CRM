@@ -1,0 +1,22 @@
+# Fichiers de configuration sensibles
+.env
+
+# Répertoires de dépendances
+/vendor/
+
+# Fichiers de log
+*.log
+
+# Fichiers temporaires de l'éditeur
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+
+# Système d'exploitation
+.DS_Store
+Thumbs.db
+
+# Autres fichiers ou répertoires à exclure
+/test/

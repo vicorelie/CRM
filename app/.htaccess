@@ -1,0 +1,27 @@
+# /.htaccess
+
+# Activer la réécriture d'URL si nécessaire
+RewriteEngine On
+
+# Rediriger toutes les requêtes vers index.php si le fichier ou le répertoire n'existe pas
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^.*$ index.php [NC,L]
+
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "openai_log.json">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<FilesMatch "/config/wanatest-447115-1b409ff83dbb\.json">
+    Require all denied
+</FilesMatch>
