@@ -139,7 +139,7 @@ function error_json(string $error_message, int $error_code = ErrorCode::GENERAL_
  *
  * @return array|null Array with 'message' and 'code' keys, or null
  */
-function error_get_last(): ?array {
+function get_last_error_message(): ?array {
     if (isset($_SESSION['error_message'])) {
         $error = [
             'message' => $_SESSION['error_message'],
@@ -163,7 +163,7 @@ function error_get_last(): ?array {
  * @return string HTML alert or empty string
  */
 function error_display_alert(string $custom_class = null): string {
-    $error = error_get_last();
+    $error = get_last_error_message();
 
     if ($error === null) {
         return '';
