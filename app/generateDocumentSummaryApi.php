@@ -7,23 +7,6 @@ ini_set('memory_limit', '1024M');
 require 'config.php';             // Doit définir $pdo, OPENAI_API_KEY, OPENAI_MODEL_SUMMARY,...
 csrf_protect_post();
 
-/* ---------- utilitaires ---------- */
-function ensurePdo(PDO $pdo): PDO {
-    try { $pdo->query('SELECT 1'); return $pdo; }
-    catch (PDOException) {
-        global $dsn;
-        return new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-    }
-}
-function fetchOne(PDO $pdo, string $sql, array $params): ?array {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetch() ?: null;
-}
-
 /* ---------- 1. Contrôles & infos ---------- */
 if (!isset($_SESSION['user_uuid'])) {
     die("Erreur : accès non autorisé.");

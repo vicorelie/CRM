@@ -11,34 +11,6 @@ ini_set('memory_limit', '1024M');
 require_once __DIR__ . '/config.php';     // DSN, DB_USER, DB_PASS, $pdo, constantes
 csrf_protect_post();
 
-/* ---------- utilitaires ---------- */
-function fixJsonQuotes(string $j): string {
-    return preg_replace_callback(
-        '/"((?:\\\\.|[^"\\\\])*)"/u',
-        fn($m) => '"' . str_replace('"','\"',$m[1]) . '"',
-        $j
-    );
-}
-
-function ensurePdo(PDO $pdo): PDO {
-    try {
-        $pdo->query('SELECT 1');
-        return $pdo;
-    } catch (PDOException) {
-        global $dsn;
-        return new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-    }
-}
-
-function fetchOne(PDO $pdo, string $sql, array $p): ?array {
-    $s = $pdo->prepare($sql);
-    $s->execute($p);
-    return $s->fetch(PDO::FETCH_ASSOC) ?: null;
-}
-
 /* ---------- 1. Contrôles ---------- */
 if (!isset($_SESSION['user_uuid'])) {
     die('Erreur : connexion requise.');
