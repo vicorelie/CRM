@@ -2,6 +2,7 @@
 // config.php
 
 require 'vendor/autoload.php';
+require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/csrf.php';
 require_once __DIR__ . '/includes/error_handler.php';
 
