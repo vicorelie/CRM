@@ -102,6 +102,16 @@ PAYPAL_CLIENT_ID=...
 PAYPAL_CLIENT_SECRET=...
 ```
 
+**Important : Permissions du fichier .env**
+
+Le fichier `.env` doit être lisible par le serveur web :
+
+```bash
+# Donner les bonnes permissions
+sudo chown www-data:www-data app/.env
+sudo chmod 640 app/.env
+```
+
 ### 3. Installer les dépendances PHP
 
 ```bash
