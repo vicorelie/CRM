@@ -678,6 +678,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="addSubject.php" class="modal-content" id="addSubjectForm">
+      <?= csrf_field() ?>
       <div class="modal-header">
         <h5 class="modal-title"><?= htmlspecialchars($lang_data['add_new_subject'] ?? 'Ajouter une nouvelle matière') ?></h5>
         <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
