@@ -1,9 +1,9 @@
 <?php
 // updateSubjectDocument.php
 
-session_start();
 require 'config.php';
 requireSubscription($pdo);
+csrf_protect_post();
 
 if (!isset($_SESSION['user_uuid'])) {
     header('Location: login.php');

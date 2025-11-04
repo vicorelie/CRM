@@ -1,7 +1,7 @@
 <?php
 // addFlashCardApi.php
-session_start();
 require 'config.php';
+csrf_protect_post();
 header('Content-Type: application/json; charset=utf-8');
 
 // 1) Vérification authentification

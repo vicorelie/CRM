@@ -1,13 +1,10 @@
 <?php
 // deleteMessage.php
 
-header('Content-Type: application/json');
-
-// Inclure la configuration de la base de données
 require 'config.php';
+csrf_protect_post();
 
-// Démarrer la session
-session_start();
+header('Content-Type: application/json');
 
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_uuid'])) {

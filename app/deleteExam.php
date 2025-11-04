@@ -2,9 +2,7 @@
 // deleteExam.php
 
 require 'config.php';
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+csrf_protect_post();
 
 // Charger la langue
 $lang = $_SESSION['lang'] ?? 'fr';

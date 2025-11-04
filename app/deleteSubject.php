@@ -1,9 +1,9 @@
 <?php
 // deleteSubject.php
 
-session_start();
 require 'config.php';
 requireSubscription($pdo);
+csrf_protect_post();
 
 // Vérifier que l'utilisateur est connecté
 if (!isset($_SESSION['user_uuid'])) {

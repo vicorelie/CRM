@@ -1,12 +1,11 @@
 <?php
 // generateGeneralPairApi.php
 
-session_start();
 set_time_limit(300);
 ini_set('memory_limit', '1024M');
 
 require 'config.php'; // Doit définir $pdo, OPENAI_API_KEY, OPENAI_MODEL (par ex. "gpt-3.5-turbo")
-require_once 'vendor/autoload.php';
+csrf_protect_post();
 
 use Ramsey\Uuid\Uuid;
 

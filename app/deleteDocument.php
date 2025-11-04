@@ -2,6 +2,7 @@
 // deleteDocument.php
 
 require 'config.php';
+csrf_protect_post();
 
 if (!isset($_SESSION['user_uuid'])) {
     header('Location: login.php');

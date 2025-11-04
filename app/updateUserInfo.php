@@ -1,7 +1,7 @@
 <?php
-session_start();
 require 'config.php';
 requireSubscription($pdo);
+csrf_protect_post();
 
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_uuid'])) {

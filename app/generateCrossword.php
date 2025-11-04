@@ -1,7 +1,7 @@
 <?php
 // generateCrossword.php
-session_start();
-require_once __DIR__.'/config.php'; // $pdo, ... 
+require_once __DIR__.'/config.php'; // $pdo, ...
+csrf_protect_post(); 
 
 // 1) Sécurité & params
 if (!isset($_SESSION['user_uuid'])) exit('login');

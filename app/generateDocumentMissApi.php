@@ -1,12 +1,11 @@
 <?php
 // generateDocumentMissApi.php
 
-session_start();
 set_time_limit(300);
 ini_set('memory_limit', '1024M');
 
 require 'config.php';             // Définit $pdo, OPENAI_API_KEY, OPENAI_MODEL, etc.
-require_once 'vendor/autoload.php';
+csrf_protect_post();
 
 /* ---------- utilitaires ---------- */
 function ensurePdo(PDO $pdo): PDO {

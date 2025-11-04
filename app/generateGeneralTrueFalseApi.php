@@ -8,12 +8,11 @@
  *  • Insère dans documentTrueFalse.text_content puis redirige vers viewTrueFalse.php
  ***************************************************************************/
 
-session_start();
 set_time_limit(300);
 ini_set('memory_limit', '1024M');
 
 require 'config.php';                 // définit $pdo, OPENAI_API_KEY, OPENAI_MODEL
-require_once 'vendor/autoload.php';
+csrf_protect_post();
 
 if (!isset($_SESSION['user_uuid'])) {
     die("Erreur : accès non autorisé. Veuillez vous connecter.");

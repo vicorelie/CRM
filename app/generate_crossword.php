@@ -1,8 +1,8 @@
 <?php
 // generate_crossword.php
-session_start();
 require_once __DIR__.'/config.php';
 requireSubscription($pdo);
+csrf_protect_post();
 
 // 1) Sécurité & params
 $u    = $_SESSION['user_uuid'] ?? '';

@@ -8,8 +8,7 @@ set_time_limit(0);
 ini_set('memory_limit', '1024M');
 
 require_once __DIR__.'/config.php';   // DSN, DB_USER, DB_PASS, $pdo, constantes
-session_start();
-require_once 'vendor/autoload.php';
+csrf_protect_post();
 
 /* ---------- utilitaires ---------- */
 function fixJsonQuotes(string $j): string
