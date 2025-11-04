@@ -3,6 +3,7 @@
 
 require 'vendor/autoload.php';
 require_once __DIR__ . '/includes/csrf.php';
+require_once __DIR__ . '/includes/error_handler.php';
 
 use Dotenv\Dotenv;
 
@@ -50,7 +51,12 @@ try {
 
 } catch (PDOException $e) {
     // Gestion des erreurs de connexion
-    die("Erreur de connexion à la base de données: " . $e->getMessage());
+    error_log("[CRITICAL] Database connection failed: " . $e->getMessage());
+    error_die(
+        "Impossible de se connecter à la base de données",
+        ErrorCode::DB_CONNECTION_FAILED,
+        500
+    );
 }
 
 function requireSubscription(PDO $pdo): void
