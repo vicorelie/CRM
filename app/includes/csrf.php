@@ -31,10 +31,10 @@ function csrf_generate_token(): string {
 /**
  * Validate a CSRF token
  *
- * @param string $token The token to validate
+ * @param string|null $token The token to validate
  * @return bool True if valid, false otherwise
  */
-function csrf_validate_token(string $token): bool {
+function csrf_validate_token(?string $token): bool {
     if (empty($token)) {
         return false;
     }

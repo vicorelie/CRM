@@ -1713,6 +1713,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateQCMModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralQuizApi.php" id="generateQCMForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="generateQCMModalLabel">
@@ -1866,6 +1867,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateSummaryModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralSummaryApi.php" id="generateSummaryForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -1934,6 +1936,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generatePairModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralPairApi.php" id="generatePairForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -2006,6 +2009,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateFlashModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralFlashApi.php" id="generateFlashForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -2145,6 +2149,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateCrosswordModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" action="generate_crossword.php" id="generateCrosswordForm" class="modal-content">
+      <?= csrf_field() ?>
       <div class="modal-header">
         <h5 class="modal-title"><?=htmlspecialchars($lang_data['generate_crossword']??'Générer Mots-croisés')?></h5>
         <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
@@ -2172,6 +2177,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateTFModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralTrueFalseApi.php" id="generateTFForm" class="modal-content">
+      <?= csrf_field() ?>
       <div class="modal-header">
         <h5 class="modal-title">
           <?= htmlspecialchars($lang_data['generate_truefalse'] ?? 'Générer Vrai/Faux') ?>
@@ -2215,6 +2221,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateMissModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralMissApi.php" id="generateMissForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
