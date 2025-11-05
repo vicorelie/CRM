@@ -215,8 +215,14 @@ if ($err) {
 $data = json_decode($response,true);
 $content = $data['choices'][0]['message']['content'] ?? '';
 $content = preg_replace('/^```json\s*|```$/i','',$content);
-$flashCards = json_decode($content,true);
-if (json_last_error() !== JSON_ERROR_NONE || !is_array($flashCards)) {
+$content = trim($content);
+
+// Nettoyer et parser le JSON avec les helpers
+$content = fixJsonQuotes($content);
+$flashCards = parseJson($content);
+
+if (!is_array($flashCards)) {
+    error_log("[Flash Generation] Invalid JSON response: " . substr($content, 0, 500));
     header("Location: viewFlash.php?generateFlashError=Format_JSON_invalide");
     exit;
 }
