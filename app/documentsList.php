@@ -1119,9 +1119,9 @@ try {
                         <label for="modal_flash_language" class="form-label">
                             <?= htmlspecialchars($lang_data['generate_flash_language'] ?? 'Langue pour les Flash') ?>
                         </label>
-                        <select 
-                            class="form-control" 
-                            id="modal_flash_language" 
+                        <select
+                            class="form-control"
+                            id="modal_flash_language"
                             name="flash_language"
                             required
                         >
@@ -1141,6 +1141,21 @@ try {
                                 <?= htmlspecialchars($lang_data['lang_russian'] ?? 'Russe') ?>
                             </option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_flash_number" class="form-label">
+                            <?= htmlspecialchars($lang_data['flash_number_label'] ?? 'Nombre de flashcards') ?>
+                        </label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="modal_flash_number"
+                            name="flash_number"
+                            min="5"
+                            max="50"
+                            value="15"
+                            required
+                        >
                     </div>
                     <p>
                         <?= htmlspecialchars($lang_data['generate_flash_confirm'] ?? 'Voulez-vous générer des flashcards ?') ?>

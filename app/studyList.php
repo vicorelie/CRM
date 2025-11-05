@@ -2055,6 +2055,24 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
             </label>
           </div>
 
+          <!-- Nombre de Flashcards -->
+          <div class="form-floating mb-3">
+            <input
+              type="number"
+              class="form-control"
+              id="modal_flash_number"
+              name="flash_number"
+              min="5"
+              max="50"
+              value="15"
+              placeholder="Nombre de flashcards"
+              required
+            >
+            <label for="modal_flash_number">
+              <?= htmlspecialchars($lang_data['flash_number_label'] ?? 'Nombre de flashcards') ?>
+            </label>
+          </div>
+
           <!-- <p class="mt-3">
             <?= htmlspecialchars($lang_data['generate_flash_confirm'] ?? 'Voulez-vous générer des flashcards ?') ?>
           </p> -->
