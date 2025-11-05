@@ -188,6 +188,8 @@ FLASH;
 }
 
 // Appel à OpenAI
+// Note: max_tokens calculé dynamiquement : ~250 tokens par carte + marge
+$maxTokens = max(2000, $numberOfFlashCards * 250);
 $request = [
     'model'       => OPENAI_MODEL_FLASH,
     'messages'    => [
@@ -195,7 +197,7 @@ $request = [
         ['role'=>'user',  'content'=>$promptFlash]
     ],
     'temperature' => 0.7,
-    'max_tokens'  => 1500,
+    'max_tokens'  => $maxTokens,
 ];
 $ch = curl_init("https://api.openai.com/v1/chat/completions");
 curl_setopt_array($ch, [

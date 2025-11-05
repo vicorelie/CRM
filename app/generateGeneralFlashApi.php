@@ -165,7 +165,10 @@ error_log("Prompt flash : " . $promptFlash);
 function callOpenAIFlashCards($prompt, $language, $numberOfCards = 9) {
     $apiKey   = OPENAI_API_KEY;
     $endpoint = "https://api.openai.com/v1/chat/completions";
-    
+
+    // Calculer max_tokens dynamiquement : ~250 tokens par carte + marge
+    $maxTokens = max(2000, $numberOfCards * 250);
+
     $data = [
         "model"       => OPENAI_MODEL,
         "messages"    => [
@@ -178,7 +181,7 @@ function callOpenAIFlashCards($prompt, $language, $numberOfCards = 9) {
                 "content" => $prompt
             ]
         ],
-        "max_tokens"  => 1500,
+        "max_tokens"  => $maxTokens,
         "temperature" => 0.7,
     ];
     
