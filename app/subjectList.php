@@ -374,6 +374,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
                     <ul class="dropdown-menu shadow" aria-labelledby="dropdownMenuLink<?= $subj['id'] ?>" style="z-index: 9999; background-color:#bababa;">
                         <li>
                             <form method="POST" action="deleteSubject.php" onsubmit="return confirm('<?= htmlspecialchars($lang_data['delete_subject'] ?? 'Voulez-vous vraiment supprimer cette matière ?') ?>');">
+                                <?= csrf_field() ?>
                                 <input type="hidden" name="subject_id" value="<?= $subj['id'] ?>">
                                 <button type="submit" class="dropdown-item"><?= htmlspecialchars($lang_data['delete'] ?? 'Supprimer') ?></button>
                             </form>
@@ -492,6 +493,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
                             </button>
                             <!-- Bouton Supprimer -->
                             <form method="POST" action="deleteSubjectDocument.php" onsubmit="return confirm('<?= htmlspecialchars($lang_data['delete_document_confirmation'] ?? 'Supprimer ce document ?') ?>');">
+                                <?= csrf_field() ?>
                                 <input type="hidden" name="subject_document_id" value="<?= htmlspecialchars($doc['id']) ?>">
                                 <button type="submit" class="btn btn-link p-0" title="<?= htmlspecialchars($lang_data['delete_document_confirmation'] ?? 'Supprimer ce document') ?>">
                                     <i class="fas fa-trash" style="font-size:1.2rem;color:#19d1f1;"></i>
@@ -582,6 +584,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form method="POST" action="updateSubjectDocument.php">
+                        <?= csrf_field() ?>
                         <div class="modal-header">
                             <h5 class="modal-title"><?= htmlspecialchars($lang_data['edit_document'] ?? 'Éditer le Document') ?></h5>
                             <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
@@ -731,6 +734,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="addDocFromSubjectModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="addSubjectDocument.php" class="modal-content" id="docFromSubjectForm">
+      <?= csrf_field() ?>
       <div class="modal-header">
         <h5 class="modal-title"><?= htmlspecialchars($lang_data['create_document'] ?? 'Créer un Document') ?></h5>
         <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
@@ -761,6 +765,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="curriculumModal" style="display:block;background:rgba(0,0,0,0.5);" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form action="updateStudentCurriculum.php" method="POST" class="modal-content" id="curriculumForm">
+      <?= csrf_field() ?>
       <input type="hidden" name="from_page" value="subjectList">
       <div class="modal-header">
         <h5 class="modal-title"><?= htmlspecialchars($lang_data['curriculum_modal_title'] ?? 'Complétez vos informations') ?></h5>
@@ -858,6 +863,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateQCMModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralQuizApi.php" id="generateQCMForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="generateQCMModalLabel"><?= htmlspecialchars($lang_data['generate_qcm'] ?? 'Générer QCM') ?></h5>
@@ -905,6 +911,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateSummaryModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralSummaryApi.php" id="generateSummaryForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><?= htmlspecialchars($lang_data['generate_summary'] ?? 'Générer Résumé') ?></h5>
@@ -936,6 +943,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generatePairModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralPairApi.php" id="generatePairForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><?= htmlspecialchars($lang_data['generate_pair'] ?? 'Générer Paires') ?></h5>
@@ -968,6 +976,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateFlashModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralFlashApi.php" id="generateFlashForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><?= htmlspecialchars($lang_data['generate_flash'] ?? 'Générer Flash') ?></h5>
@@ -1000,6 +1009,7 @@ const studentTypeInDb = "<?= $studentTypeInDb ?>";
 <div class="modal fade" id="generateMissModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="generateGeneralMissApi.php" id="generateMissForm">
+      <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><?= htmlspecialchars($lang_data['generate_miss'] ?? 'Générer Miss') ?></h5>

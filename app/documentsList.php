@@ -263,6 +263,7 @@ try {
     <div class="upload-card mb-4">
         <div class="card bg-light text-center p-4 border-0">
             <form method="POST" action="extractContent.php" enctype="multipart/form-data" class="upload-form">
+                <?= csrf_field() ?>
                 <div class="upload-dropzone" id="uploadDropzone">
                     <i class="fas fa-cloud-upload-alt fa-3x upload-icon mb-3"></i>
                     <p class="mb-2">
@@ -430,6 +431,7 @@ try {
                                 <!-- Bouton Supprimer -->
                                 <form method="POST" action="deleteDocument.php" class="d-inline ms-2"
                                       onsubmit="return confirm('<?= htmlspecialchars($lang_data['delete_confirmation'] ?? 'Êtes-vous sûr de vouloir supprimer ce document ?') ?>');">
+                                    <?= csrf_field() ?>
                                     <input type="hidden" name="document_id" value="<?= htmlspecialchars($doc['id']) ?>">
                                     <button type="submit" class="btn btn-link p-0"
                                             aria-label="<?= htmlspecialchars($lang_data['delete'] ?? 'Supprimer') ?>"
@@ -585,6 +587,7 @@ try {
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <form method="POST" action="updateDocument.php">
+                                <?= csrf_field() ?>
                                 <div class="modal-header">
                                     <h5 class="modal-title" id="editModalLabel-<?= $doc['id'] ?>">
                                         <?= htmlspecialchars($lang_data['edit_document'] ?? 'Éditer le Document') ?>
@@ -711,6 +714,7 @@ try {
 <div class="modal fade" id="curriculumModal" style="display:block;background:rgba(0,0,0,0.5);" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form action="updateStudentCurriculum.php" method="POST" class="modal-content" id="curriculumForm">
+    <?= csrf_field() ?>
     <input type="hidden" name="from_page" value="documentsList">
       <div class="modal-header">
         <h5 class="modal-title"><?= htmlspecialchars($lang_data['curriculum_modal_title'] ?? 'Complétez vos informations') ?></h5>
@@ -813,6 +817,7 @@ try {
 >
     <div class="modal-dialog">
         <form method="POST" action="generateQuizAPI.php" id="generateQCMForm">
+            <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="generateQCMModalLabel">
@@ -946,6 +951,7 @@ try {
 >
     <div class="modal-dialog">
         <form method="POST" action="generateSummary.php" id="generateSummaryForm">
+            <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="generateSummaryModalLabel">
@@ -1020,6 +1026,7 @@ try {
 >
     <div class="modal-dialog">
         <form method="POST" action="generatePairApi.php" id="generatePairForm">
+            <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="generatePairModalLabel">
@@ -1092,6 +1099,7 @@ try {
 >
     <div class="modal-dialog">
         <form method="POST" action="generateFlashApi.php" id="generateFlashForm">
+            <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="generateFlashModalLabel">
@@ -1164,6 +1172,7 @@ try {
 >
     <div class="modal-dialog">
         <form method="POST" action="generateMissApi.php" id="generateMissForm">
+            <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="generateMissModalLabel">
