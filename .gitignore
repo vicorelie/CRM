@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Security files (NEVER commit!)
+SECURITY_URGENT.md
+
 # Uploads and logs
 uploads/
 logs/
