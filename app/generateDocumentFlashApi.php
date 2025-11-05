@@ -104,8 +104,10 @@ if ($documentsId) {
                 $extra   = (int)floor(count($picked)*0.3);
                 if($extra){
                     $rest = array_values(array_diff(range(0,$totalSeg-1),$picked));
-                    $rnd  = (array)array_rand($rest,min($extra,count($rest)));
-                    foreach($rnd as $rk) $picked[]=$rest[$rk];
+                    if(count($rest) > 0){
+                        $rnd  = (array)array_rand($rest,min($extra,count($rest)));
+                        foreach($rnd as $rk) $picked[]=$rest[$rk];
+                    }
                 }
                 sort($picked);
                 foreach($picked as $idx){
