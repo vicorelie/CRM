@@ -211,7 +211,7 @@ $response = curl_exec($ch);
 $err      = curl_error($ch);
 curl_close($ch);
 if ($err) {
-    header("Location: viewFlash.php?generateFlashError=".urlencode($err));
+    header("Location: viewFlash.php?generateFlashError=".urlencode($err)."&subject_document_id={$subjectDocumentId}");
     exit;
 }
 $data = json_decode($response,true);
@@ -225,7 +225,7 @@ $flashCards = parseJson($content);
 
 if (!is_array($flashCards)) {
     error_log("[Flash Generation] Invalid JSON response: " . substr($content, 0, 500));
-    header("Location: viewFlash.php?generateFlashError=Format_JSON_invalide");
+    header("Location: viewFlash.php?generateFlashError=Format_JSON_invalide&subject_document_id={$subjectDocumentId}");
     exit;
 }
 
