@@ -33,7 +33,7 @@ $docRow = fetchOne($pdo, "
     LIMIT 1
 ", [':id'=>$subjectDocumentId,':u'=>$userUuid]);
 if (!$docRow) {
-    header("Location: viewFlash.php?generateFlashError=Document_non_trouvé");
+    header("Location: viewFlash.php?generateFlashError=Document_non_trouvé&subject_document_id={$subjectDocumentId}");
     exit;
 }
 
@@ -45,7 +45,7 @@ $subjRow = fetchOne($pdo, "
     LIMIT 1
 ", [':sid'=>$docRow['study_subjects_id'],':u'=>$userUuid]);
 if (!$subjRow) {
-    header("Location: viewFlash.php?generateFlashError=Matière_non_trouvée");
+    header("Location: viewFlash.php?generateFlashError=Matière_non_trouvée&subject_document_id={$subjectDocumentId}");
     exit;
 }
 
@@ -54,7 +54,7 @@ $curr = fetchOne($pdo, "
     SELECT * FROM studentCurriculum WHERE uuid = :u LIMIT 1
 ", [':u'=>$userUuid]);
 if (!$curr) {
-    header("Location: viewFlash.php?generateFlashError=Curriculum_non_trouvé");
+    header("Location: viewFlash.php?generateFlashError=Curriculum_non_trouvé&subject_document_id={$subjectDocumentId}");
     exit;
 }
 
