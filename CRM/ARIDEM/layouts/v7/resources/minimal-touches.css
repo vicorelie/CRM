@@ -33,4 +33,29 @@ select:focus {
     background-color: #EFEFEF;
 }
 
+/* Effet hover subtil sur les lignes de listes */
+.table tbody tr:hover {
+    background-color: #E8F4F8;
+}
+
+/* Lignes alternées dans les champs de détails */
+.detailview-table tr:nth-child(odd),
+.table.detailview-table tr:nth-child(odd),
+.recordDetails tr:nth-child(odd) {
+    background-color: #FFFFFF;
+}
+
+.detailview-table tr:nth-child(even),
+.table.detailview-table tr:nth-child(even),
+.recordDetails tr:nth-child(even) {
+    background-color: #EFEFEF;
+}
+
+/* Effet hover subtil sur les champs */
+.detailview-table tr:hover,
+.table.detailview-table tr:hover,
+.recordDetails tr:hover {
+    background-color: #E8F4F8;
+}
+
 /* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
