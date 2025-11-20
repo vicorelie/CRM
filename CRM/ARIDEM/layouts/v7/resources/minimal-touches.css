@@ -24,9 +24,13 @@ select:focus {
     border-color: #bdbdbd;
 }
 
-/* Lignes alternées très légères dans les tables - à peine visible */
+/* Lignes alternées dans les listes - #EFEFEF et #FFFFFF */
+.table tbody tr:nth-child(odd) {
+    background-color: #FFFFFF;
+}
+
 .table tbody tr:nth-child(even) {
-    background-color: #fafafa;
+    background-color: #EFEFEF;
 }
 
 /* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
