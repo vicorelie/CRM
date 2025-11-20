@@ -36,7 +36,7 @@
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/daterangepicker/daterangepicker.css")}'>
 
         {* Modern Theme CSS - ARIDEM *}
-        <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/resources/modern-theme.css")}'>
+        <link type='text/css' rel='stylesheet' href='layouts/v7/resources/modern-theme.css?v={time()}'>
 
         <input type="hidden" id="inventoryModules" value={ZEND_JSON::encode($INVENTORY_MODULES)}>
         {if isset($SELECTED_MENU_CATEGORY)}
@@ -63,7 +63,7 @@
 		<script src="{vresource_url('layouts/v7/lib/jquery/jquery-migrate-1.4.1.js')}"></script>
 
 		{* Modern Theme JavaScript - ARIDEM *}
-		<script src="{vresource_url('layouts/v7/resources/modern-theme.js')}"></script>
+		<script src="layouts/v7/resources/modern-theme.js?v={time()}"></script>
 		<script type="text/javascript">
 			var _META = { 'module': "{$MODULE}", view: "{$VIEW}", 'parent': "{$PARENT_MODULE}", 'notifier':"{$NOTIFIER_URL}", 'app':"{if isset($SELECTED_MENU_CATEGORY)} {$SELECTED_MENU_CATEGORY}{/if}" };
             {if $EXTENSION_MODULE}

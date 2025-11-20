@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 06:22:31
+/* Smarty version 4.5.5, created on 2025-11-20 12:52:41
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/JSResources.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691eb3a74ee752_86958559',
+  'unifunc' => 'content_691f0f197ef320_10130734',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691eb3a74ee752_86958559 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f0f197ef320_10130734 (Smarty_Internal_Template $_smarty_tpl) {
 echo '<script'; ?>
  type="text/javascript" src="<?php echo vresource_url('layouts/v7/lib/jquery/purl.js');?>
 "><?php echo '</script'; ?>
