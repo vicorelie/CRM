@@ -49,8 +49,8 @@
             </button>
 
             {* Bouton Inventaire *}
-            <button class="btn btn-default" id="inventory-button" onclick="window.open('index.php?module=Potentials&view=InventoryPopup&record={$RECORD->getId()}', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;">
-                📦 Inventaire
+            <button class="btn btn-success" id="inventory-button" onclick="window.open('index.php?module=Potentials&view=InventoryPopup&record={$RECORD->getId()}', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;">
+                <i class="fa fa-archive"></i> Inventaire
             </button>
             {if !empty($DETAILVIEW_LINKS['DETAILVIEW']) && ($DETAILVIEW_LINKS['DETAILVIEW']|@count gt 0)}
                 <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
