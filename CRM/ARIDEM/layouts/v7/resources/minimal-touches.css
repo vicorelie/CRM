@@ -61,14 +61,17 @@ select:focus {
     background-color: #E8F4F8;
 }
 
-/* Style des boutons - dimensions uniformes */
+/* Style des boutons - dimensions exactement uniformes */
 .btn,
+a.btn,
 button,
 input[type="button"],
 input[type="submit"] {
-    padding: 6px 12px;
-    border-radius: 5px;
-    font-size: 13px;
+    padding: 6px 12px !important;
+    border-radius: 5px !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    display: inline-block !important;
 }
 
 /* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
