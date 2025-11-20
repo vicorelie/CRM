@@ -15,6 +15,11 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
+		{* Google Fonts - Inter for modern typography *}
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 		<link type='text/css' rel='stylesheet' href='{vresource_url("libraries/bootstrap-legacy/css/bootstrap-responsive.min.css")}'> {* .row-fluid... *}
 		<link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/todc/css/bootstrap.min.css")}'>
 		<link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/todc/css/docs.min.css")}'>
@@ -29,7 +34,10 @@
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/malihu-custom-scrollbar/jquery.mCustomScrollbar.css")}'>
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/jquery.qtip.custom/jquery.qtip.css")}'>
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/daterangepicker/daterangepicker.css")}'>
-        
+
+        {* Modern Theme CSS - ARIDEM *}
+        <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/resources/modern-theme.css")}'>
+
         <input type="hidden" id="inventoryModules" value={ZEND_JSON::encode($INVENTORY_MODULES)}>
         {if isset($SELECTED_MENU_CATEGORY)}
         {assign var=V7_THEME_PATH value=Vtiger_Theme::getv7AppStylePath($SELECTED_MENU_CATEGORY)}
@@ -53,6 +61,9 @@
 		<script type="text/javascript">var __pageCreationTime = (new Date()).getTime();</script>
 		<script src="{vresource_url('layouts/v7/lib/jquery/jquery.min.js')}"></script>
 		<script src="{vresource_url('layouts/v7/lib/jquery/jquery-migrate-1.4.1.js')}"></script>
+
+		{* Modern Theme JavaScript - ARIDEM *}
+		<script src="{vresource_url('layouts/v7/resources/modern-theme.js')}"></script>
 		<script type="text/javascript">
 			var _META = { 'module': "{$MODULE}", view: "{$VIEW}", 'parent': "{$PARENT_MODULE}", 'notifier':"{$NOTIFIER_URL}", 'app':"{if isset($SELECTED_MENU_CATEGORY)} {$SELECTED_MENU_CATEGORY}{/if}" };
             {if $EXTENSION_MODULE}
