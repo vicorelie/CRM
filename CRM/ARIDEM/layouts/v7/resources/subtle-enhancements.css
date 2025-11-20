@@ -1,0 +1,190 @@
+/**
+ * ARIDEM CRM - Améliorations subtiles
+ * Bordures et graduations pour une meilleure lisibilité
+ * Sans casser le design existant
+ */
+
+/* Amélioration des bordures des champs de formulaire */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+textarea,
+select {
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Amélioration des tables - lignes alternées */
+.table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.table tbody tr:hover {
+    background-color: #f3f4f6;
+}
+
+/* Bordures plus visibles pour les tables */
+.table {
+    border: 1px solid #e5e7eb;
+}
+
+.table > thead > tr > th {
+    background-color: #f3f4f6;
+    border-bottom: 2px solid #d1d5db;
+    font-weight: 600;
+}
+
+.table > tbody > tr > td {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Amélioration des panels/widgets */
+.panel,
+.widget {
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.panel-heading,
+.widget-header {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+}
+
+/* Liste avec bordures améliorées */
+.listViewEntriesDiv,
+.listViewContentDiv {
+    border: 1px solid #e5e7eb;
+}
+
+/* Amélioration des boutons - bordures plus définies */
+.btn {
+    border-width: 1px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Amélioration des cartes de détail */
+.detailview-table,
+.recordDetails {
+    border: 1px solid #e5e7eb;
+}
+
+.detailview-table td {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+/* Amélioration visuelle des champs de label */
+.fieldLabel {
+    background-color: #f9fafb;
+    font-weight: 500;
+    border-right: 1px solid #e5e7eb;
+}
+
+.fieldValue {
+    background-color: #ffffff;
+}
+
+/* Bordures pour les sections */
+.blockData,
+.contents {
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+}
+
+/* Amélioration des dropdown menus */
+.dropdown-menu {
+    border: 1px solid #d1d5db;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Amélioration des modules avec séparation visuelle */
+.module-action-bar {
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+/* Amélioration du header */
+.listViewPageDiv .row-fluid,
+.listViewEntriesDiv .row-fluid {
+    border-bottom: 1px solid #f3f4f6;
+    padding: 8px 0;
+}
+
+/* Amélioration des filtres */
+.filterContainer,
+.searchContainer {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 10px;
+}
+
+/* Bordures pour les champs en lecture seule */
+.fieldValue[readonly],
+input[readonly],
+textarea[readonly] {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+/* Amélioration des modals */
+.modal-content {
+    border: 1px solid #d1d5db;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background-color: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+/* Amélioration des alertes */
+.alert {
+    border-width: 1px;
+    border-left-width: 4px;
+}
+
+/* Séparation visuelle des groupes de champs */
+.fieldBlockContainer {
+    border: 1px solid #e5e7eb;
+    margin-bottom: 15px;
+    background-color: #ffffff;
+}
+
+/* Amélioration des lignes sélectionnées */
+.listViewEntries.selected,
+tr.selected {
+    background-color: #dbeafe;
+    border-left: 3px solid #3b82f6;
+}
+
+/* Amélioration du pied de page des tables */
+.table tfoot tr {
+    background-color: #f3f4f6;
+    border-top: 2px solid #d1d5db;
+    font-weight: 600;
+}

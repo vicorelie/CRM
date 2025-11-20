@@ -35,8 +35,8 @@
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/jquery.qtip.custom/jquery.qtip.css")}'>
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/daterangepicker/daterangepicker.css")}'>
 
-        {* Monday Lite Theme - ARIDEM - DISABLED *}
-        {* <link type='text/css' rel='stylesheet' href='layouts/v7/resources/monday-lite-theme.css?v={time()}'> *}
+        {* Améliorations subtiles - ARIDEM *}
+        <link type='text/css' rel='stylesheet' href='layouts/v7/resources/subtle-enhancements.css?v={time()}'>
 
         <input type="hidden" id="inventoryModules" value={ZEND_JSON::encode($INVENTORY_MODULES)}>
         {if isset($SELECTED_MENU_CATEGORY)}
