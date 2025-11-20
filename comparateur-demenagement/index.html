@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DéménagePro - Comparez jusqu'à 5 devis gratuits</title>
+    <meta name="description" content="Comparez gratuitement jusqu'à 5 devis de déménageurs professionnels. Service rapide, simple et gratuit.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-truck-moving"></i>
+                    <span>DéménagePro</span>
+                </div>
+
+                <ul class="nav-menu">
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#how-it-works">Comment ça marche</a></li>
+                    <li><a href="#partners">Nos partenaires</a></li>
+                    <li><a href="#reviews">Avis clients</a></li>
+                </ul>
+
+                <button class="btn-primary" onclick="scrollToForm()">
+                    <i class="fas fa-calculator"></i> Obtenir un devis
+                </button>
+
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Comparez <span class="highlight">5 devis</span> de déménageurs en 2 minutes</h1>
+                    <p class="hero-description">
+                        Gratuit, rapide et sans engagement. Plus de 500 déménageurs partenaires dans toute la France.
+                    </p>
+
+                    <div class="trust-badges">
+                        <div class="badge">
+                            <i class="fas fa-check-circle"></i>
+                            <span>100% gratuit</span>
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Déménageurs vérifiés</span>
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-star"></i>
+                            <span>4.8/5 sur Google</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-form-container" id="form-container">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h2>Obtenez vos devis gratuits</h2>
+                            <p>Remplissez le formulaire en 2 minutes</p>
+                        </div>
+
+                        <!-- Progress bar -->
+                        <div class="progress-bar">
+                            <div class="progress-step active" data-step="1">
+                                <div class="step-number">1</div>
+                                <span>Déménagement</span>
+                            </div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="2">
+                                <div class="step-number">2</div>
+                                <span>Volume</span>
+                            </div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="3">
+                                <div class="step-number">3</div>
+                                <span>Contact</span>
+                            </div>
+                        </div>
+
+                        <!-- Multi-step form -->
+                        <form id="devis-form">
+                            <!-- Step 1: Déménagement -->
+                            <div class="form-step active" data-step="1">
+                                <div class="form-group">
+                                    <label for="depart">
+                                        <i class="fas fa-map-marker-alt"></i> D'où déménagez-vous ?
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="depart"
+                                        name="depart"
+                                        placeholder="Code postal ou ville"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="arrivee">
+                                        <i class="fas fa-map-marker-alt"></i> Où déménagez-vous ?
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="arrivee"
+                                        name="arrivee"
+                                        placeholder="Code postal ou ville"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="date-demenagement">
+                                        <i class="fas fa-calendar"></i> Date souhaitée du déménagement
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="date-demenagement"
+                                        name="date_demenagement"
+                                        required
+                                    >
+                                </div>
+
+                                <button type="button" class="btn-next" onclick="nextStep()">
+                                    Continuer <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+
+                            <!-- Step 2: Volume -->
+                            <div class="form-step" data-step="2">
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-home"></i> Type de logement actuel
+                                    </label>
+                                    <div class="radio-group">
+                                        <label class="radio-card">
+                                            <input type="radio" name="type_logement" value="studio" required>
+                                            <div class="radio-content">
+                                                <i class="fas fa-door-closed"></i>
+                                                <span>Studio</span>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="type_logement" value="t2">
+                                            <div class="radio-content">
+                                                <i class="fas fa-home"></i>
+                                                <span>T2</span>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="type_logement" value="t3">
+                                            <div class="radio-content">
+                                                <i class="fas fa-home"></i>
+                                                <span>T3</span>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="type_logement" value="t4+">
+                                            <div class="radio-content">
+                                                <i class="fas fa-hotel"></i>
+                                                <span>T4+</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="surface">
+                                        <i class="fas fa-ruler-combined"></i> Surface approximative (m²)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="surface"
+                                        name="surface"
+                                        placeholder="Ex: 60"
+                                        min="10"
+                                        max="500"
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-box"></i> Services additionnels
+                                    </label>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-card">
+                                            <input type="checkbox" name="emballage" value="1">
+                                            <span>Emballage</span>
+                                        </label>
+                                        <label class="checkbox-card">
+                                            <input type="checkbox" name="demontage" value="1">
+                                            <span>Démontage/Montage</span>
+                                        </label>
+                                        <label class="checkbox-card">
+                                            <input type="checkbox" name="stockage" value="1">
+                                            <span>Stockage</span>
+                                        </label>
+                                        <label class="checkbox-card">
+                                            <input type="checkbox" name="piano" value="1">
+                                            <span>Transport piano</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-buttons">
+                                    <button type="button" class="btn-prev" onclick="prevStep()">
+                                        <i class="fas fa-arrow-left"></i> Retour
+                                    </button>
+                                    <button type="button" class="btn-next" onclick="nextStep()">
+                                        Continuer <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Contact -->
+                            <div class="form-step" data-step="3">
+                                <div class="form-group">
+                                    <label for="nom">
+                                        <i class="fas fa-user"></i> Nom complet
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="nom"
+                                        name="nom"
+                                        placeholder="Votre nom"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email">
+                                        <i class="fas fa-envelope"></i> Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        placeholder="votre.email@exemple.fr"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="telephone">
+                                        <i class="fas fa-phone"></i> Téléphone
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        id="telephone"
+                                        name="telephone"
+                                        placeholder="06 12 34 56 78"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="consent" required>
+                                        <span>J'accepte d'être contacté par des déménageurs partenaires</span>
+                                    </label>
+                                </div>
+
+                                <div class="form-buttons">
+                                    <button type="button" class="btn-prev" onclick="prevStep()">
+                                        <i class="fas fa-arrow-left"></i> Retour
+                                    </button>
+                                    <button type="submit" class="btn-submit">
+                                        <i class="fas fa-check"></i> Recevoir mes devis
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how-it-works" class="section-how">
+        <div class="container">
+            <h2 class="section-title">Comment ça marche ?</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h3>1. Remplissez le formulaire</h3>
+                    <p>Décrivez votre déménagement en quelques clics</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <h3>2. Recevez jusqu'à 5 devis</h3>
+                    <p>Les déménageurs vous contactent sous 24h</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>3. Choisissez le meilleur</h3>
+                    <p>Comparez les offres et sélectionnez</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews -->
+    <section id="reviews" class="section-reviews">
+        <div class="container">
+            <h2 class="section-title">Ce que disent nos clients</h2>
+            <div class="reviews-grid">
+                <div class="review-card">
+                    <div class="review-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="review-text">"Service excellent ! J'ai reçu 4 devis en moins de 24h et j'ai économisé 30% par rapport à mon premier devis."</p>
+                    <p class="review-author">- Marie D., Paris</p>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="review-text">"Très pratique, gain de temps énorme. Les déménageurs étaient tous professionnels."</p>
+                    <p class="review-author">- Thomas L., Lyon</p>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="review-text">"Interface simple et efficace. J'ai pu comparer facilement les différentes offres."</p>
+                    <p class="review-author">- Sophie M., Marseille</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>DéménagePro</h4>
+                    <p>Votre comparateur de déménageurs de confiance</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#">Déménagement local</a></li>
+                        <li><a href="#">Déménagement longue distance</a></li>
+                        <li><a href="#">Déménagement international</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Informations</h4>
+                    <ul>
+                        <li><a href="#">Mentions légales</a></li>
+                        <li><a href="#">Politique de confidentialité</a></li>
+                        <li><a href="#">CGU</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <p>Email: contact@demenagepro.fr</p>
+                    <p>Tel: 01 23 45 67 89</p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 DéménagePro. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>

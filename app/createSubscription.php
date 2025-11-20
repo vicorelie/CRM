@@ -6,9 +6,9 @@ require 'config.php';       // Fichier contenant la connexion PDO ($pdo)
 require 'paypalConfig.php'; // Fichier de configuration PayPal
 
 // --- (Optionnel) Activez l'affichage des erreurs en debug (désactivez-les en prod) ---
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 /**
  * Fonction helper pour obtenir le token PayPal.

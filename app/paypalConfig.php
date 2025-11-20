@@ -38,9 +38,14 @@ define('PAYPAL_CANCEL_URL', 'https://wanatest.com/app/paypalCancel.php');
 // URL du webhook (pour notifications de paiement)
 define('PAYPAL_WEBHOOK_URL', 'https://wanatest.com/app/paypalWebhook.php');
 
-// ID des plans PayPal (à créer dans PayPal et à insérer ici)
-define('PAYPAL_PLAN_ID_MONTHLY', 'P-0YB63113TG9164313M6AR23I'); // Remplacez par votre PLAN_ID mensuel P-13J69014CV996281BM6BK4EQ
-define('PAYPAL_PLAN_ID_ANNUAL', 'P-44832832EB091042GM6B54LI');  // Remplacez par votre PLAN_ID annuel P-13J69014CV996281BM6BK4EQ
+// ID des plans PayPal - Utilise les plans sandbox ou live selon le mode
+if (PAYPAL_MODE === 'sandbox') {
+    define('PAYPAL_PLAN_ID_MONTHLY', $_ENV['PAYPAL_PLAN_ID_MONTHLY_SANDBOX'] ?? '');
+    define('PAYPAL_PLAN_ID_ANNUAL', $_ENV['PAYPAL_PLAN_ID_ANNUAL_SANDBOX'] ?? '');
+} else {
+    define('PAYPAL_PLAN_ID_MONTHLY', $_ENV['PAYPAL_PLAN_ID_MONTHLY_LIVE'] ?? 'P-0YB63113TG9164313M6AR23I');
+    define('PAYPAL_PLAN_ID_ANNUAL', $_ENV['PAYPAL_PLAN_ID_ANNUAL_LIVE'] ?? 'P-44832832EB091042GM6B54LI');
+}
 
 // Paramètres optionnels pour votre intégration
 // Nom de votre marque ou entreprise qui sera affiché dans PayPal

@@ -1,0 +1,91 @@
+╔═══════════════════════════════════════════════════════════╗
+║  🚚 DÉMÉNAGEPRO - COMPARATEUR DE DÉMÉNAGEMENT           ║
+║  Quick Start Guide                                       ║
+╚═══════════════════════════════════════════════════════════╝
+
+📍 EMPLACEMENT
+─────────────────────────────────────────────────────────────
+/var/www/comparateur-demenagement/
+
+🌐 ACCÈS
+─────────────────────────────────────────────────────────────
+Local: file:///var/www/comparateur-demenagement/index.html
+
+Pour configurer avec un domaine:
+1. Créer un virtual host dans Apache/Nginx
+2. Pointer vers /var/www/comparateur-demenagement
+3. Redémarrer le serveur web
+
+📊 BASE DE DONNÉES
+─────────────────────────────────────────────────────────────
+Nom: comparateur_demenagement
+Tables créées:
+  ✅ demandes_devis (demandes clients)
+  ✅ demenageurs (partenaires)
+  ✅ devis (offres des déménageurs)
+  ✅ avis (évaluations clients)
+
+Données de test:
+  ✅ 5 déménageurs fictifs déjà insérés
+
+🔐 SÉCURITÉ
+─────────────────────────────────────────────────────────────
+✅ PDO avec prepared statements
+✅ Validation côté client + serveur
+✅ Protection SQL injection
+✅ Filtrage des inputs
+
+📁 FICHIERS PRINCIPAUX
+─────────────────────────────────────────────────────────────
+index.html              - Page d'accueil avec formulaire
+css/style.css          - Styles modernes
+js/app.js              - Logique frontend
+api/submit-devis.php   - API backend sécurisée
+database.sql           - Script SQL
+README.md              - Documentation complète
+
+🧪 TESTER
+─────────────────────────────────────────────────────────────
+1. Ouvrir: file:///var/www/comparateur-demenagement/index.html
+2. Remplir le formulaire en 3 étapes
+3. Soumettre
+4. Vérifier dans la DB:
+   mysql -u root -p
+   USE comparateur_demenagement;
+   SELECT * FROM demandes_devis;
+
+📖 DOCUMENTATION
+─────────────────────────────────────────────────────────────
+Lire: /var/www/comparateur-demenagement/README.md
+
+💡 FEATURES INCLUSES
+─────────────────────────────────────────────────────────────
+✅ Formulaire multi-étapes (3 steps)
+✅ Design responsive (mobile, tablet, desktop)
+✅ Validation en temps réel
+✅ API REST sécurisée
+✅ Base de données relationnelle
+✅ Gestion des déménageurs partenaires
+✅ Système d'avis clients
+✅ Statistiques & reporting (vues SQL)
+
+🚀 PROCHAINES ÉTAPES
+─────────────────────────────────────────────────────────────
+□ Créer un dashboard admin
+□ Espace déménageur (login, gestion)
+□ Envoi d'emails automatiques
+□ Système de matching intelligent
+□ Page de comparaison des devis
+□ Blog & conseils
+□ Analytics & tracking
+
+📞 SUPPORT
+─────────────────────────────────────────────────────────────
+Documentation: README.md
+Logs PHP: /var/log/php-fpm/error.log
+Logs serveur: /var/log/nginx/ ou /var/log/httpd/
+
+═══════════════════════════════════════════════════════════════
+Créé par Claude Code - 2025-11-10
+Version 1.0.0
+═══════════════════════════════════════════════════════════════
