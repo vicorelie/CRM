@@ -15,10 +15,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
-		{* Google Fonts - Inter for modern typography *}
+		{* Google Fonts - Roboto for Monday.com style *}
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 		<link type='text/css' rel='stylesheet' href='{vresource_url("libraries/bootstrap-legacy/css/bootstrap-responsive.min.css")}'> {* .row-fluid... *}
 		<link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/todc/css/bootstrap.min.css")}'>
@@ -35,8 +35,8 @@
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/jquery.qtip.custom/jquery.qtip.css")}'>
         <link type='text/css' rel='stylesheet' href='{vresource_url("layouts/v7/lib/jquery/daterangepicker/daterangepicker.css")}'>
 
-        {* Modern Theme CSS - ARIDEM - DISABLED *}
-        {* <link type='text/css' rel='stylesheet' href='layouts/v7/resources/modern-theme.css?v={time()}'> *}
+        {* Monday Lite Theme - ARIDEM (Léger et progressif) *}
+        <link type='text/css' rel='stylesheet' href='layouts/v7/resources/monday-lite-theme.css?v={time()}'>
 
         <input type="hidden" id="inventoryModules" value={ZEND_JSON::encode($INVENTORY_MODULES)}>
         {if isset($SELECTED_MENU_CATEGORY)}
