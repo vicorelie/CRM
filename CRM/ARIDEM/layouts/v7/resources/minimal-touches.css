@@ -61,18 +61,12 @@ select:focus {
     background-color: #E8F4F8;
 }
 
-/* Style des boutons */
+/* Style des boutons - juste les coins arrondis */
 .btn,
 button,
 input[type="button"],
 input[type="submit"] {
-    padding: 10px 20px;
-    border: none;
     border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s;
 }
 
 /* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
