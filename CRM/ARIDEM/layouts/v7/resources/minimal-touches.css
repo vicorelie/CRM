@@ -80,6 +80,16 @@ select:focus {
     font-size: 14px;
 }
 
+/* Bordures pour délimiter les champs dans les détails */
+.detailview-table td,
+.fieldLabel,
+.fieldValue {
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
 /* Style des boutons */
 .btn,
 button,
