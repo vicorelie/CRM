@@ -3,7 +3,7 @@
  * Juste quelques améliorations très légères sans changer le design
  */
 
-/* Bordure très légère sur les champs de formulaire - presque invisible */
+/* Style des champs de formulaire */
 .form-control,
 input[type="text"],
 input[type="email"],
@@ -11,7 +11,10 @@ input[type="password"],
 input[type="number"],
 textarea,
 select {
-    border-color: #e0e0e0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
 }
 
 .form-control:focus,
