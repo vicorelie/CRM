@@ -25,8 +25,8 @@ try {
         throw new Exception('Erreur de connexion à la base de données');
     }
 
-    // Mettre à jour l'enregistrement
-    $stmt = $conn->prepare("UPDATE vtiger_potential
+    // Mettre à jour l'enregistrement dans la table des custom fields
+    $stmt = $conn->prepare("UPDATE vtiger_potentialscf
                             SET cf_volume_inventaire = ?,
                                 cf_cartons_estimes = ?,
                                 cf_inventaire_json = ?
