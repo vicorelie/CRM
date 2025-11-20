@@ -29,14 +29,15 @@ try {
     $stmt = $conn->prepare("UPDATE vtiger_potentialscf
                             SET cf_volume_inventaire = ?,
                                 cf_cartons_estimes = ?,
-                                cf_inventaire_json = ?
+                                cf_inventaire_json = ?,
+                                cf_volume_m3_estime = ?
                             WHERE potentialid = ?");
 
     if (!$stmt) {
         throw new Exception('Erreur de préparation de la requête: ' . $conn->error);
     }
 
-    $stmt->bind_param('disi', $volume, $boxes, $inventory, $recordId);
+    $stmt->bind_param('disdi', $volume, $boxes, $inventory, $volume, $recordId);
 
     if (!$stmt->execute()) {
         throw new Exception('Erreur lors de la sauvegarde: ' . $stmt->error);

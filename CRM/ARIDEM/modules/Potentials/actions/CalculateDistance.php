@@ -13,9 +13,38 @@ class Potentials_CalculateDistance_Action extends Vtiger_Action_Controller {
         $origin = $request->get('origin');
         $destination = $request->get('destination');
         $recordId = $request->get('record');
+        $distance = $request->get('distance'); // Distance déjà calculée
+        $duration = $request->get('duration'); // Durée déjà calculée
 
         $response = array('success' => false);
 
+        // Si la distance est déjà fournie, on sauvegarde directement
+        if (!empty($distance) && !empty($recordId)) {
+            try {
+                $recordModel = Vtiger_Record_Model::getInstanceById($recordId, 'Potentials');
+                $recordModel->set('mode', 'edit');
+                $recordModel->set('cf_distance_km', $distance);
+                $recordModel->save();
+
+                $response['success'] = true;
+                $response['distance'] = $distance;
+                $response['duration'] = $duration;
+                $response['message'] = 'Distance sauvegardée avec succès';
+
+                $responseObj = new Vtiger_Response();
+                $responseObj->setResult($response);
+                $responseObj->emit();
+                return;
+            } catch (Exception $e) {
+                $response['error'] = $e->getMessage();
+                $responseObj = new Vtiger_Response();
+                $responseObj->setResult($response);
+                $responseObj->emit();
+                return;
+            }
+        }
+
+        // Sinon, on calcule avec l'API Google Maps
         try {
             // Utiliser l'API Google Maps Distance Matrix (gratuite jusqu'à 2500 requêtes/jour)
             // Note: Vous devrez obtenir une clé API Google Maps et la configurer

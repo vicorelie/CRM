@@ -247,15 +247,6 @@ $distance = $recordModel->get('cf_distance_km');
                 </div>
             </div>
 
-            <!-- Boutons d'action -->
-            <div class="button-row">
-                <a href="https://www.google.com/maps/dir/?api=1&origin=<?php echo urlencode($adresseCompletOrigine); ?>&destination=<?php echo urlencode($adresseCompletDestination); ?>&travelmode=driving"
-                   target="_blank"
-                   class="btn btn-primary">
-                    🗺️ Ouvrir dans Google Maps
-                </a>
-            </div>
-
             <!-- Google Street View côte à côte -->
             <div class="maps-container">
                 <div class="map-box">
@@ -272,6 +263,16 @@ $distance = $recordModel->get('cf_distance_km');
             <div class="itinerary-box">
                 <h3>🚗 Itinéraire sur Google Maps</h3>
                 <div id="map" style="width: 100%; height: 600px;"></div>
+            </div>
+
+            <!-- Bouton Ouvrir dans Google Maps -->
+            <div class="button-row" style="margin-top: 20px;">
+                <a href="https://www.google.com/maps/dir/?api=1&origin=<?php echo urlencode($adresseCompletOrigine); ?>&destination=<?php echo urlencode($adresseCompletDestination); ?>&travelmode=driving"
+                   target="_blank"
+                   class="btn btn-success"
+                   style="font-size: 18px; padding: 15px 30px;">
+                    🗺️ Ouvrir dans Google Maps
+                </a>
             </div>
 
             <!-- Google Maps JavaScript API -->
