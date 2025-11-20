@@ -49,7 +49,7 @@
             </button>
 
             {* Bouton Inventaire *}
-            <button class="btn btn-success" id="inventory-button" onclick="window.open('index.php?module=Potentials&view=InventoryPopup&record={$RECORD->getId()}', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;" style="background-color: #667EEA; border-color: #667EEA;">
+            <button class="btn" id="inventory-button" onclick="window.open('index.php?module=Potentials&view=InventoryPopup&record={$RECORD->getId()}', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;" style="background-color: #667EEA !important; border-color: #667EEA !important; color: white;">
                 <i class="fa fa-archive"></i> Inventaire
             </button>
             {if !empty($DETAILVIEW_LINKS['DETAILVIEW']) && ($DETAILVIEW_LINKS['DETAILVIEW']|@count gt 0)}
