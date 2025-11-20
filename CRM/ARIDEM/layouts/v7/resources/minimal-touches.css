@@ -62,3 +62,14 @@ select:focus {
 }
 
 /* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
+
+/* Checkboxes et boutons radio - s'assurer qu'ils sont visibles */
+input[type="checkbox"],
+input[type="radio"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 15px !important;
+    height: 15px !important;
+    cursor: pointer;
+}
