@@ -61,35 +61,6 @@ select:focus {
     background-color: #E8F4F8;
 }
 
-/* Style des champs dans les détails */
-.detailview-table input[type="text"],
-.detailview-table input[type="email"],
-.detailview-table input[type="password"],
-.detailview-table input[type="number"],
-.detailview-table textarea,
-.detailview-table select,
-.fieldValue input[type="text"],
-.fieldValue input[type="email"],
-.fieldValue input[type="password"],
-.fieldValue input[type="number"],
-.fieldValue textarea,
-.fieldValue select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-/* Bordures pour délimiter les champs dans les détails */
-.detailview-table td,
-.fieldLabel,
-.fieldValue {
-    padding: 10px;
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
 /* Style des boutons */
 .btn,
 button,
