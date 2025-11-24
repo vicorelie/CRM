@@ -1,0 +1,119 @@
+<?php
+/* Smarty version 4.5.5, created on 2025-11-21 09:11:44
+  from '/var/www/CRM/CRM-TYPE/layouts/v7/modules/EMAILMaker/Detail.tpl' */
+
+/* @var Smarty_Internal_Template $_smarty_tpl */
+if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
+  'version' => '4.5.5',
+  'unifunc' => 'content_69202cd03dde80_89163497',
+  'has_nocache_code' => false,
+  'file_dependency' => 
+  array (
+    'a46f36a982bf7ae1598e5697a61ae69231ef68fc' => 
+    array (
+      0 => '/var/www/CRM/CRM-TYPE/layouts/v7/modules/EMAILMaker/Detail.tpl',
+      1 => 1754577898,
+      2 => 'file',
+    ),
+  ),
+  'includes' => 
+  array (
+  ),
+),false)) {
+function content_69202cd03dde80_89163497 (Smarty_Internal_Template $_smarty_tpl) {
+?><div class="detailview-content container-fluid"><div class="details row"><form id="detailView" method="post" action="index.php" name="etemplatedetailview" onsubmit="VtigerJS_DialogBox.block();"><input type="hidden" name="action" value=""><input type="hidden" name="view" value=""><input type="hidden" name="module" value="EMAILMaker"><input type="hidden" name="retur_module" value="EMAILMaker"><input type="hidden" name="return_action" value="EMAILMaker"><input type="hidden" name="return_view" value="Detail"><input type="hidden" name="record" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
+"><input type="hidden" name="templateid" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
+"><input type="hidden" name="parenttab" value="<?php echo $_smarty_tpl->tpl_vars['PARENTTAB']->value;?>
+"><input type="hidden" name="isDuplicate" value="false"><input type="hidden" name="subjectChanged" value=""><input id="recordId" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
+" type="hidden"><div class="col-lg-12"><div class="left-block col-lg-4"><div class="summaryView"><div class="summaryViewHeader"><h4 class="display-inline-block"><?php echo vtranslate('LBL_TEMPLATE_INFORMATIONS','EMAILMaker');?>
+</h4></div><div class="summaryViewFields"><div class="recordDetails"><table class="summary-table no-border"><tbody><tr class="summaryViewEntries"><td class="fieldLabel"><label class="muted textOverflowEllipsis"><?php echo vtranslate('LBL_EMAIL_NAME','EMAILMaker');?>
+</label></td><td class="fieldValue"><?php echo $_smarty_tpl->tpl_vars['TEMPLATENAME']->value;?>
+</td></tr><tr class="summaryViewEntries"><td class="fieldLabel"><label class="muted textOverflowEllipsis"><?php echo vtranslate('LBL_DESCRIPTION','EMAILMaker');?>
+</label></td><td class="fieldValue" valign=top><?php echo $_smarty_tpl->tpl_vars['DESCRIPTION']->value;?>
+</td></tr><?php if ($_smarty_tpl->tpl_vars['MODULENAME']->value != '') {?><tr class="summaryViewEntries"><td class="fieldLabel"><label class="muted textOverflowEllipsis"><?php echo vtranslate('LBL_MODULENAMES','EMAILMaker');?>
+</label></td><td class="fieldValue" valign=top><?php echo $_smarty_tpl->tpl_vars['MODULENAME']->value;?>
+</td></tr><?php }?><tr class="summaryViewEntries"><td class="fieldLabel"><label class="muted textOverflowEllipsis"><?php echo vtranslate('Status');?>
+</label></td><td class="fieldValue" valign=top><?php echo $_smarty_tpl->tpl_vars['IS_ACTIVE']->value;?>
+</td></tr><tr class="summaryViewEntries"><td class="fieldLabel"><label class="muted textOverflowEllipsis"><?php echo vtranslate('LBL_SETASDEFAULT','EMAILMaker');?>
+</label></td><td class="fieldValue" valign=top><?php echo $_smarty_tpl->tpl_vars['IS_DEFAULT']->value;?>
+</td></tr></tbody></table></div></div></div><br><?php if ($_smarty_tpl->tpl_vars['MODULENAME']->value != '') {?><div class="summaryView"><div class="summaryViewHeader"><h4 class="display-inline-block"><?php echo vtranslate('LBL_DISPLAY_TAB',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</h4><div class="pull-right"><button type="button" class="btn btn-default editDisplayConditions" data-url="index.php?module=EMAILMaker&view=EditDisplayConditions&record=<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
+">&nbsp;<?php echo vtranslate('LBL_EDIT',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+&nbsp;<?php echo vtranslate('LBL_CONDITIONS',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</button></div></div><div class="summaryViewFields"><div class="recordDetails"><?php $_smarty_tpl->_subTemplateRender(call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'vtemplate_path' ][ 0 ], array( 'DetailDisplayConditions.tpl',$_smarty_tpl->tpl_vars['MODULE']->value )), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, true);
+?></div></div></div><br><?php }
+if ($_smarty_tpl->tpl_vars['ISSTYLESACTIVE']->value == "yes") {?><div class="summaryView"><div class="summaryViewHeader"><h4 class="display-inline-block"><?php echo vtranslate('LBL_CSS_STYLE_TAB',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</h4><div class="pull-right"><button type="button" class="btn btn-default addButton addStyleContentBtn" data-modulename="ITS4YouStyles"><?php echo vtranslate('LBL_ADD');?>
+&nbsp;<?php echo vtranslate('SINGLE_ITS4YouStyles','ITS4YouStyles');?>
+</button>&nbsp;&nbsp;<button type="button" class="btn btn-default addButton selectTemplateRelation" data-modulename="ITS4YouStyles">&nbsp;<?php echo vtranslate('LBL_SELECT');?>
+&nbsp;<?php echo vtranslate('SINGLE_ITS4YouStyles','ITS4YouStyles');?>
+</button></div></div><br><div class="summaryWidgetContainer noContent"><?php if ($_smarty_tpl->tpl_vars['STYLES_LIST']->value) {?><div id="table-content" class="table-container"><table id="listview-table" class="table listview-table"><thead><tr class="listViewContentHeader"><th style="width:55px;"></th><th nowrap><?php echo vtranslate('Name','ITS4YouStyles');?>
+</th><th nowrap><?php echo vtranslate('Priority','ITS4YouStyles');?>
+</th></tr></thead><tbody class="overflow-y"><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['STYLES_LIST']->value, 'style_data');
+$_smarty_tpl->tpl_vars['style_data']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['style_data']->value) {
+$_smarty_tpl->tpl_vars['style_data']->do_else = false;
+?><tr class="" data-id="<?php echo $_smarty_tpl->tpl_vars['style_data']->value['id'];?>
+" data-module="ITS4YouStyles"><td style="width:55px"><?php if ($_smarty_tpl->tpl_vars['style_data']->value['iseditable'] == "yes") {?><span class="actionImages">&nbsp;&nbsp;&nbsp;<a name="styleEdit" data-url="index.php?module=ITS4YouStyles&view=Edit&record=<?php echo $_smarty_tpl->tpl_vars['style_data']->value['id'];?>
+"><i title="Edit" class="fa fa-pencil"></i></a> &nbsp;&nbsp;<a class="relationDelete"><i title="<?php echo vtranslate('LBL_UNLINK',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+" class="vicon-linkopen"></i></a></span><?php }?></td><td class="listViewEntryValue textOverflowEllipsis " width="%" nowrap><a name="styleEdit" data-url="index.php?module=ITS4YouStyles&view=Detail&record=<?php echo $_smarty_tpl->tpl_vars['style_data']->value['id'];?>
+"><?php echo $_smarty_tpl->tpl_vars['style_data']->value['name'];?>
+</a></td><td class="listViewEntryValue textOverflowEllipsis " width="%" nowrap><?php echo $_smarty_tpl->tpl_vars['style_data']->value['priority'];?>
+</td></tr><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></tbody></table></div><?php } else { ?><p class="textAlignCenter"><?php echo vtranslate('LBL_NO_RELATED',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+ <?php echo vtranslate('LBL_STYLES',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</p><?php }?></div></div><br><?php }
+if ($_smarty_tpl->tpl_vars['ISDOCUMENTSACTIVE']->value == "yes") {?><div class="summaryView"><div class="summaryViewHeader"><h4 class="display-inline-block"><?php echo vtranslate('Documents',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</h4><div class="pull-right"><button type="button" class="btn btn-default addButton selectTemplateRelation" data-modulename="Documents">&nbsp;<?php echo vtranslate('LBL_SELECT');?>
+&nbsp;<?php echo vtranslate('SINGLE_Documents','Documents');?>
+</button></div></div><br><div class="summaryWidgetContainer noContent"><?php if ($_smarty_tpl->tpl_vars['DOCUMENTS_RECORDS']->value != '') {?><div id="table-content" class="table-container"><table id="listview-table" class="table listview-table"><thead><tr class="listViewContentHeader"><?php if ($_smarty_tpl->tpl_vars['IS_DELETABLE']->value) {?><th style="width:20px"></th><?php }
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DOCUMENTS_HEADERS']->value, 'HEADER_LABEL', false, 'HEADER_FIELD', 'docforeach', array (
+  'last' => true,
+  'iteration' => true,
+  'total' => true,
+));
+$_smarty_tpl->tpl_vars['HEADER_LABEL']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['HEADER_FIELD']->value => $_smarty_tpl->tpl_vars['HEADER_LABEL']->value) {
+$_smarty_tpl->tpl_vars['HEADER_LABEL']->do_else = false;
+$_smarty_tpl->tpl_vars['__smarty_foreach_docforeach']->value['iteration']++;
+$_smarty_tpl->tpl_vars['__smarty_foreach_docforeach']->value['last'] = $_smarty_tpl->tpl_vars['__smarty_foreach_docforeach']->value['iteration'] === $_smarty_tpl->tpl_vars['__smarty_foreach_docforeach']->value['total'];
+?><th <?php if ((isset($_smarty_tpl->tpl_vars['__smarty_foreach_docforeach']->value['last']) ? $_smarty_tpl->tpl_vars['__smarty_foreach_docforeach']->value['last'] : null)) {?> colspan="2" <?php }?> nowrap class="<?php echo $_smarty_tpl->tpl_vars['WIDTHTYPE']->value;?>
+"><?php echo vtranslate($_smarty_tpl->tpl_vars['HEADER_LABEL']->value,$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</th><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></tr></thead><tbody class="overflow-y"><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DOCUMENTS_RECORDS']->value, 'DOCUMENTS_RECORD');
+$_smarty_tpl->tpl_vars['DOCUMENTS_RECORD']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['DOCUMENTS_RECORD']->value) {
+$_smarty_tpl->tpl_vars['DOCUMENTS_RECORD']->do_else = false;
+?><tr class="listViewEntries" data-module="Documents" data-id="<?php echo $_smarty_tpl->tpl_vars['DOCUMENTS_RECORD']->value['id'];?>
+" data-recordurl="index.php?module=Documents&amp;view=Detail&amp;record=<?php echo $_smarty_tpl->tpl_vars['DOCUMENTS_RECORD']->value['id'];?>
+"><?php if ($_smarty_tpl->tpl_vars['IS_DELETABLE']->value) {?><td nowrap style="width:20px"><span class="actionImages"><a class="relationDelete"><i title="<?php echo vtranslate('LBL_UNLINK',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+" class="vicon-linkopen alignMiddle"></i></a></span></td><?php }
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DOCUMENTS_HEADERS']->value, 'HEADER_LABEL', false, 'HEADER_FIELD', 'docrecordsforeach', array (
+));
+$_smarty_tpl->tpl_vars['HEADER_LABEL']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['HEADER_FIELD']->value => $_smarty_tpl->tpl_vars['HEADER_LABEL']->value) {
+$_smarty_tpl->tpl_vars['HEADER_LABEL']->do_else = false;
+?><td class="<?php echo $_smarty_tpl->tpl_vars['WIDTHTYPE']->value;?>
+" nowrap><?php echo $_smarty_tpl->tpl_vars['DOCUMENTS_RECORD']->value[$_smarty_tpl->tpl_vars['HEADER_FIELD']->value];?>
+</td><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></tr><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></tbody></table></div><?php } else { ?><p class="textAlignCenter"><?php echo vtranslate('LBL_NO_RELATED',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+ <?php echo vtranslate('Documents',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</p><?php }?></div></div><br><?php }?></div><div class="middle-block col-lg-8"><div class="summaryView"><div class="summaryViewFields"><div class="recordDetails"><b><?php echo vtranslate('LBL_EMAIL_SUBJECT',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+:</b>&nbsp;<?php echo $_smarty_tpl->tpl_vars['SUBJECT']->value;?>
+</div></div></div><div id="ContentEditorTabs"><ul class="nav nav-pills"><li class="active" data-type="body"><a href="#body_div2" aria-expanded="false" style="margin-right: 5px" data-toggle="tab"><?php echo vtranslate('LBL_BODY',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+</a></li></ul></div><div class="tab-content"><div class="tab-pane active" id="body_div2"><div id="previewcontent_body" class="hide"><?php echo $_smarty_tpl->tpl_vars['BODY']->value;?>
+</div><iframe id="preview_body" class="col-lg-12" style="height:1200px;"></iframe></div></div></div></div></form></div></div><?php echo '<script'; ?>
+ type="text/javascript">
+        jQuery(document).ready(function () {
+            EMAILMaker_Detail_Js.setPreviewContent('body');
+        });
+    <?php echo '</script'; ?>
+><?php }
+}

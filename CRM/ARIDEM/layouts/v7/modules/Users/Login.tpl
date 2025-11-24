@@ -224,12 +224,12 @@
 						<input type="hidden" name="module" value="Users"/>
 						<input type="hidden" name="action" value="Login"/>
 						<div class="group">
-							<input id="username" type="text" name="username" placeholder="Utilisateur">
+							<input id="username" type="text" name="username">
 							<span class="bar"></span>
 							<label>Utilisateur</label>
 						</div>
 						<div class="group">
-							<input id="password" type="password" name="password" placeholder="Mot de passe">
+							<input id="password" type="password" name="password">
 							<span class="bar"></span>
 							<label>Mot de passe</label>
 						</div>
@@ -254,12 +254,12 @@
 				<div id="forgotPasswordDiv" class="hide">
 					<form class="form-horizontal" action="forgotPassword.php" method="POST">
 						<div class="group">
-							<input id="fusername" type="text" name="username" placeholder="Utilisateur" >
+							<input id="fusername" type="text" name="username">
 							<span class="bar"></span>
 							<label>Utilisateur</label>
 						</div>
 						<div class="group">
-							<input id="email" type="email" name="emailId" placeholder="Email" >
+							<input id="email" type="email" name="emailId">
 							<span class="bar"></span>
 							<label>Email</label>
 						</div>

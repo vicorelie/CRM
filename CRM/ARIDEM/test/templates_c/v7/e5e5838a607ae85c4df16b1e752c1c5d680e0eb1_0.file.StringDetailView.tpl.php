@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:25
+/* Smarty version 4.5.5, created on 2025-11-20 20:40:47
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/uitypes/StringDetailView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e09532f47_45108144',
+  'unifunc' => 'content_691f7ccfcbde09_10258950',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e09532f47_45108144 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f7ccfcbde09_10258950 (Smarty_Internal_Template $_smarty_tpl) {
 if ($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldDataType() == 'picklist' && $_smarty_tpl->tpl_vars['MODULE']->value != 'Users') {?>
     <?php $_smarty_tpl->_assignInScope('PICKLIST_COLOR', Settings_Picklist_Module_Model::getPicklistColorByValue($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getName(),$_smarty_tpl->tpl_vars['FIELD_MODEL']->value->get('fieldvalue')));?>  
     <span <?php if (!empty($_smarty_tpl->tpl_vars['PICKLIST_COLOR']->value)) {?> class="picklist-color" style="background-color: <?php echo $_smarty_tpl->tpl_vars['PICKLIST_COLOR']->value;?>

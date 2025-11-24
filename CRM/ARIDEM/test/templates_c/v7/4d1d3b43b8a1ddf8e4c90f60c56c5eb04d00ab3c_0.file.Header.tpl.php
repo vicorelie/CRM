@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:25
+/* Smarty version 4.5.5, created on 2025-11-20 20:39:21
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/Header.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e094e4614_56936306',
+  'unifunc' => 'content_691f7c79dce829_66340025',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '4d1d3b43b8a1ddf8e4c90f60c56c5eb04d00ab3c' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/Header.tpl',
-      1 => 1763644288,
+      1 => 1763670868,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e094e4614_56936306 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f7c79dce829_66340025 (Smarty_Internal_Template $_smarty_tpl) {
 ?><!DOCTYPE html><html><head><title><?php echo vtranslate($_smarty_tpl->tpl_vars['PAGETITLE']->value,$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </title><link rel="SHORTCUT ICON" href="layouts/v7/skins/images/favicon.ico"><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet"><link type='text/css' rel='stylesheet' href='<?php echo vresource_url("libraries/bootstrap-legacy/css/bootstrap-responsive.min.css");?>
 '> <link type='text/css' rel='stylesheet' href='<?php echo vresource_url("layouts/v7/lib/todc/css/bootstrap.min.css");?>

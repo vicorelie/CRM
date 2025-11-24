@@ -11,7 +11,7 @@
 	<p>
 		Développement et design By&nbsp;
 		<a href="https://webama.fr/" target="_blank"><b>WEBAMA</b></a>&nbsp;|&nbsp;
-		<a href="https://tcerenov-design.com" target="_blank"><b>SOCIÉTÉ TCE RENOV DESIGN</b></a>&nbsp;|&nbsp;Tout droit réservé - © 2018 - {date('Y')}
+		<a href="https://webama.fr/" target="_blank"><b>SOCIÉTÉ AMYAS TRANSPORT</b></a>&nbsp;|&nbsp;Tout droit réservé - © 2018 - {date('Y')}
 	</p>
 </footer>
 </div>

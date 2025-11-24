@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:25
+/* Smarty version 4.5.5, created on 2025-11-20 21:12:22
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/dashboards/DashBoardHeader.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e09e87dc8_89690999',
+  'unifunc' => 'content_691f8436df2b24_40767002',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e09e87dc8_89690999 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f8436df2b24_40767002 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 

@@ -78,14 +78,11 @@
 							<button type="button" class="button{if $MODULE=='Leads'} active{/if}" onclick="window.location.href='/index.php?module=Leads&view=List&app=MARKETING';">
 							PROSPECTS
 							</button>
-							<button type="button" class="button{if $MODULE=='Accounts'} active{/if}" onclick="window.location.href='/index.php?module=Accounts&view=List&app=MARKETING';">
-							COMPTES
-							</button>
 							<button type="button" class="button{if $MODULE=='Contacts'} active{/if}" onclick="window.location.href='/index.php?module=Contacts&view=List&app=SALES';">
 							CONTACTS
 							</button>
 							<button type="button" class="button{if $MODULE=='Potentials'} active{/if}" onclick="window.location.href='/index.php?module=Potentials&view=List&app=SALES';">
-							AFFAIRES
+							DÉMÉNAGEMENT
 							</button>
 						</div>
 						</li>

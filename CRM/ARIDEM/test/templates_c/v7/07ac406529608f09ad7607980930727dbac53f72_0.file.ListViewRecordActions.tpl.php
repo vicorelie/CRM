@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:57:47
+/* Smarty version 4.5.5, created on 2025-11-20 20:40:41
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/ListViewRecordActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e5b0aa239_78182041',
+  'unifunc' => 'content_691f7cc907ae44_23009318',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e5b0aa239_78182041 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f7cc907ae44_23009318 (Smarty_Internal_Template $_smarty_tpl) {
 ?><!--LIST VIEW RECORD ACTIONS--><div class="table-actions"><?php if (!$_smarty_tpl->tpl_vars['SEARCH_MODE_RESULTS']->value) {?><span class="input" ><input type="checkbox" value="<?php echo $_smarty_tpl->tpl_vars['LISTVIEW_ENTRY']->value->getId();?>
 " class="listViewEntriesCheckBox"/></span><?php }
 if ($_smarty_tpl->tpl_vars['LISTVIEW_ENTRY']->value->get('starred') == vtranslate('LBL_YES',$_smarty_tpl->tpl_vars['MODULE']->value)) {

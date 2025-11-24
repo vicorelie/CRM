@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:26
+/* Smarty version 4.5.5, created on 2025-11-23 20:03:58
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/GetPDFButtons.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e0a5b1878_01044396',
+  'unifunc' => 'content_692368ae3a80e5_28684177',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'f297d3710564cf625b4512228fa54c061627c606' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/GetPDFButtons.tpl',
-      1 => 1763028180,
+      1 => 1763928225,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e0a5b1878_01044396 (Smarty_Internal_Template $_smarty_tpl) {
+function content_692368ae3a80e5_28684177 (Smarty_Internal_Template $_smarty_tpl) {
 if ($_smarty_tpl->tpl_vars['ENABLE_PDFMAKER']->value == 'true' && $_smarty_tpl->tpl_vars['CRM_TEMPLATES_EXIST']->value == '0') {?><div class="pull-right" id="PDFMakerContentDiv" style="padding-left: 5px;"><div class="clearfix"><div class="btn-group pull-right"><button class="btn btn-default selectPDFTemplates"><i title="<?php echo vtranslate('LBL_EXPORT_TO_PDF','PDFMaker');?>
 " class="fa fa-file-pdf-o" aria-hidden="true"></i>&nbsp;<?php echo vtranslate('LBL_EXPORT_TO_PDF','PDFMaker');?>
 </button><button type="button" class="btn btn-default dropdown-toggle dropdown-toggle-split PDFMoreAction" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php echo vtranslate('LBL_MORE','PDFMaker');?>

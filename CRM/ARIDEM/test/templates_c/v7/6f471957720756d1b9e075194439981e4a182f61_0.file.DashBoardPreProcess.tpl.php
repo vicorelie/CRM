@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:25
+/* Smarty version 4.5.5, created on 2025-11-20 21:12:22
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/dashboards/DashBoardPreProcess.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e09e4f1a9_31800315',
+  'unifunc' => 'content_691f8436dbf247_42305789',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -22,7 +22,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/partials/SidebarHeader.tpl' => 1,
   ),
 ),false)) {
-function content_691f1e09e4f1a9_31800315 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f8436dbf247_42305789 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_subTemplateRender("file:modules/Vtiger/partials/Topbar.tpl", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, false);
 ?>
 

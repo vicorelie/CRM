@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:57:47
+/* Smarty version 4.5.5, created on 2025-11-20 20:40:41
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/PicklistColorMap.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e5b053886_42698302',
+  'unifunc' => 'content_691f7cc903b582_00340019',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e5b053886_42698302 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f7cc903b582_00340019 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <style type="text/css">
     <?php

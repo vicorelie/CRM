@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:25
+/* Smarty version 4.5.5, created on 2025-11-20 20:39:21
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/partials/Topbar.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e094d7e68_05042589',
+  'unifunc' => 'content_691f7c79dc3316_83322865',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'e8725d8ac5d44bc7ba005c2f3a1d5c82487b1779' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/partials/Topbar.tpl',
-      1 => 1754546702,
+      1 => 1763657750,
       2 => 'file',
     ),
   ),
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/Header.tpl' => 1,
   ),
 ),false)) {
-function content_691f1e094d7e68_05042589 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f7c79dc3316_83322865 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_subTemplateRender("file:modules/Vtiger/Header.tpl", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, false);
 $_smarty_tpl->_assignInScope('APP_IMAGE_MAP', Vtiger_MenuStructure_Model::getAppIcons());?>
 		<style>
@@ -52,7 +52,7 @@ echo $_smarty_tpl->tpl_vars['APP_IMAGE_MAP']->value[$_smarty_tpl->tpl_vars['SELE
 " alt="<?php echo $_smarty_tpl->tpl_vars['COMPANY_LOGO']->value->get('alt');?>
 "/></a></div></div></div></div><div class="navbar-header paddingTop5"><button type="button" class="navbar-toggle collapsed border0" data-toggle="collapse" data-target="#navbar" aria-expanded="false"><i class="fa fa-th"></i></button><button type="button" class="navbar-toggle collapsed border0" data-toggle="collapse" data-target="#search-links-container" aria-expanded="false"><i class="fa fa-search"></i></button></div><div class="col-sm-3"><div id="search-links-container" class="search-links-container collapse navbar-collapse"><div class="search-link"><span class="fa fa-search" aria-hidden="true"></span><input class="keyword-input" type="text" placeholder="<?php echo vtranslate('LBL_TYPE_SEARCH');?>
 " value="<?php echo $_smarty_tpl->tpl_vars['GLOBAL_SEARCH_VALUE']->value;?>
-"><span id="adv-search" class="adv-search fa fa-chevron-circle-down pull-right cursorPointer" aria-hidden="true"></span></div></div></div><div id="navbar" class="col-sm-6 col-xs-12 collapse navbar-collapse navbar-right global-actions"><ul class="nav navbar-nav"><li><div class="btn-group" id="myBtnGroup"><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Leads') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Leads&view=List&app=MARKETING';">PROSPECTS</button><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Accounts') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Accounts&view=List&app=MARKETING';">COMPTES</button><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Contacts') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Contacts&view=List&app=SALES';">CONTACTS</button><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Potentials') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Potentials&view=List&app=SALES';">AFFAIRES</button></div></li><div class="dropdown pull-left"><div class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true"><a href="#" id="menubar_quickCreate" class="qc-button fa fa-plus-circle" title="<?php echo vtranslate('LBL_QUICK_CREATE',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+"><span id="adv-search" class="adv-search fa fa-chevron-circle-down pull-right cursorPointer" aria-hidden="true"></span></div></div></div><div id="navbar" class="col-sm-6 col-xs-12 collapse navbar-collapse navbar-right global-actions"><ul class="nav navbar-nav"><li><div class="btn-group" id="myBtnGroup"><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Leads') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Leads&view=List&app=MARKETING';">PROSPECTS</button><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Contacts') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Contacts&view=List&app=SALES';">CONTACTS</button><button type="button" class="button<?php if ($_smarty_tpl->tpl_vars['MODULE']->value == 'Potentials') {?> active<?php }?>" onclick="window.location.href='/index.php?module=Potentials&view=List&app=SALES';">DÉMÉNAGEMENT</button></div></li><div class="dropdown pull-left"><div class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true"><a href="#" id="menubar_quickCreate" class="qc-button fa fa-plus-circle" title="<?php echo vtranslate('LBL_QUICK_CREATE',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 " aria-hidden="true"></a></div><style type="text/css">#quickCreateModules .quickCreateItems { display: flex; flex-wrap: wrap; }#quickCreateModules .quickCreateItem  { padding: 5px; }#quickCreateModules [class^="vicon-"] { vertical-align: middle; }</style><ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" style="width:500px;"><li class="title" style="padding: 5px 0 0 15px;"><strong><?php echo vtranslate('LBL_QUICK_CREATE',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></li><hr/><li id="quickCreateModules" style="padding: 0 5px;"><div class="col-lg-12" style="padding-bottom:15px;"><div class="row quickCreateItems"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['QUICK_CREATE_MODULES']->value, 'moduleModel', false, 'moduleName');

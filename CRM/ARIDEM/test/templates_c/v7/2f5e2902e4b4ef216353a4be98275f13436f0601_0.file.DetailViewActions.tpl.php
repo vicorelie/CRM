@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 13:56:25
+/* Smarty version 4.5.5, created on 2025-11-20 20:40:47
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Potentials/DetailViewActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f1e09545bf0_90880922',
+  'unifunc' => 'content_691f7ccfccfc83_38338624',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '2f5e2902e4b4ef216353a4be98275f13436f0601' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/Potentials/DetailViewActions.tpl',
-      1 => 1763646963,
+      1 => 1763652189,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f1e09545bf0_90880922 (Smarty_Internal_Template $_smarty_tpl) {
+function content_691f7ccfccfc83_38338624 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="col-lg-6 detailViewButtoncontainer"><div class="pull-right btn-toolbar"><div class="btn-group"><?php $_smarty_tpl->_assignInScope('STARRED', $_smarty_tpl->tpl_vars['RECORD']->value->get('starred'));
@@ -46,7 +46,7 @@ if ($_smarty_tpl->tpl_vars['MODULE_NAME']->value == 'Documents' && $_smarty_tpl-
 </button><?php
 }
 $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?><button class="btn btn-success" id="visualiser-trajet-button" onclick="window.open('visualiser_trajet.php?record=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
-', 'trajet_window', 'width=1400,height=900,scrollbars=yes,resizable=yes'); return false;"><i class="fa fa-map-marker"></i> Visualiser Trajet</button><button class="btn" id="inventory-button" onclick="window.open('index.php?module=Potentials&view=InventoryPopup&record=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
+', 'trajet_window', 'width=1400,height=900,scrollbars=yes,resizable=yes'); return false;"><i class="fa fa-map-marker"></i> Visualiser Trajet</button><button class="btn" id="inventory-button" onclick="window.open('inventaire_popup.php?record=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
 ', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;" style="background-color: #667EEA !important; border-color: #667EEA !important; color: white;"><i class="fa fa-archive"></i> Inventaire</button><?php if (!empty($_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW']) && (smarty_modifier_count($_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW']) > 0)) {?><button class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);"><?php echo vtranslate('LBL_MORE',$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
 &nbsp;&nbsp;<i class="caret"></i></button><ul class="dropdown-menu dropdown-menu-right"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW'], 'DETAIL_VIEW_LINK');
@@ -64,8 +64,8 @@ _detailView_moreAction_<?php echo Vtiger_Util_Helper::replaceSpaceWithUnderScore
 }
 $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></ul><?php }?></div><?php ob_start();
 echo $_smarty_tpl->tpl_vars['NO_PAGINATION']->value;
-$_prefixVariable7 = ob_get_clean();
-if (!$_prefixVariable7) {?><div class="btn-group pull-right"><button class="btn btn-default " id="detailViewPreviousRecordButton" <?php if (empty($_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value;?>
+$_prefixVariable3 = ob_get_clean();
+if (!$_prefixVariable3) {?><div class="btn-group pull-right"><button class="btn btn-default " id="detailViewPreviousRecordButton" <?php if (empty($_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value;?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
 '" <?php }?> ><i class="fa fa-chevron-left"></i></button><button class="btn btn-default  " id="detailViewNextRecordButton"<?php if (empty($_smarty_tpl->tpl_vars['NEXT_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['NEXT_RECORD_URL']->value;?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>

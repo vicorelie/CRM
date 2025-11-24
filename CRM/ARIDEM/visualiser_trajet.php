@@ -19,17 +19,17 @@ $recordModel = Vtiger_Record_Model::getInstanceById($recordId, 'Potentials');
 $potentialName = $recordModel->get('potentialname');
 
 // Adresses
-$adresseOrigine = $recordModel->get('cf_adresse_origine');
-$villeOrigine = $recordModel->get('cf_ville_origine');
-$cpOrigine = $recordModel->get('cf_code_postal_origine');
+$adresseOrigine = $recordModel->get('cf_adresse_complete_depart');
+$villeOrigine = $recordModel->get('cf_ville_depart');
+$cpOrigine = $recordModel->get('cf_code_postal_depart');
 
-$adresseDestination = $recordModel->get('cf_adresse_destination');
-$villeDestination = $recordModel->get('cf_ville_destination');
-$cpDestination = $recordModel->get('cf_code_postal_destination');
+$adresseDestination = $recordModel->get('cf_adresse_complete_arrivee');
+$villeDestination = $recordModel->get('cf_ville_arrivee');
+$cpDestination = $recordModel->get('cf_code_postal_arrivee');
 
 // Construire les adresses complètes
-$adresseCompletOrigine = trim($adresseOrigine . ' ' . $cpOrigine . ' ' . $villeOrigine);
-$adresseCompletDestination = trim($adresseDestination . ' ' . $cpDestination . ' ' . $villeDestination);
+$adresseCompletOrigine = trim(($adresseOrigine ? $adresseOrigine . ' ' : '') . ($cpOrigine ? $cpOrigine . ' ' : '') . $villeOrigine);
+$adresseCompletDestination = trim(($adresseDestination ? $adresseDestination . ' ' : '') . ($cpDestination ? $cpDestination . ' ' : '') . $villeDestination);
 
 // Distance
 $distance = $recordModel->get('cf_distance_km');
@@ -38,7 +38,7 @@ $distance = $recordModel->get('cf_distance_km');
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Visualiser Trajet - <?php echo htmlspecialchars($potentialName); ?></title>
+    <title>Visualiser Trajet</title>
     <style>
         * {
             margin: 0;
@@ -215,8 +215,7 @@ $distance = $recordModel->get('cf_distance_km');
 </head>
 <body>
     <div class="header">
-        <h1>🗺️ Visualisation du Trajet</h1>
-        <p><?php echo htmlspecialchars($potentialName); ?></p>
+        <h1>Visualisation du Trajet</h1>
     </div>
 
     <div class="container">
@@ -225,11 +224,11 @@ $distance = $recordModel->get('cf_distance_km');
             <div class="info-panel">
                 <div class="info-row">
                     <div class="info-box">
-                        <h3>📍 Adresse d'Origine</h3>
+                        <h3>📍 Adresse départ</h3>
                         <p><?php echo htmlspecialchars($adresseCompletOrigine); ?></p>
                     </div>
                     <div class="info-box destination">
-                        <h3>📍 Adresse de Destination</h3>
+                        <h3>📍 Adresse arrivée</h3>
                         <p><?php echo htmlspecialchars($adresseCompletDestination); ?></p>
                     </div>
                 </div>
