@@ -7,78 +7,19 @@
  * All Rights Reserved.
  *************************************************************************************/
 
-Vtiger_Detail_Js("Contacts_Detail_Js", {}, {
-	registerAjaxPreSaveEvents: function (container) {
-		var thisInstance = this;
-		app.event.on(Vtiger_Detail_Js.PreAjaxSaveEvent, function (e) {
-			if (!thisInstance.checkForPortalUser(container)) {
-				e.preventDefault();
-			}
-		});
-	},
-	/**
-	 * Function to check for Portal User
-	 */
-	checkForPortalUser: function (form) {
-		var element = jQuery('[name="portal"]', form);
-		var response = element.is(':checked');
-		
-		if (response) {
-			var primaryEmailField = jQuery('[data-name="email"]');
+Vtiger_List_Js("Contacts_List_Js", {}, {
 
-			if (primaryEmailField.length == 0) {
-				app.helper.showErrorNotification({message: app.vtranslate('JS_PRIMARY_EMAIL_FIELD_DOES_NOT_EXISTS')});
-				return false;
-			}
-
-			var primaryEmailValue = primaryEmailField.data("value");
-			if (primaryEmailValue == "") {
-				app.helper.showErrorNotification({message: app.vtranslate('JS_PLEASE_ENTER_PRIMARY_EMAIL_VALUE_TO_ENABLE_PORTAL_USER')});
-				return false;
-			}
-		}
-		return true;
-	},
 	/**
 	 * Function which will register all the events
 	 */
-	registerEvents: function () {
-		var form = this.getForm();
+	registerEvents: function() {
 		this._super();
-		this.registerAjaxPreSaveEvents(form);
 		this.registerClickToCallButtons();
-		this.registerClickToCallOnAjaxLoad();
 	},
 
 	/**
-	 * Twilio Click-to-Call: Écoute les chargements AJAX pour ajouter les boutons
-	 */
-	registerClickToCallOnAjaxLoad: function() {
-		var self = this;
-
-		// Écouter les clics sur les onglets (Résumé, Détails, etc.)
-		jQuery(document).on('click', '.detailViewInfo .nav-link, .detailview-header .nav-link, a[data-toggle="tab"]', function() {
-			setTimeout(function() {
-				self.registerClickToCallButtons();
-			}, 200);
-		});
-
-		// Écouter les événements de mise à jour du widget
-		jQuery(document).on('DetailView.Widget.Updated', function() {
-			setTimeout(function() {
-				self.registerClickToCallButtons();
-			}, 100);
-		});
-
-		// Scanner périodiquement - optimisé à 1 seconde
-		setInterval(function() {
-			self.registerClickToCallButtons();
-		}, 1000);
-	},
-
-	/**
-	 * Twilio Click-to-Call: Ajoute les boutons d'appel à côté des champs téléphone
-	 * Détecte automatiquement tous les numéros de téléphone dans la page
+	 * Twilio Click-to-Call: Ajoute les boutons d'appel dans la liste
+	 * Détecte automatiquement tous les numéros de téléphone
 	 */
 	registerClickToCallButtons: function() {
 		var self = this;
@@ -86,8 +27,8 @@ Vtiger_Detail_Js("Contacts_Detail_Js", {}, {
 		// Pattern pour détecter les numéros de téléphone
 		var phonePattern = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
 
-		// Chercher tous les champs avec class "value" dans la page de détail
-		jQuery('td.fieldValue span.value').each(function() {
+		// Chercher tous les numéros de téléphone dans la liste
+		jQuery('td.listViewEntryValue span.value').each(function() {
 			var $field = jQuery(this);
 
 			// Supprimer tous les anciens boutons d'abord
@@ -98,28 +39,11 @@ Vtiger_Detail_Js("Contacts_Detail_Js", {}, {
 
 			// Vérifier si c'est un numéro de téléphone
 			if (text && text.length >= 8 && phonePattern.test(text)) {
-				// Ajouter le bouton
-				self.addCallButtonToField($field, 'auto');
-			}
-		});
-	},
-
-	/**
-	 * Ajoute un bouton d'appel à un champ
-	 */
-	addCallButtonToField: function($field, fieldName) {
-		var self = this;
-		var phoneNumber = $field.text().trim();
-
-		if (phoneNumber && phoneNumber !== '' && phoneNumber !== '-') {
-			var cleanNumber = self.cleanPhoneNumber(phoneNumber);
-
-			// Vérifier si le bouton n'existe pas déjà
-			if ($field.find('.twilio-call-btn').length === 0) {
-				var callButton = self.createCallButton(cleanNumber, fieldName);
+				var cleanNumber = self.cleanPhoneNumber(text);
+				var callButton = self.createCallButton(cleanNumber);
 				$field.append(callButton);
 			}
-		}
+		});
 	},
 
 	/**
@@ -142,18 +66,18 @@ Vtiger_Detail_Js("Contacts_Detail_Js", {}, {
 	/**
 	 * Crée un bouton d'appel
 	 */
-	createCallButton: function(phoneNumber, fieldName) {
+	createCallButton: function(phoneNumber) {
 		var self = this;
 
 		var button = jQuery('<button>')
-			.addClass('btn btn-success btn-sm twilio-call-btn')
+			.addClass('btn btn-success btn-xs twilio-call-btn')
 			.attr('type', 'button')
 			.attr('data-phone', phoneNumber)
 			.attr('title', 'Appeler via Twilio: ' + phoneNumber)
 			.css({
-				'margin-left': '10px',
-				'padding': '2px 8px',
-				'font-size': '11px',
+				'margin-left': '8px',
+				'padding': '1px 6px',
+				'font-size': '10px',
 				'background-color': '#25D366',
 				'border-color': '#25D366'
 			})
