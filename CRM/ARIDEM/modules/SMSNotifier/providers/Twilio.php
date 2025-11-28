@@ -14,7 +14,7 @@ class SMSNotifier_Twilio_Provider implements SMSNotifier_ISMSProvider_Model {
 	private $password;
 	private $parameters = array();
 
-	private $SERVICE_URI = 'https://api.twilio.com/2010-04-01/Accounts/{sid}/SMS/Messages';
+	private $SERVICE_URI = 'https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json';
 	private static $REQUIRED_PARAMETERS = array(array('name'=>'AccountSID','label'=>'Account SID','type'=>'text'),
 												array('name'=>'AuthToken','label'=>'Auth Token','type'=>'text'),
 												array('name'=>'From','label'=>'From','type'=>'text'));
@@ -110,15 +110,15 @@ class SMSNotifier_Twilio_Provider implements SMSNotifier_ISMSProvider_Model {
 		
 		
 		foreach($toNumbers as $toNumber) {
-			$xmlResponse = $httpClient->doPost(array('From'=>$params['From'], 'To'=>$toNumber,'Body'=>$message));
-			
-			$xmlObject = simplexml_load_string($xmlResponse);
+			$jsonResponse = $httpClient->doPost(array('From'=>$params['From'], 'To'=>$toNumber,'Body'=>$message));
+
+			$responseData = json_decode($jsonResponse, true);
 			$result = array();
-			if($xmlObject->SMSMessage) {
-				$result['id'] = (string)$xmlObject->SMSMessage->Sid;
-				$status = (string)$xmlObject->SMSMessage->Status;
-				$result['status'] = (string)$xmlObject->SMSMessage->Status;
-				$result['to'] = (string)$xmlObject->SMSMessage->To;
+			if(isset($responseData['sid'])) {
+				$result['id'] = $responseData['sid'];
+				$status = $responseData['status'];
+				$result['status'] = $responseData['status'];
+				$result['to'] = $responseData['to'];
 
 				switch($status) {
 					case 'queued'		:
@@ -135,7 +135,7 @@ class SMSNotifier_Twilio_Provider implements SMSNotifier_ISMSProvider_Model {
 				$results[] = $result;
 			} else {
 				$result['error'] = true;
-				$result['statusmessage'] = (string)$xmlObject->RestException->Message;
+				$result['statusmessage'] = isset($responseData['message']) ? $responseData['message'] : 'Unknown error';
 				$result['to'] = $toNumber;
 				$results[] = $result;
 			}
@@ -154,30 +154,30 @@ class SMSNotifier_Twilio_Provider implements SMSNotifier_ISMSProvider_Model {
 		$params = $this->prepareParameters();
 		$httpClient = new Vtiger_Net_Client($this->getServiceURL().'/'.$messageId);
 		$httpClient->setHeaders(array('Authorization' => 'Basic '.base64_encode($params['AccountSID'].':'.$params['AuthToken'])));
-		
-		$xmlResponse = $httpClient->doGet(array());
-		$xmlObject = simplexml_load_string($xmlResponse);
+
+		$jsonResponse = $httpClient->doGet(array());
+		$responseData = json_decode($jsonResponse, true);
 
 		$result = array();
 		$result['error'] = false;
-		$status = (string)$xmlObject->Message->Status;
+		$status = isset($responseData['status']) ? $responseData['status'] : 'failed';
 
 		switch($status) {
 			case 'queued'		:
 			case 'sending'		:	$status = self::MSG_STATUS_PROCESSING;
 									$result['needlookup'] = 1;
 									break;
-								
+
 			case 'sent'			:	$status = self::MSG_STATUS_DISPATCHED;
 									$result['needlookup'] = 1;
 									break;
-								
+
 			case 'delivered'	:	$status = self::MSG_STATUS_DELIVERED;
 									$result['needlookup'] = 0;
 									break;
-								
+
 			case 'undelivered'	:
-			case 'failed'		:	
+			case 'failed'		:
 			default				:	$status = self::MSG_STATUS_FAILED;
 									$result['needlookup'] = 1;
 									break;

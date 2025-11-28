@@ -1029,6 +1029,12 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
             }
         }
 
+        // Increase memory limit and execution time for PDF merging (especially when merging 5+ PDFs)
+        if (count($templateIds) > 1) {
+            ini_set('memory_limit', '1024M');
+            set_time_limit(300); // 5 minutes max for PDF merge
+        }
+
         //called function GetPreparedMPDF returns the name of PDF and fill the variable $mpdf with prepared HTML output
         $mpdf = '';
         $name = $this->GetPreparedMPDF($mpdf,  $records, $templateIds, $moduleName, $language, $preContent, true);
@@ -1191,6 +1197,7 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
         $focus = CRMEntity::getInstance($module);
         $TemplateContent = array();
         $PDFPassword = $name = '';
+        $firstTemplateMargins = null; // Pour uniformiser les marges lors du merge
 
         foreach ($records as $record) {
             foreach ($focus->column_fields as $cf_key => $cf_value) {
@@ -1276,7 +1283,12 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
                     }
                 } else {
                     if (!is_object($mpdf)) {
-                        $mpdf = new ITS4You_PDFMaker_JavaScript('', $format, '', '', $Settings['margin_left'], $Settings['margin_right'], 0, 0, $Settings['margin_top'], $Settings['margin_bottom'], $orientation);
+                        // Premier template : stocker ses marges pour les réutiliser lors du merge
+                        $firstTemplateMargins = array(
+                            'margin_left' => $Settings['margin_left'],
+                            'margin_right' => $Settings['margin_right']
+                        );
+                        $mpdf = new ITS4You_PDFMaker_JavaScript('', $format, '', '', $Settings['margin_left'], $Settings['margin_right'], 0, 0, 0, 0, $orientation);
                         $mpdf->actualizeTTFonts();
 
                         if (5.6 == mPDF_VERSION) {
@@ -1287,9 +1299,13 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
                         $this->mpdf_prepare_header_footer_settings($mpdf, $templateId, $Settings);
                         $mpdf->SetHTMLHeader($header_html);
                     } else {
+                        // Templates suivants : utiliser les marges du premier template pour éviter le décalage
+                        $mergeMarginLeft = $firstTemplateMargins ? $firstTemplateMargins['margin_left'] : $Settings['margin_left'];
+                        $mergeMarginRight = $firstTemplateMargins ? $firstTemplateMargins['margin_right'] : $Settings['margin_right'];
+
                         $this->mpdf_preprocess($mpdf, $templateId, $PDFContent::$bridge2mpdf);
                         $mpdf->SetHTMLHeader($header_html);
-                        $mpdf->WriteHTML('<pagebreak sheet-size="' . $formatPB . '" orientation="' . $orientation . '" margin-left="' . $Settings['margin_left'] . 'mm" margin-right="' . $Settings['margin_right'] . 'mm" margin-top="0mm" margin-bottom="0mm" margin-header="' . $Settings['margin_top'] . 'mm" margin-footer="' . $Settings['margin_bottom'] . 'mm" />');
+                        $mpdf->WriteHTML('<pagebreak sheet-size="' . $formatPB . '" orientation="' . $orientation . '" margin-left="' . $mergeMarginLeft . 'mm" margin-right="' . $mergeMarginRight . 'mm" margin-top="0mm" margin-bottom="0mm" margin-header="0mm" margin-footer="15mm" />');
                     }
 
                     $Settings['watermark']['text'] = $PDFContent->getWatermarkText();
@@ -1320,6 +1336,7 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
         }
 
         if (PDFMaker_Utils_Helper::count($TemplateContent) > 0) {
+            $firstTemplateMargins = null; // Pour uniformiser les marges lors du merge avec ListViewBlocks
             foreach ($TemplateContent as $templateId => $TContent) {
                 $header_html = $TContent['header'];
                 $body_html = $TContent['body'];
@@ -1375,7 +1392,12 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
                 }
 
                 if (!is_object($mpdf)) {
-                    $mpdf = new ITS4You_PDFMaker_JavaScript('', $format, '', '', $Settings["margin_left"], $Settings["margin_right"], 0, 0, $Settings["margin_top"], $Settings["margin_bottom"], $orientation);
+                    // Premier template : stocker ses marges pour les réutiliser lors du merge
+                    $firstTemplateMargins = array(
+                        'margin_left' => $Settings["margin_left"],
+                        'margin_right' => $Settings["margin_right"]
+                    );
+                    $mpdf = new ITS4You_PDFMaker_JavaScript('', $format, '', '', $Settings["margin_left"], $Settings["margin_right"], 0, 0, 0, 0, $orientation);
                     //autoScriptToLang();
                     if (mPDF_VERSION == 5.6) {
                         $mpdf->SetAutoFont();
@@ -1384,9 +1406,13 @@ class PDFMaker_PDFMaker_Model extends Vtiger_Module_Model
                     $this->mpdf_prepare_header_footer_settings($mpdf, $templateId, $Settings);
                     $mpdf->SetHTMLHeader($header_html);
                 } else {
+                    // Templates suivants : utiliser les marges du premier template pour éviter le décalage
+                    $mergeMarginLeft = $firstTemplateMargins ? $firstTemplateMargins['margin_left'] : $Settings["margin_left"];
+                    $mergeMarginRight = $firstTemplateMargins ? $firstTemplateMargins['margin_right'] : $Settings["margin_right"];
+
                     $this->mpdf_preprocess($mpdf, $templateId);
                     $mpdf->SetHTMLHeader($header_html);
-                    $mpdf->WriteHTML('<pagebreak sheet-size="' . $formatPB . '" orientation="' . $orientation . '" margin-left="' . $Settings["margin_left"] . 'mm" margin-right="' . $Settings["margin_right"] . 'mm" margin-top="0mm" margin-bottom="0mm" margin-header="' . $Settings["margin_top"] . 'mm" margin-footer="' . $Settings["margin_bottom"] . 'mm" />');
+                    $mpdf->WriteHTML('<pagebreak sheet-size="' . $formatPB . '" orientation="' . $orientation . '" margin-left="' . $mergeMarginLeft . 'mm" margin-right="' . $mergeMarginRight . 'mm" margin-top="0mm" margin-bottom="0mm" margin-header="0mm" margin-footer="15mm" />');
                 }
 
                 $mpdf->SetHTMLFooter($footer_html);
