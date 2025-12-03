@@ -30,7 +30,9 @@ try {
 
     // Mettre à jour l'enregistrement dans la table des custom fields
     $stmt = $conn->prepare("UPDATE vtiger_potentialscf
-                            SET cf_volume_inventaire = ?,
+                            SET cf_1017 = ?,
+                                cf_953 = ?,
+                                cf_volume_inventaire = ?,
                                 cf_cartons_estimes = ?,
                                 cf_inventaire_json = ?,
                                 cf_volume_m3_estime = ?,
@@ -41,7 +43,7 @@ try {
         throw new Exception('Erreur de préparation de la requête: ' . $conn->error);
     }
 
-    $stmt->bind_param('disdsi', $volume, $boxes, $inventory, $volume, $inventoryHTML, $recordId);
+    $stmt->bind_param('didisdsi', $volume, $boxes, $volume, $boxes, $inventory, $volume, $inventoryHTML, $recordId);
 
     if (!$stmt->execute()) {
         throw new Exception('Erreur lors de la sauvegarde: ' . $stmt->error);

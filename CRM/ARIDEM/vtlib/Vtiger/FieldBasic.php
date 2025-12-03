@@ -32,7 +32,7 @@ class Vtiger_FieldBasic {
 	var	$displaytype   = 1;
 	var $generatedtype = 1;
 	var	$readonly      = 1;
-	var	$presence      = 2;
+	var	$presence      = 0; // FIXED: Changed from 2 to 0 - new fields should be visible by default
 	var	$defaultvalue  = '';
 	var	$maximumlength = 100;
 	var	$sequence      = false;

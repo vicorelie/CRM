@@ -821,3 +821,116 @@ body{
     height: 1px;
 }
 
+/***********************************
+*********** DetailView Blocks Styling ***********
+***********************************/
+
+/* Background color for detail view blocks */
+.detailview-content .block {
+    background-color: #E6F7FF !important;
+    padding: 15px !important;
+    margin-bottom: 15px !important;
+    border-radius: 4px !important;
+}
+
+.detailview-content .blockData {
+    background-color: transparent !important;
+}
+
+.detailview-content .blockData table {
+    background-color: transparent !important;
+}
+
+/* Alternative selector for broader coverage */
+#detailView .block {
+    background-color: #E6F7FF !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Lignes dans les blocs - fond blanc semi-transparent */
+.detailview-content .detailview-table tr,
+.detailview-content .table.detailview-table tr,
+.detailview-content .recordDetails tr {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Effet hover subtil sur les lignes dans les blocs - DÉSACTIVÉ pour favoriser le hover sur les cellules */
+.detailview-content .detailview-table tr:hover,
+.detailview-content .table.detailview-table tr:hover,
+.detailview-content .recordDetails tr:hover {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Labels des champs - rendre plus lisibles */
+.detailview-content .fieldLabel {
+    font-weight: 600 !important;
+    color: #333 !important;
+}
+
+/* Valeurs des champs */
+.detailview-content .fieldValue {
+    color: #555 !important;
+}
+
+/* Bordures subtiles entre les champs */
+.detailview-content .detailview-table td {
+    
+    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+    padding: 12px 15px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Retirer la bordure droite de la dernière colonne */
+.detailview-content .detailview-table td:last-child {
+    border-right: none !important;
+}
+
+/* Effet hover sur les cellules individuelles */
+.detailview-content .detailview-table td:hover {
+    background-color: rgba(255, 255, 255, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    transform: scale(1.01) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    border-radius: 4px !important;
+}
+
+
+/* Tables de détail - espacement entre lignes */
+.detailview-content .detailview-table,
+.detailview-content .table.detailview-table {
+    border-collapse: separate !important;
+    border-spacing: 0 8px !important;
+}
+
+/* Espace plus grand entre colonnes 2 et 3 */
+.detailview-content .detailview-table td:nth-child(2) {
+    padding-right: 40px !important;
+    border-right: 2px solid rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Labels avec bordure bleue */
+.detailview-content .detailview-table td.fieldLabel {
+    background-color: rgba(230, 247, 255, 0.3) !important;
+    border-left: 3px solid #4A90E2 !important;
+    padding-left: 17px !important;
+}
+
+/* Bordures arrondies sur première et dernière cellule */
+.detailview-content .detailview-table td:first-child {
+    border-top-left-radius: 6px !important;
+    border-bottom-left-radius: 6px !important;
+}
+
+.detailview-content .detailview-table td:last-child {
+    border-top-right-radius: 6px !important;
+    border-bottom-right-radius: 6px !important;
+}
+
+/* Espacement augmenté entre colonnes gauche et droite */
+.detailview-content .detailview-table td:nth-child(3) {
+    padding-left: 40px !important;
+}
