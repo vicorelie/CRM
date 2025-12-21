@@ -1,0 +1,13 @@
+# Désactiver le listing de répertoire
+Options -Indexes
+
+# Autoriser l'accès aux fichiers CSV uniquement
+<Files "*.csv">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Bloquer l'accès direct via navigateur (sauf via le script PHP)
+<FilesMatch "\.csv$">
+    Header set Content-Disposition attachment
+</FilesMatch>

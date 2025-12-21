@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 19:21:05
+/* Smarty version 4.5.5, created on 2025-12-08 11:49:23
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/uitypes/PhoneDetailView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69235ea1f40062_15709644',
+  'unifunc' => 'content_6936bb43513533_76260931',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69235ea1f40062_15709644 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6936bb43513533_76260931 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/modifier.regex_replace.php','function'=>'smarty_modifier_regex_replace',),));
 ?>
 

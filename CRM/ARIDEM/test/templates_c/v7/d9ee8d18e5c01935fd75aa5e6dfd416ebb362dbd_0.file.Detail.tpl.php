@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:12:35
+/* Smarty version 4.5.5, created on 2025-12-07 21:01:02
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/Detail.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236ab3286570_52797765',
+  'unifunc' => 'content_6935eb0e3a5358_54300823',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'd9ee8d18e5c01935fd75aa5e6dfd416ebb362dbd' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/Detail.tpl',
-      1 => 1763928225,
+      1 => 1765057370,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236ab3286570_52797765 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935eb0e3a5358_54300823 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="detailview-content container-fluid"><div class="details row"><form id="detailView" method="post" action="index.php" name="etemplatedetailview" onsubmit="VtigerJS_DialogBox.block();"><input type="hidden" name="action" value=""><input type="hidden" name="view" value=""><input type="hidden" name="module" value="PDFMaker"><input type="hidden" name="retur_module" value="PDFMaker"><input type="hidden" name="return_action" value="PDFMaker"><input type="hidden" name="return_view" value="Detail"><input type="hidden" name="templateid" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
 "><input type="hidden" name="parenttab" value="<?php echo $_smarty_tpl->tpl_vars['PARENTTAB']->value;?>
 "><input type="hidden" name="isDuplicate" value="false"><input type="hidden" name="subjectChanged" value=""><input id="recordId" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:17:51
+/* Smarty version 4.5.5, created on 2025-12-08 06:34:54
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/Detail.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236bef602dc9_89930342',
+  'unifunc' => 'content_6936718ecbef94_65312445',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236bef602dc9_89930342 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6936718ecbef94_65312445 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="detailview-content container-fluid"><div class="details row"><form id="detailView" method="post" action="index.php" name="etemplatedetailview" onsubmit="VtigerJS_DialogBox.block();"><input type="hidden" name="action" value=""><input type="hidden" name="view" value=""><input type="hidden" name="module" value="EMAILMaker"><input type="hidden" name="retur_module" value="EMAILMaker"><input type="hidden" name="return_action" value="EMAILMaker"><input type="hidden" name="return_view" value="Detail"><input type="hidden" name="record" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
 "><input type="hidden" name="templateid" value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATEID']->value;?>
 "><input type="hidden" name="parenttab" value="<?php echo $_smarty_tpl->tpl_vars['PARENTTAB']->value;?>

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 20:51:28
+/* Smarty version 4.5.5, created on 2025-12-07 16:16:49
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/Vtiger/CustomRecordNumbering.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f7f50033763_27686458',
+  'unifunc' => 'content_6935a871289d15_31783280',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f7f50033763_27686458 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935a871289d15_31783280 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class=" detailViewContainer col-lg-12 col-md-12 col-sm-12"><form id="EditView" method="POST"><div class="blockData"><div class="clearfix"><div class="btn-group pull-right"><button type="button" class="btn addButton btn-default" name="updateRecordWithSequenceNumber"><?php echo vtranslate('LBL_UPDATE_MISSING_RECORD_SEQUENCE',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </button></div><div><h4><?php echo vtranslate('LBL_CUSTOMIZE_RECORD_NUMBERING',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>

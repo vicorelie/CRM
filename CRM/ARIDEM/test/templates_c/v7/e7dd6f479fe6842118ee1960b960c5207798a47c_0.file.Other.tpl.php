@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:37:32
+/* Smarty version 4.5.5, created on 2025-12-08 06:34:57
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/tabs/Other.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_692032dcb86a29_94682814',
+  'unifunc' => 'content_69367191669564_01599103',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_692032dcb86a29_94682814 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69367191669564_01599103 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/function.html_options.php','function'=>'smarty_function_html_options',),));
 ?>
 <div class="tab-pane" id="pdfContentOther"><div class="edit-template-content col-lg-4" style="position:fixed;z-index:1000;"><br/><div class="form-group" id="listview_block_tpl_row"><?php if ($_smarty_tpl->tpl_vars['THEME_MODE']->value != "true") {?><div class="form-group"><label class="control-label fieldLabel col-sm-3" style="font-weight: normal"><input type="checkbox" name="is_listview" id="isListViewTmpl" <?php if ($_smarty_tpl->tpl_vars['IS_LISTVIEW_CHECKED']->value == "yes") {?>checked="checked"<?php }?> onclick="EMAILMaker_EditJs.isLvTmplClicked();" title="<?php echo vtranslate('LBL_LISTVIEW_TEMPLATE',$_smarty_tpl->tpl_vars['MODULE']->value);?>

@@ -1,75 +1,39 @@
-# Environment variables
-.env
-.env.local
-.env.*.local
+# VTiger CRM - Fichiers sensibles et temporaires
 
-# Security files (NEVER commit!)
-SECURITY_URGENT.md
+# Configuration avec credentials
+config.db.php
+config.inc.php
+config.security.php
+config.csrf-secret.php
+tabdata.php
+parent_tabdata.php
 
-# Uploads and logs
-uploads/
+# User privileges
+user_privileges/
+
+# Storage, cache et logs
+storage/
+cache/
 logs/
-*.log
-
-# Vendor dependencies
-app/vendor/
-
-# Python virtual environment
-app/.venv/
-app/__pycache__/
-*.pyc
-
-# Cache directories
-app/.cache/
 .cache/
 
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Backups
+backups/
+*_BIS/
+*_BACKUP/
+*_BROKEN*/
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Vendor dependencies
+vendor/
+node_modules/
 
-# Temporary files
+# Fichiers temporaires
+*.log
 *.tmp
 *.bak
-*.backup
+*.swp
 *~
+.DS_Store
 
-# External tools
-ffmpeg/
+# Git repositories (submodules should be added explicitly)
 whisper.cpp/
-
-# Test and old files
-*copy*.php
-*OLD*.php
-*old*.php
-*test*.php
-*backup*.php
-todelete/
-**/OLD/
-**/tmp/
-
-# Google Cloud credentials
-app/config/*.json
-
-# Error logs
-error_log
-
-# Database files
-*.sql
-
-# Debian packages
-*.deb
-
-# Files with spaces (bad naming)
-*\ *.php

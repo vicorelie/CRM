@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 21:12:51
+/* Smarty version 4.5.5, created on 2025-12-06 21:39:18
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/ITS4YouInstaller/ModulesShop.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f8453856d41_13309650',
+  'unifunc' => 'content_6934a286e2a6b0_36945882',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f8453856d41_13309650 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934a286e2a6b0_36945882 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="tab-pane col-lg-12" id="modulesShop"><div class="clearfix"><div class="grid-container-block-3"><div class="grid-container-3"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['PACKAGES_LIST']->value, 'PACKAGE', false, NULL, 'packages', array (
 ));

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 18:29:09
+/* Smarty version 4.5.5, created on 2025-12-07 16:42:06
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/Leads/MappingDetail.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_692352752fb4e5_08778795',
+  'unifunc' => 'content_6935ae5e693f88_08012966',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_692352752fb4e5_08778795 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935ae5e693f88_08012966 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="leadsFieldMappingListPageDiv"><div class="col-sm-12 col-xs-12"><div class="row settingsHeader"><span class="col-sm-12"><span class="pull-right"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['MODULE_MODEL']->value->getDetailViewLinks(), 'LINK_MODEL');

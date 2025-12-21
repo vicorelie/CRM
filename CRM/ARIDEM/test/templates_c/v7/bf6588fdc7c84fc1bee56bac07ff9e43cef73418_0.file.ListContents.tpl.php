@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 20:51:26
+/* Smarty version 4.5.5, created on 2025-12-06 21:35:55
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/ModuleManager/ListContents.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f7f4e27bdd7_73741142',
+  'unifunc' => 'content_6934a1bb075437_71234782',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f7f4e27bdd7_73741142 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934a1bb075437_71234782 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="listViewPageDiv detailViewContainer" id="moduleManagerContents"><div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 "><div id="listview-actions" class="listview-actions-container"><div class="clearfix"><h4 class="pull-left"><?php echo vtranslate('LBL_MODULE_MANAGER',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </h4><div class="pull-right"><div class="btn-group"><button class="btn btn-default" type="button" onclick='window.location.href="<?php echo $_smarty_tpl->tpl_vars['IMPORT_USER_MODULE_FROM_FILE_URL']->value;?>

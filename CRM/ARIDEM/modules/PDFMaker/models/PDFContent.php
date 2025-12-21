@@ -1193,8 +1193,8 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
 	            }
 
 	            $Details['P'][$i]['PRODUCTTOTALSUM'] = $this->formatCurrencyToPDF($netPrice);
-	            $Details['P'][$i]['PRODUCT_LISTPRICEWITHOUTTAX'] = $this->formatCurrencyToPDF($netPriceWithoutTax / $quantity);
-                $Details['P'][$i]['PRODUCT_LISTPRICEWITHTAX'] = $this->formatCurrencyToPDF($netPrice / $quantity);
+	            $Details['P'][$i]['PRODUCT_LISTPRICEWITHOUTTAX'] = $this->formatCurrencyToPDF($quantity ? $netPriceWithoutTax / $quantity : 0);
+                $Details['P'][$i]['PRODUCT_LISTPRICEWITHTAX'] = $this->formatCurrencyToPDF($quantity ? $netPrice / $quantity : 0);
 
                 $totalAfterDiscountSubTotal += $totalAfterDiscount;
                 $totalSubTotal += $PData['productTotal' . $sequence];
@@ -2257,7 +2257,7 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
     public function retrievePageBreak($data = array())
     {
         if (!empty($data)) {
-            self::$pagebreak = '<pagebreak sheet-size="' . $this->getPageBreakFormat($data) . '" orientation="' . $data["orientation"] . '" margin-left="' . ($data["margin_left"] * 10) . 'mm" margin-right="' . ($data["margin_right"] * 10) . 'mm" margin-top="0mm" margin-bottom="0mm" margin-header="0mm" margin-footer="15mm" />';
+            self::$pagebreak = '<pagebreak sheet-size="' . $this->getPageBreakFormat($data) . '" orientation="' . $data["orientation"] . '" margin-left="' . ($data["margin_left"] * 10) . 'mm" margin-right="' . ($data["margin_right"] * 10) . 'mm" margin-top="0mm" margin-bottom="0mm" margin-header="' . ($data["margin_top"] * 10) . 'mm" margin-footer="' . ($data["margin_bottom"] * 10) . 'mm" />';
         } else {
             self::$pagebreak = '<br clear=all style="mso-special-character:line-break;page-break-before:always">';
         }

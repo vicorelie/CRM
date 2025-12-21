@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 08:35:27
+/* Smarty version 4.5.5, created on 2025-12-06 19:01:02
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/OperationNotPermitted.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6920244f150d77_20789445',
+  'unifunc' => 'content_69347d6e3d1161_88879558',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6920244f150d77_20789445 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69347d6e3d1161_88879558 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div style="margin:0 auto;width: 50em;">
 	<table border='0' cellpadding='5' cellspacing='0' height='600px' width="700px">
 	<tr><td align='center'>

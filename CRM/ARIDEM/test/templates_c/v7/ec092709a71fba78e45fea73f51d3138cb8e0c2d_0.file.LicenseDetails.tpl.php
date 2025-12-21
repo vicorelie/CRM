@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:32:09
+/* Smarty version 4.5.5, created on 2025-12-06 21:42:08
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/ITS4YouInstaller/LicenseDetails.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69203199ef52e2_77640407',
+  'unifunc' => 'content_6934a33055c4e5_53945431',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69203199ef52e2_77640407 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934a33055c4e5_53945431 (Smarty_Internal_Template $_smarty_tpl) {
 ?><table class="table table-bordered table-condensed themeTableColor"><thead><tr class="blockHeader"><th class="mediumWidthType" colspan="2"><span class="alignMiddle"><?php echo vtranslate('LBL_COMPANY_LICENSE_INFO',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </span></th></tr></thead><tbody><tr><td width="25%"><label class="muted pull-right marginRight10px"><?php echo vtranslate('organizationname','Settings:Vtiger');?>
 :</label></td><td style="border-left: none;"><div class="pull-left" id="organizationname_label"><?php echo $_smarty_tpl->tpl_vars['COMPANY_DETAILS']->value->get("organizationname");?>

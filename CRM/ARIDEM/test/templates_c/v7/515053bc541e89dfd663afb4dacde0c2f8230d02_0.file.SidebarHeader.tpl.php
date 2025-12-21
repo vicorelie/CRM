@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 21:12:50
+/* Smarty version 4.5.5, created on 2025-12-06 21:39:18
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/ITS4YouInstaller/partials/SidebarHeader.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f8452bde768_30334519',
+  'unifunc' => 'content_6934a2864bfd53_04683990',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/partials/SidebarAppMenu.tpl' => 1,
   ),
 ),false)) {
-function content_691f8452bde768_30334519 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934a2864bfd53_04683990 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('APP_IMAGE_MAP', array('MARKETING'=>'fa-users','SALES'=>'fa-dot-circle-o','SUPPORT'=>'fa-life-ring','INVENTORY'=>'vicon-inventory','PROJECT'=>'fa-briefcase','TOOLS'=>'fa-wrench'));?>
 
 <div class="col-sm-12 col-xs-12 app-indicator-icon-container extensionstore app-MARKETING">

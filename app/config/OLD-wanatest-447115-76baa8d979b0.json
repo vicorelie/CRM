@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "wanatest-447115",
+  "private_key_id": "76baa8d979b00d8091ae4444df3fb9266781ac75",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCuWQJc6grBCU+5\nKUenwrdkcm7AZpx32XBvvYAOnwc12DzOn8p5kIeAoxm833PnaM8WtJulzPnaLYrS\nCmMvrVK5kH+hEJRwvMCLOftkkCZTjr2N6Sv9xpyqC7JQ1vUHNA4VKC9MN9DibJIO\n5cPQEzXqWaC/Wjq8Ouh1jXx9krLTrGkECwxJd7XgtGCRHhI8L7htmwXG1rVSnjda\nXV44zma9qGPj+qFUp0vngR2TP/vD2jy2aKztqpiaB3oZctmeDQE/KQ8h4obo4WdN\ntgE9z5Zj34AnqQAGqwK+IuOqQKx8XIMjj9FoDIynqx12Vpp6UoHvtZflZOJnU/0/\n+Dl0iYJxAgMBAAECggEABMTXQ1SdCPDw4vERvlFdjBQzupRL8xzJ3iqWLEA2FadV\nqXa2NntJM4/yiieoD1Q+9uFnkQJRcsH0ZkClvCX+6We+D/kowEkvcJd8TIDDZZ11\nyqIOQ52pRx71CJBKqUDnojVETu7HakwbNihbge9mlgOP2bAVg3TOizmcpkArH05Q\nTRx9ZCTRuu2/QhkJa6jpRnejZQJ2+j76M0zDc+jUlh3LJehaKIkgdlGWeLNf9TFS\n4i+KDWUIjvk92oeWlPuXy/J+zAhCQa8bAjZ/HMsguPh7mR3/BgsWlNFupY/8N0oc\nue5416k9yceJzf4CO+oR/qcycOaOMUMGXnT7319BaQKBgQDX5nrGPiwL95v2Q4Xw\nXzvIlJ1YFVjWGp6bNG1VtmqOJjcq6HF1p3H0NPBz0bAmMlzZ2ykD8F6MqpHAK9SE\nvfRGm6PXftbhcqlAj3HFACdz1b7UVrPz+HGJzFzDPzu4jan+BwsGcdk69XAvJIVI\nJQm2qAbMDyUFBpHxAava8tLEGQKBgQDOus5ysCL2uSs9N0rDh1QFEmTb0RufUWy0\nXjV5EgOF6emtsuaA7kUa8Nb9b4p99tfBJMUPzWQLgYbaJWSfFt+6FGK/fwzRpqaV\n1msITouNqhs8ErTe7Dz9NxretactjThdJ6EeaeFa3l1V4uINItkGTIdZoXJsUYks\nicsCk8K8GQKBgHn3Qz6A2uM700iQpra/JgfPJQAgtxnk2dr2CBoWviVlo17DB22e\n1XpO+dOEDs3VP6z26TnHbbJrnYEBgcIniTrmK+3OQtgDrWfCYVQYHTGL+4z7Ghfm\nL0XYREMskrFUnkbadbkDUePDycdoCz9RZSZhz80xdQlcx89t0UcUTErpAoGAf0Oe\n/hmSnKJnjPrx6qbvwWOOdYgoYg7FRdBNSOgfBRx3/7eHkU2dezVSlJhLALqqHbve\nGJlPgonNk5O7evig6DPOiqbTJGlcWheysl1wKdjThUraz/VMonF++CWJ8k/ip+5S\nkJ+L3N3RRaMzl/Sg9/C6ziHGiAo10RZOxJpkIlkCgYBGNvZ6u3pvUSYTLm4ker7g\nZ2QztepSOeQLvvR530paabZAqaaA74On8gnpj0BWNPvLjHpDEVrN8GlrxYxjxF+E\niFdQuhkTQtG+xN8bRmHPAyjgRx9TrRaTP/LLIfAInKlvq4OGbLwAx1pEyuR1krPD\nrQTix7ieBYapRCTQ9zHRjQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "wanatest@wanatest-447115.iam.gserviceaccount.com",
+  "client_id": "105518129599507144077",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/wanatest%40wanatest-447115.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 20:40:47
+/* Smarty version 4.5.5, created on 2025-12-06 20:25:47
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/RelatedActivities.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f7ccfd0f512_09872032',
+  'unifunc' => 'content_6934914b08b900_52295952',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f7ccfd0f512_09872032 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934914b08b900_52295952 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('MODULE_NAME', "Calendar");?><div class="summaryWidgetContainer"><div class="widget_header clearfix"><h4 class="display-inline-block pull-left"><?php echo vtranslate('LBL_ACTIVITIES',$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
 </h4><?php $_smarty_tpl->_assignInScope('CALENDAR_MODEL', Vtiger_Module_Model::getInstance('Calendar'));?><div class="pull-right" style="margin-top: -5px;"><?php if ($_smarty_tpl->tpl_vars['CALENDAR_MODEL']->value->isPermitted('CreateView')) {?><button class="btn addButton btn-sm btn-default createActivity toDotask textOverflowEllipsis max-width-100" title="<?php echo vtranslate('LBL_ADD_TASK',$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
 " type="button" href="javascript:void(0)" data-url="sourceModule=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getModuleName();?>

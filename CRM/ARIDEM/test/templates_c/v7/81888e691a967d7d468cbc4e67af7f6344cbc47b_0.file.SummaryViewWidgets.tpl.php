@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 20:40:47
+/* Smarty version 4.5.5, created on 2025-12-06 20:25:47
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Potentials/SummaryViewWidgets.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f7ccfd37276_44728390',
+  'unifunc' => 'content_6934914b0c4c37_43583405',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f7ccfd37276_44728390 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934914b0c4c37_43583405 (Smarty_Internal_Template $_smarty_tpl) {
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEWWIDGET'], 'DETAIL_VIEW_WIDGET');
 $_smarty_tpl->tpl_vars['DETAIL_VIEW_WIDGET']->do_else = true;
 if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['DETAIL_VIEW_WIDGET']->value) {

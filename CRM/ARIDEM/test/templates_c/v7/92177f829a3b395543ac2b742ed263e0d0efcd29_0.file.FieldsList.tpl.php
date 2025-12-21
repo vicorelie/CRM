@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 20:39:44
+/* Smarty version 4.5.5, created on 2025-12-03 22:12:23
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/LayoutEditor/FieldsList.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f7c909bbed8_24480425',
+  'unifunc' => 'content_6930b5c7934651_92611778',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f7c909bbed8_24480425 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6930b5c7934651_92611778 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('IS_SORTABLE', $_smarty_tpl->tpl_vars['SELECTED_MODULE_MODEL']->value->isSortableAllowed());
 $_smarty_tpl->_assignInScope('ALL_BLOCK_LABELS', array());?><div class="row fieldsListContainer" style="padding:1% 0"><div class="col-sm-6"><button class="btn btn-default addButton addCustomBlock" type="button"><i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo vtranslate('LBL_ADD_CUSTOM_BLOCK',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </button></div><div class="col-sm-6"><?php if ($_smarty_tpl->tpl_vars['IS_SORTABLE']->value) {?><span class="pull-right"><button class="btn btn-success saveFieldSequence" type="button" style="opacity:0;margin-right:0px;"><?php echo vtranslate('LBL_SAVE_LAYOUT',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
@@ -75,44 +75,44 @@ if ((isset($_smarty_tpl->tpl_vars['__smarty_foreach_fieldlist']->value['index'])
 </b>&nbsp;<?php if ($_smarty_tpl->tpl_vars['IS_MANDATORY']->value) {?><span class="redColor">*</span><?php }?></span><br><span class="pull-right" style="opacity:0.6;"><?php echo vtranslate($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldDataTypeLabel(),$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </span></div></div></div></div></div><div class="col-sm-8 fieldPropertyContainer"><div class="row " style="padding: 10px 0px;"><?php ob_start();
 echo vtranslate('LBL_MAKE_THIS_FIELD',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_PROP_MANDATORY',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable1 = ob_get_clean();
-$_smarty_tpl->_assignInScope('M_FIELD_TITLE', $_prefixVariable1);
+$_prefixVariable14 = ob_get_clean();
+$_smarty_tpl->_assignInScope('M_FIELD_TITLE', $_prefixVariable14);
 ob_start();
 echo vtranslate('LBL_SHOW_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_QUICK_CREATE',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable2 = ob_get_clean();
-$_smarty_tpl->_assignInScope('Q_FIELD_TITLE', $_prefixVariable2);
+$_prefixVariable15 = ob_get_clean();
+$_smarty_tpl->_assignInScope('Q_FIELD_TITLE', $_prefixVariable15);
 ob_start();
 echo vtranslate('LBL_SHOW_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_MASS_EDIT',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable3 = ob_get_clean();
-$_smarty_tpl->_assignInScope('M_E_FIELD_TITLE', $_prefixVariable3);
+$_prefixVariable16 = ob_get_clean();
+$_smarty_tpl->_assignInScope('M_E_FIELD_TITLE', $_prefixVariable16);
 ob_start();
 echo vtranslate('LBL_SHOW_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_KEY_FIELD',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable4 = ob_get_clean();
-$_smarty_tpl->_assignInScope('S_FIELD_TITLE', $_prefixVariable4);
+$_prefixVariable17 = ob_get_clean();
+$_smarty_tpl->_assignInScope('S_FIELD_TITLE', $_prefixVariable17);
 ob_start();
 echo vtranslate('LBL_SHOW_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_DETAIL_HEADER',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable5 = ob_get_clean();
-$_smarty_tpl->_assignInScope('H_FIELD_TITLE', $_prefixVariable5);
+$_prefixVariable18 = ob_get_clean();
+$_smarty_tpl->_assignInScope('H_FIELD_TITLE', $_prefixVariable18);
 ob_start();
 echo vtranslate('LBL_NOT_MAKE_THIS_FIELD',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_PROP_MANDATORY',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable6 = ob_get_clean();
-$_smarty_tpl->_assignInScope('NOT_M_FIELD_TITLE', $_prefixVariable6);
+$_prefixVariable19 = ob_get_clean();
+$_smarty_tpl->_assignInScope('NOT_M_FIELD_TITLE', $_prefixVariable19);
 ob_start();
 echo vtranslate('LBL_HIDE_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_QUICK_CREATE',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable7 = ob_get_clean();
-$_smarty_tpl->_assignInScope('NOT_Q_FIELD_TITLE', $_prefixVariable7);
+$_prefixVariable20 = ob_get_clean();
+$_smarty_tpl->_assignInScope('NOT_Q_FIELD_TITLE', $_prefixVariable20);
 ob_start();
 echo vtranslate('LBL_HIDE_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_MASS_EDIT',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable8 = ob_get_clean();
-$_smarty_tpl->_assignInScope('NOT_M_E_FIELD_TITLE', $_prefixVariable8);
+$_prefixVariable21 = ob_get_clean();
+$_smarty_tpl->_assignInScope('NOT_M_E_FIELD_TITLE', $_prefixVariable21);
 ob_start();
 echo vtranslate('LBL_HIDE_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_KEY_FIELD',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable9 = ob_get_clean();
-$_smarty_tpl->_assignInScope('NOT_S_FIELD_TITLE', $_prefixVariable9);
+$_prefixVariable22 = ob_get_clean();
+$_smarty_tpl->_assignInScope('NOT_S_FIELD_TITLE', $_prefixVariable22);
 ob_start();
 echo vtranslate('LBL_HIDE_THIS_FIELD_IN',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value,vtranslate('LBL_DETAIL_HEADER',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value));
-$_prefixVariable10 = ob_get_clean();
-$_smarty_tpl->_assignInScope('NOT_H_FIELD_TITLE', $_prefixVariable10);
+$_prefixVariable23 = ob_get_clean();
+$_smarty_tpl->_assignInScope('NOT_H_FIELD_TITLE', $_prefixVariable23);
 $_smarty_tpl->_assignInScope('IS_MANDATORY', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->isMandatory());?><div class="fieldProperties col-sm-10" data-field-id="<?php echo $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->get('id');?>
 "><span class="mandatory switch text-capitalize <?php if ((!$_smarty_tpl->tpl_vars['IS_MANDATORY']->value)) {?>disabled<?php }?> <?php if ($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->isMandatoryOptionDisabled()) {?> cursorPointerNotAllowed <?php } else { ?> cursorPointer <?php }?>"data-toggle="tooltip" <?php if ($_smarty_tpl->tpl_vars['IS_MANDATORY']->value) {?> title="<?php echo $_smarty_tpl->tpl_vars['NOT_M_FIELD_TITLE']->value;?>
 " <?php } else { ?> title="<?php echo $_smarty_tpl->tpl_vars['M_FIELD_TITLE']->value;?>
@@ -334,8 +334,8 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div></di
 "></i></a><a href="javascript:void(0)" class="deleteCustomField pull-right"><i class="fa fa-trash" title="<?php echo vtranslate('LBL_DELETE',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 "></i></a></span></div></div></div></li><div class="modal-dialog modal-content addBlockModal hide"><?php ob_start();
 echo vtranslate('LBL_ADD_CUSTOM_BLOCK',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);
-$_prefixVariable11 = ob_get_clean();
-$_smarty_tpl->_assignInScope('HEADER_TITLE', $_prefixVariable11);
+$_prefixVariable24 = ob_get_clean();
+$_smarty_tpl->_assignInScope('HEADER_TITLE', $_prefixVariable24);
 $_smarty_tpl->_subTemplateRender(call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'vtemplate_path' ][ 0 ], array( "ModalHeader.tpl",$_smarty_tpl->tpl_vars['MODULE']->value )), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array('TITLE'=>$_smarty_tpl->tpl_vars['HEADER_TITLE']->value), 0, true);
 ?><form class="form-horizontal addCustomBlockForm"><div class="modal-body"><div class="form-group"><label class="control-label fieldLabel col-sm-5"><span><?php echo vtranslate('LBL_BLOCK_NAME',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </span><span class="redColor">*</span></label><div class="controls col-sm-6"><input type="text" name="label" class="col-sm-3 inputElement" data-rule-required='true' style='width: 75%'/></div></div><div class="form-group"><label class="control-label fieldLabel col-sm-5"><?php echo vtranslate('LBL_ADD_AFTER',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>

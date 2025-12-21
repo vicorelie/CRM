@@ -1,0 +1,5 @@
+[19-Oct-2025 14:00:02 UTC] PHP Warning:  require_once(vendor/autoload.php): Failed to open stream: Permission denied in /home3/vicorelie/crm.tcerenov-design.com/vtigercron.php on line 15
+[19-Oct-2025 14:00:02 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'vendor/autoload.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home3/vicorelie/crm.tcerenov-design.com/vtigercron.php:15
+Stack trace:
+#0 {main}
+  thrown in /home3/vicorelie/crm.tcerenov-design.com/vtigercron.php on line 15

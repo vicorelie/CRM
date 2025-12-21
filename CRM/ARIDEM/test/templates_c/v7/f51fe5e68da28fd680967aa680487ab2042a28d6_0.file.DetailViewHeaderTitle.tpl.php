@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:12:35
+/* Smarty version 4.5.5, created on 2025-12-07 21:01:02
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/DetailViewHeaderTitle.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236ab326af68_06063850',
+  'unifunc' => 'content_6935eb0e3690c4_72139276',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'f51fe5e68da28fd680967aa680487ab2042a28d6' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/DetailViewHeaderTitle.tpl',
-      1 => 1763928225,
+      1 => 1765057370,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236ab326af68_06063850 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935eb0e3690c4_72139276 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="col-lg-6 col-md-6 col-sm-6"><div class="record-header clearfix"><?php if (!$_smarty_tpl->tpl_vars['MODULE']->value) {
 $_smarty_tpl->_assignInScope('MODULE', $_smarty_tpl->tpl_vars['MODULE_NAME']->value);
 }?><div class="hidden-sm hidden-xs recordImage bg_<?php echo $_smarty_tpl->tpl_vars['MODULE']->value;?>

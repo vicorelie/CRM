@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-20 20:39:21
+/* Smarty version 4.5.5, created on 2025-12-07 16:16:31
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/Footer.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_691f7c79ea4298_04566617',
+  'unifunc' => 'content_6935a85fc7af36_73766986',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'c0753486423e15c8417701178a908abf8ae01217' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/Footer.tpl',
-      1 => 1763657319,
+      1 => 1765123250,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_691f7c79ea4298_04566617 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935a85fc7af36_73766986 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <footer class="app-footer">
 	<p>

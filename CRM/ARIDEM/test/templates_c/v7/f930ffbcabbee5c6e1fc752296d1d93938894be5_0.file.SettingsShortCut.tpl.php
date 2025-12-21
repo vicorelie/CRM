@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:07:08
+/* Smarty version 4.5.5, created on 2025-12-06 21:35:52
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/Vtiger/SettingsShortCut.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69202bbc24ba43_69749597',
+  'unifunc' => 'content_6934a1b8191324_11620626',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69202bbc24ba43_69749597 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934a1b8191324_11620626 (Smarty_Internal_Template $_smarty_tpl) {
 ?><span id="shortcut_<?php echo $_smarty_tpl->tpl_vars['SETTINGS_SHORTCUT']->value->getId();?>
 " data-actionurl="<?php echo $_smarty_tpl->tpl_vars['SETTINGS_SHORTCUT']->value->getPinUnpinActionUrl();?>
 " class="col-lg-3 contentsBackground well cursorPointer moduleBlock" data-url="<?php echo $_smarty_tpl->tpl_vars['SETTINGS_SHORTCUT']->value->getUrl();?>

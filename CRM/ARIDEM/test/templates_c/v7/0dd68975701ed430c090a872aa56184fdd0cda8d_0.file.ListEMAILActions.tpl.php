@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:37:30
+/* Smarty version 4.5.5, created on 2025-12-08 06:34:51
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/ListEMAILActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_692032da01d204_80535440',
+  'unifunc' => 'content_6936718b2f2ff3_57333927',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_692032da01d204_80535440 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6936718b2f2ff3_57333927 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div id="listview-actions" class="listview-actions-container">

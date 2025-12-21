@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:09:49
+/* Smarty version 4.5.5, created on 2025-12-07 21:00:54
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/SidebarEssentials.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236a0d8555f3_45429842',
+  'unifunc' => 'content_6935eb06b14ac0_80925750',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '05715112bb286e20677e09bb25c9318dc7573e3e' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/SidebarEssentials.tpl',
-      1 => 1763928225,
+      1 => 1765057370,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236a0d8555f3_45429842 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935eb06b14ac0_80925750 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="sidebar-menu">
     <div class="module-filters" id="module-filters">
         <div class="sidebar-container lists-menu-container">

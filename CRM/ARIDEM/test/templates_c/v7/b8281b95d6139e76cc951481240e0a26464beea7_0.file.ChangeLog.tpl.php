@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:21:00
+/* Smarty version 4.5.5, created on 2025-12-06 21:42:00
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Settings/ITS4YouInstaller/ChangeLog.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69202efcd45d63_56930482',
+  'unifunc' => 'content_6934a328dcb5c1_25760945',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69202efcd45d63_56930482 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934a328dcb5c1_25760945 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="modal-dialog modal-lg changeLog"><div class='modal-content'><div class="modal-header"><div class="clearfix"><div class="pull-right " ><button type="button" class="close" aria-label="Close" data-dismiss="modal"><span aria-hidden="true" class='fa fa-close'></span></button></div><h4 class="pull-left"><?php echo vtranslate('LBL_CHANGELOG_INFORMATION',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </h4></div></div><div class="modal-body" id="changeLog"><h4><b><?php echo $_smarty_tpl->tpl_vars['EXTENSION']->value->getExtensionLabel();?>
 &nbsp;<?php if ('Upgrade' == $_smarty_tpl->tpl_vars['MODULE_ACTION']->value) {

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:37:32
+/* Smarty version 4.5.5, created on 2025-12-08 06:34:57
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/tabs/Sharing.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_692032dcba2999_01843074',
+  'unifunc' => 'content_69367191684ce5_22172477',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_692032dcba2999_01843074 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69367191684ce5_22172477 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/function.html_options.php','function'=>'smarty_function_html_options',),));
 ?>
 <div class="tab-pane" id="editTabSharing"><br><div id="sharing_div"><div class="form-group"><label class="control-label fieldLabel col-sm-3" style="font-weight: normal"><?php echo vtranslate('LBL_TEMPLATE_OWNER',$_smarty_tpl->tpl_vars['MODULE']->value);?>

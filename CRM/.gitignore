@@ -1,0 +1,47 @@
+# VTiger CRM - Fichiers sensibles et temporaires
+
+# Configuration avec credentials
+**/config.db.php
+**/config.inc.php
+**/config.security.php
+**/config.csrf-secret.php
+**/config.performance.php
+**/config_override.*.php
+**/tabdata.php
+**/parent_tabdata.php
+
+# User privileges et permissions
+**/user_privileges/
+**/user_privileges_*.php
+
+# Storage et uploads
+**/storage/
+**/test/storage/
+**/cache/
+**/logs/
+
+# Templates compilés (cache Smarty)
+**/test/templates_c/
+**/templates_c/
+
+# Vendor et dépendances
+**/vendor/
+**/node_modules/
+
+# Backups
+**/backups/
+**/*_BIS/
+**/*_BACKUP/
+**/*_BROKEN*/
+
+# Fichiers temporaires
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+
+# Fichiers système
+.htaccess.bak
+*.zip.bak

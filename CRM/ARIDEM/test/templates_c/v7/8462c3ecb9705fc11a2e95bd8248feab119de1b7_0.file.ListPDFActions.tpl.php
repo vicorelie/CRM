@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:09:54
+/* Smarty version 4.5.5, created on 2025-12-07 21:00:54
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/ListPDFActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236a12dbece8_54103814',
+  'unifunc' => 'content_6935eb06b4dd16_41248385',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '8462c3ecb9705fc11a2e95bd8248feab119de1b7' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/ListPDFActions.tpl',
-      1 => 1763928225,
+      1 => 1765057370,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236a12dbece8_54103814 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935eb06b4dd16_41248385 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div id="listview-actions" class="listview-actions-container">
     <div class="row">
         <div class="col-md-3">

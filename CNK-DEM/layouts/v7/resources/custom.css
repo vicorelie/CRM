@@ -1,0 +1,356 @@
+/**
+ * ARIDEM CRM - Touches minimales
+ * Juste quelques améliorations très légères sans changer le design
+ */
+
+/* Style des champs de formulaire */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #bdbdbd;
+}
+
+/* Lignes alternées dans les listes - #f5f5f5 et #FFFFFF */
+.table tbody tr:nth-child(odd) {
+    background-color: #FFFFFF;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+/* Effet hover subtil sur les lignes de listes */
+.table tbody tr:hover {
+    background-color: #E8F4F8;
+}
+
+/* Tables de détail - espacement généreux entre les lignes */
+.detailview-content .detailview-table,
+.detailview-content .table.detailview-table {
+    border-collapse: separate !important;
+    border-spacing: 0 12px !important;
+}
+
+/* Lignes style carte moderne avec ombre subtile */
+.detailview-content .detailview-table tr,
+.detailview-content .table.detailview-table tr,
+.detailview-content .recordDetails tr {
+    background-color: #FFFFFF !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 8px !important;
+}
+
+/* Effet hover DÉSACTIVÉ sur les lignes - seules les valeurs réagissent */
+.detailview-content .detailview-table tr:hover,
+.detailview-content .table.detailview-table tr:hover,
+.detailview-content .recordDetails tr:hover {
+    background-color: #FFFFFF !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Pour les autres tables (pas dans detailview) garder les lignes alternées */
+.table tbody tr:nth-child(odd):not(.detailview-content *) {
+    background-color: #FFFFFF;
+}
+
+.table tbody tr:nth-child(even):not(.detailview-content *) {
+    background-color: #f5f5f5;
+}
+
+/* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
+
+/* Checkboxes et boutons radio - s'assurer qu'ils sont visibles */
+input[type="checkbox"],
+input[type="radio"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 15px !important;
+    height: 15px !important;
+    cursor: pointer;
+}
+
+/* Background color for detail view blocks - ARIDEM */
+.detailview-content .block {
+    background: linear-gradient(135deg, #E6F7FF 0%, #F0F9FF 100%) !important;
+    padding: 25px !important;
+    margin-bottom: 25px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid rgba(74, 144, 226, 0.1) !important;
+}
+
+.detailview-content .blockData {
+    background-color: transparent !important;
+}
+
+.detailview-content .blockData table {
+    background-color: transparent !important;
+}
+
+#detailView .block {
+    background-color: #E6F7FF !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Labels des champs - forcer la couleur bleue */
+.detailview-content .fieldLabel {
+    font-weight: 700 !important;
+    color: #0D47A1 !important;
+}
+
+/* Valeurs des champs - règles générales désactivées */
+.detailview-content .fieldValue {
+    color: inherit !important;
+}
+
+/* Espacement des cellules */
+.detailview-content .detailview-table td {
+    border-right: none !important;
+    padding: 15px 20px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    vertical-align: middle !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+
+/* Labels des champs - lisibles et clairs avec couleur forcée */
+.detailview-content .detailview-table td.fieldLabel,
+.detailview-content table.detailview-table td.fieldLabel,
+.detailview-content .detailview-table tr td.fieldLabel {
+    background: #E3F2FD !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    color: #0D47A1 !important;
+    width: 200px !important;
+    border: none !important;
+    cursor: default !important;
+    user-select: none !important;
+    padding: 15px 20px !important;
+    margin-right: 8px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Force la couleur bleue des labels avec encore plus de spécificité */
+.detailview-content .detailview-table td.fieldLabel *,
+.detailview-content .detailview-table td.fieldLabel span,
+.detailview-content .detailview-table td.fieldLabel label {
+    color: #0D47A1 !important;
+}
+
+/* Effet hover DÉSACTIVÉ sur les lignes et les labels */
+.detailview-content .detailview-table tr:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Pas d'effet hover sur les labels (titres) */
+.detailview-content .detailview-table td.fieldLabel:hover {
+    background: #E3F2FD !important;
+    cursor: default !important;
+    transform: none !important;
+}
+
+/* Première cellule de chaque ligne - bordures arrondies à gauche */
+.detailview-content .detailview-table td:first-child {
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+}
+
+/* Dernière cellule de chaque ligne - bordures arrondies à droite */
+.detailview-content .detailview-table td:last-child {
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+/* Valeurs des champs - style moderne et clair */
+.detailview-content .detailview-table td.fieldValue {
+    font-size: 15px !important;
+    color: #1e293b !important;
+    font-weight: 500 !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #DBEAFE !important;
+    padding: 15px 20px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+/* EFFET HOVER UNIQUEMENT sur les VALEURS (champs) */
+.detailview-content .detailview-table td.fieldValue:hover {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F0F9FF 100%) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+    border-color: #93C5FD !important;
+    transform: translateY(-1px) !important;
+    z-index: 10 !important;
+    position: relative !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+/* ========================================
+   STYLES POUR LE MODE ÉDITION - ARIDEM
+   Style simplifié et clair
+   ======================================== */
+
+/* Background bleu discret pour les blocs en mode édition */
+#EditView .fieldBlockContainer,
+#EditView .block {
+    background: #E6F7FF !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Labels en mode édition - style similaire au mode détail */
+#EditView .fieldLabel,
+#EditView td.fieldLabel {
+    background: #E3F2FD !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #0D47A1 !important;
+    padding: 10px 15px !important;
+    border: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 4px !important;
+}
+
+/* Force la couleur bleue sur les éléments enfants des labels */
+#EditView .fieldLabel *,
+#EditView .fieldLabel span,
+#EditView .fieldLabel label {
+    color: #0D47A1 !important;
+    text-transform: uppercase !important;
+}
+
+/* Champs de formulaire - style minimaliste */
+#EditView input[type="text"],
+#EditView input[type="email"],
+#EditView input[type="password"],
+#EditView input[type="number"],
+#EditView textarea,
+#EditView select,
+#EditView .form-control {
+    border: 1px solid #DBEAFE !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    background-color: #FFFFFF !important;
+    transition: border-color 0.2s ease !important;
+}
+
+/* Focus discret sur les champs */
+#EditView input[type="text"]:focus,
+#EditView input[type="email"]:focus,
+#EditView input[type="password"]:focus,
+#EditView input[type="number"]:focus,
+#EditView textarea:focus,
+#EditView select:focus,
+#EditView .form-control:focus {
+    border-color: #93C5FD !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Désactiver les lignes alternées en mode édition */
+#EditView table tbody tr,
+#EditView .table tbody tr {
+    background-color: transparent !important;
+}
+
+/* Désactiver l'effet hover sur les lignes en mode édition */
+#EditView table tbody tr:hover,
+#EditView .table tbody tr:hover {
+    background-color: transparent !important;
+}
+
+/* Espacement des cellules en mode édition */
+#EditView table td,
+#EditView .table td {
+    padding: 15px 20px !important;
+    vertical-align: middle !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+/* Cellules contenant les valeurs en mode édition */
+#EditView td.fieldValue {
+    padding: 15px 20px !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #DBEAFE !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Effet hover sur les valeurs en mode édition */
+#EditView td.fieldValue:hover {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F0F9FF 100%) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+    border-color: #93C5FD !important;
+    transform: translateY(-1px) !important;
+    z-index: 10 !important;
+    position: relative !important;
+}
+
+/* Tables en mode édition - espacement entre les lignes */
+#EditView table.table,
+#EditView .fieldBlockContainer table {
+    border-collapse: separate !important;
+    border-spacing: 0 12px !important;
+}
+
+/* Lignes en mode édition - style carte avec ombre */
+#EditView table tr {
+    background-color: transparent !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 8px !important;
+}
+
+
+/* Première cellule de chaque ligne - bordures arrondies à gauche */
+#EditView table td:first-child {
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+}
+
+/* Dernière cellule de chaque ligne - bordures arrondies à droite */
+#EditView table td:last-child {
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+/* ========================================
+   STYLES POUR LES LISTES - ARIDEM
+   Bordures sur les cellules
+   ======================================== */
+
+/* Cellules des listes - bordure 1px */
+.listViewEntriesTable tbody td,
+table[name="listViewEntriesTable"] tbody td,
+.listview-table tbody td,
+#listViewContents table tbody td {
+    border: 1px solid #DBEAFE !important;
+}

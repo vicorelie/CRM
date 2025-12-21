@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:27:51
+/* Smarty version 4.5.5, created on 2025-12-06 20:25:47
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/Vtiger/DocumentsSummaryWidgetContents.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236e47557110_06237915',
+  'unifunc' => 'content_6934914b8ae054_20311797',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236e47557110_06237915 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6934914b8ae054_20311797 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="paddingLeft5px"><span class="col-sm-5"><strong><?php echo vtranslate('Title','Documents');?>
 </strong></span><span class="col-sm-7"><strong><?php echo vtranslate('File Name','Documents');?>
 </strong></span><?php

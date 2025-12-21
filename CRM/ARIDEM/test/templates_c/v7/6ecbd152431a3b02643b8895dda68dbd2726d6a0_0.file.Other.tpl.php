@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-23 20:12:25
+/* Smarty version 4.5.5, created on 2025-12-07 21:02:08
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/tabs/Other.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69236aa95e20d3_47222415',
+  'unifunc' => 'content_6935eb502220b3_06709503',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6ecbd152431a3b02643b8895dda68dbd2726d6a0' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/tabs/Other.tpl',
-      1 => 1763928225,
+      1 => 1765057370,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69236aa95e20d3_47222415 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6935eb502220b3_06709503 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/function.html_options.php','function'=>'smarty_function_html_options',),));
 ?>
 <div class="tab-pane" id="pdfContentOther">

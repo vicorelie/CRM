@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-11-21 09:37:30
+/* Smarty version 4.5.5, created on 2025-12-08 06:34:51
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/Footer.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_692032da021ac1_60014530',
+  'unifunc' => 'content_6936718b2f6199_62638622',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_692032da021ac1_60014530 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6936718b2f6199_62638622 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <br><div class="small" style="color: rgb(153, 153, 153);text-align: center;"><?php echo vtranslate('EMAILMaker','EMAILMaker');?>
  <?php echo EMAILMaker_Version_Helper::$version;?>
