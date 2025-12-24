@@ -13,8 +13,8 @@ return [
     // ==================== CLÉS API ====================
     'api_keys' => [
         'test' => [
-            'secret_key' => 'sk_test_51SgYFzAj79AKQGHVeADffhoKoANzwLy1OCWMF1Tv89NyTUfY5X0r71mySEiEQoxCmccj2TLnSUMnlGkXseokR7w200MvMMkzAc',
-            'publishable_key' => 'pk_test_51SgYFzAj79AKQGHV9XLSrOSQt62jRggZmASC3Jw9sIUNanzcEQY6X3u8eMwDh317oho8DOXHTXSNnuieDeD4A3gG00iH8c8XF1',
+            'secret_key' => 'sk_test_51SglQ9Dl2HMKNpLg4d75DN6H1lToHEHDvLNTPKTJuVSP0AjG9n5Se4mKqFMMvqIuH4Sr479J8pkzZd37lB4xM9XQ00biXwBYKe',
+            'publishable_key' => 'pk_test_51SglQ9Dl2HMKNpLgI4MXgBBfpKHgOAx9gus4Xu8aYLH3tcH1zNLKqiDsQyGHLqtpmBUcSmS0TyoEtGDxOHkRRSL800MiXVkLu8',
         ],
         'live' => [
             'secret_key' => 'sk_live_VOTRE_CLE_SECRETE_PROD',
@@ -24,8 +24,8 @@ return [
 
     // ==================== WEBHOOK ====================
     'webhook' => [
-        'url' => 'https://crm.cnkdem.com/stripe/webhook.php',
-        'secret' => 'whsec_uM9PGTDavQfdB2qQ4xED0MzYo49Mn7NJ',
+        'url' => 'https://crm.cnkdem.com/stripe/webhook_standalone.php',
+        'secret' => 'whsec_XFlNKD8Tcm7MGt4aFDy0nrsGdeH2JdXz',
         'events' => [
             'checkout.session.completed',
             'payment_intent.succeeded',

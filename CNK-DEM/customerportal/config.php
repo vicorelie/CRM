@@ -29,11 +29,11 @@ class Portal_Config_Data {
 	protected static $data = array(
 		//CRM URL without trialing/
 		//Example: http://yourdomain.com/crm
-		'crm.url' => 'https://crm.tcerenov-design.com',
+		'crm.url' => 'https://crm.cnkdem.com',
 
 		//Portal URL without trialing/
 		//Example: http://yourdomain.com/portal
-		'portal.url' => 'https://crm.tcerenov-design.com/customerportal',
+		'portal.url' => 'https://crm.cnkdem.com/customerportal',
 
 		'crm.version' => '8.0.0', // Framework version for API
 		'language' => 'fr_fr', // Default Language for API. Note : Changing the language here will not change the default/login language for Portal user.
