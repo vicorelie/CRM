@@ -128,8 +128,6 @@ input[type="checkbox"]::after {
 /* Background color for detail view blocks - ARIDEM - COMPACT */
 .detailview-content .block {
     background: linear-gradient(135deg, #E6F7FF 0%, #F0F9FF 100%) !important;
-    padding: 12px !important; /* Réduit de 25px à 12px */
-    margin-bottom: 12px !important; /* Réduit de 25px à 12px */
     border-radius: 8px !important; /* Réduit de 12px à 8px */
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
     border: 1px solid rgba(74, 144, 226, 0.1) !important;
@@ -145,8 +143,6 @@ input[type="checkbox"]::after {
 
 #detailView .block {
     background-color: #E6F7FF !important;
-    padding: 12px !important; /* Réduit de 15px à 12px */
-    margin-bottom: 12px !important; /* Réduit de 20px à 12px */
     border-radius: 6px !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
 }
@@ -256,11 +252,9 @@ input[type="checkbox"]::after {
 #EditView .fieldBlockContainer,
 #EditView .block {
     background: #E6F7FF !important;
-    padding: 20px !important;
-    margin-bottom: 20px !important;
     border-radius: 8px !important;
     border: none !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* Labels en mode édition - style similaire au mode détail */
@@ -404,12 +398,7 @@ table[name="listViewEntriesTable"] tbody td,
     border-spacing: 0 6px !important; /* Réduit de 12px à 6px */
 }
 
-/* Réduction du padding des blocs */
-#EditView .fieldBlockContainer,
-#EditView .block {
-    padding: 12px !important; /* Réduit de 20px à 12px */
-    margin-bottom: 12px !important; /* Réduit de 20px à 12px */
-}
+/* Padding et margin des blocs déjà gérés plus haut - section désactivée */
 
 /* Réduction du padding des cellules */
 #EditView table td,
@@ -526,11 +515,7 @@ table[name="listViewEntriesTable"] tbody td,
     line-height: 32px !important;
 }
 
-/* Réduction des ombres pour un look plus plat et homogène */
-#EditView .fieldBlockContainer,
-#EditView .block {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
-}
+/* Ombres déjà gérées plus haut - section désactivée */
 
 #EditView table tr {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* Ombre plus subtile */
