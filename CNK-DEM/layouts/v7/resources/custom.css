@@ -76,7 +76,7 @@ select:focus {
 
 /* C'est tout - rien d'autre pour garder le maximum d'homogénéité */
 
-/* Checkboxes et boutons radio - s'assurer qu'ils sont visibles */
+/* Checkboxes et boutons radio - s'assurer qu'ils sont visibles et cliquables */
 input[type="checkbox"],
 input[type="radio"] {
     opacity: 1 !important;
@@ -93,6 +93,11 @@ input[type="radio"] {
     padding: 0 !important;
     vertical-align: middle !important;
     flex-shrink: 0 !important;
+    pointer-events: auto !important;
+    z-index: 100 !important;
+    appearance: auto !important;
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
 }
 
 /* Masquer les pseudo-éléments qui créent des doublons de checkbox */
