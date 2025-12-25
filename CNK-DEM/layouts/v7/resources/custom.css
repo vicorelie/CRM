@@ -160,11 +160,6 @@ input[type="checkbox"]::after {
     border-bottom: none !important;
 }
 
-/* Espacement entre les deux colonnes */
-.detailview-content .detailview-table td.fieldLabel:nth-child(3) {
-    padding-left: 20px !important;
-}
-
 /* Labels des champs - détaillés */
 .detailview-content .detailview-table td.fieldLabel,
 .detailview-content table.detailview-table td.fieldLabel,
@@ -277,11 +272,6 @@ input[type="checkbox"]::after {
     border-top: none !important;
     border-bottom: none !important;
     line-height: 1.3 !important;
-}
-
-/* Espacement entre les deux colonnes */
-#EditView table td.fieldLabel:nth-child(3) {
-    padding-left: 20px !important;
 }
 
 /* Bordures arrondies */
