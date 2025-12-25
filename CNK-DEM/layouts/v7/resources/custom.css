@@ -41,11 +41,11 @@ select:focus {
     background-color: #E8F4F8;
 }
 
-/* Tables de détail - espacement généreux entre les lignes */
+/* Tables de détail - espacement compact entre les lignes */
 .detailview-content .detailview-table,
 .detailview-content .table.detailview-table {
     border-collapse: separate !important;
-    border-spacing: 0 12px !important;
+    border-spacing: 0 6px !important; /* Réduit de 12px à 6px */
 }
 
 /* Lignes style carte moderne avec ombre subtile */
@@ -125,13 +125,13 @@ input[type="checkbox"]::after {
     display: none !important;
 }
 
-/* Background color for detail view blocks - ARIDEM */
+/* Background color for detail view blocks - ARIDEM - COMPACT */
 .detailview-content .block {
     background: linear-gradient(135deg, #E6F7FF 0%, #F0F9FF 100%) !important;
-    padding: 25px !important;
-    margin-bottom: 25px !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    padding: 12px !important; /* Réduit de 25px à 12px */
+    margin-bottom: 12px !important; /* Réduit de 25px à 12px */
+    border-radius: 8px !important; /* Réduit de 12px à 8px */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
     border: 1px solid rgba(74, 144, 226, 0.1) !important;
 }
 
@@ -145,10 +145,10 @@ input[type="checkbox"]::after {
 
 #detailView .block {
     background-color: #E6F7FF !important;
-    padding: 15px !important;
-    margin-bottom: 20px !important;
+    padding: 12px !important; /* Réduit de 15px à 12px */
+    margin-bottom: 12px !important; /* Réduit de 20px à 12px */
     border-radius: 6px !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
 }
 
 /* Labels des champs - forcer la couleur bleue */
@@ -162,10 +162,10 @@ input[type="checkbox"]::after {
     color: inherit !important;
 }
 
-/* Espacement des cellules */
+/* Espacement des cellules - COMPACT */
 .detailview-content .detailview-table td {
     border-right: none !important;
-    padding: 15px 20px !important;
+    padding: 8px 12px !important; /* Réduit de 15px 20px à 8px 12px */
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     vertical-align: middle !important;
     border-top: none !important;
@@ -173,13 +173,13 @@ input[type="checkbox"]::after {
 }
 
 
-/* Labels des champs - lisibles et clairs avec couleur forcée */
+/* Labels des champs - lisibles et clairs avec couleur forcée - COMPACT */
 .detailview-content .detailview-table td.fieldLabel,
 .detailview-content table.detailview-table td.fieldLabel,
 .detailview-content .detailview-table tr td.fieldLabel {
     background: #E3F2FD !important;
     font-weight: 700 !important;
-    font-size: 12px !important;
+    font-size: 11px !important; /* Réduit de 12px à 11px */
     letter-spacing: 0.5px !important;
     text-transform: uppercase !important;
     color: #0D47A1 !important;
@@ -187,7 +187,7 @@ input[type="checkbox"]::after {
     border: none !important;
     cursor: default !important;
     user-select: none !important;
-    padding: 15px 20px !important;
+    padding: 8px 12px !important; /* Réduit de 15px 20px à 8px 12px */
     margin-right: 8px !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
@@ -223,24 +223,24 @@ input[type="checkbox"]::after {
     border-bottom-right-radius: 8px !important;
 }
 
-/* Valeurs des champs - style moderne et clair */
+/* Valeurs des champs - style moderne et clair - COMPACT */
 .detailview-content .detailview-table td.fieldValue {
-    font-size: 15px !important;
+    font-size: 13px !important; /* Réduit de 15px à 13px */
     color: #1e293b !important;
     font-weight: 500 !important;
     background-color: #FFFFFF !important;
     border: 1px solid #DBEAFE !important;
-    padding: 15px 20px !important;
+    padding: 8px 12px !important; /* Réduit de 15px 20px à 8px 12px */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     cursor: pointer !important;
 }
 
-/* EFFET HOVER UNIQUEMENT sur les VALEURS (champs) */
+/* EFFET HOVER UNIQUEMENT sur les VALEURS (champs) - COMPACT */
 .detailview-content .detailview-table td.fieldValue:hover {
     background: linear-gradient(135deg, #FFFFFF 0%, #F0F9FF 100%) !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1) !important; /* Ombre plus légère */
     border-color: #93C5FD !important;
-    transform: translateY(-1px) !important;
+    transform: none !important; /* Désactive le déplacement au hover */
     z-index: 10 !important;
     position: relative !important;
     color: #0f172a !important;
