@@ -44,4 +44,23 @@ class Quotes_Record_Model extends Inventory_Record_Model {
 		$controller->Output($fileName.'.pdf', 'D');
 	}
 
+	/**
+	 * Function to set parent record data with custom subject for Potentials
+	 * Override to add "Dev-" prefix to subject when creating from Potential
+	 */
+	public function setParentRecordData(Vtiger_Record_Model $parentRecordModel) {
+		// Call parent method for standard mapping (account_id, contact_id, etc.)
+		parent::setParentRecordData($parentRecordModel);
+
+		// If creating from Potential, prefix the subject with "Dev-"
+		if ($parentRecordModel->getModuleName() === 'Potentials') {
+			$potentialName = $parentRecordModel->get('potentialname');
+			if (!empty($potentialName)) {
+				$this->set('subject', 'Dev-' . $potentialName);
+			}
+		}
+
+		return $this;
+	}
+
 }
