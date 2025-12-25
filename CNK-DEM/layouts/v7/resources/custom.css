@@ -125,12 +125,14 @@ input[type="checkbox"]::after {
     display: none !important;
 }
 
-/* Background color for detail view blocks - ARIDEM - COMPACT */
+/* Background color for detail view blocks - ARIDEM - MIS EN VALEUR */
 .detailview-content .block {
-    background: linear-gradient(135deg, #E6F7FF 0%, #F0F9FF 100%) !important;
-    border-radius: 8px !important; /* Réduit de 12px à 8px */
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
-    border: 1px solid rgba(74, 144, 226, 0.1) !important;
+    background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important; /* Ombre plus marquée */
+    border: 2px solid #93C5FD !important; /* Bordure plus épaisse et plus visible */
+    padding: 10px !important; /* Ajout padding pour aérer */
+    margin-bottom: 15px !important; /* Espacement entre les blocs */
 }
 
 .detailview-content .blockData {
@@ -142,9 +144,12 @@ input[type="checkbox"]::after {
 }
 
 #detailView .block {
-    background-color: #E6F7FF !important;
-    border-radius: 6px !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Ombre plus subtile */
+    background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important; /* Ombre plus marquée */
+    border: 2px solid #93C5FD !important; /* Bordure plus épaisse et plus visible */
+    padding: 10px !important; /* Ajout padding pour aérer */
+    margin-bottom: 15px !important; /* Espacement entre les blocs */
 }
 
 /* Labels des champs - forcer la couleur bleue */
@@ -248,13 +253,15 @@ input[type="checkbox"]::after {
    Style simplifié et clair
    ======================================== */
 
-/* Background bleu discret pour les blocs en mode édition */
+/* Background bleu mis en valeur pour les blocs en mode édition */
 #EditView .fieldBlockContainer,
 #EditView .block {
-    background: #E6F7FF !important;
+    background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
     border-radius: 8px !important;
-    border: none !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    border: 2px solid #93C5FD !important; /* Bordure plus épaisse et plus visible */
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important; /* Ombre plus marquée */
+    padding: 10px !important; /* Ajout padding pour aérer */
+    margin-bottom: 15px !important; /* Espacement entre les blocs */
 }
 
 /* Labels en mode édition - style similaire au mode détail */
