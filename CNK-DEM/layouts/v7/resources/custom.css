@@ -127,12 +127,10 @@ input[type="checkbox"]::after {
 /* Blocs en mode détail - mis en valeur */
 .detailview-content .block,
 #detailView .block {
-    background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
+    background: #e7f7ff !important;
     border-radius: 8px !important;
-    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important;
     border: 2px solid #93C5FD !important;
-    padding: 5px !important;
-    margin-bottom: 5px !important;
+    margin-bottom: 0px !important;
 }
 
 .detailview-content .blockData {
@@ -155,7 +153,6 @@ input[type="checkbox"]::after {
 
 /* Espacement des cellules */
 .detailview-content .detailview-table td {
-    border-right: none !important;
     padding: 8px 12px !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     vertical-align: middle !important;
@@ -163,23 +160,27 @@ input[type="checkbox"]::after {
     border-bottom: none !important;
 }
 
+/* Espacement entre les deux colonnes */
+.detailview-content .detailview-table td.fieldLabel:nth-child(3) {
+    padding-left: 20px !important;
+}
+
 /* Labels des champs - détaillés */
 .detailview-content .detailview-table td.fieldLabel,
 .detailview-content table.detailview-table td.fieldLabel,
 .detailview-content .detailview-table tr td.fieldLabel {
-    background: #E3F2FD !important;
+    background: #ededed !important;
     font-weight: 700 !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     letter-spacing: 0.5px !important;
     text-transform: uppercase !important;
-    color: #0D47A1 !important;
+    color: #08377d !important;
     width: 200px !important;
-    border: none !important;
+    border-style: solid !important;
+    border-color: #93C5FD !important;
+    border-width: 1px 0px 1px 1px !important;
     cursor: default !important;
     user-select: none !important;
-    padding: 8px 12px !important;
-    margin-right: 8px !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* Force la couleur bleue des labels */
@@ -213,7 +214,7 @@ input[type="checkbox"]::after {
     color: #1e293b !important;
     font-weight: 500 !important;
     background-color: #FFFFFF !important;
-    border: 1px solid #DBEAFE !important;
+    border: 1px solid #93C5FD !important;
     padding: 8px 12px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     cursor: pointer !important;
@@ -238,12 +239,10 @@ input[type="checkbox"]::after {
 /* Blocs en mode édition */
 #EditView .fieldBlockContainer,
 #EditView .block {
-    background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
+    background: #e7f7ff !important;
     border-radius: 8px !important;
     border: 2px solid #93C5FD !important;
-    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important;
-    padding: 5px !important;
-    margin-bottom: 5px !important;
+    margin-bottom: 10px !important;
 }
 
 /* Tables - espacement compact */
@@ -280,6 +279,11 @@ input[type="checkbox"]::after {
     line-height: 1.3 !important;
 }
 
+/* Espacement entre les deux colonnes */
+#EditView table td.fieldLabel:nth-child(3) {
+    padding-left: 20px !important;
+}
+
 /* Bordures arrondies */
 #EditView table td:first-child {
     border-top-left-radius: 8px !important;
@@ -294,16 +298,18 @@ input[type="checkbox"]::after {
 /* Labels */
 #EditView .fieldLabel,
 #EditView td.fieldLabel {
-    background: #E3F2FD !important;
+    background: #ededed !important;
     font-weight: 700 !important;
-    font-size: 11px !important;
-    text-transform: uppercase !important;
+    font-size: 13px !important;
     letter-spacing: 0.5px !important;
-    color: #0D47A1 !important;
-    padding: 8px 12px !important;
-    border: none !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    color: #08377d !important;
+    width: 200px !important;
+    border-style: solid !important;
+    border-color: #93C5FD !important;
+    border-width: 1px 0px 1px 1px !important;
+    cursor: default !important;
+    user-select: none !important;
 }
 
 #EditView .fieldLabel *,
@@ -317,7 +323,7 @@ input[type="checkbox"]::after {
 #EditView td.fieldValue {
     padding: 8px 12px !important;
     background-color: #FFFFFF !important;
-    border: 1px solid #DBEAFE !important;
+    border: 1px solid #93C5FD !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -351,7 +357,7 @@ input[type="checkbox"]::after {
     line-height: 1.4 !important;
     box-sizing: border-box !important;
     vertical-align: middle !important;
-    border: 1px solid #DBEAFE !important;
+    border: 1px solid #93C5FD !important;
     border-radius: 4px !important;
     background-color: #FFFFFF !important;
     transition: border-color 0.2s ease !important;
@@ -398,7 +404,7 @@ input[type="checkbox"]::after {
     box-sizing: border-box !important;
     vertical-align: middle !important;
     background-color: #FFFFFF !important;
-    border: 1px solid #DBEAFE !important;
+    border: 1px solid #93C5FD !important;
     border-radius: 4px !important;
 }
 
