@@ -112,7 +112,8 @@ input[type="checkbox"]::after {
 }
 
 /* Blocs en mode détail - mis en valeur */
-.detailview-content .block {
+.detailview-content .block,
+#detailView .block {
     background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
     border-radius: 8px !important;
     box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important;
@@ -127,15 +128,6 @@ input[type="checkbox"]::after {
 
 .detailview-content .blockData table {
     background-color: transparent !important;
-}
-
-#detailView .block {
-    background: linear-gradient(135deg, #E6F7FF 0%, #DBEAFE 100%) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15) !important;
-    border: 2px solid #93C5FD !important;
-    padding: 5px !important;
-    margin-bottom: 5px !important;
 }
 
 /* Labels des champs */
@@ -365,14 +357,6 @@ input[type="checkbox"]::after {
 }
 
 /* Input elements */
-#EditView .fieldBlockContainer .inputElement {
-    height: 32px !important;
-    width: 100% !important;
-    min-height: 32px !important;
-    max-height: 32px !important;
-    box-sizing: border-box !important;
-}
-
 #EditView .inputElement:not([type="checkbox"]):not([type="radio"]) {
     height: 32px !important;
     width: 100% !important;
