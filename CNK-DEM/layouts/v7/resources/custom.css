@@ -69,9 +69,9 @@ select:focus {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Checkboxes et boutons radio - visibles et cliquables */
-input[type="checkbox"],
-input[type="radio"] {
+/* Checkboxes et boutons radio - visibles et cliquables (sauf dans les switch) */
+input[type="checkbox"]:not(.bootstrap-switch):not(.bootstrap-switch-container input):not([data-on-label]):not([data-off-label]),
+input[type="radio"]:not(.bootstrap-switch):not(.bootstrap-switch-container input) {
     opacity: 1 !important;
     visibility: visible !important;
     position: relative !important;
@@ -91,6 +91,19 @@ input[type="radio"] {
     appearance: auto !important;
     -webkit-appearance: checkbox !important;
     -moz-appearance: checkbox !important;
+}
+
+/* Garder les checkboxes des switch cachées */
+.bootstrap-switch input[type="checkbox"],
+.bootstrap-switch-container input[type="checkbox"],
+input[type="checkbox"][data-on-label],
+input[type="checkbox"][data-off-label] {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
 }
 
 /* Masquer les pseudo-éléments doublons */
