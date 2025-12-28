@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 14:51:25
+/* Smarty version 4.5.5, created on 2025-12-28 15:04:49
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/PopupNavigation.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6948096d174a64_92645890',
+  'unifunc' => 'content_69514711d52bb3_77026288',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'af4994f591a8a1389cddc474555eb3de6a5ca744' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/PopupNavigation.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6948096d174a64_92645890 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514711d52bb3_77026288 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="col-md-2"><?php if ((isset($_smarty_tpl->tpl_vars['MULTI_SELECT']->value)) && $_smarty_tpl->tpl_vars['MULTI_SELECT']->value) {
 if (!empty($_smarty_tpl->tpl_vars['LISTVIEW_ENTRIES']->value)) {?><button class="select btn btn-default" disabled="disabled"><strong><?php echo vtranslate('LBL_ADD',$_smarty_tpl->tpl_vars['MODULE']->value);?>

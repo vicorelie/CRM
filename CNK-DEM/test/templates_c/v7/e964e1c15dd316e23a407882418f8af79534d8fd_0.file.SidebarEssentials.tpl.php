@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 07:03:11
+/* Smarty version 4.5.5, created on 2025-12-28 15:33:43
   from '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/SidebarEssentials.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69479bafc8b8e8_82205454',
+  'unifunc' => 'content_69514dd7302db9_67269764',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'e964e1c15dd316e23a407882418f8af79534d8fd' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/SidebarEssentials.tpl',
-      1 => 1765893765,
+      1 => 1766693999,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69479bafc8b8e8_82205454 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514dd7302db9_67269764 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="sidebar-menu">
     <div class="module-filters" id="module-filters">
         <div class="sidebar-container lists-menu-container">

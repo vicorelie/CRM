@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 14:51:25
+/* Smarty version 4.5.5, created on 2025-12-28 15:04:49
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Popup.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6948096d156525_84027299',
+  'unifunc' => 'content_69514711d47e01_01451689',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'bff80e10395768aa94b8947d36b6e0ab6054aa08' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Popup.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6948096d156525_84027299 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514711d47e01_01451689 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="modal-dialog modal-lg"><div class="modal-content"><?php ob_start();
 echo vtranslate($_smarty_tpl->tpl_vars['MODULE']->value,$_smarty_tpl->tpl_vars['MODULE']->value);

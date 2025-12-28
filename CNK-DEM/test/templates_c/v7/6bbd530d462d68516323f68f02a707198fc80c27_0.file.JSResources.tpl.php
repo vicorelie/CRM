@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-20 22:52:21
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/JSResources.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_694728a56c45e9_32716606',
+  'unifunc' => 'content_6951442a91e553_49574985',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6bbd530d462d68516323f68f02a707198fc80c27' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/JSResources.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_694728a56c45e9_32716606 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442a91e553_49574985 (Smarty_Internal_Template $_smarty_tpl) {
 echo '<script'; ?>
  type="text/javascript" src="<?php echo vresource_url('layouts/v7/lib/jquery/purl.js');?>
 "><?php echo '</script'; ?>

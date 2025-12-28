@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:54:09
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/dashboards/DashBoardContents.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9feccef7_63012551',
+  'unifunc' => 'content_6951449162fe35_57916916',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'dbe5d27e3a655fba7b916afad03c2fda2bdbf3e4' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/dashboards/DashBoardContents.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9feccef7_63012551 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951449162fe35_57916916 (Smarty_Internal_Template $_smarty_tpl) {
 ?>    
 <div class="dashBoardContainer clearfix"><div class="tabContainer"><ul class="nav nav-tabs tabs sortable container-fluid"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DASHBOARD_TABS']->value, 'TAB_DATA', false, 'index');

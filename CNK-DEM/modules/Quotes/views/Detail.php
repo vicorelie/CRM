@@ -1,6 +1,6 @@
 <?php
 
-class Quotes_Detail_View extends Vtiger_Detail_View {
+class Quotes_Detail_View extends Inventory_Detail_View {
     
     /**
      * Charger les scripts JS personnalisés

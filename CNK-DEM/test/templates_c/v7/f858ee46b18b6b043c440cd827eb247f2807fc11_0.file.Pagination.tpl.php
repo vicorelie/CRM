@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Pagination.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9f8adb78_11991784',
+  'unifunc' => 'content_6951442af04692_07404172',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'f858ee46b18b6b043c440cd827eb247f2807fc11' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Pagination.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9f8adb78_11991784 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442af04692_07404172 (Smarty_Internal_Template $_smarty_tpl) {
 if (!$_smarty_tpl->tpl_vars['CLASS_VIEW_ACTION']->value) {?>
     <?php $_smarty_tpl->_assignInScope('CLASS_VIEW_ACTION', 'listViewActions');?>
     <?php $_smarty_tpl->_assignInScope('CLASS_VIEW_PAGING_INPUT', 'listViewPagingInput');?>

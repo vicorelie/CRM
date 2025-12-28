@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 05:04:36
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:38
   from '/var/www/CNK-DEM/layouts/v7/modules/Inventory/EditView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477fe4638762_30140248',
+  'unifunc' => 'content_69514436b2e5b5_08548727',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'ba25c76053b9218326aad1205a03e1d2b72ff45b' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Inventory/EditView.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/partials/Menubar.tpl' => 1,
   ),
 ),false)) {
-function content_69477fe4638762_30140248 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514436b2e5b5_08548727 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="main-container clearfix">
         <div id="modnavigator" class="module-nav editViewModNavigator">

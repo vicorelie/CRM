@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 05:04:36
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:38
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/String.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477fe4651fa5_74511794',
+  'unifunc' => 'content_69514436b48282_77740091',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '4b1e23650068d11d04b6b31c5a719b1c0281e46f' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/String.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477fe4651fa5_74511794 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514436b48282_77740091 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('FIELD_INFO', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldInfo());
 $_smarty_tpl->_assignInScope('SPECIAL_VALIDATOR', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getValidator());
 if (!(isset($_smarty_tpl->tpl_vars['FIELD_NAME']->value))) {

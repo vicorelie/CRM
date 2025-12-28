@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-20 22:52:21
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Footer.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_694728a56baec3_10536799',
+  'unifunc' => 'content_6951442a914338_32324814',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '2bb563102396a1f40ebf44a02272e964bfb9bca9' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Footer.tpl',
-      1 => 1765895241,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_694728a56baec3_10536799 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442a914338_32324814 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <footer class="app-footer">
 	<p>

@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/OwnerFieldSearchView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9f8c32b9_49578204',
+  'unifunc' => 'content_6951442af156f4_52211823',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6bda9f392f37b7b864b79436a99d306e1d5fe854' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/OwnerFieldSearchView.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9f8c32b9_49578204 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442af156f4_52211823 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('FIELD_INFO', call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'vtlib_array' ][ 0 ], array( $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldInfo() )));?><div class="select2_search_div"><?php $_smarty_tpl->_assignInScope('ASSIGNED_USER_ID', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->get('name'));
 $_smarty_tpl->_assignInScope('ALL_ACTIVEUSER_LIST', $_smarty_tpl->tpl_vars['FIELD_INFO']->value['picklistvalues'][vtranslate('LBL_USERS')]);
 $_smarty_tpl->_assignInScope('SEARCH_VALUES', explode(',',(isset($_smarty_tpl->tpl_vars['SEARCH_INFO']->value['searchValue'])) ? $_smarty_tpl->tpl_vars['SEARCH_INFO']->value['searchValue'] : ','));

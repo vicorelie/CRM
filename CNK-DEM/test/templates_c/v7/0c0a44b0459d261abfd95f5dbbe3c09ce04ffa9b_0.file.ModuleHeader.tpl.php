@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/ModuleHeader.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9f81be78_26944508',
+  'unifunc' => 'content_6951442a806f78_19790926',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '0c0a44b0459d261abfd95f5dbbe3c09ce04ffa9b' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/ModuleHeader.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9f81be78_26944508 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442a806f78_19790926 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 

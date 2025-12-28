@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 05:04:36
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:38
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/Reference.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477fe4667101_05050165',
+  'unifunc' => 'content_69514436b5ea07_90725958',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '1a134c5065a8bfd73e8c63f7bbdc98ca9cf0cdda' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/Reference.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477fe4667101_05050165 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514436b5ea07_90725958 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('FIELD_INFO', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldInfo());
 $_smarty_tpl->_assignInScope('FIELD_NAME', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->get('name'));
 $_smarty_tpl->_assignInScope('FIELD_VALUE', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->get('fieldvalue'));

@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 15:50:34
+/* Smarty version 4.5.5, created on 2025-12-28 16:20:30
   from '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/PDFPreview.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6948174a236a37_14594818',
+  'unifunc' => 'content_695158ce20f1a5_90065185',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'f859db8ac40ec2eda164b8cf6402a2c616784db4' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/PDFPreview.tpl',
-      1 => 1765893765,
+      1 => 1766693999,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6948174a236a37_14594818 (Smarty_Internal_Template $_smarty_tpl) {
+function content_695158ce20f1a5_90065185 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="modal-dialog modal-lg"><div class="modal-content"><div class="filePreview container-fluid"><div class="modal-header row"><div class="filename col-lg-8"><h4 class="textOverflowEllipsis maxWidth50" title="<?php echo vtranslate('LBL_PREVIEW',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 "><b><?php echo vtranslate('LBL_PREVIEW',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </b></h4></div><div class="col-lg-1 pull-right"><button type="button" class="close" aria-label="Close" data-dismiss="modal"><span aria-hidden="true" class='fa fa-close'></span></button></div></div><div class="modal-body row" style="height:550px;"><input type="hidden" name="commontemplateid" value='<?php echo $_smarty_tpl->tpl_vars['COMMONTEMPLATEIDS']->value;?>

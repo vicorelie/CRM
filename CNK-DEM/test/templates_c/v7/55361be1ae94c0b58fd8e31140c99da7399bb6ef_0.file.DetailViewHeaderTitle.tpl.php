@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:55:08
+/* Smarty version 4.5.5, created on 2025-12-28 15:04:34
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/DetailViewHeaderTitle.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477dac25aea0_52919646',
+  'unifunc' => 'content_69514702c04fb6_01173236',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '55361be1ae94c0b58fd8e31140c99da7399bb6ef' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/DetailViewHeaderTitle.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477dac25aea0_52919646 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69514702c04fb6_01173236 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="col-sm-6 col-lg-6 col-md-6"><div class="record-header clearfix"><div class="recordImage bgpotentials app-<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
 "><div class="name"><span><strong><?php echo $_smarty_tpl->tpl_vars['MODULE_MODEL']->value->getModuleIcon();?>
 </strong></span></div></div><div class="recordBasicInfo"><div class="info-row"><h4><span class="recordLabel pushDown" title="<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getName();?>

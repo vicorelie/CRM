@@ -52,23 +52,6 @@ select:focus {
     border-spacing: 0 6px !important;
 }
 
-/* Lignes style carte moderne */
-.detailview-content .detailview-table tr,
-.detailview-content .table.detailview-table tr,
-.detailview-content .recordDetails tr {
-    background-color: #FFFFFF !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-    border-radius: 8px !important;
-}
-
-/* Effet hover désactivé sur les lignes */
-.detailview-content .detailview-table tr:hover,
-.detailview-content .table.detailview-table tr:hover,
-.detailview-content .recordDetails tr:hover {
-    background-color: #FFFFFF !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-}
-
 /* Checkboxes et boutons radio - visibles et cliquables (sauf dans les switch) */
 input[type="checkbox"]:not(.bootstrap-switch):not(.bootstrap-switch-container input):not([data-on-label]):not([data-off-label]),
 input[type="radio"]:not(.bootstrap-switch):not(.bootstrap-switch-container input) {
@@ -141,11 +124,6 @@ input[type="checkbox"]::after {
     background-color: transparent !important;
 }
 
-/* Labels des champs */
-.detailview-content .fieldLabel {
-    font-weight: 700 !important;
-    color: #0D47A1 !important;
-}
 
 .detailview-content .fieldValue {
     color: inherit !important;
@@ -267,7 +245,7 @@ input[type="checkbox"]::after {
 /* Cellules */
 #EditView table td,
 #EditView .table td {
-    padding: 8px 12px !important;
+    padding: 6px 12px !important;
     vertical-align: middle !important;
     border-top: none !important;
     border-bottom: none !important;
@@ -311,7 +289,7 @@ input[type="checkbox"]::after {
 
 /* Valeurs */
 #EditView td.fieldValue {
-    padding: 8px 12px !important;
+    padding: 6px 12px !important;
     background-color: #FFFFFF !important;
     border: 1px solid #93C5FD !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;

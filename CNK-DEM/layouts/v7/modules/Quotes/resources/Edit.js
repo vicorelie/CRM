@@ -72,6 +72,25 @@ Inventory_Edit_Js("Quotes_Edit_Js",{
             }
         });
 
+        // CUSTOM: Ajouter le forfait au calcul Acompte/Solde
+        var forfaitTarif = parseFloat(jQuery('[name="cf_1127"]').val()) || 0;
+        var forfaitSupplement = parseFloat(jQuery('[name="cf_1129"]').val()) || 0;
+        var forfaitPctAcompte = parseFloat(jQuery('[name="cf_1133"]').val()) || 43;
+        var forfaitPctSolde = parseFloat(jQuery('[name="cf_1135"]').val()) || 57;
+
+        if (forfaitTarif > 0 || forfaitSupplement > 0) {
+            // Le tarif forfait est divisé selon les %, le supplément va 100% à l'acompte
+            var forfaitAcompteHT = (forfaitTarif * forfaitPctAcompte / 100) + forfaitSupplement;
+            var forfaitSoldeHT = forfaitTarif * forfaitPctSolde / 100;
+
+            totalAcompte += forfaitAcompteHT;
+            totalSolde += forfaitSoldeHT;
+
+            console.log('Forfait: Tarif=' + forfaitTarif.toFixed(2) + ' + Supplément=' + forfaitSupplement.toFixed(2));
+            console.log('Forfait Acompte HT: ' + forfaitAcompteHT.toFixed(2) + ' €');
+            console.log('Forfait Solde HT: ' + forfaitSoldeHT.toFixed(2) + ' €');
+        }
+
         // Récupérer le taux de TVA depuis VTiger - essayer plusieurs méthodes
         var grandTotal = 0;
         var totalAfterDiscountGlobal = 0;
@@ -284,6 +303,13 @@ Inventory_Edit_Js("Quotes_Edit_Js",{
             // IMPORTANT : Recalculer juste avant la sauvegarde du formulaire
             jQuery(document).on('click', 'button[name="saveButton"], button[type="submit"]', function() {
                 Quotes_Edit_Js.calculateAcompteSoldeTotals();
+            });
+
+            // CUSTOM: Écouter les changements des champs forfait
+            jQuery(document).on('change blur', '[name="cf_1127"], [name="cf_1129"], [name="cf_1133"], [name="cf_1135"]', function() {
+                setTimeout(function() {
+                    Quotes_Edit_Js.calculateAcompteSoldeTotals();
+                }, 300);
             });
 
             // Recalculer toutes les 2 secondes pendant l'édition (pour capturer tous les changements)

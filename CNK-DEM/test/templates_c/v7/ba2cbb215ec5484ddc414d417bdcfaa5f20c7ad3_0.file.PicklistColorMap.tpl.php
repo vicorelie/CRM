@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/PicklistColorMap.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9f88a118_37082100',
+  'unifunc' => 'content_6951442aed19c5_86010587',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'ba2cbb215ec5484ddc414d417bdcfaa5f20c7ad3' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/PicklistColorMap.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9f88a118_37082100 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442aed19c5_86010587 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <style type="text/css">
     <?php

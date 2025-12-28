@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/SidebarAppMenu.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9f8074b5_15828717',
+  'unifunc' => 'content_6951442a7f1561_14691647',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '0f68f335a142330b7ee6eda9ae23ed2597d33d1a' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/SidebarAppMenu.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9f8074b5_15828717 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442a7f1561_14691647 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="app-menu hide" id="app-menu">
 	<div class="container-fluid">

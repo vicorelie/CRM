@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-21 04:54:55
+/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/SidebarEssentials.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69477d9f83a6f0_72860523',
+  'unifunc' => 'content_6951442ae8a135_84088227',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '63da0bc858ba43e3301e0b78760fe9c2ec848f17' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/SidebarEssentials.tpl',
-      1 => 1765888875,
+      1 => 1766693566,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69477d9f83a6f0_72860523 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6951442ae8a135_84088227 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="sidebar-menu">
@@ -103,8 +103,8 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?>
 									<li style="font-size:12px;" class='listViewFilter <?php if ($_smarty_tpl->tpl_vars['VIEWID']->value == $_smarty_tpl->tpl_vars['CUSTOM_VIEW']->value->getId() && ((isset($_smarty_tpl->tpl_vars['CURRENT_TAG']->value)) && $_smarty_tpl->tpl_vars['CURRENT_TAG']->value == '')) {?> active<?php } elseif ((isset($_smarty_tpl->tpl_vars['__smarty_foreach_customView']->value['iteration']) ? $_smarty_tpl->tpl_vars['__smarty_foreach_customView']->value['iteration'] : null) > 10) {?> filterHidden hide<?php }?>'> 
                                         <?php ob_start();
 echo vtranslate($_smarty_tpl->tpl_vars['CUSTOM_VIEW']->value->get('viewname'),$_smarty_tpl->tpl_vars['MODULE']->value);
-$_prefixVariable5 = ob_get_clean();
-$_smarty_tpl->_assignInScope('VIEWNAME', $_prefixVariable5);?>
+$_prefixVariable1 = ob_get_clean();
+$_smarty_tpl->_assignInScope('VIEWNAME', $_prefixVariable1);?>
 										<?php $_tmp_array = isset($_smarty_tpl->tpl_vars['CUSTOM_VIEW_NAMES']) ? $_smarty_tpl->tpl_vars['CUSTOM_VIEW_NAMES']->value : array();
 if (!(is_array($_tmp_array) || $_tmp_array instanceof ArrayAccess)) {
 settype($_tmp_array, 'array');
