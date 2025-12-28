@@ -13,12 +13,16 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		global $adb;
 
 		// Appeler la méthode parent pour sauvegarder le devis
-		parent::process($request);
+		$result = parent::process($request);
 
 		// CUSTOM: Recalculer les totaux à partir des Acompte/Solde (qui incluent le forfait)
+		// Récupérer le recordId (peut être dans le request ou dans le résultat du parent)
 		$recordId = $request->get('record');
+		if (!$recordId && isset($result) && method_exists($result, 'getId')) {
+			$recordId = $result->getId();
+		}
 		if (!$recordId) {
-			return;
+			return $result;
 		}
 
 		// CUSTOM: Calculer et mettre à jour le Total forfait (cf_1137 = cf_1127 + cf_1129)
@@ -33,52 +37,27 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 				array($totalForfaitHT, $recordId));
 		}
 
-		// CUSTOM: Ajouter l'assurance au subtotal VTiger
-		$result = $adb->pquery("SELECT cf_1141 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
-		$assuranceTarif = 0;
-		if ($adb->num_rows($result) > 0) {
-			$assuranceTarif = floatval($adb->query_result($result, 0, 'cf_1141'));
-		}
-
-		// Récupérer le subtotal VTiger actuel (produits + forfait uniquement)
-		$result = $adb->pquery("SELECT subtotal FROM vtiger_quotes WHERE quoteid = ?", array($recordId));
-		if ($adb->num_rows($result) > 0) {
-			$currentSubTotal = floatval($adb->query_result($result, 0, 'subtotal'));
-
-			// Ajouter l'assurance au subtotal
-			$newSubTotal = $currentSubTotal + $assuranceTarif;
-
-			// Calculer le nouveau total TTC avec TVA
-			$taxRate = 0.20;
-			$newPreTaxTotal = $newSubTotal;
-			$newTotal = $newSubTotal * (1 + $taxRate);
-
-			// Mettre à jour la base de données
-			$adb->pquery("UPDATE vtiger_quotes SET subtotal = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
-				array($newSubTotal, $newPreTaxTotal, $newTotal, $recordId));
-		}
-
-		// Récupérer les totaux Acompte/Solde (calculés correctement par JavaScript)
+		// Récupérer les totaux Acompte/Solde (calculés correctement par JavaScript, incluent produits + forfait + assurance)
 		$result = $adb->pquery("SELECT cf_1055, cf_1057 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
 		if ($adb->num_rows($result) > 0) {
 			$totalAcompteTTC = floatval($adb->query_result($result, 0, 'cf_1055'));
 			$totalSoldeTTC = floatval($adb->query_result($result, 0, 'cf_1057'));
 			$grandTotal = $totalAcompteTTC + $totalSoldeTTC;
 
-			// Vérifier que Acompte + Solde correspond au Total TTC calculé
-			// Si ce n'est pas le cas, recalculer à partir de Acompte + Solde
-			// (car Acompte/Solde incluent déjà forfait et assurance)
-			$calculatedTotal = $newTotal;
-			if (abs($grandTotal - $calculatedTotal) > 0.01) {
-				// Les totaux ne correspondent pas, utiliser Acompte + Solde comme référence
-				$newTotal = $grandTotal;
+			// Ne recalculer que si Acompte et Solde ont des valeurs
+			if ($grandTotal > 0) {
+				// Calculer le subtotal HT à partir du grand total TTC (TVA 20%)
+				$taxRate = 0.20;
 				$newSubTotal = $grandTotal / (1 + $taxRate);
 				$newPreTaxTotal = $newSubTotal;
+				$newTotal = $grandTotal;
 
 				// Mettre à jour la base de données
 				$adb->pquery("UPDATE vtiger_quotes SET subtotal = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
 					array($newSubTotal, $newPreTaxTotal, $newTotal, $recordId));
 			}
 		}
+
+		return $result;
 	}
 }
