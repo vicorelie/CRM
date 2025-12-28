@@ -21,6 +21,18 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 			return;
 		}
 
+		// CUSTOM: Calculer et mettre à jour le Total forfait (cf_1137 = cf_1127 + cf_1129)
+		$result = $adb->pquery("SELECT cf_1127, cf_1129 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
+		if ($adb->num_rows($result) > 0) {
+			$forfaitTarif = floatval($adb->query_result($result, 0, 'cf_1127'));
+			$forfaitSupplement = floatval($adb->query_result($result, 0, 'cf_1129'));
+			$totalForfaitHT = $forfaitTarif + $forfaitSupplement;
+
+			// Mettre à jour le Total forfait
+			$adb->pquery("UPDATE vtiger_quotescf SET cf_1137 = ? WHERE quoteid = ?",
+				array($totalForfaitHT, $recordId));
+		}
+
 		// Récupérer les totaux Acompte/Solde (calculés correctement par JavaScript)
 		$result = $adb->pquery("SELECT cf_1055, cf_1057 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
 		if ($adb->num_rows($result) > 0) {
