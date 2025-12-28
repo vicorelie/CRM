@@ -45,13 +45,15 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		// IMPORTANT: Calculer le subtotal des PRODUITS UNIQUEMENT (pas forfait, pas assurance)
 		// en faisant la somme directe des lignes de produits/services
 		$result = $adb->pquery(
-			"SELECT SUM(quantity * listprice * (1 - discount_percent/100) - discount_amount) as products_total
+			"SELECT SUM(
+				quantity * listprice * (1 - COALESCE(discount_percent, 0)/100) - COALESCE(discount_amount, 0)
+			) as products_total
 			 FROM vtiger_inventoryproductrel
 			 WHERE id = ?",
 			array($recordId)
 		);
 		$productsSubTotal = 0;
-		if ($adb->num_rows($result) > 0) {
+		if ($adb->num_rows($result) > 0 && $adb->query_result($result, 0, 'products_total') !== NULL) {
 			$productsSubTotal = floatval($adb->query_result($result, 0, 'products_total'));
 		}
 
