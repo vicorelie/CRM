@@ -42,13 +42,17 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		$adb->pquery("UPDATE vtiger_quotescf SET cf_1137 = ? WHERE quoteid = ?",
 			array($totalForfaitHT, $recordId));
 
-		// Récupérer le total des produits/services depuis VTiger
-		$result = $adb->pquery("SELECT subtotal, total FROM vtiger_quotes WHERE quoteid = ?", array($recordId));
-		$vtigerSubTotal = 0;
-		$vtigerTotal = 0;
+		// IMPORTANT: Calculer le subtotal des PRODUITS UNIQUEMENT (pas forfait, pas assurance)
+		// en faisant la somme directe des lignes de produits/services
+		$result = $adb->pquery(
+			"SELECT SUM(quantity * listprice * (1 - discount_percent/100) - discount_amount) as products_total
+			 FROM vtiger_inventoryproductrel
+			 WHERE id = ?",
+			array($recordId)
+		);
+		$productsSubTotal = 0;
 		if ($adb->num_rows($result) > 0) {
-			$vtigerSubTotal = floatval($adb->query_result($result, 0, 'subtotal'));
-			$vtigerTotal = floatval($adb->query_result($result, 0, 'total'));
+			$productsSubTotal = floatval($adb->query_result($result, 0, 'products_total'));
 		}
 
 		// CUSTOM: Calculer Acompte et Solde côté serveur (plus fiable que JavaScript)
@@ -58,15 +62,15 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		$forfaitAcompteHT = ($forfaitTarif * $forfaitPctAcompte / 100) + $forfaitSupplement;
 		$forfaitSoldeHT = $forfaitTarif * $forfaitPctSolde / 100;
 
-		// Total HT = Produits + Forfait + Assurance
-		$totalHT = $vtigerSubTotal + $totalForfaitHT + $assuranceTarif;
+		// Total HT = Produits UNIQUEMENT + Forfait + Assurance
+		$totalHT = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
 
 		// Répartir entre Acompte et Solde
 		// Produits: selon les % de chaque produit (gardés par VTiger)
 		// Forfait: selon cf_1133 et cf_1135
 		// Assurance: 100% à l'acompte
-		$totalAcompteHT = ($vtigerSubTotal * $forfaitPctAcompte / 100) + $forfaitAcompteHT + $assuranceTarif;
-		$totalSoldeHT = ($vtigerSubTotal * $forfaitPctSolde / 100) + $forfaitSoldeHT;
+		$totalAcompteHT = ($productsSubTotal * $forfaitPctAcompte / 100) + $forfaitAcompteHT + $assuranceTarif;
+		$totalSoldeHT = ($productsSubTotal * $forfaitPctSolde / 100) + $forfaitSoldeHT;
 
 		// Calculer les montants TTC
 		$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
