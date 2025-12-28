@@ -33,6 +33,31 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 				array($totalForfaitHT, $recordId));
 		}
 
+		// CUSTOM: Ajouter l'assurance au subtotal VTiger
+		$result = $adb->pquery("SELECT cf_1141 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
+		$assuranceTarif = 0;
+		if ($adb->num_rows($result) > 0) {
+			$assuranceTarif = floatval($adb->query_result($result, 0, 'cf_1141'));
+		}
+
+		// Récupérer le subtotal VTiger actuel (produits + forfait uniquement)
+		$result = $adb->pquery("SELECT subtotal FROM vtiger_quotes WHERE quoteid = ?", array($recordId));
+		if ($adb->num_rows($result) > 0) {
+			$currentSubTotal = floatval($adb->query_result($result, 0, 'subtotal'));
+
+			// Ajouter l'assurance au subtotal
+			$newSubTotal = $currentSubTotal + $assuranceTarif;
+
+			// Calculer le nouveau total TTC avec TVA
+			$taxRate = 0.20;
+			$newPreTaxTotal = $newSubTotal;
+			$newTotal = $newSubTotal * (1 + $taxRate);
+
+			// Mettre à jour la base de données
+			$adb->pquery("UPDATE vtiger_quotes SET subtotal = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
+				array($newSubTotal, $newPreTaxTotal, $newTotal, $recordId));
+		}
+
 		// Récupérer les totaux Acompte/Solde (calculés correctement par JavaScript)
 		$result = $adb->pquery("SELECT cf_1055, cf_1057 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
 		if ($adb->num_rows($result) > 0) {
@@ -40,15 +65,20 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 			$totalSoldeTTC = floatval($adb->query_result($result, 0, 'cf_1057'));
 			$grandTotal = $totalAcompteTTC + $totalSoldeTTC;
 
-			// Calculer le subtotal HT à partir du grand total TTC (TVA 20%)
-			$taxRate = 0.20;
-			$newSubTotal = $grandTotal / (1 + $taxRate);
-			$newPreTaxTotal = $newSubTotal;
-			$newTotal = $grandTotal;
+			// Vérifier que Acompte + Solde correspond au Total TTC calculé
+			// Si ce n'est pas le cas, recalculer à partir de Acompte + Solde
+			// (car Acompte/Solde incluent déjà forfait et assurance)
+			$calculatedTotal = $newTotal;
+			if (abs($grandTotal - $calculatedTotal) > 0.01) {
+				// Les totaux ne correspondent pas, utiliser Acompte + Solde comme référence
+				$newTotal = $grandTotal;
+				$newSubTotal = $grandTotal / (1 + $taxRate);
+				$newPreTaxTotal = $newSubTotal;
 
-			// Mettre à jour la base de données
-			$adb->pquery("UPDATE vtiger_quotes SET subtotal = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
-				array($newSubTotal, $newPreTaxTotal, $newTotal, $recordId));
+				// Mettre à jour la base de données
+				$adb->pquery("UPDATE vtiger_quotes SET subtotal = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
+					array($newSubTotal, $newPreTaxTotal, $newTotal, $recordId));
+			}
 		}
 	}
 }

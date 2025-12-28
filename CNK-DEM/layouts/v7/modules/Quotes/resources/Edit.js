@@ -91,6 +91,16 @@ Inventory_Edit_Js("Quotes_Edit_Js",{
             console.log('Forfait Solde HT: ' + forfaitSoldeHT.toFixed(2) + ' €');
         }
 
+        // CUSTOM: Ajouter l'assurance au calcul Acompte/Solde
+        var assuranceTarif = parseFloat(jQuery('[name="cf_1141"]').val()) || 0;
+
+        if (assuranceTarif > 0) {
+            // L'assurance va 100% à l'acompte (payée d'avance)
+            totalAcompte += assuranceTarif;
+
+            console.log('Assurance HT: ' + assuranceTarif.toFixed(2) + ' € (100% Acompte)');
+        }
+
         // Récupérer le taux de TVA depuis VTiger - essayer plusieurs méthodes
         var grandTotal = 0;
         var totalAfterDiscountGlobal = 0;
@@ -307,6 +317,13 @@ Inventory_Edit_Js("Quotes_Edit_Js",{
 
             // CUSTOM: Écouter les changements des champs forfait
             jQuery(document).on('change blur', '[name="cf_1127"], [name="cf_1129"], [name="cf_1133"], [name="cf_1135"]', function() {
+                setTimeout(function() {
+                    Quotes_Edit_Js.calculateAcompteSoldeTotals();
+                }, 300);
+            });
+
+            // CUSTOM: Écouter les changements du champ assurance
+            jQuery(document).on('change blur', '[name="cf_1141"]', function() {
                 setTimeout(function() {
                     Quotes_Edit_Js.calculateAcompteSoldeTotals();
                 }, 300);
