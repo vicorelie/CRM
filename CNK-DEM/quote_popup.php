@@ -91,6 +91,25 @@ $potentialName = $potential['potentialname'];
                 </div>
 
                 <div class="form-section">
+                    <h3>Produits / Services</h3>
+                    <button type="button" class="btn btn-success" onclick="openProductPopup()">
+                        <i class="fas fa-plus"></i> Ajouter un produit
+                    </button>
+                    <input type="hidden" id="totalProductCount" name="totalProductCount" value="0">
+                    <table id="productsTable" style="width:100%;margin-top:15px;border-collapse:collapse;display:none">
+                        <thead>
+                            <tr style="background:#667eea;color:white">
+                                <th style="padding:12px;text-align:left">Produit</th>
+                                <th style="padding:12px;text-align:left;width:100px">Quantité</th>
+                                <th style="padding:12px;text-align:left;width:120px">Prix unitaire</th>
+                                <th style="padding:12px;text-align:left;width:80px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsList"></tbody>
+                    </table>
+                </div>
+
+                <div class="form-section">
                     <h3>Assurance</h3>
                     <div class="form-group">
                         <label>Montant assurance</label>
@@ -112,5 +131,49 @@ $potentialName = $potential['potentialname'];
             </button>
         </div>
     </div>
+    <script>
+        var productCounter = 0;
+        var selectedProducts = {};
+
+        function openProductPopup() {
+            var url = 'index.php?module=Products&view=Popup&src_module=Quotes&src_field=productSelect&multi_select=true';
+            window.open(url, 'product_popup', 'width=1000,height=600,scrollbars=yes,resizable=yes');
+        }
+
+        window.selectProductsCallback = function(products) {
+            if (!Array.isArray(products)) products = [products];
+            products.forEach(function(product) {
+                if (selectedProducts[product.id]) return;
+                productCounter++;
+                selectedProducts[product.id] = true;
+                var productName = product.name || product.label || 'Produit inconnu';
+                var unitPrice = parseFloat(product.unit_price || product.listprice || 0).toFixed(2);
+                var row = document.createElement('tr');
+                row.setAttribute('data-product-id', product.id);
+                row.style.borderBottom = '1px solid #dee2e6';
+                row.innerHTML = '<td style="padding:10px">' + productName +
+                    '<input type="hidden" name="hdnProductId' + productCounter + '" value="' + product.id + '">' +
+                    '<input type="hidden" name="productName' + productCounter + '" value="' + productName + '">' +
+                    '<input type="hidden" name="comment' + productCounter + '" value="">' +
+                    '<input type="hidden" name="productDeleted' + productCounter + '" value="0">' +
+                    '<input type="hidden" name="discount_percent' + productCounter + '" value="0">' +
+                    '<input type="hidden" name="discount_amount' + productCounter + '" value="0">' +
+                    '</td><td style="padding:10px"><input type="number" name="qty' + productCounter + '" value="1" step="1" min="1" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:5px"></td>' +
+                    '<td style="padding:10px"><input type="number" name="listPrice' + productCounter + '" value="' + unitPrice + '" step="0.01" min="0" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:5px"></td>' +
+                    '<td style="padding:10px"><button type="button" onclick="removeProduct(this,' + product.id + ')" style="background:#dc3545;color:white;padding:8px 15px;border:none;border-radius:8px;cursor:pointer"><i class="fas fa-trash"></i></button></td>';
+                document.getElementById('productsList').appendChild(row);
+                document.getElementById('productsTable').style.display = 'table';
+                document.getElementById('totalProductCount').value = productCounter;
+            });
+        };
+
+        function removeProduct(btn, productId) {
+            btn.closest('tr').remove();
+            delete selectedProducts[productId];
+            if (document.getElementById('productsList').children.length === 0) {
+                document.getElementById('productsTable').style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
