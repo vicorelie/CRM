@@ -92,9 +92,11 @@ $potentialName = $potential['potentialname'];
 
                 <div class="form-section">
                     <h3>Produits / Services</h3>
-                    <button type="button" class="btn btn-success" onclick="openProductPopup()">
-                        <i class="fas fa-plus"></i> Ajouter un produit
-                    </button>
+                    <div class="form-group">
+                        <label>Rechercher et ajouter un produit</label>
+                        <input type="text" id="productSearch" placeholder="Tapez pour rechercher un produit..." style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px">
+                        <div id="productResults" style="position:relative;background:white;border:1px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:300px;overflow-y:auto;display:none"></div>
+                    </div>
                     <input type="hidden" id="totalProductCount" name="totalProductCount" value="0">
                     <table id="productsTable" style="width:100%;margin-top:15px;border-collapse:collapse;display:none">
                         <thead>
@@ -134,38 +136,123 @@ $potentialName = $potential['potentialname'];
     <script>
         var productCounter = 0;
         var selectedProducts = {};
+        var allProducts = [];
+        var searchTimeout;
 
-        function openProductPopup() {
-            var url = 'index.php?module=Products&view=Popup&src_module=Quotes&src_field=productSelect&multi_select=true';
-            window.open(url, 'product_popup', 'width=1000,height=600,scrollbars=yes,resizable=yes');
+        // Charger tous les produits au démarrage
+        fetch('index.php?module=Products&view=List&mode=getRecordsJson')
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.result) {
+                    allProducts = data.result;
+                }
+            });
+
+        // Recherche de produits
+        document.addEventListener('DOMContentLoaded', function() {
+            var searchInput = document.getElementById('productSearch');
+            var resultsDiv = document.getElementById('productResults');
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                var query = this.value.toLowerCase();
+
+                if (query.length < 2) {
+                    resultsDiv.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(function() {
+                    var filtered = allProducts.filter(function(p) {
+                        return p.productname && p.productname.toLowerCase().indexOf(query) !== -1;
+                    });
+
+                    if (filtered.length === 0) {
+                        // Faire une recherche AJAX si pas de résultats en cache
+                        fetch('index.php?module=Products&action=ProductsAjax&mode=search&search_value=' + encodeURIComponent(query))
+                            .then(response => response.json())
+                            .then(data => {
+                                displayResults(data.result || []);
+                            });
+                    } else {
+                        displayResults(filtered);
+                    }
+                }, 300);
+            });
+
+            searchInput.addEventListener('focus', function() {
+                if (this.value.length >= 2 && resultsDiv.children.length > 0) {
+                    resultsDiv.style.display = 'block';
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+                    resultsDiv.style.display = 'none';
+                }
+            });
+        });
+
+        function displayResults(products) {
+            var resultsDiv = document.getElementById('productResults');
+            resultsDiv.innerHTML = '';
+
+            if (products.length === 0) {
+                resultsDiv.innerHTML = '<div style="padding:10px;color:#999">Aucun produit trouvé</div>';
+                resultsDiv.style.display = 'block';
+                return;
+            }
+
+            products.forEach(function(product) {
+                var div = document.createElement('div');
+                div.style.cssText = 'padding:10px;cursor:pointer;border-bottom:1px solid #eee';
+                div.innerHTML = '<strong>' + (product.productname || product.name) + '</strong><br><small>' + (parseFloat(product.unit_price || 0).toFixed(2)) + ' €</small>';
+                div.onmouseover = function() { this.style.background = '#f0f0f0'; };
+                div.onmouseout = function() { this.style.background = 'white'; };
+                div.onclick = function() {
+                    addProduct({
+                        id: product.id || product.productid,
+                        name: product.productname || product.name,
+                        unit_price: product.unit_price
+                    });
+                    document.getElementById('productSearch').value = '';
+                    resultsDiv.style.display = 'none';
+                };
+                resultsDiv.appendChild(div);
+            });
+
+            resultsDiv.style.display = 'block';
         }
 
-        window.selectProductsCallback = function(products) {
-            if (!Array.isArray(products)) products = [products];
-            products.forEach(function(product) {
-                if (selectedProducts[product.id]) return;
-                productCounter++;
-                selectedProducts[product.id] = true;
-                var productName = product.name || product.label || 'Produit inconnu';
-                var unitPrice = parseFloat(product.unit_price || product.listprice || 0).toFixed(2);
-                var row = document.createElement('tr');
-                row.setAttribute('data-product-id', product.id);
-                row.style.borderBottom = '1px solid #dee2e6';
-                row.innerHTML = '<td style="padding:10px">' + productName +
-                    '<input type="hidden" name="hdnProductId' + productCounter + '" value="' + product.id + '">' +
-                    '<input type="hidden" name="productName' + productCounter + '" value="' + productName + '">' +
-                    '<input type="hidden" name="comment' + productCounter + '" value="">' +
-                    '<input type="hidden" name="productDeleted' + productCounter + '" value="0">' +
-                    '<input type="hidden" name="discount_percent' + productCounter + '" value="0">' +
-                    '<input type="hidden" name="discount_amount' + productCounter + '" value="0">' +
-                    '</td><td style="padding:10px"><input type="number" name="qty' + productCounter + '" value="1" step="1" min="1" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:5px"></td>' +
-                    '<td style="padding:10px"><input type="number" name="listPrice' + productCounter + '" value="' + unitPrice + '" step="0.01" min="0" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:5px"></td>' +
-                    '<td style="padding:10px"><button type="button" onclick="removeProduct(this,' + product.id + ')" style="background:#dc3545;color:white;padding:8px 15px;border:none;border-radius:8px;cursor:pointer"><i class="fas fa-trash"></i></button></td>';
-                document.getElementById('productsList').appendChild(row);
-                document.getElementById('productsTable').style.display = 'table';
-                document.getElementById('totalProductCount').value = productCounter;
-            });
-        };
+        function addProduct(product) {
+            if (selectedProducts[product.id]) {
+                alert('Ce produit est déjà dans la liste');
+                return;
+            }
+
+            productCounter++;
+            selectedProducts[product.id] = true;
+            var productName = product.name || 'Produit inconnu';
+            var unitPrice = parseFloat(product.unit_price || 0).toFixed(2);
+
+            var row = document.createElement('tr');
+            row.setAttribute('data-product-id', product.id);
+            row.style.borderBottom = '1px solid #dee2e6';
+            row.innerHTML = '<td style="padding:10px">' + productName +
+                '<input type="hidden" name="hdnProductId' + productCounter + '" value="' + product.id + '">' +
+                '<input type="hidden" name="productName' + productCounter + '" value="' + productName + '">' +
+                '<input type="hidden" name="comment' + productCounter + '" value="">' +
+                '<input type="hidden" name="productDeleted' + productCounter + '" value="0">' +
+                '<input type="hidden" name="discount_percent' + productCounter + '" value="0">' +
+                '<input type="hidden" name="discount_amount' + productCounter + '" value="0">' +
+                '</td><td style="padding:10px"><input type="number" name="qty' + productCounter + '" value="1" step="1" min="1" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:5px"></td>' +
+                '<td style="padding:10px"><input type="number" name="listPrice' + productCounter + '" value="' + unitPrice + '" step="0.01" min="0" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:5px"></td>' +
+                '<td style="padding:10px"><button type="button" onclick="removeProduct(this,' + product.id + ')" style="background:#dc3545;color:white;padding:8px 15px;border:none;border-radius:8px;cursor:pointer"><i class="fas fa-trash"></i></button></td>';
+
+            document.getElementById('productsList').appendChild(row);
+            document.getElementById('productsTable').style.display = 'table';
+            document.getElementById('totalProductCount').value = productCounter;
+        }
 
         function removeProduct(btn, productId) {
             btn.closest('tr').remove();
