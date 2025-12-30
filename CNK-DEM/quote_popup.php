@@ -280,52 +280,35 @@ if ($productsResult) {
             }
         }
 
-        // Intercepter la soumission du formulaire pour l'envoyer vers la fenêtre parente
+        // Intercepter la soumission du formulaire pour rediriger vers la page de création de devis
         document.getElementById('quoteForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Créer un formulaire dans la fenêtre parente (opener)
+            // Construire l'URL de création de devis avec les paramètres
+            var form = this;
+            var params = new URLSearchParams();
+
+            // Paramètres de base
+            params.append('module', 'Quotes');
+            params.append('view', 'Edit');
+            params.append('sourceModule', 'Potentials');
+            params.append('sourceRecord', '<?php echo $potentialId; ?>');
+
+            // Ajouter les valeurs du formulaire comme paramètres
+            var inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(function(input) {
+                if (input.name && input.type !== 'submit' && input.type !== 'button' && input.value) {
+                    params.append(input.name, input.value);
+                }
+            });
+
+            // Rediriger la fenêtre parente vers la page de création de devis
+            var url = 'index.php?' + params.toString();
             if (window.opener && !window.opener.closed) {
-                var form = this;
-                var openerForm = window.opener.document.createElement('form');
-                openerForm.method = 'POST';
-                openerForm.action = window.opener.location.origin + '/index.php';
-
-                // Copier tous les champs du formulaire
-                var inputs = form.querySelectorAll('input, select, textarea');
-                inputs.forEach(function(input) {
-                    // Ignorer les champs sans nom ou de type submit/button
-                    if (!input.name || input.type === 'submit' || input.type === 'button') {
-                        return;
-                    }
-
-                    var newInput = window.opener.document.createElement('input');
-                    newInput.type = 'hidden';
-                    newInput.name = input.name;
-
-                    // Obtenir la valeur correctement selon le type d'input
-                    if (input.type === 'checkbox') {
-                        newInput.value = input.checked ? input.value : '';
-                    } else if (input.type === 'radio') {
-                        if (input.checked) {
-                            newInput.value = input.value;
-                        } else {
-                            return; // Ne pas ajouter les radios non cochés
-                        }
-                    } else {
-                        newInput.value = input.value || '';
-                    }
-
-                    openerForm.appendChild(newInput);
-                });
-
-                // Ajouter le formulaire au document parent, le soumettre et fermer le popup
-                window.opener.document.body.appendChild(openerForm);
-                openerForm.submit();
+                window.opener.location.href = url;
                 window.close();
             } else {
-                // Si pas de fenêtre parente, soumettre normalement
-                this.submit();
+                window.location.href = url;
             }
         });
     </script>
