@@ -91,9 +91,10 @@ if ($productsResult) {
                         <label>Type de forfait</label>
                         <select name="cf_1125">
                             <option value="">-- Sélectionnez --</option>
-                            <option value="ECO">ECO</option>
-                            <option value="MEDIUM">MEDIUM</option>
-                            <option value="PREMIUM">PREMIUM</option>
+                            <option value="FORFAIT ECO">FORFAIT ECO</option>
+                            <option value="FORFAIT ECO PLUS">FORFAIT ECO PLUS</option>
+                            <option value="FORFAIT CONFORT">FORFAIT CONFORT</option>
+                            <option value="FORFAIT LUXE">FORFAIT LUXE</option>
                         </select>
                     </div>
                     <div class="form-row">
@@ -136,10 +137,28 @@ if ($productsResult) {
                         <select name="cf_1145">
                             <option value="">-- Sélectionnez --</option>
                             <option value="4000">4 000 €</option>
+                            <option value="5000">5 000 €</option>
+                            <option value="6000">6 000 €</option>
+                            <option value="7000">7 000 €</option>
                             <option value="8000">8 000 €</option>
+                            <option value="9000">9 000 €</option>
+                            <option value="10000">10 000 €</option>
+                            <option value="11000">11 000 €</option>
                             <option value="12000">12 000 €</option>
+                            <option value="13000">13 000 €</option>
+                            <option value="14000">14 000 €</option>
+                            <option value="15000">15 000 €</option>
                             <option value="16000">16 000 €</option>
+                            <option value="17000">17 000 €</option>
+                            <option value="18000">18 000 €</option>
+                            <option value="19000">19 000 €</option>
                             <option value="20000">20 000 €</option>
+                            <option value="21000">21 000 €</option>
+                            <option value="22000">22 000 €</option>
+                            <option value="23000">23 000 €</option>
+                            <option value="24000">24 000 €</option>
+                            <option value="25000">25 000 €</option>
+                            <option value="26000">26 000 €</option>
                         </select>
                     </div>
                 </div>
