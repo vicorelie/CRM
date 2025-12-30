@@ -293,7 +293,7 @@ if ($productsResult) {
             params.append('view', 'Edit');
             params.append('sourceModule', 'Potentials');
             params.append('sourceRecord', '<?php echo $potentialId; ?>');
-            params.append('potentialid', '<?php echo $potentialId; ?>');
+            params.append('potential_id', '<?php echo $potentialId; ?>');
             params.append('relationOperation', 'true');
 
             // Liste des champs à exclure (paramètres de contrôle)
