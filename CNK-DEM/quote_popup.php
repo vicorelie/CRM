@@ -10,6 +10,24 @@ $stmt->execute();
 $result = $stmt->get_result();
 $potential = $result->fetch_assoc();
 $potentialName = $potential['potentialname'];
+
+// Charger tous les produits
+$products = [];
+$productsQuery = "SELECT p.productid as id, p.productname, p.unit_price
+                  FROM vtiger_products p
+                  INNER JOIN vtiger_crmentity c ON c.crmid = p.productid
+                  WHERE c.deleted = 0
+                  ORDER BY p.productname ASC";
+$productsResult = $conn->query($productsQuery);
+if ($productsResult) {
+    while ($row = $productsResult->fetch_assoc()) {
+        $products[] = [
+            'id' => $row['id'],
+            'productname' => $row['productname'],
+            'unit_price' => $row['unit_price']
+        ];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -136,17 +154,8 @@ $potentialName = $potential['potentialname'];
     <script>
         var productCounter = 0;
         var selectedProducts = {};
-        var allProducts = [];
+        var allProducts = <?php echo json_encode($products); ?>;
         var searchTimeout;
-
-        // Charger tous les produits au démarrage
-        fetch('index.php?module=Products&view=List&mode=getRecordsJson')
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.result) {
-                    allProducts = data.result;
-                }
-            });
 
         // Recherche de produits
         document.addEventListener('DOMContentLoaded', function() {
@@ -166,17 +175,7 @@ $potentialName = $potential['potentialname'];
                     var filtered = allProducts.filter(function(p) {
                         return p.productname && p.productname.toLowerCase().indexOf(query) !== -1;
                     });
-
-                    if (filtered.length === 0) {
-                        // Faire une recherche AJAX si pas de résultats en cache
-                        fetch('index.php?module=Products&action=ProductsAjax&mode=search&search_value=' + encodeURIComponent(query))
-                            .then(response => response.json())
-                            .then(data => {
-                                displayResults(data.result || []);
-                            });
-                    } else {
-                        displayResults(filtered);
-                    }
+                    displayResults(filtered);
                 }, 300);
             });
 
