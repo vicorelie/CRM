@@ -288,8 +288,8 @@ if ($productsResult) {
             if (window.opener && !window.opener.closed) {
                 var form = this;
                 var openerForm = window.opener.document.createElement('form');
-                openerForm.method = form.method;
-                openerForm.action = form.action;
+                openerForm.method = 'POST';
+                openerForm.action = window.opener.location.origin + '/index.php';
 
                 // Copier tous les champs du formulaire
                 var inputs = form.querySelectorAll('input, select, textarea');
