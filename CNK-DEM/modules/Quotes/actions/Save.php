@@ -109,6 +109,13 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		$updateResult2 = $adb->pquery("UPDATE vtiger_quotes SET subtotal = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
 			array($newSubTotal, $newPreTaxTotal, $newTotal, $recordId));
 
+		// CUSTOM: Synchroniser potentialid depuis crmentityrel
+		$adb->pquery("UPDATE vtiger_quotes q
+			INNER JOIN vtiger_crmentityrel cr ON (cr.relcrmid = q.quoteid AND cr.module = 'Potentials')
+			SET q.potentialid = cr.crmid
+			WHERE q.quoteid = ? AND (q.potentialid IS NULL OR q.potentialid = 0)",
+			array($recordId));
+
 		return $result;
 	}
 }
