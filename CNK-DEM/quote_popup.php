@@ -294,10 +294,28 @@ if ($productsResult) {
                 // Copier tous les champs du formulaire
                 var inputs = form.querySelectorAll('input, select, textarea');
                 inputs.forEach(function(input) {
+                    // Ignorer les champs sans nom ou de type submit/button
+                    if (!input.name || input.type === 'submit' || input.type === 'button') {
+                        return;
+                    }
+
                     var newInput = window.opener.document.createElement('input');
                     newInput.type = 'hidden';
                     newInput.name = input.name;
-                    newInput.value = input.value;
+
+                    // Obtenir la valeur correctement selon le type d'input
+                    if (input.type === 'checkbox') {
+                        newInput.value = input.checked ? input.value : '';
+                    } else if (input.type === 'radio') {
+                        if (input.checked) {
+                            newInput.value = input.value;
+                        } else {
+                            return; // Ne pas ajouter les radios non cochés
+                        }
+                    } else {
+                        newInput.value = input.value || '';
+                    }
+
                     openerForm.appendChild(newInput);
                 });
 
