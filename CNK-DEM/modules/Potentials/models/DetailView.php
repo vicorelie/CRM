@@ -38,6 +38,17 @@ class Potentials_DetailView_Model extends Vtiger_DetailView_Model {
 			$linkModelList['DETAILVIEWBASIC'][] = Vtiger_Link_Model::getInstanceFromValues($basicActionLink);
 		}
 
+		// Generate Quote button
+		if($currentUserModel->hasModuleActionPermission($quoteModuleModel->getId(), 'CreateView')) {
+			$basicActionLink = array(
+				'linktype' => 'DETAILVIEWBASIC',
+				'linklabel' => 'LBL_GENERATE_QUOTE',
+				'linkurl' => 'javascript:Potentials_Detail_Js.generateQuote('.$recordModel->getId().');',
+				'linkicon' => ''
+			);
+			$linkModelList['DETAILVIEWBASIC'][] = Vtiger_Link_Model::getInstanceFromValues($basicActionLink);
+		}
+
 		if($currentUserModel->hasModuleActionPermission($invoiceModuleModel->getId(), 'CreateView')) {
 			$basicActionLink = array(
 				'linktype' => 'DETAILVIEW',

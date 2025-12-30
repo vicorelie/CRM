@@ -42,7 +42,8 @@ $languageStrings = array(
     'LBL_RELATED_CONTACTS'         => 'Contacts Liés'            , 
     'LBL_RELATED_PRODUCTS'         => 'Produits Liés'            , 
     'Related To'                   => 'Nom de l\'organisation'      ,
-    'Type'                         => 'Type'                        , 
+    'Type'                         => 'Type'                        ,
+    'LBL_GENERATE_QUOTE'           => 'Générer un devis'           ,
 
     //Convert Potentials
     'LBL_CONVERT_POTENTIAL' => 'Conversion nécessite la sélection du projet',

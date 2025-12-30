@@ -7,7 +7,15 @@
  * All Rights Reserved.
  *************************************************************************************/
 
-Vtiger_Detail_Js("Potentials_Detail_Js", {}, {
+Vtiger_Detail_Js("Potentials_Detail_Js", {
+	/**
+	 * Generate Quote - Opens standalone popup to quickly create a quote from this Potential
+	 */
+	generateQuote: function(potentialId) {
+		var url = 'quote_popup.php?record=' + potentialId;
+		window.open(url, 'quote_popup', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+	}
+}, {
 	registerAjaxPreSaveEvents: function (container) {
 		var thisInstance = this;
 		app.event.on(Vtiger_Detail_Js.PreAjaxSaveEvent, function (e) {
