@@ -279,6 +279,37 @@ if ($productsResult) {
                 document.getElementById('productsTable').style.display = 'none';
             }
         }
+
+        // Intercepter la soumission du formulaire pour l'envoyer vers la fenêtre parente
+        document.getElementById('quoteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Créer un formulaire dans la fenêtre parente (opener)
+            if (window.opener && !window.opener.closed) {
+                var form = this;
+                var openerForm = window.opener.document.createElement('form');
+                openerForm.method = form.method;
+                openerForm.action = form.action;
+
+                // Copier tous les champs du formulaire
+                var inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(function(input) {
+                    var newInput = window.opener.document.createElement('input');
+                    newInput.type = 'hidden';
+                    newInput.name = input.name;
+                    newInput.value = input.value;
+                    openerForm.appendChild(newInput);
+                });
+
+                // Ajouter le formulaire au document parent, le soumettre et fermer le popup
+                window.opener.document.body.appendChild(openerForm);
+                openerForm.submit();
+                window.close();
+            } else {
+                // Si pas de fenêtre parente, soumettre normalement
+                this.submit();
+            }
+        });
     </script>
 </body>
 </html>
