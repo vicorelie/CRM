@@ -294,10 +294,17 @@ if ($productsResult) {
             params.append('sourceModule', 'Potentials');
             params.append('sourceRecord', '<?php echo $potentialId; ?>');
 
+            // Liste des champs à exclure (paramètres de contrôle)
+            var excludeFields = ['module', 'action', 'sourceModule', 'sourceRecord', 'potential_id', 'relationOperation'];
+
             // Ajouter les valeurs du formulaire comme paramètres
             var inputs = form.querySelectorAll('input, select, textarea');
             inputs.forEach(function(input) {
-                if (input.name && input.type !== 'submit' && input.type !== 'button' && input.value) {
+                if (input.name &&
+                    input.type !== 'submit' &&
+                    input.type !== 'button' &&
+                    input.value &&
+                    !excludeFields.includes(input.name)) {
                     params.append(input.name, input.value);
                 }
             });
