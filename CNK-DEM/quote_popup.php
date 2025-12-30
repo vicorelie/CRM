@@ -293,9 +293,10 @@ if ($productsResult) {
             params.append('view', 'Edit');
             params.append('sourceModule', 'Potentials');
             params.append('sourceRecord', '<?php echo $potentialId; ?>');
+            params.append('potentialid', '<?php echo $potentialId; ?>');
 
             // Liste des champs à exclure (paramètres de contrôle)
-            var excludeFields = ['module', 'action', 'relationOperation'];
+            var excludeFields = ['module', 'action', 'relationOperation', 'potential_id'];
 
             // Ajouter les valeurs du formulaire comme paramètres
             var inputs = form.querySelectorAll('input, select, textarea');
