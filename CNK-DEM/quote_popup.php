@@ -4,12 +4,13 @@ require_once 'config.inc.php';
 $potentialId = isset($_GET['record']) ? intval($_GET['record']) : 0;
 if ($potentialId <= 0) die('ID invalide');
 $conn = new mysqli($dbconfig['db_server'], $dbconfig['db_username'], $dbconfig['db_password'], $dbconfig['db_name']);
-$stmt = $conn->prepare("SELECT potentialname FROM vtiger_potential WHERE potentialid = ?");
+$stmt = $conn->prepare("SELECT potentialname, contact_id FROM vtiger_potential WHERE potentialid = ?");
 $stmt->bind_param('i', $potentialId);
 $stmt->execute();
 $result = $stmt->get_result();
 $potential = $result->fetch_assoc();
 $potentialName = $potential['potentialname'];
+$contactId = $potential['contact_id'] ? intval($potential['contact_id']) : 0;
 
 // Charger tous les produits
 $products = [];
@@ -69,6 +70,7 @@ if ($productsResult) {
                 <input type="hidden" name="module" value="Quotes">
                 <input type="hidden" name="action" value="Save">
                 <input type="hidden" name="potential_id" value="<?php echo $potentialId; ?>">
+                <input type="hidden" name="contact_id" value="<?php echo $contactId; ?>">
                 <input type="hidden" name="sourceRecord" value="<?php echo $potentialId; ?>">
                 <input type="hidden" name="sourceModule" value="Potentials">
                 <input type="hidden" name="relationOperation" value="true">
@@ -116,6 +118,7 @@ if ($productsResult) {
                         <input type="text" id="productSearch" placeholder="Tapez pour rechercher un produit..." style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px">
                         <div id="productResults" style="position:relative;background:white;border:1px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:300px;overflow-y:auto;display:none"></div>
                     </div>
+
                     <input type="hidden" id="totalProductCount" name="totalProductCount" value="0">
                     <table id="productsTable" style="width:100%;margin-top:15px;border-collapse:collapse;display:none">
                         <thead>
@@ -134,7 +137,7 @@ if ($productsResult) {
                     <h3>Assurance</h3>
                     <div class="form-group">
                         <label>Montant assurance</label>
-                        <select name="cf_1145">
+                        <select name="cf_1139">
                             <option value="">-- Sélectionnez --</option>
                             <option value="4000">4 000 €</option>
                             <option value="5000">5 000 €</option>
@@ -185,23 +188,23 @@ if ($productsResult) {
                 clearTimeout(searchTimeout);
                 var query = this.value.toLowerCase();
 
-                if (query.length < 2) {
-                    resultsDiv.style.display = 'none';
-                    return;
-                }
-
                 searchTimeout = setTimeout(function() {
-                    var filtered = allProducts.filter(function(p) {
-                        return p.productname && p.productname.toLowerCase().indexOf(query) !== -1;
-                    });
-                    displayResults(filtered);
-                }, 300);
+                    if (query.length === 0) {
+                        // Afficher tous les produits si le champ est vide
+                        displayResults(allProducts);
+                    } else {
+                        // Filtrer les produits en fonction de la recherche
+                        var filtered = allProducts.filter(function(p) {
+                            return p.productname && p.productname.toLowerCase().indexOf(query) !== -1;
+                        });
+                        displayResults(filtered);
+                    }
+                }, 200);
             });
 
             searchInput.addEventListener('focus', function() {
-                if (this.value.length >= 2 && resultsDiv.children.length > 0) {
-                    resultsDiv.style.display = 'block';
-                }
+                // Afficher tous les produits au focus
+                displayResults(allProducts);
             });
 
             document.addEventListener('click', function(e) {
@@ -275,9 +278,43 @@ if ($productsResult) {
         function removeProduct(btn, productId) {
             btn.closest('tr').remove();
             delete selectedProducts[productId];
+
+            // Réindexer tous les produits restants
+            reindexProducts();
+
             if (document.getElementById('productsList').children.length === 0) {
                 document.getElementById('productsTable').style.display = 'none';
+                productCounter = 0;
+                document.getElementById('totalProductCount').value = 0;
             }
+        }
+
+        function reindexProducts() {
+            var rows = document.getElementById('productsList').getElementsByTagName('tr');
+            productCounter = 0;
+
+            for (var i = 0; i < rows.length; i++) {
+                productCounter++;
+                var row = rows[i];
+
+                // Récupérer les valeurs actuelles
+                var productId = row.querySelector('input[name^="hdnProductId"]').value;
+                var productName = row.querySelector('input[name^="productName"]').value;
+                var qty = row.querySelector('input[name^="qty"]').value;
+                var listPrice = row.querySelector('input[name^="listPrice"]').value;
+
+                // Mettre à jour tous les noms des champs avec le nouvel index
+                row.querySelector('input[name^="hdnProductId"]').name = 'hdnProductId' + productCounter;
+                row.querySelector('input[name^="productName"]').name = 'productName' + productCounter;
+                row.querySelector('input[name^="comment"]').name = 'comment' + productCounter;
+                row.querySelector('input[name^="productDeleted"]').name = 'productDeleted' + productCounter;
+                row.querySelector('input[name^="discount_percent"]').name = 'discount_percent' + productCounter;
+                row.querySelector('input[name^="discount_amount"]').name = 'discount_amount' + productCounter;
+                row.querySelector('input[name^="qty"]').name = 'qty' + productCounter;
+                row.querySelector('input[name^="listPrice"]').name = 'listPrice' + productCounter;
+            }
+
+            document.getElementById('totalProductCount').value = productCounter;
         }
 
         // Intercepter la soumission du formulaire pour rediriger vers la page de création de devis
@@ -294,10 +331,13 @@ if ($productsResult) {
             params.append('sourceModule', 'Potentials');
             params.append('sourceRecord', '<?php echo $potentialId; ?>');
             params.append('potential_id', '<?php echo $potentialId; ?>');
+            <?php if ($contactId > 0): ?>
+            params.append('contact_id', '<?php echo $contactId; ?>');
+            <?php endif; ?>
             params.append('relationOperation', 'true');
 
             // Liste des champs à exclure (paramètres de contrôle)
-            var excludeFields = ['module', 'action', 'relationOperation', 'potential_id'];
+            var excludeFields = ['module', 'action', 'relationOperation', 'potential_id', 'contact_id'];
 
             // Ajouter les valeurs du formulaire comme paramètres
             var inputs = form.querySelectorAll('input, select, textarea');
