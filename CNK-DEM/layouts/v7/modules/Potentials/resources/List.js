@@ -211,19 +211,19 @@ Vtiger_List_Js("Potentials_List_Js", {}, {
 	registerRappelListDetection: function() {
 		var thisInstance = this;
 
-		// Trouver l'index de la colonne statut (cf_971) en vérifiant les headers
+		// Trouver l'index de la colonne "Statut" en vérifiant le texte des headers
 		var statusColumnIndex = -1;
-		jQuery('.listViewContentDiv thead th').each(function(index) {
-			var fieldName = jQuery(this).data('field-name') || jQuery(this).attr('data-fieldname') || jQuery(this).data('fieldname');
-			if (fieldName === 'cf_971') {
+		jQuery('thead th').each(function(index) {
+			var headerText = jQuery(this).text().trim();
+			if (headerText === 'Statut' || headerText === 'Status') {
 				statusColumnIndex = index;
-				console.log('[RAPPEL LIST] Colonne statut (cf_971) trouvée à l\'index:', statusColumnIndex);
+				console.log('[RAPPEL LIST] Colonne Statut trouvée à l\'index:', statusColumnIndex);
 				return false; // break
 			}
 		});
 
 		if (statusColumnIndex === -1) {
-			console.warn('[RAPPEL LIST] Colonne statut (cf_971) non trouvée dans les headers');
+			console.warn('[RAPPEL LIST] Colonne Statut non trouvée dans les headers');
 			return;
 		}
 
