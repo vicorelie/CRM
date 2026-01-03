@@ -228,7 +228,7 @@ Vtiger_List_Js("Leads_List_Js", {}, {
 		}
 
 		// Intercepter les modifications inline sur la colonne de statut
-		jQuery(document).on('click', '.listViewEntries tr.listViewEntry', function(e) {
+		jQuery(document).on('click', 'tr.listViewEntries', function(e) {
 			var $row = jQuery(this);
 			var $clickedCell = jQuery(e.target).closest('td.listViewEntryValue');
 
