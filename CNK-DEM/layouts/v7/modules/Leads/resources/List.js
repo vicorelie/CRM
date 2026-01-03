@@ -244,7 +244,9 @@ Vtiger_List_Js("Leads_List_Js", {}, {
 
 					// Surveiller la sauvegarde inline
 					var checkInterval = setInterval(function() {
-						var $valueSpan = $clickedCell.find('.value');
+						// Re-chercher la cellule dans la ligne à chaque fois car VTiger peut la remplacer
+						var $currentCell = $row.find('td').eq(statusColumnIndex);
+						var $valueSpan = $currentCell.find('.value');
 						if ($valueSpan.length > 0) {
 							var newStatus = $valueSpan.text().trim();
 
