@@ -211,61 +211,30 @@ Vtiger_List_Js("Leads_List_Js", {}, {
 	registerRappelListDetection: function() {
 		var thisInstance = this;
 
-		// Trouver l'index de la colonne "Statut" en vérifiant le texte des headers
-		var statusColumnIndex = -1;
-		jQuery('thead th').each(function(index) {
-			var headerText = jQuery(this).text().trim();
-			if (headerText === 'Statut' || headerText === 'Lead Status') {
-				statusColumnIndex = index;
-				console.log('[RAPPEL LEADS LIST] Colonne Statut trouvée à l\'index:', statusColumnIndex);
-				return false; // break
-			}
-		});
+		// Écouter les requêtes AJAX SaveAjax pour détecter les changements de statut
+		jQuery(document).ajaxComplete(function(event, xhr, settings) {
+			// Vérifier si c'est une requête SaveAjax
+			if (settings.data && typeof settings.data === 'string' && settings.data.indexOf('action=SaveAjax') > -1) {
+				// Vérifier si le champ leadstatus a été modifié vers "A Rappeler"
+				if (settings.data.indexOf('leadstatus=') > -1 && settings.data.indexOf('leadstatus=A+Rappeler') > -1) {
+					// Extraire l'ID de l'enregistrement
+					var recordMatch = settings.data.match(/record=(\d+)/);
+					if (recordMatch) {
+						var recordId = recordMatch[1];
 
-		if (statusColumnIndex === -1) {
-			console.warn('[RAPPEL LEADS LIST] Colonne Statut non trouvée dans les headers');
-			return;
-		}
+						console.log('[RAPPEL LEADS LIST] Statut changé vers A Rappeler via AJAX, ID:', recordId);
 
-		// Intercepter les modifications inline sur la colonne de statut
-		jQuery(document).on('click', 'tr.listViewEntries', function(e) {
-			var $row = jQuery(this);
-			var $clickedCell = jQuery(e.target).closest('td.listViewEntryValue');
-
-			// Vérifier si la cellule cliquée est dans la colonne de statut
-			if ($clickedCell.length > 0) {
-				var cellIndex = $clickedCell.index();
-
-				if (cellIndex === statusColumnIndex) {
-					var recordId = $row.data('id');
-					var initialStatus = $clickedCell.find('.value').text().trim();
-
-					console.log('[RAPPEL LEADS LIST] Cellule statut cliquée, ID:', recordId, 'Statut initial:', initialStatus);
-
-					// Surveiller la sauvegarde inline
-					var checkInterval = setInterval(function() {
-						// Re-chercher la cellule dans la ligne à chaque fois car VTiger peut la remplacer
-						var $currentCell = $row.find('td').eq(statusColumnIndex);
-						var $valueSpan = $currentCell.find('.value');
-						if ($valueSpan.length > 0) {
-							var newStatus = $valueSpan.text().trim();
-
-							if (newStatus === 'A Rappeler' && initialStatus !== 'A Rappeler') {
-								console.log('[RAPPEL LEADS LIST] Statut changé vers A Rappeler, ouverture popup...');
-								clearInterval(checkInterval);
-
-								// Attendre un peu pour que la sauvegarde soit terminée
-								setTimeout(function() {
-									thisInstance.openRappelPopupFromList(recordId, $row);
-								}, 500);
+						// Attendre que la liste soit rechargée
+						setTimeout(function() {
+							var $row = jQuery('tr.listViewEntries[data-id="' + recordId + '"]');
+							if ($row.length > 0) {
+								console.log('[RAPPEL LEADS LIST] Ligne trouvée, ouverture popup...');
+								thisInstance.openRappelPopupFromList(recordId, $row);
+							} else {
+								console.warn('[RAPPEL LEADS LIST] Ligne non trouvée après rechargement');
 							}
-						}
-					}, 200);
-
-					// Arrêter de vérifier après 10 secondes
-					setTimeout(function() {
-						clearInterval(checkInterval);
-					}, 10000);
+						}, 1000);
+					}
 				}
 			}
 		});
