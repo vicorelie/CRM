@@ -15,6 +15,7 @@ Vtiger_List_Js("Leads_List_Js", {}, {
 	registerEvents: function() {
 		this._super();
 		this.registerClickToCallButtons();
+		this.registerRappelListDetection();
 	},
 
 	/**
@@ -202,5 +203,131 @@ Vtiger_List_Js("Leads_List_Js", {}, {
 				Vtiger_Helper_Js.showPnotify(params);
 			}
 		});
+	},
+
+	/**
+	 * Détecte le changement de statut vers "A Rappeler" dans la liste
+	 */
+	registerRappelListDetection: function() {
+		var thisInstance = this;
+
+		// Trouver l'index de la colonne leadstatus en vérifiant les headers
+		var statusColumnIndex = -1;
+		jQuery('.listViewContentDiv thead th').each(function(index) {
+			var fieldName = jQuery(this).data('field-name') || jQuery(this).attr('data-fieldname') || jQuery(this).data('fieldname');
+			if (fieldName === 'leadstatus') {
+				statusColumnIndex = index;
+				console.log('[RAPPEL LEADS LIST] Colonne leadstatus trouvée à l\'index:', statusColumnIndex);
+				return false; // break
+			}
+		});
+
+		if (statusColumnIndex === -1) {
+			console.warn('[RAPPEL LEADS LIST] Colonne leadstatus non trouvée dans les headers');
+			return;
+		}
+
+		// Intercepter les modifications inline sur la colonne de statut
+		jQuery(document).on('click', '.listViewEntries tr.listViewEntry', function(e) {
+			var $row = jQuery(this);
+			var $clickedCell = jQuery(e.target).closest('td.listViewEntryValue');
+
+			// Vérifier si la cellule cliquée est dans la colonne de statut
+			if ($clickedCell.length > 0) {
+				var cellIndex = $clickedCell.index();
+
+				if (cellIndex === statusColumnIndex) {
+					var recordId = $row.data('id');
+					var initialStatus = $clickedCell.find('.value').text().trim();
+
+					console.log('[RAPPEL LEADS LIST] Cellule statut cliquée, ID:', recordId, 'Statut initial:', initialStatus);
+
+					// Surveiller la sauvegarde inline
+					var checkInterval = setInterval(function() {
+						var $valueSpan = $clickedCell.find('.value');
+						if ($valueSpan.length > 0) {
+							var newStatus = $valueSpan.text().trim();
+
+							if (newStatus === 'A Rappeler' && initialStatus !== 'A Rappeler') {
+								console.log('[RAPPEL LEADS LIST] Statut changé vers A Rappeler, ouverture popup...');
+								clearInterval(checkInterval);
+
+								// Attendre un peu pour que la sauvegarde soit terminée
+								setTimeout(function() {
+									thisInstance.openRappelPopupFromList(recordId, $row);
+								}, 500);
+							}
+						}
+					}, 200);
+
+					// Arrêter de vérifier après 10 secondes
+					setTimeout(function() {
+						clearInterval(checkInterval);
+					}, 10000);
+				}
+			}
+		});
+	},
+
+	/**
+	 * Ouvre le popup de rappel depuis la liste
+	 */
+	openRappelPopupFromList: function(recordId, $row) {
+		console.log('[RAPPEL LEADS LIST] openRappelPopupFromList appelé avec ID:', recordId);
+
+		var module = 'Leads';
+
+		// Construire le nom du prospect depuis firstname, lastname, company
+		var firstname = $row.find('td[data-field-name="firstname"] .value').text().trim();
+		var lastname = $row.find('td[data-field-name="lastname"] .value').text().trim();
+		var company = $row.find('td[data-field-name="company"] .value').text().trim();
+
+		var recordName = '';
+		if (firstname || lastname) {
+			recordName = (firstname + ' ' + lastname).trim();
+		}
+		if (company && recordName) {
+			recordName += ' (' + company + ')';
+		} else if (company) {
+			recordName = company;
+		}
+		if (!recordName) {
+			recordName = 'Ce prospect';
+		}
+
+		// Récupérer l'ID utilisateur
+		var userId = 1;
+		try {
+			if (typeof app !== 'undefined' && app.getUserId) {
+				userId = app.getUserId();
+				console.log('[RAPPEL LEADS LIST] User ID récupéré:', userId);
+			}
+		} catch(e) {
+			console.log('[RAPPEL LEADS LIST] Impossible de récupérer l\'ID utilisateur, utilisation de 1 par défaut');
+		}
+
+		// Construire l'URL du popup
+		var baseUrl = window.location.protocol + '//' + window.location.host + '/';
+		var popupUrl = baseUrl + 'rappel_popup.php?module=' + module +
+					   '&record_id=' + recordId +
+					   '&record_name=' + encodeURIComponent(recordName) +
+					   '&user_id=' + userId;
+
+		console.log('[RAPPEL LEADS LIST] URL du popup:', popupUrl);
+
+		// Ouvrir le popup
+		var popup = window.open(
+			popupUrl,
+			'RappelPopup',
+			'width=600,height=600,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=yes'
+		);
+
+		if (popup) {
+			console.log('[RAPPEL LEADS LIST] Popup ouvert avec succès');
+			popup.focus();
+		} else {
+			console.error('[RAPPEL LEADS LIST] Popup bloqué!');
+			alert('Le popup de rappel a été bloqué. Veuillez autoriser les popups pour ce site.');
+		}
 	}
 })
