@@ -286,19 +286,13 @@ Vtiger_List_Js("Leads_List_Js", {}, {
 
 		console.log('[RAPPEL LEADS LIST] URL du popup:', popupUrl);
 
-		// Ouvrir le popup
-		var popup = window.open(
-			popupUrl,
-			'RappelPopup',
-			'width=600,height=600,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=yes'
-		);
-
-		if (popup) {
-			console.log('[RAPPEL LEADS LIST] Popup ouvert avec succès');
-			popup.focus();
+		// Ouvrir dans un nouvel onglet
+		var newTab = window.open(popupUrl, '_blank');
+		if (newTab) {
+			console.log('[RAPPEL LEADS LIST] Onglet ouvert avec succès');
+			newTab.focus();
 		} else {
-			console.error('[RAPPEL LEADS LIST] Popup bloqué!');
-			alert('Le popup de rappel a été bloqué. Veuillez autoriser les popups pour ce site.');
+			console.error('[RAPPEL LEADS LIST] Impossible d\'ouvrir l\'onglet');
 		}
 	}
 })

@@ -113,20 +113,13 @@ Vtiger_Detail_Js("Leads_Detail_Js", {}, {
 
 		console.log('[RAPPEL LEADS DETAIL] URL du popup:', popupUrl);
 
-		// Ouvrir dans une fenêtre popup
-		var popup = window.open(
-			popupUrl,
-			'RappelPopup',
-			'width=600,height=600,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=yes'
-		);
-
-		if (popup) {
-			console.log('[RAPPEL LEADS DETAIL] Popup ouvert avec succès');
-			popup.focus();
+		// Ouvrir dans un nouvel onglet
+		var newTab = window.open(popupUrl, '_blank');
+		if (newTab) {
+			console.log('[RAPPEL LEADS DETAIL] Onglet ouvert avec succès');
+			newTab.focus();
 		} else {
-			console.error('[RAPPEL LEADS DETAIL] Popup bloqué!');
-			alert('Le popup de rappel a été bloqué. Veuillez autoriser les popups pour ce site.');
-			window.open(popupUrl, '_blank');
+			console.error('[RAPPEL LEADS DETAIL] Impossible d\'ouvrir l\'onglet');
 		}
 	},
 
