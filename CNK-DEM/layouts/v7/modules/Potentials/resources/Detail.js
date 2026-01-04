@@ -110,8 +110,11 @@ Vtiger_Detail_Js("Potentials_Detail_Js", {
 				settings.data.indexOf('module=Potentials') > -1) {
 
 				// Vérifier si le champ cf_971 (statut) a été modifié vers "A Rappeler"
+				// Accepter différents formats: A+Rappeler, A%20Rappeler, A Rappeler
 				if (settings.data.indexOf('cf_971=') > -1 &&
-					settings.data.indexOf('cf_971=A+Rappeler') > -1) {
+					(settings.data.indexOf('cf_971=A+Rappeler') > -1 ||
+					 settings.data.indexOf('cf_971=A%20Rappeler') > -1 ||
+					 settings.data.indexOf('cf_971=A Rappeler') > -1)) {
 
 					var recordMatch = settings.data.match(/record=(\d+)/);
 					if (recordMatch) {

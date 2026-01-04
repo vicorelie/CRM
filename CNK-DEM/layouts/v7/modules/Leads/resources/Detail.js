@@ -103,8 +103,11 @@ Vtiger_Detail_Js("Leads_Detail_Js", {}, {
 				settings.data.indexOf('module=Leads') > -1) {
 
 				// Vérifier si le champ leadstatus a été modifié vers "A Rappeler"
+				// Accepter différents formats: A+Rappeler, A%20Rappeler, A Rappeler
 				if (settings.data.indexOf('leadstatus=') > -1 &&
-					settings.data.indexOf('leadstatus=A+Rappeler') > -1) {
+					(settings.data.indexOf('leadstatus=A+Rappeler') > -1 ||
+					 settings.data.indexOf('leadstatus=A%20Rappeler') > -1 ||
+					 settings.data.indexOf('leadstatus=A Rappeler') > -1)) {
 
 					var recordMatch = settings.data.match(/record=(\d+)/);
 					if (recordMatch) {
