@@ -53,9 +53,88 @@ Vtiger_Detail_Js("Potentials_Detail_Js", {
 	registerEvents: function () {
 		var form = this.getForm();
 		this._super();
+
+		// Vérifier si un rappel est en attente dans localStorage
+		this.checkPendingRappel();
+
 		this.registerAjaxPreSaveEvents(form);
 		this.registerClickToCallButtons();
 		this.registerClickToCallOnAjaxLoad();
+	},
+
+	/**
+	 * Vérifie si un rappel est en attente et l'ouvre si nécessaire
+	 */
+	checkPendingRappel: function() {
+		var rappelData = localStorage.getItem('rappel_pending');
+		if (rappelData) {
+			try {
+				var data = JSON.parse(rappelData);
+
+				// Vérifier que ce n'est pas trop vieux (max 5 minutes)
+				var now = new Date().getTime();
+				if (now - data.timestamp < 300000) { // 5 minutes = 300000ms
+					console.log('[RAPPEL DETAIL] Rappel en attente trouvé:', data);
+
+					// Supprimer de localStorage
+					localStorage.removeItem('rappel_pending');
+
+					// Ouvrir le popup
+					this.openRappelPopup(data.recordId, data.recordName);
+				} else {
+					// Trop vieux, supprimer
+					console.log('[RAPPEL DETAIL] Rappel expiré, suppression');
+					localStorage.removeItem('rappel_pending');
+				}
+			} catch(e) {
+				console.error('[RAPPEL DETAIL] Erreur lors de la lecture de localStorage:', e);
+				localStorage.removeItem('rappel_pending');
+			}
+		}
+	},
+
+	/**
+	 * Ouvre le popup de création de rappel
+	 */
+	openRappelPopup: function(recordId, recordName) {
+		console.log('[RAPPEL DETAIL] openRappelPopup appelé avec recordId:', recordId, 'recordName:', recordName);
+		var module = 'Potentials';
+
+		// Récupérer l'ID de l'utilisateur connecté
+		var userId = 1; // Défaut
+		try {
+			if (typeof app !== 'undefined' && app.getUser) {
+				userId = app.getUser().get('id');
+				console.log('[RAPPEL DETAIL] User ID récupéré:', userId);
+			}
+		} catch(e) {
+			console.log('[RAPPEL DETAIL] Impossible de récupérer l\'ID utilisateur, utilisation de 1 par défaut');
+		}
+
+		// Utiliser l'URL de base du site
+		var baseUrl = window.location.protocol + '//' + window.location.host + '/';
+		var popupUrl = baseUrl + 'rappel_popup.php?module=' + module +
+		               '&record_id=' + recordId +
+		               '&record_name=' + encodeURIComponent(recordName) +
+		               '&user_id=' + userId;
+
+		console.log('[RAPPEL DETAIL] URL du popup:', popupUrl);
+
+		// Ouvrir dans une fenêtre popup
+		var popup = window.open(
+			popupUrl,
+			'RappelPopup',
+			'width=600,height=600,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=yes'
+		);
+
+		if (popup) {
+			console.log('[RAPPEL DETAIL] Popup ouvert avec succès');
+			popup.focus();
+		} else {
+			console.error('[RAPPEL DETAIL] Popup bloqué!');
+			alert('Le popup de rappel a été bloqué. Veuillez autoriser les popups pour ce site.');
+			window.open(popupUrl, '_blank');
+		}
 	},
 
 	/**
