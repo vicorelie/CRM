@@ -57,6 +57,9 @@ Vtiger_Detail_Js("Potentials_Detail_Js", {
 		// Vérifier si un rappel est en attente dans localStorage
 		this.checkPendingRappel();
 
+		// Détecter les modifications inline (crayon)
+		this.registerRappelInlineEditDetection();
+
 		this.registerAjaxPreSaveEvents(form);
 		this.registerClickToCallButtons();
 		this.registerClickToCallOnAjaxLoad();
@@ -91,6 +94,43 @@ Vtiger_Detail_Js("Potentials_Detail_Js", {
 				localStorage.removeItem('rappel_pending');
 			}
 		}
+	},
+
+	/**
+	 * Détecte le changement de statut vers "A Rappeler" via édition inline (crayon)
+	 */
+	registerRappelInlineEditDetection: function() {
+		var thisInstance = this;
+
+		// Écouter les requêtes AJAX SaveAjax pour détecter les changements de statut
+		jQuery(document).ajaxComplete(function(event, xhr, settings) {
+			// Vérifier si c'est une requête SaveAjax pour Potentials
+			if (settings.data && typeof settings.data === 'string' &&
+				settings.data.indexOf('action=SaveAjax') > -1 &&
+				settings.data.indexOf('module=Potentials') > -1) {
+
+				// Vérifier si le champ cf_971 (statut) a été modifié vers "A Rappeler"
+				if (settings.data.indexOf('cf_971=') > -1 &&
+					settings.data.indexOf('cf_971=A+Rappeler') > -1) {
+
+					var recordMatch = settings.data.match(/record=(\d+)/);
+					if (recordMatch) {
+						var recordId = recordMatch[1];
+
+						console.log('[RAPPEL DETAIL] Statut changé vers A Rappeler via inline edit, ID:', recordId);
+
+						// Attendre que la page soit mise à jour
+						setTimeout(function() {
+							// Récupérer le nom de l'affaire depuis la page
+							var recordName = jQuery('[data-name="potentialname"]').data('value') || 'Cette affaire';
+
+							console.log('[RAPPEL DETAIL] Ouverture popup pour:', recordName);
+							thisInstance.openRappelPopup(recordId, recordName);
+						}, 500);
+					}
+				}
+			}
+		});
 	},
 
 	/**
