@@ -10,65 +10,95 @@ Vtiger_Edit_Js("Leads_Edit_Js", {}, {
     registerEvents: function() {
         this._super();
         console.log('[RAPPEL LEADS] registerEvents appelé');
+
+        // Vérifier si un rappel est en attente dans localStorage
+        this.checkPendingRappel();
+
         this.registerRappelDetection();
     },
 
     /**
-     * Détecte le changement de statut vers "A Rappeler" via interception AJAX
+     * Vérifie si un rappel est en attente et l'ouvre si nécessaire
+     */
+    checkPendingRappel: function() {
+        var rappelData = localStorage.getItem('rappel_pending');
+        if (rappelData) {
+            try {
+                var data = JSON.parse(rappelData);
+
+                // Vérifier que ce n'est pas trop vieux (max 5 minutes)
+                var now = new Date().getTime();
+                if (now - data.timestamp < 300000) { // 5 minutes = 300000ms
+                    console.log('[RAPPEL LEADS] Rappel en attente trouvé:', data);
+
+                    // Supprimer de localStorage
+                    localStorage.removeItem('rappel_pending');
+
+                    // Ouvrir le popup
+                    this.openRappelPopup(data.recordId, data.recordName);
+                } else {
+                    // Trop vieux, supprimer
+                    console.log('[RAPPEL LEADS] Rappel expiré, suppression');
+                    localStorage.removeItem('rappel_pending');
+                }
+            } catch(e) {
+                console.error('[RAPPEL LEADS] Erreur lors de la lecture de localStorage:', e);
+                localStorage.removeItem('rappel_pending');
+            }
+        }
+    },
+
+    /**
+     * Détecte le changement de statut vers "A Rappeler" et stocke dans localStorage
      */
     registerRappelDetection: function() {
         var thisInstance = this;
 
-        // Écouter les requêtes AJAX SaveAjax pour détecter les changements de statut
-        jQuery(document).ajaxComplete(function(event, xhr, settings) {
-            // Vérifier si c'est une requête SaveAjax pour Leads
-            if (settings.data && typeof settings.data === 'string' &&
-                settings.data.indexOf('action=SaveAjax') > -1 &&
-                settings.data.indexOf('module=Leads') > -1) {
+        // Surveiller le changement du champ leadstatus
+        var statutField = jQuery('[name="leadstatus"]');
+        if (statutField.length > 0) {
+            var initialStatus = statutField.val();
+            console.log('[RAPPEL LEADS] Statut initial:', initialStatus);
 
-                console.log('[RAPPEL LEADS] SaveAjax détecté');
+            // Écouter la soumission du formulaire
+            jQuery('#EditView').on('submit', function() {
+                var newStatus = statutField.val();
+                console.log('[RAPPEL LEADS] Soumission formulaire, statut:', newStatus);
 
-                // Vérifier si le champ leadstatus a été modifié vers "A Rappeler"
-                if (settings.data.indexOf('leadstatus=') > -1 &&
-                    settings.data.indexOf('leadstatus=A+Rappeler') > -1) {
+                // Si le statut change vers "A Rappeler"
+                if (newStatus === 'A Rappeler' && initialStatus !== 'A Rappeler') {
+                    var recordId = jQuery('[name="record"]').val();
 
-                    // Extraire l'ID de l'enregistrement
-                    var recordMatch = settings.data.match(/record=(\d+)/);
-                    if (recordMatch) {
-                        var recordId = recordMatch[1];
-                        console.log('[RAPPEL LEADS] Statut changé vers A Rappeler via AJAX, ID:', recordId);
+                    // Construire le nom du prospect
+                    var firstname = jQuery('[name="firstname"]').val() || '';
+                    var lastname = jQuery('[name="lastname"]').val() || '';
+                    var company = jQuery('[name="company"]').val() || '';
 
-                        // Extraire les informations du prospect
-                        var firstnameMatch = settings.data.match(/firstname=([^&]*)/);
-                        var lastnameMatch = settings.data.match(/lastname=([^&]*)/);
-                        var companyMatch = settings.data.match(/company=([^&]*)/);
-
-                        var recordName = '';
-                        var firstname = firstnameMatch ? decodeURIComponent(firstnameMatch[1].replace(/\+/g, ' ')) : '';
-                        var lastname = lastnameMatch ? decodeURIComponent(lastnameMatch[1].replace(/\+/g, ' ')) : '';
-                        var company = companyMatch ? decodeURIComponent(companyMatch[1].replace(/\+/g, ' ')) : '';
-
-                        if (firstname || lastname) {
-                            recordName = (firstname + ' ' + lastname).trim();
-                        }
-                        if (company && recordName) {
-                            recordName += ' (' + company + ')';
-                        } else if (company) {
-                            recordName = company;
-                        }
-                        if (!recordName) {
-                            recordName = 'Ce prospect';
-                        }
-
-                        // Attendre que VTiger finisse de traiter la sauvegarde
-                        setTimeout(function() {
-                            console.log('[RAPPEL LEADS] Ouverture du popup...');
-                            thisInstance.openRappelPopup(recordId, recordName);
-                        }, 500);
+                    var recordName = '';
+                    if (firstname || lastname) {
+                        recordName = (firstname + ' ' + lastname).trim();
                     }
+                    if (company && recordName) {
+                        recordName += ' (' + company + ')';
+                    } else if (company) {
+                        recordName = company;
+                    }
+                    if (!recordName) {
+                        recordName = 'Ce prospect';
+                    }
+
+                    // Stocker dans localStorage pour ouvrir le popup après redirection
+                    localStorage.setItem('rappel_pending', JSON.stringify({
+                        module: 'Leads',
+                        recordId: recordId,
+                        recordName: recordName,
+                        timestamp: new Date().getTime()
+                    }));
+
+                    console.log('[RAPPEL LEADS] Info stockée dans localStorage');
                 }
-            }
-        });
+            });
+        }
     },
 
     /**
