@@ -111,8 +111,8 @@ Vtiger_Edit_Js("Leads_Edit_Js", {}, {
         // Récupérer l'ID de l'utilisateur connecté
         var userId = 1; // Défaut
         try {
-            if (typeof app !== 'undefined' && app.getUser) {
-                userId = app.getUser().get('id');
+            if (typeof app !== 'undefined' && app.getUserId) {
+                userId = app.getUserId();
                 console.log('[RAPPEL LEADS] User ID récupéré:', userId);
             }
         } catch(e) {

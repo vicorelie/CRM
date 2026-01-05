@@ -104,19 +104,40 @@ Vtiger_Detail_Js("Potentials_Detail_Js", {
 
 		// Écouter les requêtes AJAX SaveAjax pour détecter les changements de statut
 		jQuery(document).ajaxComplete(function(event, xhr, settings) {
+			console.log('[RAPPEL DETAIL DEBUG] AJAX complete, type:', typeof settings.data, 'url:', settings.url);
+
+			// Vérifier si settings.data est un objet FormData ou un objet
+			var dataStr = '';
+			if (typeof settings.data === 'string') {
+				dataStr = settings.data;
+			} else if (settings.data && typeof settings.data === 'object') {
+				// Convertir l'objet en string pour le chercher
+				try {
+					dataStr = JSON.stringify(settings.data);
+				} catch(e) {
+					// Si c'est FormData, essayer de lire depuis l'URL
+					dataStr = settings.url || '';
+				}
+			}
+
+			console.log('[RAPPEL DETAIL DEBUG] data string:', dataStr.substring(0, 200));
+
 			// Vérifier si c'est une requête SaveAjax pour Potentials
-			if (settings.data && typeof settings.data === 'string' &&
-				settings.data.indexOf('action=SaveAjax') > -1 &&
-				settings.data.indexOf('module=Potentials') > -1) {
+			if (dataStr &&
+				dataStr.indexOf('SaveAjax') > -1 &&
+				dataStr.indexOf('Potentials') > -1) {
+
+				console.log('[RAPPEL DETAIL DEBUG] SaveAjax pour Potentials détecté');
 
 				// Vérifier si le champ cf_971 (statut) a été modifié vers "A Rappeler"
 				// Accepter différents formats: A+Rappeler, A%20Rappeler, A Rappeler
-				if (settings.data.indexOf('cf_971=') > -1 &&
-					(settings.data.indexOf('cf_971=A+Rappeler') > -1 ||
-					 settings.data.indexOf('cf_971=A%20Rappeler') > -1 ||
-					 settings.data.indexOf('cf_971=A Rappeler') > -1)) {
+				if (dataStr.indexOf('cf_971') > -1 &&
+					(dataStr.indexOf('A+Rappeler') > -1 ||
+					 dataStr.indexOf('A%20Rappeler') > -1 ||
+					 dataStr.indexOf('A Rappeler') > -1 ||
+					 dataStr.indexOf('"value":"A Rappeler"') > -1)) {
 
-					var recordMatch = settings.data.match(/record=(\d+)/);
+					var recordMatch = dataStr.match(/record["\s:=]+(\d+)/);
 					if (recordMatch) {
 						var recordId = recordMatch[1];
 
@@ -146,8 +167,8 @@ Vtiger_Detail_Js("Potentials_Detail_Js", {
 		// Récupérer l'ID de l'utilisateur connecté
 		var userId = 1; // Défaut
 		try {
-			if (typeof app !== 'undefined' && app.getUser) {
-				userId = app.getUser().get('id');
+			if (typeof app !== 'undefined' && app.getUserId) {
+				userId = app.getUserId();
 				console.log('[RAPPEL DETAIL] User ID récupéré:', userId);
 			}
 		} catch(e) {
