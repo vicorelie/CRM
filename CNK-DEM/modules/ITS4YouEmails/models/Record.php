@@ -996,14 +996,15 @@ class ITS4YouEmails_Record_Model extends Vtiger_Record_Model
         return boolval($adb->num_rows($result));
     }
 
-    public function saveAccess($recordId, $accessId = '')
+    public function saveAccess($recordId, $accessId = '', $accessType = 0)
     {
         $adb = PearDatabase::getInstance();
-        $adb->pquery('INSERT INTO its4you_emails_access (record_id, mail_id, access_id, access_time) VALUES (?,?,?,?)', [
+        $adb->pquery('INSERT INTO its4you_emails_access (record_id, mail_id, access_id, access_time, access_type) VALUES (?,?,?,?, ?)', [
             $recordId,
             $this->getId(),
             $accessId,
-            date('Y-m-d H:i:s')
+            date('Y-m-d H:i:s'),
+            $accessType
         ]);
     }
 

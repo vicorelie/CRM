@@ -284,6 +284,62 @@ Inventory_Edit_Js("Quotes_Edit_Js",{
             this.registerForTogglingBillingandShippingAddress();
             this.registerEventForCopyAddress();
             this.registerAcompteSoldeCalculation();
+            this.applyQuotePopupData();
+        },
+
+        /**
+         * Appliquer les données du popup de devis si présentes dans localStorage
+         */
+        applyQuotePopupData: function() {
+            var self = this;
+            try {
+                var timestamp = localStorage.getItem('quote_popup_timestamp');
+                var popupData = localStorage.getItem('quote_popup_data');
+                var popupRecord = localStorage.getItem('quote_popup_record');
+
+                // Vérifier si les données sont récentes (moins de 30 secondes)
+                if (!timestamp || !popupData) return;
+
+                var age = Date.now() - parseInt(timestamp);
+                if (age > 30000) {
+                    // Données trop anciennes, les supprimer
+                    localStorage.removeItem('quote_popup_data');
+                    localStorage.removeItem('quote_popup_timestamp');
+                    localStorage.removeItem('quote_popup_record');
+                    return;
+                }
+
+                console.log('[QUOTE EDIT] Données du popup détectées, application...');
+                var data = JSON.parse(popupData);
+
+                // Appliquer les valeurs des champs
+                setTimeout(function() {
+                    if (data.subject) jQuery('[name="subject"]').val(data.subject);
+                    if (data.validtill) jQuery('[name="validtill"]').val(data.validtill);
+                    if (data.cf_1125) jQuery('[name="cf_1125"]').val(data.cf_1125);
+                    if (data.cf_1127) jQuery('[name="cf_1127"]').val(data.cf_1127);
+                    if (data.cf_1129) jQuery('[name="cf_1129"]').val(data.cf_1129);
+                    if (data.cf_1139) jQuery('[name="cf_1139"]').val(data.cf_1139);
+                    if (data.cf_1141) jQuery('[name="cf_1141"]').val(data.cf_1141);
+
+                    console.log('[QUOTE EDIT] Champs remplis depuis popup');
+
+                    // Note: Les produits seront gérés par VTiger via URL params ou par le record existant
+                    // Pour les nouveaux devis, VTiger devrait charger les produits via URL params
+                    // Pour les devis existants, les produits sont déjà chargés depuis la DB
+
+                    // Supprimer les données du localStorage
+                    localStorage.removeItem('quote_popup_data');
+                    localStorage.removeItem('quote_popup_timestamp');
+                    localStorage.removeItem('quote_popup_record');
+
+                    // Forcer le recalcul des totaux
+                    Quotes_Edit_Js.calculateAcompteSoldeTotals();
+                }, 500);
+
+            } catch (e) {
+                console.error('[QUOTE EDIT] Erreur application données popup:', e);
+            }
         },
 
         /**

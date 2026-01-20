@@ -1,0 +1,51 @@
+<?xml version='1.0'?>
+<schema>
+	<tables>
+		<table>
+			<name>its4you_signature</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_signature` (
+  `signatureid` int(19) NOT NULL,
+  `signature_name` varchar(255) DEFAULT NULL,
+  `signature_no` varchar(100) DEFAULT NULL,
+  `signature_date` date DEFAULT NULL,
+  `status` varchar(100) DEFAULT NULL,
+  `signature_mode` varchar(100) DEFAULT NULL,
+  `senton` date DEFAULT NULL,
+  `template` int(11) DEFAULT NULL,
+  `language` varchar(100) DEFAULT NULL,
+  `source_module` varchar(100) DEFAULT NULL,
+  `source_record` int(11) DEFAULT NULL,
+  PRIMARY KEY (`signatureid`)
+) ENGINE=InnoDB]]></sql>
+		</table>
+		<table>
+			<name>its4you_signaturecf</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_signaturecf` (
+  `signatureid` int(19) NOT NULL,
+  PRIMARY KEY (`signatureid`)
+) ENGINE=InnoDB]]></sql>
+		</table>
+		<table>
+			<name>its4you_signature_settings</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_signature_settings` (
+  `signid` int(11) NOT NULL AUTO_INCREMENT,
+  `signed_email_subject` varchar(200) DEFAULT NULL,
+  `signed_email_message` text DEFAULT NULL,
+  `accept_email_subject` varchar(200) DEFAULT NULL,
+  `accept_email_message` text DEFAULT NULL,
+  `email_subject` varchar(200) DEFAULT NULL,
+  `email_message` text DEFAULT NULL,
+  PRIMARY KEY (`signid`)
+) ENGINE=InnoDB]]></sql>
+		</table>
+		<table>
+			<name>vtiger_its4yousignature_user_field</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `vtiger_its4yousignature_user_field` (
+            `recordid` int(25) NOT NULL,
+            `userid` int(25) NOT NULL,
+            `starred` varchar(100) DEFAULT NULL,
+            KEY `recordid` (`recordid`)
+            ) ENGINE=InnoDB]]></sql>
+		</table>
+	</tables>
+</schema>

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
+/* Smarty version 4.5.5, created on 2026-01-19 00:35:14
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/Menubar.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6951442a80cc50_50669377',
+  'unifunc' => 'content_696d6022514900_26120953',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6951442a80cc50_50669377 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696d6022514900_26120953 (Smarty_Internal_Template $_smarty_tpl) {
 if ($_smarty_tpl->tpl_vars['MENU_STRUCTURE']->value) {
 $_smarty_tpl->_assignInScope('topMenus', $_smarty_tpl->tpl_vars['MENU_STRUCTURE']->value->getTop());
 $_smarty_tpl->_assignInScope('moreMenus', $_smarty_tpl->tpl_vars['MENU_STRUCTURE']->value->getMore());?>

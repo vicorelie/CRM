@@ -108,7 +108,7 @@
                                 </div>
                             {/if}
 
-                            {if $TEMPLATE_LANGUAGES|@sizeof > 1}
+                            {*{if $TEMPLATE_LANGUAGES|@sizeof > 1}
                                 <div class="row">
                                     <h5>{vtranslate('LBL_LANGUAGE','EMAILMaker')}:</h5>
                                 </div>
@@ -121,7 +121,7 @@
                                 {foreach from="$TEMPLATE_LANGUAGES" item="lang" key="lang_key"}
                                     <input type="hidden" name="email_template_language" id="email_template_language" value="{$lang_key}"/>
                                 {/foreach}
-                            {/if}
+                            {/if}*}
                             {if $IS_PDFMAKER eq 'yes'}
                                 <br>
                                 <div class="{if empty($PDFTEMPLATEIDS)}hide{/if}" id="EMAILMakerPDFTemplatesContainer">

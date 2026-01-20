@@ -2517,12 +2517,16 @@ Vtiger_Edit_Js("Inventory_Edit_Js", {
 				editViewForm.removeData('submit');
 				return false;
 			}
-            else if(jQuery('.lineItemRow').length<=0){  
- 		        e.preventDefault();  
- 		        msg = app.vtranslate('JS_NO_LINE_ITEM');  
-				app.helper.showErrorNotification({"message" : msg});
- 		        editViewForm.removeData('submit');  
- 		        return false;
+            else if(jQuery('.lineItemRow').length<=0){
+				// Allow empty line items for Quotes, Invoice, PurchaseOrder, and SalesOrder
+				var currentModule = app.getModuleName();
+				if(currentModule !== 'Quotes' && currentModule !== 'Invoice' && currentModule !== 'PurchaseOrder' && currentModule !== 'SalesOrder') {
+					e.preventDefault();
+					msg = app.vtranslate('JS_NO_LINE_ITEM');
+					app.helper.showErrorNotification({"message" : msg});
+					editViewForm.removeData('submit');
+					return false;
+				}
             }
 			self.updateLineItemElementByOrder();
 			var taxMode = self.isIndividualTaxMode();
@@ -2818,6 +2822,46 @@ Vtiger_Edit_Js("Inventory_Edit_Js", {
         this.registerLineItemAutoComplete();
         this.registerReferenceSelectionEvent(this.getForm());
         this.registerPopoverCancelEvent();
+
+        // Remove product validation for Quotes, Invoice, PurchaseOrder, and SalesOrder
+        var currentModule = app.getModuleName();
+        if(currentModule === 'Quotes' || currentModule === 'Invoice' || currentModule === 'PurchaseOrder' || currentModule === 'SalesOrder') {
+            var self = this;
+            console.log('DEBUG: Module détecté pour suppression validation:', currentModule);
+
+            setTimeout(function() {
+                console.log('DEBUG: Début suppression validation productName');
+                var productFields = jQuery('input.productName');
+                console.log('DEBUG: Nombre de champs productName trouvés:', productFields.length);
+
+                productFields.each(function() {
+                    var field = jQuery(this);
+                    console.log('DEBUG: Traitement champ:', field.attr('name'));
+
+                    // Retirer l'attribut HTML
+                    field.removeAttr('data-rule-required');
+
+                    // Retirer les règles jQuery Validate
+                    if(typeof field.rules === 'function') {
+                        field.rules('remove', 'required');
+                        console.log('DEBUG: Règle required supprimée');
+                    }
+
+                    // Retirer les classes d'erreur si présentes
+                    field.removeClass('error');
+                    field.closest('.fieldValue').find('label.error').remove();
+                });
+
+                // Forcer la re-validation du formulaire
+                var editForm = jQuery('#EditView');
+                if(editForm.length > 0 && typeof editForm.valid === 'function') {
+                    console.log('DEBUG: Re-validation du formulaire');
+                    editForm.valid();
+                }
+
+                console.log('DEBUG: Suppression validation terminée');
+            }, 1000);
+        }
     },
 });
     

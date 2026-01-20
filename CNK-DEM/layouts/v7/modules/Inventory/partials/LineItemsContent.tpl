@@ -73,7 +73,7 @@
 					<div class="col-lg-10">
 						<div class="input-group" style="width:100%">
 							<input type="text" id="{$productName}" name="{$productName}" value="{(isset($data.$productName)) ? $data.$productName : ''}" class="productName form-control {if $row_no neq 0} autoComplete {/if} " placeholder="{vtranslate('LBL_TYPE_SEARCH',$MODULE)}"
-								   data-rule-required=true {if !empty($data.$productName)} disabled="disabled" {/if}>
+								   {if $MODULE neq 'Quotes' && $MODULE neq 'Invoice' && $MODULE neq 'PurchaseOrder' && $MODULE neq 'SalesOrder'}data-rule-required=true{/if} {if !empty($data.$productName)} disabled="disabled" {/if}>
 							{if isset($data.$productDeleted) && !$data.$productDeleted}
 								<span class="input-group-addon cursorPointer clearLineItem" title="{vtranslate('LBL_CLEAR',$MODULE)}">
 									<i class="fa fa-times-circle"></i>

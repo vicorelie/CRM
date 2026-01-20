@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
+/* Smarty version 4.5.5, created on 2026-01-19 12:05:23
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Pagination.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6951442af04692_07404172',
+  'unifunc' => 'content_696e01e3af9476_57614145',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6951442af04692_07404172 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e01e3af9476_57614145 (Smarty_Internal_Template $_smarty_tpl) {
 if (!$_smarty_tpl->tpl_vars['CLASS_VIEW_ACTION']->value) {?>
     <?php $_smarty_tpl->_assignInScope('CLASS_VIEW_ACTION', 'listViewActions');?>
     <?php $_smarty_tpl->_assignInScope('CLASS_VIEW_PAGING_INPUT', 'listViewPagingInput');?>

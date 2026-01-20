@@ -1,0 +1,55 @@
+<?xml version='1.0'?>
+<schema>
+	<tables>
+		<table>
+			<name>its4you_processflow</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_processflow` (
+  `pfid` int(11) NOT NULL,
+  `pfname` text NOT NULL,
+  `description` text NOT NULL,
+  `module_name` varchar(255) NOT NULL,
+  `conditions` longtext NOT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  `seq` int(11) DEFAULT NULL,
+  `status` int(2) NOT NULL DEFAULT '0',
+  `if_type` int(2) DEFAULT '0',
+  `deleted` int(2) NOT NULL DEFAULT '0',
+   PRIMARY KEY (`pfid`),
+   KEY `module` (`module_name`),
+   KEY `deleted` (`deleted`),
+   KEY `seq` (`seq`),
+   KEY `status` (`status`),
+   KEY `if_type` (`if_type`),
+   KEY `parent_id` (`parent_id`)
+) ENGINE=InnoDB
+            ]]></sql>
+		</table>
+		<table>
+			<name>its4you_processflowrel</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_processflowrel` (
+  `id` int(11) NOT NULL,
+  `pfid` int(11) NOT NULL,
+  `parent_id` int(11) NOT NULL,
+  `parent_module` varchar(250) NOT NULL,
+  `info` text,
+  `status` int(2) NOT NULL DEFAULT '0',
+  `for_list` int(2) DEFAULT '0',
+  `for_detail` int(2) DEFAULT '0',
+  `for_edit` int(2) DEFAULT '0',
+  `source_module` varchar(255) NULL,
+  `if_type` int(2) DEFAULT '0',
+  `deleted` int(2) NOT NULL DEFAULT '0',
+  `method_name` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pfid` (`pfid`),
+  KEY `parent_id` (`parent_id`),
+  KEY `for_list` (`for_list`),
+  KEY `for_detail` (`for_detail`),
+  KEY `for_edit` (`for_edit`),
+  KEY `if_type` (`if_type`),
+  KEY `deleted` (`deleted`)
+) ENGINE=InnoDB
+            ]]></sql>
+		</table>
+	</tables>
+</schema>

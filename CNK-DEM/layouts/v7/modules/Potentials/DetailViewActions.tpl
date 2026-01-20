@@ -30,7 +30,8 @@
                 </button>
             {/if}
             {foreach item=DETAIL_VIEW_BASIC_LINK from=$DETAILVIEW_LINKS['DETAILVIEWBASIC']}
-                <button class="btn btn-default" id="{$MODULE_NAME}_detailView_basicAction_{Vtiger_Util_Helper::replaceSpaceWithUnderScores($DETAIL_VIEW_BASIC_LINK->getLabel())}"
+                <button class="btn {if $DETAIL_VIEW_BASIC_LINK->getLabel() eq 'LBL_GENERATE_QUOTE'}btn-generate-quote{else}btn-default{/if}" id="{$MODULE_NAME}_detailView_basicAction_{Vtiger_Util_Helper::replaceSpaceWithUnderScores($DETAIL_VIEW_BASIC_LINK->getLabel())}"
+                        {if $DETAIL_VIEW_BASIC_LINK->getLabel() eq 'LBL_GENERATE_QUOTE'}style="background: #8e44ad; border-color: #8e44ad; color: white;"{/if}
                         {if $DETAIL_VIEW_BASIC_LINK->isPageLoadLink()}
                             onclick="window.location.href = '{$DETAIL_VIEW_BASIC_LINK->getUrl()}&app={$SELECTED_MENU_CATEGORY}'"
                         {else}

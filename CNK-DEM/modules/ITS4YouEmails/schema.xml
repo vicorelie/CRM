@@ -65,6 +65,7 @@
             `record_id` int(25) NOT NULL,
             `access_id` varchar(50) DEFAULT NULL,
             `access_time` datetime DEFAULT NULL,
+            `access_type` int(1) NOT NULL,
             KEY `record_id` (`record_id`)
             )]]></sql>
 		</table>

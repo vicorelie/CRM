@@ -28,7 +28,8 @@ $stmt = $conn->prepare("SELECT
     p.potentialname,
     pcf.cf_939,
     pcf.cf_963,
-    pcf.cf_969
+    pcf.cf_969,
+    pcf.cf_1259
 FROM vtiger_potential p
 LEFT JOIN vtiger_potentialscf pcf ON p.potentialid = pcf.potentialid
 WHERE p.potentialid = ?");
@@ -44,6 +45,7 @@ if (!$data) {
 
 $potentialName = $data['potentialname'];
 $savedVolume = $data['cf_939'] ?? 0; // Volume estimé
+$savedVolumeFinal = $data['cf_1259'] ?? 0; // Volume final
 $savedBoxes = $data['cf_963'] ?? 0; // Cartons estimés
 $savedInventory = $data['cf_969'] ?? '{}'; // Inventaire JSON
 
@@ -158,12 +160,26 @@ $conn->close();
             background: #5568d3;
             transform: scale(1.1);
         }
-        .qty-display {
-            min-width: 50px;
+        .qty-input {
+            width: 60px;
             text-align: center;
             font-size: 1.3em;
             font-weight: bold;
             color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 5px;
+            -moz-appearance: textfield;
+        }
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .qty-input:focus {
+            outline: none;
+            border-color: #5568d3;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
         }
         .actions {
             position: fixed;
@@ -212,6 +228,69 @@ $conn->close();
             border-radius: 10px;
             margin-bottom: 20px;
         }
+        .search-header {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .search-input-wrapper {
+            flex: 1;
+        }
+        .btn-new-article {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        .btn-new-article:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .new-article-form {
+            display: none;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 2px solid #667eea;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-form {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-submit {
+            background: #667eea;
+            color: white;
+        }
+        .btn-form-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -220,15 +299,33 @@ $conn->close();
             <h1>Inventaire de Déménagement</h1>
             <p>Affaire: <?php echo htmlspecialchars($potentialName); ?></p>
             <div class="volume-display" id="totalVolume">0 m³</div>
-            <div style="margin-top: 10px; font-size: 0.7em;">
-                Cartons estimés: <span id="totalBoxes">0</span>
+            <div style="margin-top: 15px; font-size: 1em;">
+                Volume final: <input type="number" id="volumeFinal" value="<?php echo floatval($savedVolumeFinal); ?>" step="0.01" min="0" style="width: 100px; padding: 5px; font-size: 1em; border-radius: 5px; border: none; text-align: center;"> m³
             </div>
         </div>
 
         <div class="content-wrapper">
             <div class="search-box">
-                <input type="text" id="inventory-search" placeholder="🔍 Rechercher un article..." style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                <div class="search-header">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="inventory-search" placeholder="🔍 Rechercher un article..." style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                    </div>
+                    <button class="btn-new-article" onclick="toggleNewArticleForm()">+ Nouvel article</button>
+                </div>
                 <div id="inventory-search-results" style="margin-top: 10px; padding: 0 12px; font-size: 14px; color: #666;"></div>
+
+                <div class="new-article-form" id="new-article-form">
+                    <h3 style="margin-bottom: 10px; color: #667eea;">Créer un nouvel article (catégorie Divers)</h3>
+                    <div class="form-row">
+                        <input type="text" class="form-input" id="new-article-name" placeholder="Nom de l'article" required style="flex: 2;">
+                        <input type="number" class="form-input" id="new-article-volume" placeholder="Volume (m³)" step="0.01" min="0" required style="flex: 1;">
+                        <input type="number" class="form-input" id="new-article-quantity" placeholder="Quantité" min="0" value="1" required style="flex: 1;">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-form btn-form-cancel" onclick="toggleNewArticleForm()">Annuler</button>
+                        <button class="btn-form btn-submit" onclick="createNewArticle()">Créer et ajouter</button>
+                    </div>
+                </div>
             </div>
 
             <div id="categories-container">
@@ -247,7 +344,6 @@ $conn->close();
         const RECORD_ID = <?php echo $recordId; ?>;
         const SAVED_INVENTORY_RAW = <?php echo json_encode($savedInventory); ?>;
         const SAVED_VOLUME = <?php echo $savedVolume ? $savedVolume : 0; ?>;
-        const SAVED_BOXES = <?php echo $savedBoxes ? $savedBoxes : 0; ?>;
 
         let SAVED_INVENTORY = {};
         try {
@@ -373,7 +469,7 @@ $conn->close();
                         </div>
                         <div class="item-controls">
                             <button class="btn-qty" onclick="changeQty('${categoryId}', '${item.name}', -1)">−</button>
-                            <div class="qty-display" id="${safeId}">${qty}</div>
+                            <input type="number" class="qty-input" id="${safeId}" value="${qty}" min="0" onchange="setQty('${categoryId}', '${item.name}', this.value)">
                             <button class="btn-qty" onclick="changeQty('${categoryId}', '${item.name}', 1)">+</button>
                         </div>
                     </div>
@@ -382,12 +478,23 @@ $conn->close();
             container.innerHTML = html;
         }
 
-        // Changer la quantité d'un item
+        // Changer la quantité d'un item (via boutons +/-)
         window.changeQty = function(category, itemName, delta) {
             inventory[category][itemName] = Math.max(0, (inventory[category][itemName] || 0) + delta);
 
             const safeId = 'qty_' + category + '_' + itemName.replace(/[^a-z0-9]/gi, '_');
-            document.getElementById(safeId).textContent = inventory[category][itemName];
+            document.getElementById(safeId).value = inventory[category][itemName];
+
+            updateTotalVolume();
+        };
+
+        // Définir directement la quantité d'un item (via input)
+        window.setQty = function(category, itemName, value) {
+            const qty = Math.max(0, parseInt(value) || 0);
+            inventory[category][itemName] = qty;
+
+            const safeId = 'qty_' + category + '_' + itemName.replace(/[^a-z0-9]/gi, '_');
+            document.getElementById(safeId).value = qty;
 
             updateTotalVolume();
         };
@@ -406,9 +513,6 @@ $conn->close();
             });
 
             document.getElementById('totalVolume').textContent = totalVolume.toFixed(2) + ' m³';
-
-            const estimatedBoxes = Math.ceil(totalVolume * 7);
-            document.getElementById('totalBoxes').textContent = estimatedBoxes;
         }
 
         // Sauvegarder l'inventaire
@@ -425,10 +529,12 @@ $conn->close();
 
             const totalBoxes = Math.ceil(totalVolume * 7);
             const inventoryJSON = JSON.stringify(inventory);
+            const volumeFinal = parseFloat(document.getElementById('volumeFinal').value) || 0;
 
             console.log('Sauvegarde de l\'inventaire:', {
                 recordId: RECORD_ID,
                 volume: totalVolume,
+                volumeFinal: volumeFinal,
                 boxes: totalBoxes,
                 inventory: inventoryJSON
             });
@@ -439,6 +545,7 @@ $conn->close();
                 data: {
                     record_id: RECORD_ID,
                     volume: totalVolume.toFixed(2),
+                    volume_final: volumeFinal.toFixed(2),
                     boxes: totalBoxes,
                     inventory: inventoryJSON
                 },
@@ -447,7 +554,6 @@ $conn->close();
                     try {
                         const result = typeof response === 'string' ? JSON.parse(response) : response;
                         if (result.success) {
-                            alert('✓ Inventaire enregistré avec succès!\n\nVolume: ' + totalVolume.toFixed(2) + ' m³\nCartons: ' + totalBoxes);
                             if (window.opener) {
                                 window.opener.location.reload();
                             }
@@ -465,6 +571,82 @@ $conn->close();
                     alert('Erreur lors de la sauvegarde: ' + error);
                 }
             });
+        };
+
+        // Toggle formulaire nouvel article
+        window.toggleNewArticleForm = function() {
+            const form = document.getElementById('new-article-form');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                document.getElementById('new-article-name').focus();
+            } else {
+                form.style.display = 'none';
+                document.getElementById('new-article-name').value = '';
+                document.getElementById('new-article-volume').value = '';
+                document.getElementById('new-article-quantity').value = '1';
+            }
+        };
+
+        // Créer un nouvel article
+        window.createNewArticle = async function() {
+            const name = document.getElementById('new-article-name').value.trim();
+            const volume = parseFloat(document.getElementById('new-article-volume').value);
+            const quantity = parseInt(document.getElementById('new-article-quantity').value) || 0;
+
+            if (!name) {
+                alert('Veuillez entrer un nom d\'article');
+                return;
+            }
+
+            if (isNaN(volume) || volume < 0) {
+                alert('Veuillez entrer un volume valide');
+                return;
+            }
+
+            if (quantity < 0) {
+                alert('Veuillez entrer une quantité valide');
+                return;
+            }
+
+            try {
+                const response = await fetch('create_divers_product.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `productname=${encodeURIComponent(name)}&unit_price=${encodeURIComponent(volume)}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✓ Article "${name}" créé avec succès!\nVolume: ${volume} m³\nQuantité: ${quantity}`);
+
+                    // Fermer le formulaire
+                    toggleNewArticleForm();
+
+                    // Recharger les articles depuis la base de données
+                    const reloaded = await loadItemsFromDatabase();
+                    if (reloaded) {
+                        // Ajouter le nouvel article à l'inventaire avec la quantité spécifiée
+                        if (!inventory['divers']) {
+                            inventory['divers'] = {};
+                        }
+                        inventory['divers'][name] = quantity;
+
+                        // Re-render toutes les catégories
+                        Object.keys(ITEMS_DB).forEach(category => {
+                            renderCategory(category);
+                        });
+                        updateTotalVolume();
+                    }
+                } else {
+                    alert('Erreur lors de la création: ' + (result.error || 'Erreur inconnue'));
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+                alert('Erreur lors de la création de l\'article');
+            }
         };
 
         // Fonction de recherche

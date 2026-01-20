@@ -1,0 +1,66 @@
+<?php
+/*+***********************************************************************************
+ * The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+ *************************************************************************************/
+
+/**
+ * Quotes Record Model Class
+ */
+class Quotes_Record_Model extends Inventory_Record_Model {
+
+	public function getCreateInvoiceUrl() {
+		$invoiceModuleModel = Vtiger_Module_Model::getInstance('Invoice');
+
+		return "index.php?module=".$invoiceModuleModel->getName()."&view=".$invoiceModuleModel->getEditViewName()."&quote_id=".$this->getId();
+	}
+
+	public function getCreateSalesOrderUrl() {
+		$salesOrderModuleModel = Vtiger_Module_Model::getInstance('SalesOrder');
+
+		return "index.php?module=".$salesOrderModuleModel->getName()."&view=".$salesOrderModuleModel->getEditViewName()."&quote_id=".$this->getId();
+	}
+
+	public function getCreatePurchaseOrderUrl() {
+		$purchaseOrderModuleModel = Vtiger_Module_Model::getInstance('PurchaseOrder');
+		return "index.php?module=".$purchaseOrderModuleModel->getName()."&view=".$purchaseOrderModuleModel->getEditViewName()."&quote_id=".$this->getId();
+	}
+
+	/**
+	 * Function to get this record and details as PDF
+	 */
+	public function getPDF() {
+		$recordId = $this->getId();
+		$moduleName = $this->getModuleName();
+
+		$controller = new Vtiger_QuotePDFController($moduleName);
+		$controller->loadRecord($recordId);
+
+		$fileName = $moduleName.'_'.getModuleSequenceNumber($moduleName, $recordId);
+		$controller->Output($fileName.'.pdf', 'D');
+	}
+
+	/**
+	 * Function to set parent record data with custom subject for Potentials
+	 * Override to add "Dev-" prefix to subject when creating from Potential
+	 */
+	public function setParentRecordData(Vtiger_Record_Model $parentRecordModel) {
+		// Call parent method for standard mapping (account_id, contact_id, etc.)
+		parent::setParentRecordData($parentRecordModel);
+
+		// If creating from Potential, prefix the subject with "Dev-"
+		if ($parentRecordModel->getModuleName() === 'Potentials') {
+			$potentialName = $parentRecordModel->get('potentialname');
+			if (!empty($potentialName)) {
+				$this->set('subject', 'Dev-' . $potentialName);
+			}
+		}
+
+		return $this;
+	}
+
+}

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:38
+/* Smarty version 4.5.5, created on 2026-01-19 18:59:42
   from '/var/www/CNK-DEM/layouts/v7/modules/Inventory/partials/LineItemsEdit.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69514436bee819_59890126',
+  'unifunc' => 'content_696e62fe31afa2_29182185',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69514436bee819_59890126 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e62fe31afa2_29182185 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 
@@ -145,28 +145,28 @@ $_smarty_tpl->_assignInScope('RECORD_CURRENCY_RATE', $_smarty_tpl->tpl_vars['SEL
 </option></select></div></div></div></div></div><div class="lineitemTableContainer"><table class="table table-bordered" id="lineItemTab"><tr><td><strong><?php echo vtranslate('LBL_TOOLS',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php if ((isset($_smarty_tpl->tpl_vars['IMAGE_EDITABLE']->value))) {?><td><strong><?php ob_start();
 echo $_smarty_tpl->tpl_vars['LINEITEM_FIELDS']->value['image']->get('label');
-$_prefixVariable6 = ob_get_clean();
-echo vtranslate($_prefixVariable6,$_smarty_tpl->tpl_vars['MODULE']->value);?>
+$_prefixVariable2 = ob_get_clean();
+echo vtranslate($_prefixVariable2,$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php }
 if ((isset($_smarty_tpl->tpl_vars['PRODUCT_EDITABLE']->value))) {?><td><span class="redColor">*</span><strong><?php ob_start();
 echo $_smarty_tpl->tpl_vars['LINEITEM_FIELDS']->value['productid']->get('label');
-$_prefixVariable7 = ob_get_clean();
-echo vtranslate($_prefixVariable7,$_smarty_tpl->tpl_vars['MODULE']->value);?>
+$_prefixVariable3 = ob_get_clean();
+echo vtranslate($_prefixVariable3,$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php }?><td><strong><?php echo vtranslate('LBL_QTY',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php if ((isset($_smarty_tpl->tpl_vars['PURCHASE_COST_EDITABLE']->value))) {?><td><strong class="pull-right"><?php ob_start();
 echo $_smarty_tpl->tpl_vars['LINEITEM_FIELDS']->value['purchase_cost']->get('label');
-$_prefixVariable8 = ob_get_clean();
-echo vtranslate($_prefixVariable8,$_smarty_tpl->tpl_vars['MODULE']->value);?>
+$_prefixVariable4 = ob_get_clean();
+echo vtranslate($_prefixVariable4,$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php }
 if ((isset($_smarty_tpl->tpl_vars['LIST_PRICE_EDITABLE']->value))) {?><td><strong><?php ob_start();
 echo $_smarty_tpl->tpl_vars['LINEITEM_FIELDS']->value['listprice']->get('label');
-$_prefixVariable9 = ob_get_clean();
-echo vtranslate($_prefixVariable9,$_smarty_tpl->tpl_vars['MODULE']->value);?>
+$_prefixVariable5 = ob_get_clean();
+echo vtranslate($_prefixVariable5,$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php }?><td><strong class="pull-right"><?php echo vtranslate('LBL_TOTAL',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php if ((isset($_smarty_tpl->tpl_vars['MARGIN_EDITABLE']->value)) && (isset($_smarty_tpl->tpl_vars['PURCHASE_COST_EDITABLE']->value))) {?><td><strong class="pull-right"><?php ob_start();
 echo $_smarty_tpl->tpl_vars['LINEITEM_FIELDS']->value['margin']->get('label');
-$_prefixVariable10 = ob_get_clean();
-echo vtranslate($_prefixVariable10,$_smarty_tpl->tpl_vars['MODULE']->value);?>
+$_prefixVariable6 = ob_get_clean();
+echo vtranslate($_prefixVariable6,$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td><?php }?><td><strong class="pull-right"><?php echo vtranslate('LBL_NET_PRICE',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </strong></td></tr><tr id="row0" class="hide lineItemCloneCopy" data-row-num="0"><?php $_smarty_tpl->_subTemplateRender(call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'vtemplate_path' ][ 0 ], array( "partials/LineItemsContent.tpl",'Inventory' )), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array('row_no'=>0,'data'=>array(),'IGNORE_UI_REGISTRATION'=>true), 0, true);
 ?></tr><?php

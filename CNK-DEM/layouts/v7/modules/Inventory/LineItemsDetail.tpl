@@ -72,7 +72,7 @@
 
 <input type="hidden" class="isCustomFieldExists" value="false">
 
-{assign var=FINAL_DETAILS value=$RELATED_PRODUCTS.1.final_details}
+{assign var=FINAL_DETAILS value=$FINAL_DETAILS_OVERRIDE|default:$RELATED_PRODUCTS.1.final_details}
 <div class="details block">
     <div class="lineItemTableDiv">
         <table class="table table-bordered lineItemsTable" style = "margin-top:15px">
@@ -145,11 +145,14 @@
 
                         {if $PRODUCT_VIEWABLE}
                             <td>
+                                {* CNK-DEM: Utiliser productDescription si existe, sinon productName *}
+                                {assign var="displayProductName" value=$LINE_ITEM_DETAIL["productDescription$INDEX"]}
+                                {if empty($displayProductName)}{assign var="displayProductName" value=$LINE_ITEM_DETAIL["productName$INDEX"]}{/if}
                                 <div>
                                     {if $LINE_ITEM_DETAIL["productDeleted$INDEX"]}
-                                        {$LINE_ITEM_DETAIL["productName$INDEX"]}
+                                        {$displayProductName}
                                     {else}
-                                        <h5><a class="fieldValue" href="index.php?module={$LINE_ITEM_DETAIL["entityType$INDEX"]}&view=Detail&record={$LINE_ITEM_DETAIL["hdnProductId$INDEX"]}" target="_blank">{$LINE_ITEM_DETAIL["productName$INDEX"]}</a></h5>
+                                        <h5><a class="fieldValue" href="index.php?module={$LINE_ITEM_DETAIL["entityType$INDEX"]}&view=Detail&record={$LINE_ITEM_DETAIL["hdnProductId$INDEX"]}" target="_blank">{$displayProductName}</a></h5>
                                         {/if}
                                 </div>
                                 {if $LINE_ITEM_DETAIL["productDeleted$INDEX"]}
@@ -239,7 +242,7 @@
             </td>
             <td>
                 <span class="pull-right">
-                    <strong>{$FINAL_DETAILS["hdnSubTotal"]}</strong>
+                    <strong><span id="netTotal">{$FINAL_DETAILS["hdnSubTotal"]}</span></strong>
                 </span>
             </td>
         </tr>
@@ -253,7 +256,7 @@
                 </td>
                 <td>
                     <div align="right">
-                        {$FINAL_DETAILS['discountTotal_final']}
+                        <span id="discountTotal_final">{$FINAL_DETAILS['discountTotal_final']}</span>
                     </div>
 
                 </td>
@@ -282,7 +285,7 @@
             </td>
             <td>
                 <div align="right">
-                    {$FINAL_DETAILS["preTaxTotal"]}
+                    <span id="preTaxTotal">{$FINAL_DETAILS["preTaxTotal"]}</span>
                 </div>
             </td>
         </tr>
@@ -296,7 +299,11 @@
                 </td>
                 <td>
                     <div align="right">
-                        {$FINAL_DETAILS['tax_totalamount']}
+                        {assign var="TAX_AMOUNT" value=$FINAL_DETAILS['tax_totalamount']}
+                        {if $TAX_AMOUNT eq '' || $TAX_AMOUNT eq 0}
+                            {assign var="TAX_AMOUNT" value=$FINAL_DETAILS['grandTotal'] - $FINAL_DETAILS['preTaxTotal']}
+                        {/if}
+                        <span id="tax_final">{$TAX_AMOUNT}</span>
                     </div>
                 </td>
             </tr>
@@ -351,7 +358,7 @@
             </td>
             <td>
                 <div align="right">
-                    {$FINAL_DETAILS["grandTotal"]}
+                    <span id="grandTotal">{$FINAL_DETAILS["grandTotal"]}</span>
                 </div>
             </td>
         </tr>

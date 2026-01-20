@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:38
+/* Smarty version 4.5.5, created on 2026-01-19 18:59:42
   from '/var/www/CNK-DEM/layouts/v7/modules/Inventory/partials/LineItemsContent.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69514436c24ac7_33652041',
+  'unifunc' => 'content_696e62fe351396_83874992',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'd66cdca663708345b7b1305371cd6174b873579d' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Inventory/partials/LineItemsContent.tpl',
-      1 => 1766693566,
+      1 => 1768247974,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69514436c24ac7_33652041 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e62fe351396_83874992 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('deleted', ("deleted").($_smarty_tpl->tpl_vars['row_no']->value));
 $_smarty_tpl->_assignInScope('image', ("productImage").($_smarty_tpl->tpl_vars['row_no']->value));
 $_smarty_tpl->_assignInScope('purchaseCost', ("purchaseCost").($_smarty_tpl->tpl_vars['row_no']->value));
@@ -58,15 +58,15 @@ if ($_smarty_tpl->tpl_vars['MODULE']->value == 'PurchaseOrder') {
 $_smarty_tpl->_assignInScope('listPriceValues', array());
 ob_start();
 echo $_smarty_tpl->tpl_vars['RECORD_CURRENCY_RATE']->value;
-$_prefixVariable11 = ob_get_clean();
+$_prefixVariable7 = ob_get_clean();
 ob_start();
 if ((isset($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['purchaseCost']->value])) && (isset($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['qty']->value])) && $_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['purchaseCost']->value] && $_smarty_tpl->tpl_vars['RECORD_CURRENCY_RATE']->value && $_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['qty']->value]) {
-echo (string)(((float)$_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['purchaseCost']->value])/((float)$_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['qty']->value]*(float)$_prefixVariable11));
+echo (string)(((float)$_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['purchaseCost']->value])/((float)$_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['qty']->value]*(float)$_prefixVariable7));
 } else {
 echo "0";
 }
-$_prefixVariable12=ob_get_clean();
-$_smarty_tpl->_assignInScope('purchaseCost', $_prefixVariable12);
+$_prefixVariable8=ob_get_clean();
+$_smarty_tpl->_assignInScope('purchaseCost', $_prefixVariable8);
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['CURRENCIES']->value, 'currency_details');
 $_smarty_tpl->tpl_vars['currency_details']->do_else = true;
 if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['currency_details']->value) {
@@ -92,7 +92,7 @@ if ($_smarty_tpl->tpl_vars['PRODUCT_EDITABLE']->value) {?><td><!-- Product Re-Or
 " name="<?php echo $_smarty_tpl->tpl_vars['productName']->value;?>
 " value="<?php echo (isset($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productName']->value])) ? $_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productName']->value] : '';?>
 " class="productName form-control <?php if ($_smarty_tpl->tpl_vars['row_no']->value != 0) {?> autoComplete <?php }?> " placeholder="<?php echo vtranslate('LBL_TYPE_SEARCH',$_smarty_tpl->tpl_vars['MODULE']->value);?>
-"data-rule-required=true <?php if (!empty($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productName']->value])) {?> disabled="disabled" <?php }?>><?php if ((isset($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productDeleted']->value])) && !$_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productDeleted']->value]) {?><span class="input-group-addon cursorPointer clearLineItem" title="<?php echo vtranslate('LBL_CLEAR',$_smarty_tpl->tpl_vars['MODULE']->value);?>
+"<?php if ($_smarty_tpl->tpl_vars['MODULE']->value != 'Quotes' && $_smarty_tpl->tpl_vars['MODULE']->value != 'Invoice' && $_smarty_tpl->tpl_vars['MODULE']->value != 'PurchaseOrder' && $_smarty_tpl->tpl_vars['MODULE']->value != 'SalesOrder') {?>data-rule-required=true<?php }?> <?php if (!empty($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productName']->value])) {?> disabled="disabled" <?php }?>><?php if ((isset($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productDeleted']->value])) && !$_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['productDeleted']->value]) {?><span class="input-group-addon cursorPointer clearLineItem" title="<?php echo vtranslate('LBL_CLEAR',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 "><i class="fa fa-times-circle"></i></span><?php }?><input type="hidden" id="<?php echo $_smarty_tpl->tpl_vars['hdnProductId']->value;?>
 " name="<?php echo $_smarty_tpl->tpl_vars['hdnProductId']->value;?>
 " value="<?php echo (isset($_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['hdnProductId']->value])) ? $_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['hdnProductId']->value] : '';?>
@@ -177,8 +177,8 @@ echo $_smarty_tpl->tpl_vars['data']->value[$_smarty_tpl->tpl_vars['listPrice']->
 echo Zend_Json::encode($_smarty_tpl->tpl_vars['listPriceValues']->value);
 }?>' data-base-currency-id="<?php ob_start();
 echo $_smarty_tpl->tpl_vars['entityType']->value;
-$_prefixVariable13 = ob_get_clean();
-echo getProductBaseCurrency($_smarty_tpl->tpl_vars['productId']->value,$_prefixVariable13);?>
+$_prefixVariable9 = ob_get_clean();
+echo getProductBaseCurrency($_smarty_tpl->tpl_vars['productId']->value,$_prefixVariable9);?>
 " />&nbsp;<?php $_smarty_tpl->_assignInScope('PRICEBOOK_MODULE_MODEL', Vtiger_Module_Model::getInstance('PriceBooks'));
 if ($_smarty_tpl->tpl_vars['PRICEBOOK_MODULE_MODEL']->value->isPermitted('DetailView') && $_smarty_tpl->tpl_vars['MODULE']->value != 'PurchaseOrder') {?><span class="priceBookPopup cursorPointer" data-popup="Popup" title="<?php echo vtranslate('PriceBooks',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 " data-module-name="PriceBooks" style="float:left"><?php echo Vtiger_Module_Model::getModuleIconPath('PriceBooks');?>

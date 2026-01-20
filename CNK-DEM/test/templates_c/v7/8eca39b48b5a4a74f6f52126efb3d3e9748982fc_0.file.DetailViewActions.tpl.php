@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 15:04:34
+/* Smarty version 4.5.5, created on 2026-01-19 23:18:30
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/DetailViewActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69514702c11ca0_32843397',
+  'unifunc' => 'content_696e9fa6a2de92_26472883',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '8eca39b48b5a4a74f6f52126efb3d3e9748982fc' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/DetailViewActions.tpl',
-      1 => 1766693566,
+      1 => 1768857487,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69514702c11ca0_32843397 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e9fa6a2de92_26472883 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="col-lg-6 detailViewButtoncontainer"><div class="pull-right btn-toolbar"><div class="btn-group"><?php $_smarty_tpl->_assignInScope('STARRED', $_smarty_tpl->tpl_vars['RECORD']->value->get('starred'));
@@ -34,9 +34,10 @@ $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->t
 $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->do_else = true;
 if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value) {
 $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->do_else = false;
-?><button class="btn btn-default" id="<?php echo $_smarty_tpl->tpl_vars['MODULE_NAME']->value;?>
+?><button class="btn <?php if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel() == 'LBL_GENERATE_QUOTE') {?>btn-generate-quote<?php } else { ?>btn-default<?php }?>" id="<?php echo $_smarty_tpl->tpl_vars['MODULE_NAME']->value;?>
 _detailView_basicAction_<?php echo Vtiger_Util_Helper::replaceSpaceWithUnderScores($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel());?>
-"<?php if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->isPageLoadLink()) {?>onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getUrl();?>
+"<?php if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel() == 'LBL_GENERATE_QUOTE') {?>style="background: #8e44ad; border-color: #8e44ad; color: white;"<?php }
+if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->isPageLoadLink()) {?>onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getUrl();?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
 '"<?php } else { ?>onclick="<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getUrl();?>
 "<?php }

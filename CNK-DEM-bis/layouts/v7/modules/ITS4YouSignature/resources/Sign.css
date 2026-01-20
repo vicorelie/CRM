@@ -1,0 +1,84 @@
+/* * *******************************************************************************
+ * The content of this file is subject to the ITS4YouSignature license.
+ * ("License"); You may not use this file except in compliance with the License
+ * The Initial Developer of the Original Code is IT-Solutions4You s.r.o.
+ * Portions created by IT-Solutions4You s.r.o. are Copyright(C) IT-Solutions4You s.r.o.
+ * All Rights Reserved.
+ * ****************************************************************************** */
+
+body {
+    background: #f9f9f9;
+    padding: 15px 0;
+    margin: 0 auto;
+}
+.sigPad {
+    width: 100%;
+}
+.sigWrapper, .typed {
+    height: 200px;
+    border: 0 !important;
+}
+.typed {
+    font-size: 160px;
+    line-height: 200px;
+}
+.pad {
+    background: none;
+    outline: 1px solid #ddd;
+}
+.typeItDesc, .drawItDesc {
+    border: 0;
+}
+.modal-dialog {
+    width: 600px;
+}
+.typeItDesc, .drawItDesc, .sigPad label {
+    padding: 0;
+    margin: 0;
+    font: normal 1em/1.375 "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.sigPad input {
+    width: 100%;
+    border: 1px solid #cccccc;
+}
+.sigNav .clearButton a {
+    font-weight: normal;
+    font-size: 14px;
+    color: #f00;
+}
+.previewPDF {
+    position: relative;
+}
+.previewPDF iframe {
+    border: 1px solid #222;
+    width: 100%;
+    display: inline-block;
+}
+.prevHeight {
+    height: 800px;
+}
+.myModal {
+    position: absolute;
+    top: 0;
+    margin: 0 auto;
+    right: 0;
+    left: 0;
+}
+
+.m-0 {
+    margin: 0;;
+}
+.pb-15px {
+    padding-bottom: 15px;
+}
+
+.text-end {
+    text-align: end;
+}
+.overflow-hidden {
+    overflow: hidden;
+}
+.modal-content, .modal-dialog {
+    margin: 15px auto;
+    max-width: 100vw;
+}

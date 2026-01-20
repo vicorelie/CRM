@@ -1073,13 +1073,67 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
 
             $currencyType = $this->getInventoryCurrencyInfoCustom($module, $focus);
 
+            // CNK-DEM: Check if Quotes module with no products - populate TOTAL details from finalDetails
+            $logFile = '/var/www/CNK-DEM/pdf_debug.log';
+            file_put_contents($logFile, date('[Y-m-d H:i:s]') . " getInventoryProducts - Module: $module\n", FILE_APPEND);
+            file_put_contents($logFile, "relatedProducts keys: " . print_r(array_keys($relatedProducts), true) . "\n", FILE_APPEND);
+
+            $hasProducts = false;
+            foreach ($relatedProducts as $key => $value) {
+                if (is_numeric($key)) {
+                    $hasProducts = true;
+                    file_put_contents($logFile, "Found numeric key: $key\n", FILE_APPEND);
+                    break;
+                }
+            }
+
+            file_put_contents($logFile, "hasProducts: " . ($hasProducts ? 'YES' : 'NO') . "\n", FILE_APPEND);
+            file_put_contents($logFile, "Module is Quotes/Invoice: " . (($module === 'Quotes' || $module === 'Invoice') ? 'YES' : 'NO') . "\n", FILE_APPEND);
+            file_put_contents($logFile, "finalDetails is NOT empty: " . (!empty($finalDetails) ? 'YES' : 'NO') . "\n", FILE_APPEND);
+
+            if (!$hasProducts && ($module === 'Quotes' || $module === 'Invoice') && !empty($finalDetails)) {
+                // No products - populate Details from finalDetails directly
+                $totalVatPercentage = $finalDetails['group_total_tax_percent'];
+
+                file_put_contents($logFile, "==> CONDITION MET - Building Details from finalDetails\n", FILE_APPEND);
+                file_put_contents($logFile, "finalDetails: " . print_r($finalDetails, true) . "\n", FILE_APPEND);
+
+                $Details['TOTAL']['TOTALWITHOUTVAT'] = $this->formatCurrencyToPDF($finalDetails['preTaxTotal']);
+                $Details['TOTAL']['TAXTOTAL'] = $this->formatCurrencyToPDF($finalDetails['tax_totalamount']);
+                $Details['TOTAL']['TAXTOTALPERCENT'] = $this->formatNumberToPDF($totalVatPercentage);
+                $Details['TOTAL']['VATBLOCK'] = $this->getGroupVatBlock($finalDetails);
+                $Details['TOTAL']['CHARGESBLOCK'] = $this->getChargesBlock($finalDetails);
+
+                // Discount fields
+                $Details['TOTAL']['FINALDISCOUNTPERCENT'] = $this->formatNumberToPDF($finalDetails['hdnDiscountPercent'] ?? 0);
+                $Details['TOTAL']['FINALDISCOUNTAMOUNT'] = $this->formatNumberToPDF($finalDetails['discount_amount_final']);
+                $Details['TOTAL']['FINALDISCOUNT'] = $this->formatCurrencyToPDF($finalDetails['discount_amount_final']);
+                $Details['TOTAL']['TOTALAFTERDISCOUNT'] = $this->formatCurrencyToPDF($finalDetails['preTaxTotal']);
+                $Details['TOTAL']['NETTOTAL'] = $this->formatCurrencyToPDF($finalDetails['preTaxTotal']);
+
+                // Shipping & handling
+                $Details['TOTAL']['SHTAXAMOUNT'] = $this->formatCurrencyToPDF(0);
+                $Details['TOTAL']['SHTAXTOTAL'] = $this->formatCurrencyToPDF(0);
+
+                // Deducted taxes
+                $Details['TOTAL']['DEDUCTEDTAXESBLOCK'] = $this->getDeductedTaxesBlock($finalDetails);
+                $Details['TOTAL']['DEDUCTEDTAXESTOTAL'] = $this->formatCurrencyToPDF(0);
+
+                file_put_contents($logFile, "Details[TOTAL]: " . print_r($Details['TOTAL'], true) . "\n", FILE_APPEND);
+
+                return $Details;
+            }
+
             foreach ($relatedProducts as $i => $PData) {
                 $Details['P'][$i] = array(
                     'TAXTYPE' => $taxType,
                 );
 
                 $sequence = $i;
-                $productTitle = $productName = $PData['productName' . $sequence];
+                // CNK-DEM: Utiliser la description personnalisée si elle existe, sinon le nom du produit
+                $productDescription = isset($PData['productDescription' . $sequence]) ? trim($PData['productDescription' . $sequence]) : '';
+                $originalProductName = $PData['productName' . $sequence];
+                $productTitle = $productName = !empty($productDescription) ? $productDescription : $originalProductName;
                 $entityType = $PData['entityType' . $sequence];
                 $productId = $psId = $PData['hdnProductId' . $sequence];
                 $productFocus = CRMEntity::getInstance('Products');
@@ -1595,17 +1649,28 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
         $result = self::$db->pquery("select * from vtiger_inventoryproductrel where id=?", array(self::$focus->id));
         $num_rows = self::$db->num_rows($result);
 
-        if ($num_rows > 0) {
+        // CNK-DEM: Allow processing even without products for Quotes and Invoice modules
+        $forceProcessing = ($num_rows == 0 && (self::$module === 'Quotes' || self::$module === 'Invoice'));
+
+        if ($num_rows > 0 || $forceProcessing) {
             $products = $this->replaceInventoryDetailsBlock(self::$module, self::$focus);
             $blockTypes = array('', 'PRODUCTS_', 'SERVICES_', 'UNIQUE_');
 
-            foreach ($blockTypes as $blockType) {
-                if (strpos(self::$content, "#PRODUCTBLOC_" . $blockType . "START#") !== false && strpos(self::$content, "#PRODUCTBLOC_" . $blockType . "END#") !== false) {
-                    $tableTag = $this->convertProductBlock($blockType);
-                    $breakLinesData = $this->getInventoryBreaklines(self::$focus->id);
-                    $breakLineType = $this->getBreakLineType($breakLinesData, $tableTag);
+            // CNK-DEM: If no products, remove product blocks from template
+            if ($forceProcessing && $num_rows == 0) {
+                foreach ($blockTypes as $blockType) {
+                    $pattern = '/#PRODUCTBLOC_' . $blockType . 'START#.*?#PRODUCTBLOC_' . $blockType . 'END#/s';
+                    self::$content = preg_replace($pattern, '', self::$content);
+                }
+            } else {
+                foreach ($blockTypes as $blockType) {
+                    if (strpos(self::$content, "#PRODUCTBLOC_" . $blockType . "START#") !== false && strpos(self::$content, "#PRODUCTBLOC_" . $blockType . "END#") !== false) {
+                        $tableTag = $this->convertProductBlock($blockType);
+                        $breakLinesData = $this->getInventoryBreaklines(self::$focus->id);
+                        $breakLineType = $this->getBreakLineType($breakLinesData, $tableTag);
 
-                    $this->replaceProducts($products, $blockType, $breakLinesData['products'], $breakLineType);
+                        $this->replaceProducts($products, $blockType, $breakLinesData['products'], $breakLineType);
+                    }
                 }
             }
 

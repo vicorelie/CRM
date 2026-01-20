@@ -1,0 +1,82 @@
+<?php
+/* *********************************************************************************
+ * The content of this file is subject to the EMAILMaker license.
+ * ("License"); You may not use this file except in compliance with the License
+ * The Initial Developer of the Original Code is IT-Solutions4You s.r.o.
+ * Portions created by IT-Solutions4You s.r.o. are Copyright(C) IT-Solutions4You s.r.o.
+ * All Rights Reserved.
+ * ******************************************************************************* */
+
+$languageStrings = array(
+	'LBL_MODULE_NAME' => 'EMAIL Maker', 
+	'LBL_LICENSE_KEY' => 'License key', 
+	'LBL_INSTALL' => 'Installation', 
+	'LBL_FINISH' => 'Fertig', 
+	'LBL_INSERT_KEY' => 'Bitte den Lizenzschlüssel einfügen, den Sie mit der Kaufbestätigungs-Mail erhalten haben.', 
+	'LBL_VALIDATE' => 'Überprüfen', 
+	'LBL_INVALID_KEY' => 'Ungültiger Lizenzschlüssel! Nehmen Sie mit dem Hersteller von EMAIL Maker Kontakt auf.', 
+	'LBL_ONLINE_ASSURE' => 'Bitte sorgen Sie für einen Internetzugang des Servers, um die Überprüfung durchzuführen.', 
+	'LBL_ORDER_NOW' => 'Bestellen', 
+	'LBL_VALIDATION' => 'Überprüfung', 
+	'LBL_WELCOME' => 'Willkommen zum EMAIL Maker Installationsassistenten', 
+	'LBL_WELCOME_DESC' => 'Nun wird EMAIL Maker in Ihrem vtiger DRM installiert', 
+	'LBL_WELCOME_FINISH' => 'Es ist unbedingt erforderlich die Installation ohne Unterbrechung zu Ende zu führen', 
+	'LBL_TRY_AGAIN' => 'Nochmal versuchen', 
+	'COPYRIGHT' => ':: IT-Solutions4You', 
+	'LBL_INVALID_FOPEN_CURL' => 'Den Parameter <strong>allow_url_fopen</strong> oder die Erweiterung <strong>cURL</strong> in Ihren PHP Einstellungen aktivieren.', 
+	'LBL_REACTIVATE' => 'Lizenz reaktivieren', 
+	'LBL_REACTIVATE_DESC' => 'falls Probleme mit dem Lizenzschlüssel auftreten.', 
+	'REACTIVATE_SUCCESS' => 'Sie haben Ihren EMAIL Maker erfolgreich reaktiviert', 
+	'LBL_DEACTIVATE' => 'Lizenz deaktivieren', 
+	'LBL_DEACTIVATE_TITLE' => 'Lizenz deaktivieren', 
+	'LBL_DEACTIVATE_QUESTION' => 'Wollen Sie wirklich die Lizenz deaktivieren ?', 
+	'LBL_DEACTIVATE_DESC' => 'Nach der Deaktivierung können Sie nur noch EMAIKL Maker Vorlagen exportieren<br />Nach der Aktivierung haben Sie wieder die volle Funktionalität.', 
+	'LBL_DEACTIVATE_ERROR' => 'Deaktivierung des Lizenzschlüssles fehlgeschlagen.', 
+	'LBL_ACTIVATE_KEY' => 'Aktiviere Lizenz', 
+	'LBL_VALIDATION_ERROR' => 'Error occured during validation of license key', 
+	'LBL_LICENSE' => 'Lizenz-Einstellungen', 
+	'LBL_INSTALL_SUCCESS' => 'EMAIL Maker wurde erfolgreich installiert.', 
+	'LBL_DEACTIVATE_SUCCESS' => 'Lizenz-Schlüssel wurde erfolgreich deaktiviert.', 
+	'LBL_UNINSTALL' => 'Deinstalliere EMAIL Maker', 
+	'LBL_UNINSTALL_DESC' => 'Remove Module completely from your vTiger. Uninstalling the module will delete all existing templates', 
+	'LBL_ACTIVATE_BTN' => 'In order to use your EMAILMaker properly, you need to (re)activate your license.', 
+	'LBL_COMPANY_LICENSE_INFO' => 'Your Company Information', 
+	'LBL_CHANGE_COMPANY_INFORMATION' => 'Change Company Information', 
+	'LBL_URL' => 'Your vtiger url', 
+	'LBL_LICENSE_DUE_DATE' => 'Due Date', 
+	'LBL_LICENSE_SETTINGS_INFO' => 'Manage your Module License Key', 
+	'LBL_LICENSE_DESC' => 'Manage all settings related to your license', 
+	'LBL_REACTIVATE_SUCCESS' => 'You have successfuly reactivated your EMAIL Maker.', 
+	'LBL_REACTIVATE_ERROR' => 'Some error occured while (re)activating the license key.', 
+	'LBL_INACTIVE' => 'EMAIL Maker is inactive. Please insert a license key.', 
+	'ALERT_DOC_TITLE' => 'The document title can not be empty.', 
+	'LBL_LICENSE_RENEW' => 'Renew license', 
+	'LBL_LICENSE_EXPIRED' => 'Trial License expired', 
+	'LBL_LICENSE_DEACTIVATE_BUY' => 'You can login to shop and <b>renew</b> your license or <b>deactivate</b> if you have a new license', 
+	'LBL_INSTALLER_NOT_ACTIVE' => 'Install or Activate ITS4YouInstaller module to manage your licenses.', 
+	'LBL_INSTALLER_UPDATE' => 'Update ITS4YouInstaller module for access to EMAILMaker', 
+	'EMAILMaker' => 'EMAILMaker', 
+	'SINGLE_EMAILMaker' => 'EMAILMaker', 
+	'LBL_MODULE' => 'Module', 
+	'LBL_LICENSE_ACTIVE' => 'Extension is active', 
+	'LBL_LICENSE_INACTIVE' => 'Extension is not active', 
+	'LBL_DOWNLOAD' => 'Download', 
+	'LBL_DOWNLOAD_INSTALLER' => 'Download Installer', 
+	'LBL_UPGRADE' => 'Upgrade EMAILMaker', 
+	'LBL_BLOCK_SYSTEM_INFORMATION' => 'System Information', 
+	'LBL_EDIT_FIELDS' => 'Fields & Layout', 
+	'LBL_EDIT_WORKFLOWS' => 'Workflows', 
+	'LBL_MODULE_SEQUENCE_NUMBERING' => 'Numbering', 
+	'LBL_VERSION' => 'Version', 
+	'LBL_INTEGRATION' => 'Integration', 
+	'LBL_MODULE_REQUIREMENTS' => 'Module Requirements', 
+	'LBL_LICENSE_MANAGE' => 'Manage licenses', 
+	'LBL_LICENSE_USED_BY_OTHER_USERS' => 'License used by other users', 
+);
+
+$jsLanguageStrings = array(
+	'LBL_UNINSTALL_CONFIRM' => 'Are you sure you want to completely remove EMAIL Maker and Templates?', 
+	'JS_UNINSTALL_CONFIRM' => 'Are you sure you want to completely remove EMAIL Maker and Templates?', 
+	'LBL_DEACTIVATE_QUESTION' => 'Wollen Sie wirklich ihren Lizenzschlüssel deaktivieren?', 
+); 
+

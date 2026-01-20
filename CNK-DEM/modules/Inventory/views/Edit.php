@@ -74,6 +74,35 @@ Class Inventory_Edit_View extends Vtiger_Edit_View {
 
 			$recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);
 			$recordModel->setRecordFieldValues($parentRecordModel);
+
+			// CUSTOM: Copier les champs personnalisés depuis Quote vers PurchaseOrder
+			$sourceModuleName = $parentRecordModel->getModuleName();
+			if ($sourceModuleName === 'Quotes') {
+				// Mapping des champs: Quote -> PurchaseOrder
+				$fieldMapping = array(
+					'cf_1125' => 'cf_1245',  // TYPE DE FORFAIT
+					'cf_1127' => 'cf_1239',  // TARIF FORFAIT
+					'cf_1129' => 'cf_1241',  // SUPPLÉMENT FORFAIT
+					'cf_1131' => 'cf_1253',  // DESCRIPTION FORFAIT
+					'cf_1137' => 'cf_1243',  // TOTAL FORFAIT
+					'cf_1133' => 'cf_1235',  // POURCENTAGE ACOMPTE FORFAIT
+					'cf_1135' => 'cf_1237',  // POURCENTAGE SOLDE FORFAIT
+					'cf_1139' => 'cf_1247',  // MONTANT ASSURANCE
+					'cf_1141' => 'cf_1249',  // TARIF POUR 1000
+					'cf_1143' => 'cf_1251',  // TARIF ASSURANCE
+					'cf_1145' => 'cf_1255',  // DESCRIPTION ASSURANCE
+					'cf_1055' => 'cf_1231',  // TOTAL ACOMPTE
+					'cf_1057' => 'cf_1233',  // TOTAL SOLDE
+					'prestataire' => 'prestataire',  // PRESTATAIRE
+				);
+
+				foreach ($fieldMapping as $sourceField => $targetField) {
+					$value = $parentRecordModel->get($sourceField);
+					if ($value !== null && $value !== '') {
+						$recordModel->set($targetField, $value);
+					}
+				}
+			}
 		} elseif ($request->get('salesorder_id') || $request->get('quote_id')) {
 			if ($request->get('salesorder_id')) {
 				$referenceId = $request->get('salesorder_id');
@@ -87,6 +116,35 @@ Class Inventory_Edit_View extends Vtiger_Edit_View {
 			$relatedProducts = $parentRecordModel->getProducts();
 			$recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);
 			$recordModel->setRecordFieldValues($parentRecordModel);
+
+			// CUSTOM: Copier les champs personnalisés depuis Quote vers SalesOrder/Invoice
+			$sourceModuleName = $parentRecordModel->getModuleName();
+			if ($sourceModuleName === 'Quotes' && $moduleName === 'SalesOrder') {
+				// Mapping des champs: Quote -> SalesOrder
+				$fieldMapping = array(
+					'cf_1125' => 'cf_1186',  // TYPE DE FORFAIT
+					'cf_1127' => 'cf_1180',  // TARIF FORFAIT
+					'cf_1129' => 'cf_1182',  // SUPPLÉMENT FORFAIT
+					'cf_1131' => 'cf_1188',  // DESCRIPTION FORFAIT
+					'cf_1137' => 'cf_1184',  // TOTAL FORFAIT
+					'cf_1133' => 'cf_1176',  // POURCENTAGE ACOMPTE FORFAIT
+					'cf_1135' => 'cf_1178',  // POURCENTAGE SOLDE FORFAIT
+					'cf_1139' => 'cf_1170',  // MONTANT ASSURANCE
+					'cf_1141' => 'cf_1172',  // TARIF POUR 1000
+					'cf_1143' => 'cf_1174',  // TARIF ASSURANCE
+					'cf_1145' => 'cf_1190',  // DESCRIPTION ASSURANCE
+					'cf_1055' => 'cf_1166',  // TOTAL ACOMPTE
+					'cf_1057' => 'cf_1168',  // TOTAL SOLDE
+					'prestataire' => 'prestataire',  // PRESTATAIRE
+				);
+
+				foreach ($fieldMapping as $sourceField => $targetField) {
+					$value = $parentRecordModel->get($sourceField);
+					if ($value !== null && $value !== '') {
+						$recordModel->set($targetField, $value);
+					}
+				}
+			}
 		} else {
 			$taxes = Inventory_Module_Model::getAllProductTaxes();
 			$recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);

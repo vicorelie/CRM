@@ -77,8 +77,6 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 
 		// Écouter les requêtes AJAX SaveAjax pour détecter les changements de champs
 		jQuery(document).ajaxComplete(function(event, xhr, settings) {
-			console.log('[QUOTES CALC DEBUG] AJAX complete, type:', typeof settings.data, 'url:', settings.url);
-
 			// Vérifier si settings.data est un objet FormData ou un objet
 			var dataStr = '';
 			if (typeof settings.data === 'string') {
@@ -92,14 +90,10 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 				}
 			}
 
-			console.log('[QUOTES CALC DEBUG] data string:', dataStr.substring(0, 200));
-
 			// Vérifier si c'est une requête SaveAjax pour Quotes
 			if (dataStr &&
 				dataStr.indexOf('SaveAjax') > -1 &&
 				dataStr.indexOf('Quotes') > -1) {
-
-				console.log('[QUOTES CALC DEBUG] SaveAjax pour Quotes détecté');
 
 				// Champs de calcul surveillés:
 				// cf_1127 = Forfait Tarif
@@ -114,7 +108,6 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 				for (var i = 0; i < calculationFields.length; i++) {
 					if (dataStr.indexOf(calculationFields[i]) > -1) {
 						fieldModified = true;
-						console.log('[QUOTES CALC] Champ de calcul modifié:', calculationFields[i]);
 						break;
 					}
 				}
@@ -124,7 +117,6 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 					var recordMatch = dataStr.match(/record["\s:=]+(\d+)/);
 					if (recordMatch) {
 						var recordId = recordMatch[1];
-						console.log('[QUOTES CALC] Recalcul des totaux pour le devis ID:', recordId);
 
 						// Attendre un peu pour que la sauvegarde soit terminée
 						setTimeout(function() {
@@ -140,8 +132,7 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 	 * Appelle l'action PHP pour recalculer tous les totaux
 	 */
 	recalculateQuoteTotals: function(recordId) {
-		console.log('[QUOTES CALC] Appel de RecalculateQuoteTotals pour recordId:', recordId);
-
+		var thisInstance = this;
 		var postData = {
 			module: 'Quotes',
 			action: 'RecalculateQuoteTotals',
@@ -150,56 +141,44 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 
 		AppConnector.request(postData).then(
 			function(data) {
-				console.log('[QUOTES CALC] Réponse reçue:', data);
-
 				if (data.success && data.result && data.result.calculated_fields) {
 					var fields = data.result.calculated_fields;
 
-					// Mettre à jour l'affichage des champs calculés
+					// Mettre à jour l'affichage des champs calculés custom
 					// cf_1137 = Total Forfait
 					if (fields.cf_1137 !== undefined) {
-						var cf1137Element = jQuery('[data-name="cf_1137"] .value');
+						var cf1137Element = jQuery('#Quotes_detailView_fieldValue_cf_1137 .value');
 						if (cf1137Element.length > 0) {
-							cf1137Element.text(fields.cf_1137 + ' €');
-							console.log('[QUOTES CALC] cf_1137 mis à jour:', fields.cf_1137);
+							cf1137Element.text(' ' + fields.cf_1137 + ' ');
 						}
 					}
 
 					// cf_1055 = Acompte TTC
 					if (fields.cf_1055 !== undefined) {
-						var cf1055Element = jQuery('[data-name="cf_1055"] .value');
+						var cf1055Element = jQuery('#Quotes_detailView_fieldValue_cf_1055 .value');
 						if (cf1055Element.length > 0) {
-							cf1055Element.text(fields.cf_1055 + ' €');
-							console.log('[QUOTES CALC] cf_1055 mis à jour:', fields.cf_1055);
+							cf1055Element.text(' ' + fields.cf_1055 + ' ');
 						}
 					}
 
 					// cf_1057 = Solde TTC
 					if (fields.cf_1057 !== undefined) {
-						var cf1057Element = jQuery('[data-name="cf_1057"] .value');
+						var cf1057Element = jQuery('#Quotes_detailView_fieldValue_cf_1057 .value');
 						if (cf1057Element.length > 0) {
-							cf1057Element.text(fields.cf_1057 + ' €');
-							console.log('[QUOTES CALC] cf_1057 mis à jour:', fields.cf_1057);
+							cf1057Element.text(' ' + fields.cf_1057 + ' ');
 						}
 					}
 
 					// cf_1143 = Assurance calculée
 					if (fields.cf_1143 !== undefined) {
-						var cf1143Element = jQuery('[data-name="cf_1143"] .value');
+						var cf1143Element = jQuery('#Quotes_detailView_fieldValue_cf_1143 .value');
 						if (cf1143Element.length > 0) {
-							cf1143Element.text(fields.cf_1143 + ' €');
-							console.log('[QUOTES CALC] cf_1143 mis à jour:', fields.cf_1143);
+							cf1143Element.text(' ' + fields.cf_1143 + ' ');
 						}
 					}
 
-					// Total
-					if (fields.total !== undefined) {
-						var totalElement = jQuery('[data-name="hdnGrandTotal"] .value');
-						if (totalElement.length > 0) {
-							totalElement.text(fields.total + ' €');
-							console.log('[QUOTES CALC] Total mis à jour:', fields.total);
-						}
-					}
+					// Mettre à jour les champs LineItems par leurs IDs
+					thisInstance.updateLineItemsTotals(fields);
 
 					// Afficher un message de succès discret
 					var params = {
@@ -216,6 +195,49 @@ Inventory_Detail_Js("Quotes_Detail_Js",{
 				console.error('[QUOTES CALC] Erreur AJAX:', error);
 			}
 		);
+	},
+	/**
+	 * Met à jour les totaux de la section LineItems
+	 */
+	updateLineItemsTotals: function(fields) {
+		console.log('[QUOTES CALC] updateLineItemsTotals appelée avec:', fields);
+
+		// Mettre à jour Total des Articles (netTotal)
+		if (fields.subtotal !== undefined) {
+			var netTotalEl = jQuery('#netTotal');
+			console.log('[QUOTES CALC] netTotal element:', netTotalEl.length, 'value:', fields.subtotal);
+			netTotalEl.text(fields.subtotal);
+		}
+
+		// Mettre à jour Remise générale (discountTotal_final)
+		if (fields.discount_amount !== undefined) {
+			var discountEl = jQuery('#discountTotal_final');
+			console.log('[QUOTES CALC] discountTotal_final element:', discountEl.length, 'value:', fields.discount_amount);
+			discountEl.text(fields.discount_amount);
+		}
+
+		// Mettre à jour Pre Tax Total (preTaxTotal + hidden input)
+		if (fields.pre_tax_total !== undefined) {
+			var preTaxEl = jQuery('#preTaxTotal');
+			console.log('[QUOTES CALC] preTaxTotal element:', preTaxEl.length, 'value:', fields.pre_tax_total);
+			preTaxEl.text(fields.pre_tax_total);
+			jQuery('#pre_tax_total').val(fields.pre_tax_total);
+		}
+
+		// Mettre à jour Total taxe (tax_amount)
+		if (fields.tax_amount !== undefined) {
+			var taxEl = jQuery('#tax_final');
+			console.log('[QUOTES CALC] tax_final element:', taxEl.length, 'value:', fields.tax_amount);
+			taxEl.text(fields.tax_amount);
+		}
+
+		// Mettre à jour Total TTC (grandTotal)
+		if (fields.total !== undefined) {
+			var grandTotalEl = jQuery('#grandTotal');
+			console.log('[QUOTES CALC] grandTotal element:', grandTotalEl.length, 'value:', fields.total);
+			grandTotalEl.text(fields.total);
+			jQuery('#hdnGrandTotal').val(fields.total);
+		}
 	},
 
 	/**

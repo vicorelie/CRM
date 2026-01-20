@@ -1,0 +1,7 @@
+<?php
+$languageStrings = array(
+'FORFAIT ECO'	=>	'FORFAIT ECO',
+'FORFAIT ECO PLUS'	=>	'FORFAIT ECO PLUS',
+'FORFAIT CONFORT'	=>	'FORFAIT CONFORT',
+'FORFAIT LUXE'	=>	'FORFAIT LUXE',
+);

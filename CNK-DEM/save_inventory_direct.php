@@ -11,6 +11,7 @@ try {
     // Récupérer les données POST
     $recordId = isset($_POST['record_id']) ? intval($_POST['record_id']) : 0;
     $volume = isset($_POST['volume']) ? floatval($_POST['volume']) : 0;
+    $volumeFinal = isset($_POST['volume_final']) ? floatval($_POST['volume_final']) : 0;
     $boxes = isset($_POST['boxes']) ? intval($_POST['boxes']) : 0;
     $inventory = isset($_POST['inventory']) ? $_POST['inventory'] : '{}';
 
@@ -31,6 +32,7 @@ try {
     // Mettre à jour l'enregistrement dans la table des custom fields
     $stmt = $conn->prepare("UPDATE vtiger_potentialscf
                             SET cf_939 = ?,
+                                cf_1259 = ?,
                                 cf_963 = ?,
                                 cf_969 = ?,
                                 cf_965 = ?
@@ -40,7 +42,7 @@ try {
         throw new Exception('Erreur de préparation de la requête: ' . $conn->error);
     }
 
-    $stmt->bind_param('dissi', $volume, $boxes, $inventory, $inventoryHTML, $recordId);
+    $stmt->bind_param('ddissi', $volume, $volumeFinal, $boxes, $inventory, $inventoryHTML, $recordId);
 
     if (!$stmt->execute()) {
         throw new Exception('Erreur lors de la sauvegarde: ' . $stmt->error);

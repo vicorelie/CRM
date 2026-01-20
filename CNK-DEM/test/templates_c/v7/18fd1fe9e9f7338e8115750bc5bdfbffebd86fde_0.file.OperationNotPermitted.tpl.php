@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 15:28:51
+/* Smarty version 4.5.5, created on 2026-01-19 10:49:08
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/OperationNotPermitted.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69514cb30fe613_91557987',
+  'unifunc' => 'content_696df004cbc189_71409144',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69514cb30fe613_91557987 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696df004cbc189_71409144 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div style="margin:0 auto;width: 50em;">
 	<table border='0' cellpadding='5' cellspacing='0' height='600px' width="700px">
 	<tr><td align='center'>

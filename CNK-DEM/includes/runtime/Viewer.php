@@ -253,9 +253,13 @@ function vtemplate_path($templateName, $moduleName='') {
  * Generated cache friendly resource URL linked with version of Vtiger
  */
 function vresource_url($url) {
-    global $vtiger_current_version;
+    global $vtiger_current_version, $patch_version;
     if (stripos($url, '://') === false) {
-        $url = $url .'?v='.$vtiger_current_version;
+        $version = $vtiger_current_version;
+        if (!empty($patch_version)) {
+            $version .= '.' . $patch_version;
+        }
+        $url = $url .'?v='.$version;
     }
     return $url;
 }

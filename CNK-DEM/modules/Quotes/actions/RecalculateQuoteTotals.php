@@ -29,8 +29,10 @@ class Quotes_RecalculateQuoteTotals_Action extends Vtiger_Action_Controller {
 			// Récupérer tous les champs nécessaires depuis la DB
 			$quoteResult = $adb->pquery(
 				"SELECT qcf.cf_1127, qcf.cf_1129, qcf.cf_1133, qcf.cf_1135,
-				        qcf.cf_1139, qcf.cf_1141
+				        qcf.cf_1139, qcf.cf_1141,
+				        q.discount_amount
 				 FROM vtiger_quotescf qcf
+				 INNER JOIN vtiger_quotes q ON q.quoteid = qcf.quoteid
 				 WHERE qcf.quoteid = ?",
 				array($recordId)
 			);
@@ -52,6 +54,7 @@ class Quotes_RecalculateQuoteTotals_Action extends Vtiger_Action_Controller {
 
 			$montantAssurance = floatval($adb->query_result($quoteResult, 0, 'cf_1139')) ?: 0;
 			$tarifPour1000 = floatval($adb->query_result($quoteResult, 0, 'cf_1141')) ?: 0;
+			$discountAmount = floatval($adb->query_result($quoteResult, 0, 'discount_amount')) ?: 0;
 
 			// 1. Calculer cf_1143 (Tarif assurance) = ((cf_1139 / 1000) - 4) * cf_1141
 			$assuranceTarif = 0;
@@ -75,11 +78,13 @@ class Quotes_RecalculateQuoteTotals_Action extends Vtiger_Action_Controller {
 				$productsSubTotal = floatval($adb->query_result($productsResult, 0, 'products_subtotal')) ?: 0;
 			}
 
-			// 4. Calculer le total HT
-			$totalHT = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
+			// 4. Calculer le total HT (Pre Tax Total = Produits + Forfait + Assurance - Remise)
+			$preTaxTotal = $productsSubTotal + $totalForfaitHT + $assuranceTarif - $discountAmount;
+			$subtotal = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
 
 			// TVA 20%
 			$taxRate = 0.20;
+			$taxAmount = $preTaxTotal * $taxRate;
 
 			// 5. Calculer Acompte et Solde des produits - PRODUIT PAR PRODUIT
 			$totalProduitsAcompteHT = 0;
@@ -98,10 +103,10 @@ class Quotes_RecalculateQuoteTotals_Action extends Vtiger_Action_Controller {
 					$quantity = floatval($adb->query_result($lineItemsResult, $i, 'quantity')) ?: 0;
 					$listPrice = floatval($adb->query_result($lineItemsResult, $i, 'listprice')) ?: 0;
 					$discountPercent = floatval($adb->query_result($lineItemsResult, $i, 'discount_percent')) ?: 0;
-					$discountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
+					$lineDiscountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
 
 					// Calculer le total après remise pour cette ligne
-					$lineTotal = ($quantity * $listPrice * (1 - $discountPercent / 100)) - $discountAmount;
+					$lineTotal = ($quantity * $listPrice * (1 - $discountPercent / 100)) - $lineDiscountAmount;
 
 					if ($lineTotal > 0 && $productId) {
 						// Essayer d'abord dans vtiger_productcf
@@ -164,23 +169,28 @@ class Quotes_RecalculateQuoteTotals_Action extends Vtiger_Action_Controller {
 				array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $assuranceTarif, $recordId)
 			);
 
+			// Note: Il n'y a PAS de colonne tax_totalamount dans vtiger_quotes
 			$adb->pquery(
 				"UPDATE vtiger_quotes
 				 SET subtotal = ?, pre_tax_total = ?, total = ?
 				 WHERE quoteid = ?",
-				array($totalHT, $totalHT, $grandTotal, $recordId)
+				array($subtotal, $preTaxTotal, $grandTotal, $recordId)
 			);
 
-			// 9. Retourner les résultats
+			// 9. Retourner TOUS les champs calculés (custom + LineItems)
 			$response = new Vtiger_Response();
 			$response->setResult(array(
 				'calculated_fields' => array(
+					// Champs custom
 					'cf_1137' => number_format($totalForfaitHT, 2, '.', ''),
 					'cf_1055' => number_format($totalAcompteTTC, 2, '.', ''),
 					'cf_1057' => number_format($totalSoldeTTC, 2, '.', ''),
 					'cf_1143' => number_format($assuranceTarif, 2, '.', ''),
-					'subtotal' => number_format($totalHT, 2, '.', ''),
-					'pre_tax_total' => number_format($totalHT, 2, '.', ''),
+					// Champs LineItems
+					'subtotal' => number_format($subtotal, 2, '.', ''),
+					'discount_amount' => number_format($discountAmount, 2, '.', ''),
+					'pre_tax_total' => number_format($preTaxTotal, 2, '.', ''),
+					'tax_amount' => number_format($taxAmount, 2, '.', ''),
 					'total' => number_format($grandTotal, 2, '.', '')
 				),
 				'message' => 'Totaux recalculés avec succès'

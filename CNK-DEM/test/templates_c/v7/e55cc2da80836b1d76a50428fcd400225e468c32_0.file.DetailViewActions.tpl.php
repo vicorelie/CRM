@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
+/* Smarty version 4.5.5, created on 2026-01-19 18:09:10
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/DetailViewActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6951442a837b41_45004742',
+  'unifunc' => 'content_696e5726e18068_42189521',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6951442a837b41_45004742 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e5726e18068_42189521 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="col-lg-6 detailViewButtoncontainer"><div class="pull-right btn-toolbar"><div class="btn-group"><?php $_smarty_tpl->_assignInScope('STARRED', $_smarty_tpl->tpl_vars['RECORD']->value->get('starred'));
@@ -63,8 +63,8 @@ _detailView_moreAction_<?php echo Vtiger_Util_Helper::replaceSpaceWithUnderScore
 }
 $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></ul><?php }?></div><?php ob_start();
 echo $_smarty_tpl->tpl_vars['NO_PAGINATION']->value;
-$_prefixVariable7 = ob_get_clean();
-if (!$_prefixVariable7) {?><div class="btn-group pull-right"><button class="btn btn-default " id="detailViewPreviousRecordButton" <?php if (empty($_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value;?>
+$_prefixVariable1 = ob_get_clean();
+if (!$_prefixVariable1) {?><div class="btn-group pull-right"><button class="btn btn-default " id="detailViewPreviousRecordButton" <?php if (empty($_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value;?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
 '" <?php }?> ><i class="fa fa-chevron-left"></i></button><button class="btn btn-default  " id="detailViewNextRecordButton"<?php if (empty($_smarty_tpl->tpl_vars['NEXT_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['NEXT_RECORD_URL']->value;?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>

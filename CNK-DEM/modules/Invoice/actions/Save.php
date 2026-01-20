@@ -20,6 +20,34 @@ class Invoice_Save_Action extends Inventory_Save_Action {
 
 		$recordModel = parent::saveRecord($request);
 
+		// CNK-DEM: If we stored quote totals in session, apply them now
+		if (isset($_SESSION['invoice_copy_quote_totals']) && !empty($_SESSION['invoice_copy_quote_totals'])) {
+			global $adb;
+			$invoiceId = $recordModel->getId();
+			$totals = $_SESSION['invoice_copy_quote_totals'];
+
+			// Update invoice totals in database
+			$adb->pquery("UPDATE vtiger_invoice SET
+						  subtotal = ?,
+						  discount_amount = ?,
+						  pre_tax_total = ?,
+						  total = ?,
+						  taxtype = ?
+						  WHERE invoiceid = ?",
+				array(
+					$totals['subtotal'],
+					$totals['discount_amount'],
+					$totals['pre_tax_total'],
+					$totals['total'],
+					$totals['taxtype'],
+					$invoiceId
+				)
+			);
+
+			// Clear session
+			unset($_SESSION['invoice_copy_quote_totals']);
+		}
+
 		//Reverting the action value to $_REQUEST
 		$_REQUEST['action'] = $request->get('action');
 		return $recordModel;

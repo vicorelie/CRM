@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 15:33:43
+/* Smarty version 4.5.5, created on 2026-01-19 18:19:06
   from '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/JSResources.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69514dd735ff12_18830698',
+  'unifunc' => 'content_696e597a31c722_32194795',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_69514dd735ff12_18830698 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e597a31c722_32194795 (Smarty_Internal_Template $_smarty_tpl) {
 echo '<script'; ?>
  type="text/javascript" src="layouts/v7/lib/jquery/purl.js"><?php echo '</script'; ?>
 ><?php echo '<script'; ?>

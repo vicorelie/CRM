@@ -76,6 +76,8 @@ class ITS4YouEmails extends CRMEntity
         ['ITS4YouEmails', 'HEADERSCRIPT', 'ITS4YouEmails_MassEdit_Js', 'layouts/v7/modules/ITS4YouEmails/resources/MassEdit.js'],
     );
 
+    public $related_tables = [];
+
     public function __construct()
     {
         global $log;
@@ -229,6 +231,23 @@ class ITS4YouEmails extends CRMEntity
         if (!columnExists('recipient_id', 'its4you_emails')) {
             $this->db->query('ALTER TABLE its4you_emails ADD recipient_id INT(11) NULL');
         }
+
+        if (!columnExists('access_type', 'its4you_emails_access')) {
+            $this->db->query('ALTER TABLE its4you_emails_access ADD access_type INT(1) NULL');
+        }
+
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_account_id ON its4you_emails(account_id)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_contact_id ON its4you_emails(contact_id)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_lead_id ON its4you_emails(lead_id)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_vendor_id ON its4you_emails(vendor_id)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_user_id ON its4you_emails(user_id)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_related_to ON its4you_emails(related_to)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_parent_id ON its4you_emails(parent_id)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_sending_id ON its4you_emails(sending_id)');
+        $this->db->pquery('CREATE UNIQUE INDEX IF NOT EXISTS idx_email_no ON its4you_emails(its4you_email_no)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_subject ON its4you_emails(subject(100))');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_email_flag ON its4you_emails(email_flag)');
+        $this->db->pquery('CREATE INDEX IF NOT EXISTS idx_smtp ON its4you_emails(smtp)');
     }
 
     public function updateNumbering()

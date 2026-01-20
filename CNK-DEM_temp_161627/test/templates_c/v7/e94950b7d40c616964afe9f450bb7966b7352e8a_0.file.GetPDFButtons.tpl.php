@@ -1,0 +1,42 @@
+<?php
+/* Smarty version 4.5.5, created on 2025-12-30 13:12:40
+  from '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/GetPDFButtons.tpl' */
+
+/* @var Smarty_Internal_Template $_smarty_tpl */
+if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
+  'version' => '4.5.5',
+  'unifunc' => 'content_6953cfc8679a20_42396578',
+  'has_nocache_code' => false,
+  'file_dependency' => 
+  array (
+    'e94950b7d40c616964afe9f450bb7966b7352e8a' => 
+    array (
+      0 => '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/GetPDFButtons.tpl',
+      1 => 1766693999,
+      2 => 'file',
+    ),
+  ),
+  'includes' => 
+  array (
+  ),
+),false)) {
+function content_6953cfc8679a20_42396578 (Smarty_Internal_Template $_smarty_tpl) {
+if ($_smarty_tpl->tpl_vars['ENABLE_PDFMAKER']->value == 'true' && $_smarty_tpl->tpl_vars['CRM_TEMPLATES_EXIST']->value == '0') {?><div class="pull-right" id="PDFMakerContentDiv" style="padding-left: 5px;"><div class="clearfix"><div class="btn-group pull-right"><button class="btn btn-default selectPDFTemplates"><i title="<?php echo vtranslate('LBL_EXPORT_TO_PDF','PDFMaker');?>
+" class="fa fa-file-pdf-o" aria-hidden="true"></i>&nbsp;<?php echo vtranslate('LBL_EXPORT_TO_PDF','PDFMaker');?>
+</button><button type="button" class="btn btn-default dropdown-toggle dropdown-toggle-split PDFMoreAction" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php echo vtranslate('LBL_MORE','PDFMaker');?>
+&nbsp;&nbsp;<span class="caret"></span></button></button><ul class="dropdown-menu"><li class="dropdown-header"><select class="form-control" name="use_common_template" id="use_common_template" multiple><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['CRM_TEMPLATES']->value, 'TEMPLATE_ITEM', false, 'TEMPLATE_KEY');
+$_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['TEMPLATE_KEY']->value => $_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value) {
+$_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->do_else = false;
+?><option data-export_edit_disabled="<?php echo $_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value['disable_export_edit'];?>
+"value="<?php echo $_smarty_tpl->tpl_vars['TEMPLATE_KEY']->value;?>
+"<?php if ($_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value['title'] != '') {?> title="<?php echo $_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value['title'];?>
+" <?php }
+if ($_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value['is_default'] == '1' || $_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value['is_default'] == '3') {?> selected="selected" <?php }?>><?php echo $_smarty_tpl->tpl_vars['TEMPLATE_ITEM']->value['templatename'];?>
+</option><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></select></li><?php $_smarty_tpl->_subTemplateRender(call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'vtemplate_path' ][ 0 ], array( "GetPDFActions.tpl",'PDFMaker' )), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, true);
+?></ul></div></div></div><?php }
+}
+}

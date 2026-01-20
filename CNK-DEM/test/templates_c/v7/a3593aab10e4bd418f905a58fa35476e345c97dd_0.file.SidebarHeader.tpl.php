@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:26
+/* Smarty version 4.5.5, created on 2026-01-19 00:35:14
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/SidebarHeader.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6951442a7e8379_07490403',
+  'unifunc' => 'content_696d60224e93a0_35294653',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/partials/SidebarAppMenu.tpl' => 1,
   ),
 ),false)) {
-function content_6951442a7e8379_07490403 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696d60224e93a0_35294653 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('APP_IMAGE_MAP', Vtiger_MenuStructure_Model::getAppIcons());?>
 
 <div class="col-sm-1 col-xs-2 app-indicator-icon-container app-<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-28 14:52:38
+/* Smarty version 4.5.5, created on 2026-01-19 18:59:42
   from '/var/www/CNK-DEM/layouts/v7/modules/Inventory/EditView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_69514436b2e5b5_08548727',
+  'unifunc' => 'content_696e62fe293621_09727256',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/partials/Menubar.tpl' => 1,
   ),
 ),false)) {
-function content_69514436b2e5b5_08548727 (Smarty_Internal_Template $_smarty_tpl) {
+function content_696e62fe293621_09727256 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="main-container clearfix">
         <div id="modnavigator" class="module-nav editViewModNavigator">
