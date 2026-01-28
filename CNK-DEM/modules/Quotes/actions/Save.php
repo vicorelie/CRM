@@ -205,10 +205,43 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
 		$grandTotal = $totalAcompteTTC + $totalSoldeTTC;
 
+		// Calculer le montant déjà payé depuis vtiger_stripe_payments
+		$paidResult = $adb->pquery(
+			"SELECT COALESCE(SUM(amount), 0) as total_paid FROM vtiger_stripe_payments WHERE quote_id = ? AND status = 'paid'",
+			array($recordId)
+		);
+		$totalPaid = floatval($adb->query_result($paidResult, 0, 'total_paid'));
+
+		// Calculer le reste à payer
+		$resteAPayer = $grandTotal - $totalPaid;
+		if ($resteAPayer < 0) $resteAPayer = 0;
+
+		// Déterminer les statuts de paiement
+		$statutAcompte = '';
+		$statutSolde = '';
+
+		if ($totalPaid > 0) {
+			if ($totalPaid < $totalAcompteTTC) {
+				// Payé partiellement l'acompte
+				$statutAcompte = 'Partiel';
+				$statutSolde = '';
+			} elseif ($totalPaid >= $totalAcompteTTC && $totalPaid < $grandTotal) {
+				// Acompte payé, solde partiel ou non commencé
+				$statutAcompte = 'Payé';
+				if ($totalPaid > $totalAcompteTTC) {
+					$statutSolde = 'Partiel';
+				}
+			} elseif ($totalPaid >= $grandTotal) {
+				// Tout est payé
+				$statutAcompte = 'Payé';
+				$statutSolde = 'Payé';
+			}
+		}
+
 		// Mettre à jour vtiger_quotescf (la ligne devrait déjà exister après parent::process())
 		$updateResult = $adb->pquery(
-			"UPDATE vtiger_quotescf SET cf_1137 = ?, cf_1055 = ?, cf_1057 = ? WHERE quoteid = ?",
-			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $recordId)
+			"UPDATE vtiger_quotescf SET cf_1137 = ?, cf_1055 = ?, cf_1057 = ?, cf_1275 = ?, cf_1083 = ?, cf_1085 = ? WHERE quoteid = ?",
+			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $resteAPayer, $statutAcompte, $statutSolde, $recordId)
 		);
 
 		// Calculer le montant de la taxe (TVA)

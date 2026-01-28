@@ -26,24 +26,28 @@ class InvoiceHandler extends VTEventHandler {
         global $current_user, $currentModule;
 
         /**
-         * Adjust the balance amount against total & received amount
-         * NOTE: beforesave the total amount will not be populated in event data.
+         * Custom field copying from Quote is now handled in Inventory_Edit_View
+         * This handler only manages balance calculations
          */
         if ($eventName == 'vtiger.entity.aftersave') {
             // Trigger from other module (due to indirect save) need to be ignored - to avoid inconsistency.
             if ($currentModule != 'Invoice')
                 return;
+
+            $db = PearDatabase::getInstance();
+            $invoiceId = $entityData->getId();
             $entityDelta = new VTEntityDelta();
+
+            // Original balance calculation logic
             $oldCurrency = $entityDelta->getOldValue($entityData->getModuleName(), $entityData->getId(), 'currency_id');
             $newCurrency = $entityDelta->getCurrentValue($entityData->getModuleName(), $entityData->getId(), 'currency_id');
             $oldConversionRate = $entityDelta->getOldValue($entityData->getModuleName(), $entityData->getId(), 'conversion_rate');
-            $db = PearDatabase::getInstance();
             $wsid = vtws_getWebserviceEntityId('Invoice', $entityData->getId());
             $wsrecord = vtws_retrieve($wsid,$current_user);
             if ($oldCurrency != $newCurrency && $oldCurrency != '') {
-              if($oldConversionRate != ''){ 
+              if($oldConversionRate != ''){
                 $wsrecord['received'] = floatval(((float)$wsrecord['received']/$oldConversionRate) * (float)$wsrecord['conversion_rate']);
-              }  
+              }
             }
             $wsrecord['balance'] = floatval((float)$wsrecord['hdnGrandTotal'] - (float)$wsrecord['received']);
             if ($wsrecord['balance'] == 0) {

@@ -10,6 +10,8 @@
 class Invoice_Save_Action extends Inventory_Save_Action {
 
 	public function saveRecord($request) {
+		global $adb;
+
 		$recordId = $request->get('record');
 
 		if ($recordId && $_REQUEST['action'] == 'SaveAjax') {
@@ -19,33 +21,54 @@ class Invoice_Save_Action extends Inventory_Save_Action {
 		}
 
 		$recordModel = parent::saveRecord($request);
+		$invoiceId = $recordModel->getId();
 
-		// CNK-DEM: If we stored quote totals in session, apply them now
-		if (isset($_SESSION['invoice_copy_quote_totals']) && !empty($_SESSION['invoice_copy_quote_totals'])) {
-			global $adb;
-			$invoiceId = $recordModel->getId();
-			$totals = $_SESSION['invoice_copy_quote_totals'];
+		// CUSTOM: Recalculer les totaux si la facture provient d'un devis
+		$quoteId = $recordModel->get('quote_id');
 
-			// Update invoice totals in database
-			$adb->pquery("UPDATE vtiger_invoice SET
-						  subtotal = ?,
-						  discount_amount = ?,
-						  pre_tax_total = ?,
-						  total = ?,
-						  taxtype = ?
-						  WHERE invoiceid = ?",
-				array(
-					$totals['subtotal'],
-					$totals['discount_amount'],
-					$totals['pre_tax_total'],
-					$totals['total'],
-					$totals['taxtype'],
-					$invoiceId
-				)
+		if ($quoteId) {
+			// Récupérer le forfait, assurance et calculs depuis les champs custom
+			$forfaitTarif = floatval($recordModel->get('cf_1279')) ?: 0;
+			$forfaitSupplement = floatval($recordModel->get('cf_1281')) ?: 0;
+			$totalForfaitHT = floatval($recordModel->get('cf_1283')) ?: 0;
+			$assuranceTarif = floatval($recordModel->get('cf_1287')) ?: 0;
+
+			// Récupérer le subtotal des produits
+			$productsResult = $adb->pquery(
+				"SELECT SUM(COALESCE(quantity, 0) * COALESCE(listprice, 0) * (1 - COALESCE(discount_percent, 0)/100) - COALESCE(discount_amount, 0)) as products_subtotal
+				 FROM vtiger_inventoryproductrel
+				 WHERE id = ?",
+				array($invoiceId)
 			);
 
-			// Clear session
-			unset($_SESSION['invoice_copy_quote_totals']);
+			$productsSubTotal = 0;
+			if ($adb->num_rows($productsResult) > 0) {
+				$productsSubTotal = floatval($adb->query_result($productsResult, 0, 'products_subtotal')) ?: 0;
+			}
+
+			// Récupérer la remise globale
+			$discountAmount = floatval($request->get('discount_amount')) ?: 0;
+			if ($discountAmount == 0) {
+				$discountResult = $adb->pquery("SELECT discount_amount FROM vtiger_invoice WHERE invoiceid = ?", array($invoiceId));
+				if ($adb->num_rows($discountResult) > 0) {
+					$discountAmount = floatval($adb->query_result($discountResult, 0, 'discount_amount')) ?: 0;
+				}
+			}
+
+			// Calculer le total HT (produits + forfait + assurance)
+			$subtotalBeforeDiscount = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
+			$totalHT = $subtotalBeforeDiscount - $discountAmount;
+
+			// TVA 20%
+			$taxRate = 0.20;
+			$taxAmount = $totalHT * $taxRate;
+			$grandTotal = $totalHT * (1 + $taxRate);
+
+			// Mettre à jour les totaux VTiger
+			$adb->pquery(
+				"UPDATE vtiger_invoice SET subtotal = ?, discount_amount = ?, pre_tax_total = ?, total = ? WHERE invoiceid = ?",
+				array($subtotalBeforeDiscount, $discountAmount, $totalHT, $grandTotal, $invoiceId)
+			);
 		}
 
 		//Reverting the action value to $_REQUEST

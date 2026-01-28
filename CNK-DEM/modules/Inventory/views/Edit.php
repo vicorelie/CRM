@@ -144,6 +144,40 @@ Class Inventory_Edit_View extends Vtiger_Edit_View {
 						$recordModel->set($targetField, $value);
 					}
 				}
+			} elseif ($sourceModuleName === 'Quotes' && $moduleName === 'Invoice') {
+				// Mapping des champs: Quote -> Invoice
+				$fieldMapping = array(
+					'cf_1125' => 'cf_1277',  // TYPE DE FORFAIT
+					'cf_1127' => 'cf_1279',  // TARIF FORFAIT
+					'cf_1129' => 'cf_1281',  // SUPPLÉMENT FORFAIT
+					'cf_1137' => 'cf_1283',  // TOTAL FORFAIT
+					'cf_1139' => 'cf_1285',  // MONTANT ASSURANCE
+					'cf_1143' => 'cf_1287',  // TARIF ASSURANCE
+					'cf_1055' => 'cf_1289',  // TOTAL ACOMPTE TTC
+					'cf_1057' => 'cf_1291',  // TOTAL SOLDE TTC
+					'cf_1269' => 'cf_1305',  // TYPE DE DÉMÉNAGEMENT
+				);
+
+				// Calcul du montant total devis et reste à payer
+				$acompteTTC = floatval($parentRecordModel->get('cf_1055') ?: 0);
+				$soldeTTC = floatval($parentRecordModel->get('cf_1057') ?: 0);
+				$montantTotalDevis = $acompteTTC + $soldeTTC;
+
+				// Copy mapped fields
+				foreach ($fieldMapping as $sourceField => $targetField) {
+					$value = $parentRecordModel->get($sourceField);
+					if ($value !== null && $value !== '') {
+						$recordModel->set($targetField, $value);
+					}
+				}
+
+				// Set additional calculated fields
+				$recordModel->set('cf_1293', $montantTotalDevis);  // Reste à payer (initial)
+				$recordModel->set('cf_1301', $montantTotalDevis);  // Montant total devis TTC
+				$recordModel->set('cf_1304', $parentRecordModel->get('quote_no'));  // Numéro du devis
+
+				// Set quote_id to link invoice to quote
+				$recordModel->set('quote_id', $referenceId);
 			}
 		} else {
 			$taxes = Inventory_Module_Model::getAllProductTaxes();

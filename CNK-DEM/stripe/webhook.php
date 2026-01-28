@@ -123,6 +123,15 @@ function handleCheckoutSessionCompleted($session) {
     StripeHelper::log("Appel de createPaymentNote($quoteId, $paymentType, 'Payé')");
     StripeHelper::createPaymentNote($quoteId, $paymentType, 'Payé', $session);
     StripeHelper::log("createPaymentNote terminé");
+
+    // Créer automatiquement une facture
+    StripeHelper::log("Appel de createInvoiceFromQuote($quoteId, $paymentType)");
+    $invoiceId = StripeHelper::createInvoiceFromQuote($quoteId, $paymentType, $session);
+    if ($invoiceId) {
+        StripeHelper::log("✓ Facture créée automatiquement (ID: $invoiceId)");
+    } else {
+        StripeHelper::log("⚠ Échec de la création automatique de la facture", 'warning');
+    }
 }
 
 /**
