@@ -13,12 +13,18 @@ stripe/
 ├── config.php                    # Configuration Stripe (COMMENCER ICI)
 ├── StripeHelper.php              # Classe helper principale
 ├── webhook.php                   # Récepteur webhook Stripe
+├── webhook_standalone.php        # Webhook autonome (traitement complet)
 ├── logs/                         # Logs Stripe
 │   └── stripe.log
+├── templates/                    # Templates email
 ├── verify_installation.php       # Script de vérification
 ├── README.md                     # Ce fichier
 ├── STRUCTURE.md                  # Documentation structure
 └── REORGANISATION.md             # Détails de la réorganisation
+
+Fichiers liés (hors dossier stripe/):
+├── modules/Quotes/actions/ManageStripePayments.php    # Actions AJAX paiements
+└── layouts/v7/modules/Quotes/resources/StripePaymentLinks.js  # Interface JS
 ```
 
 ---
@@ -105,26 +111,44 @@ https://dashboard.stripe.com/events
 
 ## 🔧 Comment ça marche ?
 
-### 1. Génération de liens
+### 1. Interface de gestion
 
-Quand vous cliquez sur "Générer liens Stripe" dans un devis :
+Depuis la vue détail d'un devis, cliquez sur **"Gérer paiements Stripe"** :
 
-1. VTiger appelle `GenerateStripePaymentLinks.php`
-2. Qui utilise `StripeHelper::createPaymentLink()`
-3. Qui crée un lien de paiement Stripe
-4. Le lien est sauvegardé dans les champs cf_1079 (Acompte) et cf_1081 (Solde)
+1. Modal avec résumé des montants (acompte, solde, payé, reste)
+2. Historique complet des paiements avec statuts
+3. Création de nouveaux paiements (Stripe ou manuels)
+4. Actions : PDF facture, copier lien, email, modifier statut, supprimer
 
-### 2. Paiement client
+### 2. Génération de liens
+
+Quand vous créez un paiement Stripe :
+
+1. `ManageStripePayments.php` reçoit la demande
+2. Qui utilise `StripeHelper::createPaymentLinkWithDetails()`
+3. Qui crée un lien de paiement Stripe avec métadonnées
+4. Le paiement est enregistré dans `vtiger_stripe_payments`
+
+### 3. Paiement client
 
 Quand le client paie :
 
 1. Stripe traite le paiement
-2. Stripe envoie une notification à `webhook.php`
-3. Le webhook utilise `StripeHelper::updatePaymentStatus()`
-4. Le statut du devis passe à "Payé"
-5. Une note est créée dans VTiger
+2. Stripe envoie une notification à `webhook_standalone.php`
+3. Le webhook met à jour le statut du paiement
+4. Une facture est automatiquement générée
+5. Les statuts acompte/solde du devis sont mis à jour
 
-### 3. Centralisation
+### 4. Génération de factures
+
+À chaque paiement validé :
+
+1. Une facture VTiger est créée automatiquement
+2. Les produits du devis sont copiés vers la facture
+3. L'ID facture est lié au paiement
+4. Bouton PDF pour ouvrir avec template "FACTURE (CNK DEM)"
+
+### 5. Centralisation
 
 Toute la logique Stripe est dans `StripeHelper.php` :
 - Plus facile à maintenir
@@ -135,9 +159,28 @@ Toute la logique Stripe est dans `StripeHelper.php` :
 
 ## ✨ Fonctionnalités
 
+### Gestion des paiements
 ✅ Génération automatique de liens de paiement Stripe
 ✅ Gestion des Acomptes et Soldes séparément
 ✅ Mise à jour automatique des statuts après paiement
+✅ Support des paiements manuels (virement, espèces, chèque)
+✅ Modification des statuts de paiement
+✅ Suppression des paiements en attente
+
+### Facturation automatique
+✅ Génération automatique de factures à chaque paiement
+✅ Bouton PDF pour ouvrir la facture (template "FACTURE (CNK DEM)")
+✅ Copie des produits du devis vers la facture
+✅ Mise à jour des statuts acompte/solde
+
+### Interface utilisateur
+✅ Modal "Gérer paiements Stripe" dans les devis
+✅ Tableau récapitulatif des montants (acompte, solde, payé, reste)
+✅ Historique complet des paiements avec statuts
+✅ Envoi d'emails de paiement personnalisés
+✅ Copie des liens de paiement en un clic
+
+### Technique
 ✅ Création de notes de paiement dans VTiger
 ✅ Logs complets pour le débogage
 ✅ Support test et production
@@ -217,6 +260,11 @@ Quand tout fonctionne en mode test :
 
 ## 📅 Historique
 
+- **Janvier 2026** : Ajout bouton PDF facture dans modal paiements
+- **Janvier 2026** : Génération automatique de factures à chaque paiement
+- **Janvier 2026** : Support des paiements manuels (virement, espèces, chèque)
+- **Janvier 2026** : Modal de gestion des paiements multiples
+- **Janvier 2026** : Envoi d'emails de paiement personnalisés
 - **Décembre 2024** : Réorganisation complète dans dossier `stripe/`
 - **Décembre 2024** : Installation initiale de l'intégration Stripe
 
