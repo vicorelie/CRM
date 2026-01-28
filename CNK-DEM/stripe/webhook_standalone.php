@@ -503,12 +503,22 @@ function generateInvoiceForPayment($quoteId, $paymentId, $amount, $description) 
         // Utiliser une transaction pour éviter les conflits d'ID
         $pdo->beginTransaction();
         try {
-            // Verrouiller la table pendant la lecture pour éviter les conflits
-            $stmt = $pdo->query("SELECT MAX(crmid) as max_id FROM vtiger_crmentity FOR UPDATE");
-            $maxId = $stmt->fetch(PDO::FETCH_ASSOC)['max_id'] ?: 0;
-            $invoiceId = $maxId + 1;
+            // Récupérer la séquence actuelle
+            $stmt = $pdo->query("SELECT MAX(id) as current_id FROM vtiger_crmentity_seq FOR UPDATE");
+            $currentSeq = intval($stmt->fetch(PDO::FETCH_ASSOC)['current_id']) ?: 0;
 
-            logStripe("Prochain ID disponible (avec lock): $invoiceId");
+            // Vérifier aussi le max réel dans crmentity au cas où
+            $stmt = $pdo->query("SELECT MAX(crmid) as max_id FROM vtiger_crmentity");
+            $maxCrmId = intval($stmt->fetch(PDO::FETCH_ASSOC)['max_id']) ?: 0;
+
+            // Prendre le plus grand des deux + 1
+            $invoiceId = max($currentSeq, $maxCrmId) + 1;
+
+            // Mettre à jour la séquence pour éviter les conflits futurs
+            $stmt = $pdo->prepare("INSERT INTO vtiger_crmentity_seq (id) VALUES (?)");
+            $stmt->execute([$invoiceId]);
+
+            logStripe("Prochain ID disponible (avec lock et séquence): $invoiceId");
 
             // Créer l'entrée dans crmentity
             $now = date('Y-m-d H:i:s');

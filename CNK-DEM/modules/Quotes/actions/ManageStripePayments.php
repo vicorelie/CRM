@@ -732,10 +732,19 @@ class Quotes_ManageStripePayments_Action extends Vtiger_BasicAjax_Action {
                 $invoiceNo = 'FACTURE' . ($maxNo + 1);
             }
 
-            // Obtenir le prochain ID disponible
+            // Obtenir le prochain ID disponible via la séquence (évite les conflits)
+            $seqResult = $db->pquery("SELECT MAX(id) as current_id FROM vtiger_crmentity_seq", array());
+            $currentSeq = intval($db->query_result($seqResult, 0, 'current_id')) ?: 0;
+
+            // Vérifier aussi le max réel dans crmentity au cas où
             $maxIdResult = $db->pquery("SELECT MAX(crmid) as max_id FROM vtiger_crmentity", array());
-            $maxId = $db->query_result($maxIdResult, 0, 'max_id') ?: 0;
-            $invoiceId = $maxId + 1;
+            $maxCrmId = intval($db->query_result($maxIdResult, 0, 'max_id')) ?: 0;
+
+            // Prendre le plus grand des deux + 1
+            $invoiceId = max($currentSeq, $maxCrmId) + 1;
+
+            // Mettre à jour la séquence pour éviter les conflits futurs
+            $db->pquery("INSERT INTO vtiger_crmentity_seq (id) VALUES (?)", array($invoiceId));
 
             StripeHelper::log("Création facture: ID=$invoiceId, No=$invoiceNo");
 
