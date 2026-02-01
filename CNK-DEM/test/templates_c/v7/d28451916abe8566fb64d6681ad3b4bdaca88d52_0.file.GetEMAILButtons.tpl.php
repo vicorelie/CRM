@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 00:35:15
+/* Smarty version 4.5.5, created on 2026-02-01 17:56:38
   from '/var/www/CNK-DEM/layouts/v7/modules/EMAILMaker/GetEMAILButtons.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696d6023518a85_51744442',
+  'unifunc' => 'content_697f77b6854984_90969058',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696d6023518a85_51744442 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f77b6854984_90969058 (Smarty_Internal_Template $_smarty_tpl) {
 if ($_smarty_tpl->tpl_vars['ENABLE_EMAILMAKER']->value == 'true') {?><div class="pull-right" id="EMAILMakerContentDiv" style="padding-left: 5px;"><div class="clearfix"><div class="btn-group pull-right"><button class="btn btn-default selectEMAILTemplates"><i title="<?php echo vtranslate('LBL_SEND_EMAILMAKER_EMAIL','EMAILMaker');?>
 " class="fa fa-envelope-o" aria-hidden="true"></i>&nbsp;<?php echo vtranslate('LBL_SEND_EMAILMAKER_EMAIL','EMAILMaker');?>
 </button></div></div></div><?php }

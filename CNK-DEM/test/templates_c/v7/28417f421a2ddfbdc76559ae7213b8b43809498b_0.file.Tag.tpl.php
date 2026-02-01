@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 00:35:14
+/* Smarty version 4.5.5, created on 2026-02-01 17:56:31
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Tag.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696d6022544695_43090528',
+  'unifunc' => 'content_697f77afb41619_95202429',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696d6022544695_43090528 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f77afb41619_95202429 (Smarty_Internal_Template $_smarty_tpl) {
 ?> 
  <span class="tag <?php if ($_smarty_tpl->tpl_vars['ACTIVE']->value == true) {?> active <?php }?>" title="<?php echo $_smarty_tpl->tpl_vars['TAG_MODEL']->value->getName();?>
 " data-type="<?php echo $_smarty_tpl->tpl_vars['TAG_MODEL']->value->getType();?>

@@ -201,6 +201,20 @@
         selectedProducts: {},
         productCounter: 0,
         TVA_RATE: 1.20,
+        isSaving: false,  // Flag to prevent concurrent saves
+        isLoading: false, // Flag to prevent auto-save during quote loading
+        autoSaveTimeout: null, // Timeout for debounced auto-save
+
+        triggerDebouncedAutoSave: function() {
+            var self = this;
+            var quoteId = jQuery('#unified_selectedQuoteId').val();
+            if (!quoteId) return;
+
+            clearTimeout(this.autoSaveTimeout);
+            this.autoSaveTimeout = setTimeout(function() {
+                self.autoSaveQuoteWithProducts();
+            }, 1000); // 1 second delay
+        },
 
         init: function() {
             var container = jQuery('#devisTabContainer');
@@ -226,6 +240,217 @@
             // Disable scroll on number inputs
             jQuery('#devisTabContainer').on('wheel', 'input[type="number"]', function(e) {
                 jQuery(this).blur();
+            });
+
+            // Auto-save with debounce
+            this.registerAutoSave();
+        },
+
+        registerAutoSave: function() {
+            var self = this;
+
+            // Debounced auto-save - waits 1 second after last change
+            var triggerAutoSave = function() {
+                clearTimeout(self.autoSaveTimeout);
+                self.autoSaveTimeout = setTimeout(function() {
+                    self.autoSaveQuoteWithProducts();
+                }, 1000);
+            };
+
+            // Auto-save on change for selects
+            jQuery('#unified_cf_1125, #unified_cf_1269, #unified_cf_1139, #unified_prestataire').on('change', function() {
+                var quoteId = jQuery('#unified_selectedQuoteId').val();
+                if (quoteId) {
+                    triggerAutoSave();
+                }
+            });
+
+            // Auto-save on blur for text/number inputs
+            jQuery('#unified_subject, #unified_cf_1005, #unified_cf_1127, #unified_cf_1129').on('blur', function() {
+                var quoteId = jQuery('#unified_selectedQuoteId').val();
+                if (quoteId) {
+                    triggerAutoSave();
+                }
+            });
+        },
+
+        saveQuoteField: function(quoteId, fieldName, fieldValue) {
+            var self = this;
+
+            // Skip auto-save during quote loading
+            if (this.isLoading) {
+                console.log('[UnifiedDevis] Skipping field auto-save during loading:', fieldName);
+                return;
+            }
+
+            console.log('[UnifiedDevis] Auto-saving field:', fieldName, '=', fieldValue);
+
+            // Visual feedback
+            var field = jQuery('#unified_' + fieldName + ', #unified_' + fieldName.replace('cf_', ''));
+            field.addClass('field-saving');
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Quotes',
+                    action: 'SaveAjax',
+                    record: quoteId,
+                    field: fieldName,
+                    value: fieldValue
+                },
+                success: function(response) {
+                    field.removeClass('field-saving').addClass('field-saved');
+                    setTimeout(function() {
+                        field.removeClass('field-saved');
+                    }, 1500);
+                    console.log('[UnifiedDevis] Field saved:', fieldName);
+                },
+                error: function(xhr, status, error) {
+                    field.removeClass('field-saving').addClass('field-error');
+                    setTimeout(function() {
+                        field.removeClass('field-error');
+                    }, 3000);
+                    console.error('[UnifiedDevis] Error saving field:', fieldName, error);
+                }
+            });
+        },
+
+        autoSaveQuoteWithProducts: function() {
+            var self = this;
+            var quoteId = jQuery('#unified_selectedQuoteId').val();
+
+            if (!quoteId) {
+                console.log('[UnifiedDevis] No quote selected, skipping auto-save');
+                return;
+            }
+
+            // Skip auto-save during quote loading
+            if (this.isLoading) {
+                console.log('[UnifiedDevis] Skipping auto-save during loading');
+                return;
+            }
+
+            // Prevent concurrent saves
+            if (this.isSaving) {
+                console.log('[UnifiedDevis] Already saving, skipping');
+                return;
+            }
+
+            this.isSaving = true;
+            console.log('[UnifiedDevis] Auto-saving quote with products (using FormData like Save button)...');
+
+            // Prepare form exactly like submitToVtiger does
+            jQuery('#unified_recordId').val(quoteId);
+            jQuery('#unified_hidden_subject').val(jQuery('#unified_subject').val());
+            jQuery('#unified_hidden_cf_1005').val(jQuery('#unified_cf_1005').val());
+            jQuery('#unified_hidden_cf_1125').val(jQuery('#unified_cf_1125').val());
+            jQuery('#unified_hidden_cf_1269').val(jQuery('#unified_cf_1269').val());
+            jQuery('#unified_hidden_cf_1127').val(jQuery('#unified_cf_1127').val() || '0');
+            jQuery('#unified_hidden_cf_1129').val(jQuery('#unified_cf_1129').val() || '0');
+            jQuery('#unified_hidden_cf_1139').val(jQuery('#unified_cf_1139').val());
+            jQuery('#unified_hidden_prestataire').val(jQuery('#unified_prestataire').val());
+            jQuery('#unified_hidden_cf_1162').val(jQuery('#unified_cf_1162').val());
+
+            // Prepare products
+            var container = jQuery('#unifiedHiddenProductsContainer');
+            container.empty();
+
+            var rows = jQuery('#unified_productsList tr');
+            jQuery('#unified_hidden_totalProductCount').val(rows.length);
+
+            rows.each(function(i) {
+                var idx = i + 1;
+                var row = jQuery(this);
+                var productId = row.attr('data-product-id');
+                var productName = row.find('input[name^="productName"]').val();
+                var qty = row.find('input[name^="qty"]').val();
+                var listPrice = row.find('input[name^="listPrice"]').val();
+
+                var fields = [
+                    {name: 'hdnProductId' + idx, value: productId},
+                    {name: 'productName' + idx, value: productName},
+                    {name: 'productDescription' + idx, value: productName},
+                    {name: 'qty' + idx, value: qty},
+                    {name: 'listPrice' + idx, value: listPrice},
+                    {name: 'comment' + idx, value: ''},
+                    {name: 'discount_percent' + idx, value: '0'},
+                    {name: 'discount_amount' + idx, value: '0'},
+                    {name: 'productDeleted' + idx, value: '0'},
+                    {name: 'lineItemType' + idx, value: 'Products'},
+                    {name: 'subproduct_ids' + idx, value: ''}
+                ];
+
+                fields.forEach(function(field) {
+                    container.append('<input type="hidden" name="' + field.name + '" value="' + field.value + '">');
+                });
+            });
+
+            // Calculate totals for VTiger
+            var productsTotal = 0;
+            jQuery('#unified_productsList tr').each(function() {
+                var qty = parseFloat(jQuery(this).find('input[name^="qty"]').val()) || 0;
+                var price = parseFloat(jQuery(this).find('input[name^="listPrice"]').val()) || 0;
+                productsTotal += qty * price;
+            });
+
+            var forfaitHT = parseFloat(jQuery('#unified_cf_1127').val()) || 0;
+            var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
+            var subTotal = productsTotal + forfaitHT + supplementHT;
+            var grandTotal = subTotal * 1.20; // TVA 20%
+
+            jQuery('#unified_hdnSubTotal').val(subTotal.toFixed(2));
+            jQuery('#unified_hdnGrandTotal').val(grandTotal.toFixed(2));
+            jQuery('#unified_pre_tax_total').val(subTotal.toFixed(2));
+
+            // Show subtle saving indicator
+            jQuery('#devisTabContainer').addClass('saving');
+
+            // Use FormData exactly like submitToVtiger (which works)
+            var form = jQuery('#unifiedQuoteForm');
+            var formData = new FormData(form[0]);
+
+            console.log('[UnifiedDevis] Submitting with FormData...');
+
+            fetch('/index.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+            .then(function(response) {
+                console.log('[UnifiedDevis] Save response status:', response.status);
+                self.isSaving = false;
+
+                // Wait a bit then fetch updated data to update chip
+                setTimeout(function() {
+                    jQuery.get('get_quote_data.php?quoteid=' + quoteId, function(data) {
+                        jQuery('#devisTabContainer').removeClass('saving').addClass('saved');
+                        setTimeout(function() {
+                            jQuery('#devisTabContainer').removeClass('saved');
+                        }, 1500);
+
+                        console.log('[UnifiedDevis] Data from DB after save:', data);
+
+                        if (data.success && data.quote) {
+                            var chip = jQuery('.quote-chip[data-quoteid="' + quoteId + '"]');
+                            if (chip.length) {
+                                var total = parseFloat(data.quote.total) || 0;
+                                var totalFormatted = Math.round(total).toLocaleString('fr-FR').replace(/\s/g, ' ') + '€';
+                                chip.find('.chip-total').text(totalFormatted);
+                                chip.find('.chip-formule').text(data.quote.cf_1125 || '-');
+                                console.log('[UnifiedDevis] Updated chip to:', totalFormatted);
+                            }
+                        }
+                    });
+                }, 500);
+            })
+            .catch(function(error) {
+                self.isSaving = false;
+                jQuery('#devisTabContainer').removeClass('saving').addClass('save-error');
+                setTimeout(function() {
+                    jQuery('#devisTabContainer').removeClass('save-error');
+                }, 3000);
+                console.error('[UnifiedDevis] Save error:', error);
             });
         },
 
@@ -321,6 +546,9 @@
             jQuery('#unified_productsList').append(row);
             jQuery('#unified_productsTable').show();
             this.updateMontantTotal();
+
+            // Debounced auto-save for products
+            this.triggerDebouncedAutoSave();
         },
 
         updateLineTotal: function(input) {
@@ -335,6 +563,9 @@
 
             totalSpan.text(total);
             this.updateMontantTotal();
+
+            // Debounced auto-save for product changes
+            this.triggerDebouncedAutoSave();
         },
 
         removeProduct: function(btn, productId) {
@@ -344,6 +575,9 @@
                 jQuery('#unified_productsTable').hide();
             }
             this.updateMontantTotal();
+
+            // Debounced auto-save after product removal
+            this.triggerDebouncedAutoSave();
         },
 
         updateFromHT: function() {
@@ -420,18 +654,24 @@
 
             console.log('[UnifiedDevis] loadQuote called with quoteId:', quoteId);
 
+            // Set loading flag to prevent auto-save during loading
+            this.isLoading = true;
+            console.log('[UnifiedDevis] isLoading set to true');
+
             // Update selection (support both old quote-card and new quote-chip)
             jQuery('.quote-card, .quote-chip').removeClass('selected');
             jQuery('.quote-card[data-quoteid="' + quoteId + '"], .quote-chip[data-quoteid="' + quoteId + '"]').addClass('selected');
             jQuery('#unified_selectedQuoteId').val(quoteId);
             console.log('[UnifiedDevis] unified_selectedQuoteId set to:', jQuery('#unified_selectedQuoteId').val());
-            jQuery('#unified_btnSave').show();
             jQuery('#unified_btnPaiement').show();
             jQuery('#unified_btnBDC').show();
             jQuery('#unified_btnViewPdf').show();
+            this.updatePdfSendStatus();
 
             jQuery.get('get_quote_data.php?quoteid=' + quoteId, function(data) {
                 if (!data.success) {
+                    self.isLoading = false;
+                    console.log('[UnifiedDevis] isLoading set to false (data error)');
                     app.helper.showErrorNotification({message: 'Erreur: ' + data.message});
                     return;
                 }
@@ -444,6 +684,24 @@
                 jQuery('#unified_cf_1127').val(quote.cf_1127 || 0);
                 jQuery('#unified_cf_1129').val(quote.cf_1129 || 0);
                 jQuery('#unified_cf_1139').val(quote.cf_1139 || '');
+                jQuery('#unified_prestataire').val(quote.prestataire || '');
+
+                // Load validation status
+                var isValidated = quote.cf_1162 === '1' || quote.cf_1162 === 1;
+                jQuery('#unified_cf_1162').val(isValidated ? '1' : '0');
+                var toggle = jQuery('#unified_cf_1162_toggle');
+                var chip = jQuery('.quote-chip[data-quoteid="' + quoteId + '"]');
+                if (isValidated) {
+                    toggle.addClass('validated');
+                    toggle.find('i').removeClass('fa-circle-o').addClass('fa-check-circle');
+                    toggle.find('span').text('Validé');
+                    chip.addClass('validated');
+                } else {
+                    toggle.removeClass('validated');
+                    toggle.find('i').removeClass('fa-check-circle').addClass('fa-circle-o');
+                    toggle.find('span').text('Non validé');
+                    chip.removeClass('validated');
+                }
 
                 self.updateFromHT();
 
@@ -471,15 +729,48 @@
                     }
                 });
 
+                // Loading complete - re-enable auto-save
+                self.isLoading = false;
+                console.log('[UnifiedDevis] isLoading set to false - loading complete');
+
             }, 'json').fail(function() {
+                self.isLoading = false;
+                console.log('[UnifiedDevis] isLoading set to false (after error)');
                 app.helper.showErrorNotification({message: 'Erreur lors du chargement du devis'});
             });
+        },
+
+        toggleValidation: function() {
+            var toggle = jQuery('#unified_cf_1162_toggle');
+            var hidden = jQuery('#unified_cf_1162');
+            var isValidated = hidden.val() === '1';
+            var quoteId = jQuery('#unified_selectedQuoteId').val();
+            var chip = jQuery('.quote-chip[data-quoteid="' + quoteId + '"]');
+
+            if (isValidated) {
+                // Unvalidate
+                hidden.val('0');
+                toggle.removeClass('validated');
+                toggle.find('i').removeClass('fa-check-circle').addClass('fa-circle-o');
+                toggle.find('span').text('Non validé');
+                chip.removeClass('validated');
+            } else {
+                // Validate
+                hidden.val('1');
+                toggle.addClass('validated');
+                toggle.find('i').removeClass('fa-circle-o').addClass('fa-check-circle');
+                toggle.find('span').text('Validé');
+                chip.addClass('validated');
+            }
+
+            // Trigger auto-save
+            this.triggerDebouncedAutoSave();
         },
 
         togglePdfTemplate: function(element, templateId) {
             var checkbox = jQuery(element).find('input[type="checkbox"]');
             checkbox.prop('checked', !checkbox.prop('checked'));
-            jQuery(element).toggleClass('selected').css('border-color', checkbox.prop('checked') ? '#e74c3c' : '#e0e0e0');
+            jQuery(element).toggleClass('checked');
             this.updatePdfSendStatus();
         },
 
@@ -520,7 +811,7 @@
         },
 
         /**
-         * Open BDC (Bon de Commande) Modal
+         * Open ODM (Ordre de Mission) Modal
          */
         openBDCModal: function() {
             var quoteId = jQuery('#unified_selectedQuoteId').val();
@@ -540,7 +831,7 @@
                         '<div class="modal-content">' +
                             '<div class="modal-header" style="background: #27ae60; color: white;">' +
                                 '<button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 1;">&times;</button>' +
-                                '<h4 class="modal-title"><i class="fa fa-file-text-o"></i> Bons de Commande</h4>' +
+                                '<h4 class="modal-title"><i class="fa fa-file-text-o"></i> Ordres de Mission</h4>' +
                             '</div>' +
                             '<div class="modal-body" id="bdcModalBody" style="max-height: 70vh; overflow-y: auto;">' +
                                 '<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Chargement...</p></div>' +
@@ -557,7 +848,7 @@
             // Show modal
             modal.modal('show');
 
-            // Load BDC data
+            // Load ODM data
             this.loadBDCData(quoteId);
         },
 
@@ -566,7 +857,8 @@
          */
         loadBDCData: function(quoteId) {
             var self = this;
-            jQuery('#bdcModalBody').html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Chargement des bons de commande...</p></div>');
+            console.log('[UnifiedDevis] loadBDCData called with quoteId:', quoteId);
+            jQuery('#bdcModalBody').html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Chargement des ordres de mission...</p></div>');
 
             jQuery.ajax({
                 url: 'index.php',
@@ -579,6 +871,7 @@
                 },
                 dataType: 'json',
                 success: function(response) {
+                    console.log('[UnifiedDevis] BDC response:', response);
                     if (response.success) {
                         self.renderBDCList(quoteId, response.data);
                     } else {
@@ -587,7 +880,8 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('[UnifiedDevis] BDC load error:', error);
-                    jQuery('#bdcModalBody').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Erreur de connexion</div>');
+                    console.error('[UnifiedDevis] BDC xhr:', xhr.responseText);
+                    jQuery('#bdcModalBody').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Erreur de connexion<br><small>' + error + '</small></div>');
                 }
             });
         },
@@ -599,14 +893,14 @@
             var self = this;
             var html = '';
 
-            // BDC List
+            // ODM List
             html += '<div class="panel panel-default">';
-            html += '<div class="panel-heading"><h5 class="panel-title"><i class="fa fa-list"></i> Liste des Bons de Commande</h5></div>';
+            html += '<div class="panel-heading"><h5 class="panel-title"><i class="fa fa-list"></i> Liste des Ordres de Mission</h5></div>';
             html += '<div class="panel-body" style="padding: 0;">';
 
             if (data.salesorders && data.salesorders.length > 0) {
                 html += '<table class="table table-striped table-hover" style="margin: 0;">';
-                html += '<thead><tr style="background: #f5f5f5;"><th>N° BDC</th><th>Sujet</th><th>Date</th><th class="text-right">Total</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+                html += '<thead><tr style="background: #f5f5f5;"><th>N° ODM</th><th>Sujet</th><th>Date</th><th class="text-right">Total</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
 
                 data.salesorders.forEach(function(so) {
                     var statusClass = 'label-default';
@@ -615,11 +909,12 @@
                     else if (so.sostatus === 'Delivered') statusClass = 'label-primary';
                     else if (so.sostatus === 'Cancelled') statusClass = 'label-danger';
 
+                    // Note: fetchByAssoc converts all keys to lowercase
                     html += '<tr>';
                     html += '<td><strong>' + (so.salesorder_no || '-') + '</strong></td>';
                     html += '<td>' + (so.subject || '-') + '</td>';
                     html += '<td>' + (so.createdtime || '-') + '</td>';
-                    html += '<td class="text-right"><strong>' + self.formatMoney(so.hdnGrandTotal) + ' €</strong></td>';
+                    html += '<td class="text-right"><strong>' + self.formatMoney(so.hdngrandtotal) + ' €</strong></td>';
                     html += '<td><span class="label ' + statusClass + '">' + (so.sostatus || '-') + '</span></td>';
                     html += '<td>';
                     html += '<a href="index.php?module=SalesOrder&view=Detail&record=' + so.salesorderid + '" target="_blank" class="btn btn-xs btn-info" title="Voir"><i class="fa fa-eye"></i></a> ';
@@ -630,31 +925,31 @@
 
                 html += '</tbody></table>';
             } else {
-                html += '<p class="text-center text-muted" style="padding: 20px;"><i class="fa fa-info-circle"></i> Aucun bon de commande pour ce devis</p>';
+                html += '<p class="text-center text-muted" style="padding: 20px;"><i class="fa fa-info-circle"></i> Aucun ordre de mission pour ce devis</p>';
             }
 
             html += '</div></div>';
 
-            // Create new BDC section
+            // Create new ODM section
             html += '<div class="panel panel-success">';
-            html += '<div class="panel-heading"><h5 class="panel-title"><i class="fa fa-plus-circle"></i> Creer un Bon de Commande</h5></div>';
+            html += '<div class="panel-heading"><h5 class="panel-title"><i class="fa fa-plus-circle"></i> Creer un Ordre de Mission</h5></div>';
             html += '<div class="panel-body">';
-            html += '<p class="text-muted">Creer un nouveau bon de commande a partir de ce devis. Les produits et montants seront automatiquement copies.</p>';
-            html += '<button type="button" class="btn btn-success" onclick="UnifiedDevis.createBDCFromQuote(' + quoteId + ')">';
-            html += '<i class="fa fa-plus"></i> Creer un BDC depuis ce devis';
-            html += '</button>';
+            html += '<p class="text-muted">Creer un nouvel ordre de mission a partir de ce devis. Vous serez redirige vers le formulaire VTiger avec les donnees pre-remplies.</p>';
+            html += '<a href="index.php?module=SalesOrder&view=Edit&quote_id=' + quoteId + '" target="_blank" class="btn btn-success">';
+            html += '<i class="fa fa-plus"></i> Creer un ODM depuis ce devis';
+            html += '</a>';
             html += '</div></div>';
 
             jQuery('#bdcModalBody').html(html);
         },
 
         /**
-         * Create BDC from Quote
+         * Create ODM from Quote
          */
         createBDCFromQuote: function(quoteId) {
             var self = this;
 
-            if (!confirm('Voulez-vous creer un bon de commande a partir de ce devis?')) {
+            if (!confirm('Voulez-vous creer un ordre de mission a partir de ce devis?')) {
                 return;
             }
 
@@ -673,18 +968,18 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        app.helper.showSuccessNotification({message: 'Bon de commande cree avec succes!'});
-                        // Reload BDC list
+                        app.helper.showSuccessNotification({message: 'Ordre de mission cree avec succes!'});
+                        // Reload ODM list
                         self.loadBDCData(quoteId);
                     } else {
                         app.helper.showErrorNotification({message: response.message || 'Erreur lors de la creation'});
-                        jQuery('#bdcModalBody .btn-success').prop('disabled', false).html('<i class="fa fa-plus"></i> Creer un BDC depuis ce devis');
+                        jQuery('#bdcModalBody .btn-success').prop('disabled', false).html('<i class="fa fa-plus"></i> Creer un ODM depuis ce devis');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('[UnifiedDevis] BDC create error:', error);
+                    console.error('[UnifiedDevis] ODM create error:', error);
                     app.helper.showErrorNotification({message: 'Erreur de connexion'});
-                    jQuery('#bdcModalBody .btn-success').prop('disabled', false).html('<i class="fa fa-plus"></i> Creer un BDC depuis ce devis');
+                    jQuery('#bdcModalBody .btn-success').prop('disabled', false).html('<i class="fa fa-plus"></i> Creer un ODM depuis ce devis');
                 }
             });
         },
@@ -927,9 +1222,7 @@
 
             checkboxes.each(function() {
                 jQuery(this).prop('checked', !allChecked);
-                jQuery(this).closest('.pdf-template-item')
-                    .toggleClass('selected', !allChecked)
-                    .css('border-color', !allChecked ? '#e74c3c' : '#e0e0e0');
+                jQuery(this).closest('.pdf-template-item').toggleClass('checked', !allChecked);
             });
             this.updatePdfSendStatus();
         },
@@ -947,12 +1240,55 @@
 
         updatePdfSendStatus: function() {
             var selected = this.getSelectedPdfTemplates();
-            var statusDiv = jQuery('#unified_pdfSendStatus');
-            if (selected.length > 0) {
-                statusDiv.html('<span style="color: #e74c3c;"><i class="fa fa-info-circle"></i> ' + selected.length + ' document(s) seront envoyes par email apres sauvegarde</span>');
+            var quoteId = jQuery('#unified_selectedQuoteId').val();
+            var btnSendMail = jQuery('#unified_btnSendMail');
+
+            // Show/hide email button based on PDF selection and quote selection
+            if (selected.length > 0 && quoteId) {
+                btnSendMail.show();
             } else {
-                statusDiv.html('');
+                btnSendMail.hide();
             }
+        },
+
+        sendMail: function() {
+            var self = this;
+            var quoteId = jQuery('#unified_selectedQuoteId').val();
+            var selectedPdfs = this.getSelectedPdfTemplates();
+            var recipientEmail = jQuery('#unified_pdfRecipientEmail').val();
+
+            if (!quoteId) {
+                app.helper.showErrorNotification({message: 'Veuillez d\'abord selectionner un devis'});
+                return;
+            }
+
+            if (selectedPdfs.length === 0) {
+                app.helper.showErrorNotification({message: 'Veuillez selectionner au moins un document PDF'});
+                return;
+            }
+
+            if (!recipientEmail) {
+                app.helper.showErrorNotification({message: 'Veuillez saisir une adresse email'});
+                return;
+            }
+
+            app.helper.showProgress();
+
+            this.sendPdfEmails(quoteId).then(function(result) {
+                app.helper.hideProgress();
+                if (result.success) {
+                    app.helper.showSuccessNotification({message: 'Email envoye avec succes!'});
+                    // Uncheck all PDFs after sending
+                    jQuery('.unified-pdf-template-checkbox').prop('checked', false);
+                    jQuery('.pdf-template-item').removeClass('checked');
+                    self.updatePdfSendStatus();
+                } else {
+                    app.helper.showErrorNotification({message: 'Erreur lors de l\'envoi: ' + (result.error || 'Erreur inconnue')});
+                }
+            }).catch(function(error) {
+                app.helper.hideProgress();
+                app.helper.showErrorNotification({message: 'Erreur: ' + error.message});
+            });
         },
 
         saveQuote: function() {
@@ -979,6 +1315,8 @@
             jQuery('#unified_hidden_cf_1127').val(jQuery('#unified_cf_1127').val() || '0');
             jQuery('#unified_hidden_cf_1129').val(jQuery('#unified_cf_1129').val() || '0');
             jQuery('#unified_hidden_cf_1139').val(jQuery('#unified_cf_1139').val());
+            jQuery('#unified_hidden_prestataire').val(jQuery('#unified_prestataire').val());
+            jQuery('#unified_hidden_cf_1162').val(jQuery('#unified_cf_1162').val());
 
             // Prepare products
             var container = jQuery('#unifiedHiddenProductsContainer');
@@ -1014,14 +1352,28 @@
                 });
             });
 
+            // Calculate totals for VTiger
+            var productsTotal = 0;
+            jQuery('#unified_productsList tr').each(function() {
+                var qty = parseFloat(jQuery(this).find('input[name^="qty"]').val()) || 0;
+                var price = parseFloat(jQuery(this).find('input[name^="listPrice"]').val()) || 0;
+                productsTotal += qty * price;
+            });
+
+            var forfaitHT = parseFloat(jQuery('#unified_cf_1127').val()) || 0;
+            var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
+            var subTotal = productsTotal + forfaitHT + supplementHT;
+            var grandTotal = subTotal * 1.20; // TVA 20%
+
+            jQuery('#unified_hdnSubTotal').val(subTotal.toFixed(2));
+            jQuery('#unified_hdnGrandTotal').val(grandTotal.toFixed(2));
+            jQuery('#unified_pre_tax_total').val(subTotal.toFixed(2));
+
             // Show loading
             app.helper.showProgress();
 
             var form = jQuery('#unifiedQuoteForm');
             var formData = new FormData(form[0]);
-
-            var selectedPdfs = this.getSelectedPdfTemplates();
-            var recipientEmail = jQuery('#unified_pdfRecipientEmail').val();
 
             fetch('/index.php', {
                 method: 'POST',
@@ -1029,36 +1381,13 @@
                 credentials: 'include'
             })
             .then(function(response) {
-                if (!recordId) {
-                    return fetch('/get_last_quote.php?potential_id=' + self.potentialId)
-                        .then(function(resp) { return resp.json(); })
-                        .then(function(data) {
-                            return data.success && data.quote_id ? data.quote_id : null;
-                        });
-                }
-                return recordId;
-            })
-            .then(function(quoteId) {
-                if (selectedPdfs.length > 0 && recipientEmail && quoteId) {
-                    return self.sendPdfEmails(quoteId).then(function(pdfResult) {
-                        return { quoteId: quoteId, pdfResult: pdfResult };
-                    });
-                }
-                return { quoteId: quoteId };
-            })
-            .then(function(result) {
                 app.helper.hideProgress();
-
-                if (result.pdfResult && result.pdfResult.success) {
-                    app.helper.showSuccessNotification({message: 'Devis sauvegarde et email envoye avec succes!'});
-                } else {
-                    app.helper.showSuccessNotification({message: 'Devis sauvegarde avec succes!'});
-                }
+                app.helper.showSuccessNotification({message: recordId ? 'Devis sauvegarde!' : 'Devis cree avec succes!'});
 
                 // Reload the page to show updated quotes
                 setTimeout(function() {
                     window.location.reload();
-                }, 1500);
+                }, 1000);
             })
             .catch(function(error) {
                 app.helper.hideProgress();
@@ -1265,6 +1594,18 @@
         inventory: {},
         itemsDb: {},
         categoriesInfo: {},
+        autoSaveTimeout: null,
+        isSaving: false,
+
+        triggerDebouncedAutoSave: function() {
+            var self = this;
+            if (!this.recordId) return;
+
+            clearTimeout(this.autoSaveTimeout);
+            this.autoSaveTimeout = setTimeout(function() {
+                self.autoSave();
+            }, 1000); // 1 second delay
+        },
 
         init: function() {
             var self = this;
@@ -1331,6 +1672,12 @@
                 self.updateTotalVolume();
                 console.log('[UnifiedInventaire] Calling initSearch...');
                 self.initSearch();
+
+                // Bind change event on Volume final field for auto-save
+                jQuery('#unified-volumeFinal').off('change blur').on('change blur', function() {
+                    console.log('[UnifiedInventaire] Volume final changed:', jQuery(this).val());
+                    self.triggerDebouncedAutoSave();
+                });
 
                 console.log('[UnifiedInventaire] All done!');
             }).catch(function(error) {
@@ -1430,12 +1777,14 @@
             jQuery('#' + safeId).val(this.inventory[category][itemName]);
 
             this.updateTotalVolume();
+            this.triggerDebouncedAutoSave();
         },
 
         setQty: function(category, itemName, value) {
             if (!this.inventory[category]) this.inventory[category] = {};
             this.inventory[category][itemName] = Math.max(0, parseInt(value) || 0);
             this.updateTotalVolume();
+            this.triggerDebouncedAutoSave();
         },
 
         updateTotalVolume: function() {
@@ -1550,6 +1899,78 @@
                 }
             }, 'json').fail(function() {
                 app.helper.showErrorNotification({message: 'Erreur lors de la creation'});
+            });
+        },
+
+        autoSave: function() {
+            var self = this;
+
+            // Prevent concurrent saves
+            if (this.isSaving) {
+                console.log('[UnifiedInventaire] Already saving, skipping auto-save');
+                return;
+            }
+
+            this.isSaving = true;
+            console.log('[UnifiedInventaire] Auto-saving inventory...');
+
+            var totalVolume = 0;
+            Object.keys(this.inventory).forEach(function(category) {
+                if (self.itemsDb[category]) {
+                    self.itemsDb[category].forEach(function(item) {
+                        var qty = self.inventory[category][item.name] || 0;
+                        totalVolume += qty * item.volume;
+                    });
+                }
+            });
+
+            var volumeFinal = parseFloat(jQuery('#unified-volumeFinal').val()) || 0;
+            var totalBoxes = Math.ceil(totalVolume * 7);
+
+            // Show subtle saving indicator
+            jQuery('#inventaireTabContainer').addClass('saving');
+
+            jQuery.ajax({
+                url: 'save_inventory_direct.php',
+                type: 'POST',
+                data: {
+                    record_id: this.recordId,
+                    volume: totalVolume.toFixed(2),
+                    volume_final: volumeFinal.toFixed(2),
+                    boxes: totalBoxes,
+                    inventory: JSON.stringify(this.inventory)
+                },
+                success: function(response) {
+                    self.isSaving = false;
+                    var result = typeof response === 'string' ? JSON.parse(response) : response;
+
+                    jQuery('#inventaireTabContainer').removeClass('saving').addClass('saved');
+                    setTimeout(function() {
+                        jQuery('#inventaireTabContainer').removeClass('saved');
+                    }, 1500);
+
+                    if (result.success) {
+                        console.log('[UnifiedInventaire] Auto-save successful');
+                        // Invalidate Details tab so it reloads with new volume
+                        if (window.UnifiedTabbedView) {
+                            UnifiedTabbedView.invalidateTab('details');
+                        }
+                    } else {
+                        console.error('[UnifiedInventaire] Auto-save error:', result.error);
+                        jQuery('#inventaireTabContainer').removeClass('saved').addClass('save-error');
+                        setTimeout(function() {
+                            jQuery('#inventaireTabContainer').removeClass('save-error');
+                        }, 3000);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    self.isSaving = false;
+                    console.error('[UnifiedInventaire] Auto-save error:', error);
+                    jQuery('#inventaireTabContainer').removeClass('saving').addClass('save-error');
+                    setTimeout(function() {
+                        jQuery('#inventaireTabContainer').removeClass('save-error');
+                    }, 3000);
+                }
             });
         },
 

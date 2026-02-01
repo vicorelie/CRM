@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 00:35:15
+/* Smarty version 4.5.5, created on 2026-02-01 17:27:23
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/dashboards/DashBoardContents.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696d6023121214_67900853',
+  'unifunc' => 'content_697f70dbc3dd47_89382489',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696d6023121214_67900853 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f70dbc3dd47_89382489 (Smarty_Internal_Template $_smarty_tpl) {
 ?>    
 <div class="dashBoardContainer clearfix"><div class="tabContainer"><ul class="nav nav-tabs tabs sortable container-fluid"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DASHBOARD_TABS']->value, 'TAB_DATA', false, 'index');

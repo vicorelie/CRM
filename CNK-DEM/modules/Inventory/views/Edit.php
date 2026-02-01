@@ -117,8 +117,39 @@ Class Inventory_Edit_View extends Vtiger_Edit_View {
 			$recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);
 			$recordModel->setRecordFieldValues($parentRecordModel);
 
-			// CUSTOM: Copier les champs personnalisés depuis Quote vers SalesOrder/Invoice
+			// CUSTOM: Définir le sujet du BDC comme "Ord-" + nom de l'affaire
 			$sourceModuleName = $parentRecordModel->getModuleName();
+			if ($sourceModuleName === 'Quotes' && $moduleName === 'SalesOrder') {
+				$potentialId = $parentRecordModel->get('potential_id');
+				if ($potentialId) {
+					try {
+						$potentialModel = Vtiger_Record_Model::getInstanceById($potentialId, 'Potentials');
+						$potentialName = $potentialModel->get('potentialname');
+						if ($potentialName) {
+							$recordModel->set('subject', 'Ord-' . $potentialName);
+						}
+					} catch (Exception $e) {
+						// Si le Potential n'existe pas, garder le sujet du Quote
+					}
+				}
+
+				// CUSTOM: Copier l'adresse du prestataire (Vendor) vers l'adresse de facturation
+				$prestataireId = $parentRecordModel->get('prestataire');
+				if ($prestataireId) {
+					try {
+						$vendorModel = Vtiger_Record_Model::getInstanceById($prestataireId, 'Vendors');
+						$recordModel->set('bill_street', $vendorModel->get('street'));
+						$recordModel->set('bill_city', $vendorModel->get('city'));
+						$recordModel->set('bill_state', $vendorModel->get('state'));
+						$recordModel->set('bill_code', $vendorModel->get('postalcode'));
+						$recordModel->set('bill_country', $vendorModel->get('country'));
+					} catch (Exception $e) {
+						// Si le prestataire n'existe pas, garder les adresses par défaut
+					}
+				}
+			}
+
+			// CUSTOM: Copier les champs personnalisés depuis Quote vers SalesOrder/Invoice
 			if ($sourceModuleName === 'Quotes' && $moduleName === 'SalesOrder') {
 				// Mapping des champs: Quote -> SalesOrder
 				$fieldMapping = array(

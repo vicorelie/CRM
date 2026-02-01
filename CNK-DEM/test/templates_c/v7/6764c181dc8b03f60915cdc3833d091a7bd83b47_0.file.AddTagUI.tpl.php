@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 00:35:14
+/* Smarty version 4.5.5, created on 2026-02-01 17:56:31
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/AddTagUI.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696d6022540886_78465544',
+  'unifunc' => 'content_697f77afb3d070_04219151',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,11 +20,11 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696d6022540886_78465544 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f77afb3d070_04219151 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="showAllTagContainer hide"><div class="modal-dialog modal-lg"><div class="modal-content"><form class="detailShowAllModal"><?php ob_start();
 echo vtranslate('LBL_ADD_OR_SELECT_TAG',$_smarty_tpl->tpl_vars['MODULE']->value,$_smarty_tpl->tpl_vars['RECORD_NAME']->value);
-$_prefixVariable9=ob_get_clean();
-$_smarty_tpl->_assignInScope('TITLE', $_prefixVariable9);
+$_prefixVariable2=ob_get_clean();
+$_smarty_tpl->_assignInScope('TITLE', $_prefixVariable2);
 $_smarty_tpl->_subTemplateRender(call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'vtemplate_path' ][ 0 ], array( "ModalHeader.tpl",$_smarty_tpl->tpl_vars['MODULE']->value )), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, true);
 ?><div class="modal-body"><div class="row"><div class="col-lg-6 selectTagContainer"><div class="form-group"><label class="control-label"><?php echo vtranslate('LBL_CURRENT_TAGS',$_smarty_tpl->tpl_vars['MODULE']->value);?>
 </label><div class="currentTagScroll"><div class="currentTag multiLevelTagList form-control"><span class="noTagsPlaceHolder" style="padding:3px;display:none;border:1px solid transparent;color:#999"><?php echo vtranslate('LBL_NO_TAG_EXISTS',$_smarty_tpl->tpl_vars['MODULE']->value);?>

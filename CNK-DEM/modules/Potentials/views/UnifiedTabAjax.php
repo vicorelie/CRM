@@ -3,10 +3,13 @@
  * UnifiedTabAjax View - AJAX handler for loading unified tab content
  ************************************************************************************/
 
-class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
+class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 
 	function __construct() {
 		parent::__construct();
+		// Expose AJAX methods
+		$this->exposeMethod('getBDCList');
+		$this->exposeMethod('createBDCFromQuote');
 	}
 
 	/**
@@ -29,13 +32,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 	function process(Vtiger_Request $request) {
 		$mode = $request->get('mode');
 
-		// Handle BDC (Bon de Commande) AJAX requests
-		if ($mode === 'getBDCList') {
-			$this->getBDCList($request);
-			return;
-		}
-		if ($mode === 'createBDCFromQuote') {
-			$this->createBDCFromQuote($request);
+		// Check if mode is an exposed method (BDC requests, etc.)
+		if (!empty($mode) && $this->isMethodExposed($mode)) {
+			$this->invokeExposedMethod($mode, $request);
 			return;
 		}
 
@@ -127,10 +126,16 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$currentUserId = $currentUser->getId();
 
+		// Check if current user is admin
+		$isAdmin = ($currentUser->get('is_admin') === 'on');
+
+		// Get validation field (cf_1164) from Potential
+		$validationValue = $recordModel->get('cf_1164');
+
 		// Load existing quotes
 		$quotes = [];
 		$quotesQuery = "SELECT q.quoteid, q.quote_no, q.subject, q.quotestage, q.total,
-						qcf.cf_1125, qcf.cf_1127, qcf.cf_1129, qcf.cf_1139,
+						qcf.cf_1125, qcf.cf_1127, qcf.cf_1129, qcf.cf_1139, qcf.cf_1162,
 						DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
 						FROM vtiger_quotes q
 						LEFT JOIN vtiger_quotescf qcf ON qcf.quoteid = q.quoteid
@@ -185,6 +190,21 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 			}
 		}
 
+		// Load Vendors (Prestataires)
+		$vendors = [];
+		$vendorsQuery = "SELECT v.vendorid, v.vendorname
+						 FROM vtiger_vendor v
+						 INNER JOIN vtiger_crmentity c ON c.crmid = v.vendorid
+						 WHERE c.deleted = 0
+						 ORDER BY v.vendorname ASC";
+		$result = $db->pquery($vendorsQuery, []);
+		while($row = $db->fetchByAssoc($result)) {
+			$vendors[] = [
+				'id' => $row['vendorid'],
+				'name' => $row['vendorname']
+			];
+		}
+
 		// Get CSRF token
 		include_once 'libraries/csrf-magic/csrf-magic.php';
 		$csrfToken = function_exists('csrf_get_tokens') ? csrf_get_tokens() : '';
@@ -200,8 +220,11 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 		$viewer->assign('QUOTES', $quotes);
 		$viewer->assign('PRODUCTS_JSON', json_encode($products));
 		$viewer->assign('PDF_TEMPLATES', $pdfTemplates);
+		$viewer->assign('VENDORS', $vendors);
 		$viewer->assign('CSRF_TOKEN', $csrfToken);
 		$viewer->assign('DEFAULT_VALIDITY_DATE', $defaultValidityDate);
+		$viewer->assign('IS_ADMIN', $isAdmin);
+		$viewer->assign('VALIDATION_VALUE', $validationValue);
 
 		error_log('[UnifiedTabAjax] Devis variables set, rendering template...');
 		try {
@@ -263,41 +286,49 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 	/**
 	 * Get list of SalesOrders (BDC) for a Quote
 	 */
-	private function getBDCList(Vtiger_Request $request) {
+	public function getBDCList(Vtiger_Request $request) {
+		error_log('[UnifiedTabAjax] getBDCList called');
 		header('Content-Type: application/json');
 		$db = PearDatabase::getInstance();
 		$quoteId = $request->get('quote_id');
+		error_log('[UnifiedTabAjax] getBDCList quote_id: ' . $quoteId);
 
 		if (empty($quoteId)) {
+			error_log('[UnifiedTabAjax] getBDCList - Quote ID missing');
 			echo json_encode(['success' => false, 'message' => 'Quote ID manquant']);
 			return;
 		}
 
 		try {
 			// Get SalesOrders linked to this quote
-			$query = "SELECT so.salesorderid, so.salesorder_no, so.subject, so.sostatus, so.hdnGrandTotal,
+			$query = "SELECT so.salesorderid, so.salesorder_no, so.subject, so.sostatus, so.total as hdnGrandTotal,
 					  DATE_FORMAT(c.createdtime, '%d/%m/%Y') as createdtime
 					  FROM vtiger_salesorder so
 					  INNER JOIN vtiger_crmentity c ON c.crmid = so.salesorderid
-					  WHERE so.quote_id = ? AND c.deleted = 0
+					  WHERE so.quoteid = ? AND c.deleted = 0
 					  ORDER BY c.createdtime DESC";
 
 			$result = $db->pquery($query, [$quoteId]);
 			$salesorders = [];
+			$numRows = $db->num_rows($result);
+			error_log('[UnifiedTabAjax] getBDCList - Found ' . $numRows . ' salesorders');
 
 			while ($row = $db->fetchByAssoc($result)) {
 				$salesorders[] = $row;
 			}
 
-			echo json_encode([
+			$response = [
 				'success' => true,
 				'data' => [
 					'salesorders' => $salesorders,
 					'quote_id' => $quoteId
 				]
-			]);
+			];
+			error_log('[UnifiedTabAjax] getBDCList - Response: ' . json_encode($response));
+			echo json_encode($response);
 
 		} catch (Exception $e) {
+			error_log('[UnifiedTabAjax] getBDCList error: ' . $e->getMessage());
 			echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 		}
 	}
@@ -305,7 +336,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 	/**
 	 * Create a SalesOrder (BDC) from a Quote
 	 */
-	private function createBDCFromQuote(Vtiger_Request $request) {
+	public function createBDCFromQuote(Vtiger_Request $request) {
 		header('Content-Type: application/json');
 		$db = PearDatabase::getInstance();
 		$quoteId = $request->get('quote_id');
@@ -316,8 +347,32 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 		}
 
 		try {
-			// Get Quote data
+			// Get Quote data from model
 			$quoteModel = Vtiger_Record_Model::getInstanceById($quoteId, 'Quotes');
+
+			// Get Quote totals directly from database (more reliable)
+			$quoteTotalsQuery = "SELECT q.total, q.subtotal, q.taxtype, q.discount_percent, q.discount_amount,
+								 q.s_h_amount, q.adjustment, q.pre_tax_total, q.currency_id, q.conversion_rate
+								 FROM vtiger_quotes q WHERE q.quoteid = ?";
+			$quoteTotalsResult = $db->pquery($quoteTotalsQuery, [$quoteId]);
+			$quoteTotals = $db->fetchByAssoc($quoteTotalsResult);
+
+			// Get Contact address for billing
+			$contactId = $quoteModel->get('contact_id');
+			$billStreet = $billCity = $billState = $billCode = $billCountry = '';
+			if ($contactId) {
+				$contactAddressQuery = "SELECT mailingstreet, mailingcity, mailingstate, mailingzip, mailingcountry
+									   FROM vtiger_contactaddress WHERE contactaddressid = ?";
+				$contactResult = $db->pquery($contactAddressQuery, [$contactId]);
+				if ($db->num_rows($contactResult) > 0) {
+					$contactAddr = $db->fetchByAssoc($contactResult);
+					$billStreet = $contactAddr['mailingstreet'];
+					$billCity = $contactAddr['mailingcity'];
+					$billState = $contactAddr['mailingstate'];
+					$billCode = $contactAddr['mailingzip'];
+					$billCountry = $contactAddr['mailingcountry'];
+				}
+			}
 
 			// Create new SalesOrder
 			$salesOrderModel = Vtiger_Record_Model::getCleanInstance('SalesOrder');
@@ -325,37 +380,29 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 			// Copy basic fields from Quote
 			$salesOrderModel->set('subject', $quoteModel->get('subject'));
 			$salesOrderModel->set('potential_id', $quoteModel->get('potential_id'));
-			$salesOrderModel->set('contact_id', $quoteModel->get('contact_id'));
+			$salesOrderModel->set('contact_id', $contactId);
 			$salesOrderModel->set('account_id', $quoteModel->get('account_id'));
 			$salesOrderModel->set('quote_id', $quoteId);
 			$salesOrderModel->set('sostatus', 'Created');
-			$salesOrderModel->set('currency_id', $quoteModel->get('currency_id') ?: 1);
-			$salesOrderModel->set('conversion_rate', $quoteModel->get('conversion_rate') ?: 1);
+			$salesOrderModel->set('currency_id', $quoteTotals['currency_id'] ?: 1);
+			$salesOrderModel->set('conversion_rate', $quoteTotals['conversion_rate'] ?: 1);
 			$salesOrderModel->set('assigned_user_id', $quoteModel->get('assigned_user_id'));
 
-			// Copy address fields
-			$salesOrderModel->set('bill_street', $quoteModel->get('bill_street'));
-			$salesOrderModel->set('bill_city', $quoteModel->get('bill_city'));
-			$salesOrderModel->set('bill_state', $quoteModel->get('bill_state'));
-			$salesOrderModel->set('bill_code', $quoteModel->get('bill_code'));
-			$salesOrderModel->set('bill_country', $quoteModel->get('bill_country'));
+			// Set billing address from Contact
+			$salesOrderModel->set('bill_street', $billStreet);
+			$salesOrderModel->set('bill_city', $billCity);
+			$salesOrderModel->set('bill_state', $billState);
+			$salesOrderModel->set('bill_code', $billCode);
+			$salesOrderModel->set('bill_country', $billCountry);
+
+			// Copy shipping address from Quote
 			$salesOrderModel->set('ship_street', $quoteModel->get('ship_street'));
 			$salesOrderModel->set('ship_city', $quoteModel->get('ship_city'));
 			$salesOrderModel->set('ship_state', $quoteModel->get('ship_state'));
 			$salesOrderModel->set('ship_code', $quoteModel->get('ship_code'));
 			$salesOrderModel->set('ship_country', $quoteModel->get('ship_country'));
 
-			// Copy financial fields
-			$salesOrderModel->set('hdnSubTotal', $quoteModel->get('hdnSubTotal'));
-			$salesOrderModel->set('hdnGrandTotal', $quoteModel->get('hdnGrandTotal'));
-			$salesOrderModel->set('hdnTaxType', $quoteModel->get('hdnTaxType'));
-			$salesOrderModel->set('txtAdjustment', $quoteModel->get('txtAdjustment'));
-			$salesOrderModel->set('hdnDiscountPercent', $quoteModel->get('hdnDiscountPercent'));
-			$salesOrderModel->set('hdnDiscountAmount', $quoteModel->get('hdnDiscountAmount'));
-			$salesOrderModel->set('hdnS_H_Amount', $quoteModel->get('hdnS_H_Amount'));
-			$salesOrderModel->set('pre_tax_total', $quoteModel->get('pre_tax_total'));
-
-			// Save the SalesOrder
+			// Save the SalesOrder first
 			$salesOrderModel->save();
 			$salesOrderId = $salesOrderModel->getId();
 
@@ -398,6 +445,23 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_Index_View {
 					VALUES (?, ?, ?, ?)";
 				$db->pquery($insertTaxQuery, [$salesOrderId, $tax['productid'], $tax['taxname'], $tax['taxpercentage']]);
 			}
+
+			// Update SalesOrder totals directly in database
+			$updateTotalsQuery = "UPDATE vtiger_salesorder SET
+				total = ?, subtotal = ?, taxtype = ?, discount_percent = ?, discount_amount = ?,
+				s_h_amount = ?, adjustment = ?, pre_tax_total = ?
+				WHERE salesorderid = ?";
+			$db->pquery($updateTotalsQuery, [
+				$quoteTotals['total'],
+				$quoteTotals['subtotal'],
+				$quoteTotals['taxtype'],
+				$quoteTotals['discount_percent'],
+				$quoteTotals['discount_amount'],
+				$quoteTotals['s_h_amount'],
+				$quoteTotals['adjustment'],
+				$quoteTotals['pre_tax_total'],
+				$salesOrderId
+			]);
 
 			echo json_encode([
 				'success' => true,

@@ -18,13 +18,21 @@ class Potentials_CalculateDistance_Action extends Vtiger_Action_Controller {
 
         $response = array('success' => false);
 
+        // Log pour debug
+        $logFile = dirname(__FILE__) . '/../../../logs/distance_debug.log';
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - Record: $recordId, Distance: $distance, Duration: $duration\n", FILE_APPEND);
+
         // Si la distance est déjà fournie, on sauvegarde directement
         if (!empty($distance) && !empty($recordId)) {
             try {
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - Tentative de sauvegarde...\n", FILE_APPEND);
+
                 $recordModel = Vtiger_Record_Model::getInstanceById($recordId, 'Potentials');
                 $recordModel->set('mode', 'edit');
                 $recordModel->set('cf_961', $distance); // Distance
                 $recordModel->save();
+
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - Sauvegarde réussie pour record $recordId\n", FILE_APPEND);
 
                 $response['success'] = true;
                 $response['distance'] = $distance;
@@ -36,6 +44,7 @@ class Potentials_CalculateDistance_Action extends Vtiger_Action_Controller {
                 $responseObj->emit();
                 return;
             } catch (Exception $e) {
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - ERREUR: " . $e->getMessage() . "\n", FILE_APPEND);
                 $response['error'] = $e->getMessage();
                 $responseObj = new Vtiger_Response();
                 $responseObj->setResult($response);

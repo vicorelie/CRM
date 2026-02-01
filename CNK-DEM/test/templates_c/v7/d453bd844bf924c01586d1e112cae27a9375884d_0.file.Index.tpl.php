@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 18:05:23
+/* Smarty version 4.5.5, created on 2026-02-01 17:27:23
   from '/var/www/CNK-DEM/layouts/v7/modules/Settings/LayoutEditor/Index.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696e56432ed5b3_13959261',
+  'unifunc' => 'content_697f70db4be566_45293264',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696e56432ed5b3_13959261 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f70db4be566_45293264 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <div class="container-fluid main-scroll paddingTop15" id="layoutEditorContainer"><input id="selectedModuleName" type="hidden" value="<?php echo $_smarty_tpl->tpl_vars['SELECTED_MODULE_NAME']->value;?>
 " /><input class="selectedTab" type="hidden" value="<?php echo $_smarty_tpl->tpl_vars['SELECTED_TAB']->value;?>

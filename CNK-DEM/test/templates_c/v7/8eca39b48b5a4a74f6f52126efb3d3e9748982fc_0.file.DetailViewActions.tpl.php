@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 23:18:30
+/* Smarty version 4.5.5, created on 2026-02-01 17:56:38
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/DetailViewActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696e9fa6a2de92_26472883',
+  'unifunc' => 'content_697f77b604c6e8_46618885',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '8eca39b48b5a4a74f6f52126efb3d3e9748982fc' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/DetailViewActions.tpl',
-      1 => 1768857487,
+      1 => 1769903478,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696e9fa6a2de92_26472883 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f77b604c6e8_46618885 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="col-lg-6 detailViewButtoncontainer"><div class="pull-right btn-toolbar"><div class="btn-group"><?php $_smarty_tpl->_assignInScope('STARRED', $_smarty_tpl->tpl_vars['RECORD']->value->get('starred'));
@@ -34,21 +34,20 @@ $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->t
 $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->do_else = true;
 if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value) {
 $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->do_else = false;
-?><button class="btn <?php if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel() == 'LBL_GENERATE_QUOTE') {?>btn-generate-quote<?php } else { ?>btn-default<?php }?>" id="<?php echo $_smarty_tpl->tpl_vars['MODULE_NAME']->value;?>
+if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel() != 'LBL_GENERATE_QUOTE') {?><button class="btn btn-default" id="<?php echo $_smarty_tpl->tpl_vars['MODULE_NAME']->value;?>
 _detailView_basicAction_<?php echo Vtiger_Util_Helper::replaceSpaceWithUnderScores($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel());?>
-"<?php if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel() == 'LBL_GENERATE_QUOTE') {?>style="background: #8e44ad; border-color: #8e44ad; color: white;"<?php }
-if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->isPageLoadLink()) {?>onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getUrl();?>
+"<?php if ($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->isPageLoadLink()) {?>onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getUrl();?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
 '"<?php } else { ?>onclick="<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getUrl();?>
 "<?php }
 if ($_smarty_tpl->tpl_vars['MODULE_NAME']->value == 'Documents' && $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel() == 'LBL_VIEW_FILE') {?>data-filelocationtype="<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->get('filelocationtype');?>
 " data-filename="<?php echo $_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->get('filename');?>
 "<?php }?>><?php echo vtranslate($_smarty_tpl->tpl_vars['DETAIL_VIEW_BASIC_LINK']->value->getLabel(),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
-</button><?php
+</button><?php }
 }
-$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?><button class="btn btn-success" id="visualiser-trajet-button" onclick="window.open('visualiser_trajet.php?record=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
-', 'trajet_window', 'width=1400,height=900,scrollbars=yes,resizable=yes'); return false;"><i class="fa fa-map-marker"></i> Visualiser Trajet</button><button class="btn" id="inventory-button" onclick="window.open('inventaire_popup.php?record=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
-', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;" style="background-color: #667EEA !important; border-color: #667EEA !important; color: white;"><i class="fa fa-archive"></i> Inventaire</button><?php if (!empty($_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW']) && (smarty_modifier_count($_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW']) > 0)) {?><button class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);"><?php echo vtranslate('LBL_MORE',$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?><button class="btn" id="unified-view-button" onclick="window.location.href='index.php?module=Potentials&view=Unified&record=<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
+&app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
+'"style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; font-weight: 600; padding: 8px 15px;"><i class="fa fa-th-large"></i> Gestion client</button><?php if (!empty($_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW']) && (smarty_modifier_count($_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW']) > 0)) {?><button class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);"><?php echo vtranslate('LBL_MORE',$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
 &nbsp;&nbsp;<i class="caret"></i></button><ul class="dropdown-menu dropdown-menu-right"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['DETAILVIEW_LINKS']->value['DETAILVIEW'], 'DETAIL_VIEW_LINK');
 $_smarty_tpl->tpl_vars['DETAIL_VIEW_LINK']->do_else = true;
@@ -65,8 +64,8 @@ _detailView_moreAction_<?php echo Vtiger_Util_Helper::replaceSpaceWithUnderScore
 }
 $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></ul><?php }?></div><?php ob_start();
 echo $_smarty_tpl->tpl_vars['NO_PAGINATION']->value;
-$_prefixVariable1 = ob_get_clean();
-if (!$_prefixVariable1) {?><div class="btn-group pull-right"><button class="btn btn-default " id="detailViewPreviousRecordButton" <?php if (empty($_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value;?>
+$_prefixVariable3 = ob_get_clean();
+if (!$_prefixVariable3) {?><div class="btn-group pull-right"><button class="btn btn-default " id="detailViewPreviousRecordButton" <?php if (empty($_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['PREVIOUS_RECORD_URL']->value;?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>
 '" <?php }?> ><i class="fa fa-chevron-left"></i></button><button class="btn btn-default  " id="detailViewNextRecordButton"<?php if (empty($_smarty_tpl->tpl_vars['NEXT_RECORD_URL']->value)) {?> disabled="disabled" <?php } else { ?> onclick="window.location.href = '<?php echo $_smarty_tpl->tpl_vars['NEXT_RECORD_URL']->value;?>
 &app=<?php echo $_smarty_tpl->tpl_vars['SELECTED_MENU_CATEGORY']->value;?>

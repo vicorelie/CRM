@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 00:35:14
+/* Smarty version 4.5.5, created on 2026-02-01 17:27:03
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/Topbar.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696d60224d4046_76524562',
+  'unifunc' => 'content_697f70c7a144c3_08977799',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/Header.tpl' => 1,
   ),
 ),false)) {
-function content_696d60224d4046_76524562 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f70c7a144c3_08977799 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_subTemplateRender("file:modules/Vtiger/Header.tpl", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, false);
 $_smarty_tpl->_assignInScope('APP_IMAGE_MAP', Vtiger_MenuStructure_Model::getAppIcons());?>
 		<style>

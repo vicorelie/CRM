@@ -15,6 +15,7 @@ class Potentials_Detail_View extends Vtiger_Detail_View {
 		parent::__construct();
 		$this->exposeMethod('showRelatedRecords');
 	}
+
 	/**
 	 * Function to get activities
 	 * @param Vtiger_Request $request

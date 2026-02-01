@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 00:35:14
+/* Smarty version 4.5.5, created on 2026-02-01 17:27:03
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Footer.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696d602260e469_10617914',
+  'unifunc' => 'content_697f70c7a5b1b1_64546613',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696d602260e469_10617914 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f70c7a5b1b1_64546613 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <footer class="app-footer">
 	<p>

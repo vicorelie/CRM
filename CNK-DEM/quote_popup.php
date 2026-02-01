@@ -72,6 +72,35 @@ if ($productsResult) {
         ];
     }
 }
+
+// Charger les templates PDF Maker pour les devis
+$pdfTemplates = [];
+$pdfQuery = "SELECT templateid, filename, description FROM vtiger_pdfmaker
+             WHERE module = 'Quotes' AND deleted = 0
+             ORDER BY filename ASC";
+$pdfResult = $conn->query($pdfQuery);
+if ($pdfResult) {
+    while ($row = $pdfResult->fetch_assoc()) {
+        $pdfTemplates[] = [
+            'id' => $row['templateid'],
+            'name' => $row['filename'],
+            'description' => $row['description']
+        ];
+    }
+}
+
+// Récupérer l'email du contact lié à l'affaire
+$contactEmail = '';
+if ($contactId > 0) {
+    $emailQuery = "SELECT email FROM vtiger_contactdetails WHERE contactid = ?";
+    $stmt = $conn->prepare($emailQuery);
+    $stmt->bind_param('i', $contactId);
+    $stmt->execute();
+    $emailResult = $stmt->get_result();
+    if ($row = $emailResult->fetch_assoc()) {
+        $contactEmail = $row['email'] ?: '';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -91,6 +120,7 @@ if ($productsResult) {
         .form-section.section-info { border-left-color: #3498db; }
         .form-section.section-forfait { border-left-color: #9b59b6; }
         .form-section.section-products { border-left-color: #27ae60; }
+        .form-section.section-pdf { border-left-color: #e74c3c; }
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #333; font-size: 13px; }
         .form-group input, .form-group select { width: 100%; padding: 9px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; }
@@ -122,6 +152,21 @@ if ($productsResult) {
         .quote-subject { font-size: 0.85em; color: #333; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .quote-total { font-weight: bold; color: #28a745; font-size: 1em; }
         .quote-date { font-size: 0.8em; color: #666; margin-top: 3px; }
+        /* Styles pour la section PDF */
+        .pdf-templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
+        .pdf-template-item { background: white; border: 2px solid #e0e0e0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s; }
+        .pdf-template-item:hover { border-color: #e74c3c; background: #fef5f5; }
+        .pdf-template-item.selected { border-color: #e74c3c; background: #fef5f5; }
+        .pdf-template-item input[type="checkbox"] { margin-right: 8px; transform: scale(1.2); }
+        .pdf-template-item label { cursor: pointer; font-size: 13px; display: flex; align-items: center; }
+        .pdf-email-row { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #dee2e6; }
+        .pdf-send-btn { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 10px; }
+        .pdf-send-btn:hover { opacity: 0.9; }
+        .pdf-send-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .pdf-section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .pdf-section-title i { color: #e74c3c; font-size: 1.2em; }
+        .select-all-btn { background: #6c757d; color: white; padding: 5px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .select-all-btn:hover { background: #5a6268; }
     </style>
 </head>
 <body>
@@ -289,6 +334,42 @@ if ($productsResult) {
                 </table>
             </div>
 
+            <?php if (count($pdfTemplates) > 0): ?>
+            <div class="form-section section-pdf">
+                <div class="pdf-section-title">
+                    <i class="fas fa-file-pdf"></i>
+                    <strong>Envoyer des documents PDF par email</strong>
+                    <button type="button" class="select-all-btn" onclick="toggleAllPdfTemplates()">
+                        <i class="fas fa-check-square"></i> Tout sélectionner
+                    </button>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    Sélectionnez les documents à envoyer par email après la création/sauvegarde du devis
+                </p>
+                <div class="pdf-templates-grid">
+                    <?php foreach ($pdfTemplates as $template): ?>
+                    <div class="pdf-template-item" onclick="togglePdfTemplate(this, <?php echo $template['id']; ?>)">
+                        <label>
+                            <input type="checkbox" class="pdf-template-checkbox" value="<?php echo $template['id']; ?>" data-name="<?php echo htmlspecialchars($template['name']); ?>">
+                            <?php echo htmlspecialchars($template['name']); ?>
+                        </label>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="pdf-email-row">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Email du destinataire</label>
+                            <input type="email" id="pdfRecipientEmail" value="<?php echo htmlspecialchars($contactEmail); ?>" placeholder="email@exemple.com">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <div id="pdfSendStatus" style="font-size: 13px; padding: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
         </div>
 
         <div class="actions">
@@ -302,6 +383,21 @@ if ($productsResult) {
     </div>
 
     <script>
+        // Global error handler pour attraper toutes les erreurs
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('[QUOTE POPUP ERROR] Message:', message);
+            console.error('[QUOTE POPUP ERROR] Source:', source);
+            console.error('[QUOTE POPUP ERROR] Line:', lineno, 'Column:', colno);
+            console.error('[QUOTE POPUP ERROR] Error object:', error);
+        };
+
+        // Handler pour les rejets de Promise non gérés
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('[QUOTE POPUP] Promise rejetée non gérée:', event.reason);
+        });
+
+        console.log('[QUOTE POPUP] === Script initialisé ===');
+
         var productCounter = 0;
         var selectedProducts = {};
         var productsData = [];
@@ -309,6 +405,128 @@ if ($productsResult) {
         var potentialId = <?php echo $potentialId; ?>;
         var contactId = <?php echo $contactId; ?>;
         var TVA_RATE = 1.20; // TVA 20%
+        var pdfTemplates = <?php echo json_encode($pdfTemplates); ?>;
+        var pendingPdfSend = false; // Flag pour savoir si on doit envoyer des PDFs après sauvegarde
+
+        console.log('[QUOTE POPUP] potentialId:', potentialId);
+        console.log('[QUOTE POPUP] contactId:', contactId);
+        console.log('[QUOTE POPUP] pdfTemplates disponibles:', pdfTemplates.length);
+
+        // CSRF Token pour les requêtes AJAX
+        var csrfToken = '<?php echo $csrfToken; ?>';
+        console.log('[QUOTE POPUP] CSRF Token:', csrfToken ? 'présent' : 'absent');
+
+        // Mode debug: mettre window.DEBUG_NO_CLOSE = true dans la console pour empêcher la fermeture auto
+        window.DEBUG_NO_CLOSE = false;
+        console.log('[QUOTE POPUP] Pour empêcher la fermeture auto, tapez: window.DEBUG_NO_CLOSE = true');
+
+        // Fonctions pour la gestion des templates PDF
+        function togglePdfTemplate(element, templateId) {
+            var checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('selected', checkbox.checked);
+            updatePdfSendButton();
+        }
+
+        function toggleAllPdfTemplates() {
+            var checkboxes = document.querySelectorAll('.pdf-template-checkbox');
+            var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = !allChecked;
+                checkbox.closest('.pdf-template-item').classList.toggle('selected', !allChecked);
+            });
+            updatePdfSendButton();
+        }
+
+        function getSelectedPdfTemplates() {
+            var selected = [];
+            document.querySelectorAll('.pdf-template-checkbox:checked').forEach(function(checkbox) {
+                selected.push({
+                    id: checkbox.value,
+                    name: checkbox.dataset.name
+                });
+            });
+            return selected;
+        }
+
+        function updatePdfSendButton() {
+            var selected = getSelectedPdfTemplates();
+            var statusDiv = document.getElementById('pdfSendStatus');
+            if (selected.length > 0) {
+                statusDiv.innerHTML = '<span style="color: #e74c3c;"><i class="fas fa-info-circle"></i> ' + selected.length + ' document(s) seront envoyés par email après sauvegarde</span>';
+            } else {
+                statusDiv.innerHTML = '';
+            }
+        }
+
+        function sendPdfEmails(quoteId) {
+            console.log('[PDF] === sendPdfEmails() appelée ===');
+            console.log('[PDF] quoteId reçu:', quoteId);
+
+            var selectedTemplates = getSelectedPdfTemplates();
+            var email = document.getElementById('pdfRecipientEmail').value;
+
+            console.log('[PDF] Templates sélectionnés:', selectedTemplates);
+            console.log('[PDF] Email:', email);
+
+            if (selectedTemplates.length === 0) {
+                console.log('[PDF] Aucun template sélectionné, skip');
+                return Promise.resolve({ skip: true });
+            }
+
+            if (!email || !email.includes('@')) {
+                console.log('[PDF] Pas d\'email valide, envoi ignoré');
+                return Promise.resolve({ skip: true, reason: 'no_email' });
+            }
+
+            var templateIds = selectedTemplates.map(function(t) { return t.id; });
+
+            console.log('[PDF] ==> Envoi de ' + templateIds.length + ' PDFs à ' + email);
+            console.log('[PDF] Template IDs:', templateIds);
+
+            var formData = new FormData();
+            formData.append('record', quoteId);
+            formData.append('email', email);
+            templateIds.forEach(function(id) {
+                formData.append('templates[]', id);
+            });
+
+            // Ajouter le token CSRF si disponible
+            if (csrfToken) {
+                formData.append('__vtrftk', csrfToken);
+            }
+
+            console.log('[PDF] Appel API /index.php?module=Quotes&action=SendQuotePDFs...');
+            console.log('[PDF] FormData: record=' + quoteId + ', email=' + email + ', templates=' + templateIds.join(','));
+
+            return fetch('/index.php?module=Quotes&action=SendQuotePDFs', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+            .then(function(response) {
+                console.log('[PDF] Réponse HTTP status:', response.status);
+                console.log('[PDF] Réponse HTTP ok:', response.ok);
+                return response.text();
+            })
+            .then(function(text) {
+                console.log('[PDF] Réponse brute (premiers 500 caractères):', text.substring(0, 500));
+                try {
+                    var data = JSON.parse(text);
+                    console.log('[PDF] Réponse JSON parsée:', data);
+                    return data.result || data;
+                } catch (e) {
+                    console.error('[PDF] Erreur parsing JSON:', e);
+                    console.log('[PDF] Réponse complète:', text);
+                    return { success: false, error: 'Réponse non-JSON: ' + text.substring(0, 100) };
+                }
+            })
+            .catch(function(error) {
+                console.error('[PDF] Erreur:', error);
+                return { success: false, error: error.message };
+            });
+        }
 
         // Fonctions de calcul HT/TTC
         function updateFromHT() {
@@ -535,6 +753,15 @@ if ($productsResult) {
 
             console.log('[QUOTE POPUP] Envoi AJAX...');
 
+            // Vérifier si on doit envoyer des PDFs
+            var selectedPdfs = getSelectedPdfTemplates();
+            var recipientEmail = document.getElementById('pdfRecipientEmail') ? document.getElementById('pdfRecipientEmail').value : '';
+
+            console.log('[QUOTE POPUP] === DEBUG PDF ===');
+            console.log('[QUOTE POPUP] Templates sélectionnés:', selectedPdfs);
+            console.log('[QUOTE POPUP] Nombre de templates:', selectedPdfs.length);
+            console.log('[QUOTE POPUP] Email destinataire:', recipientEmail);
+
             fetch('/index.php', {
                 method: 'POST',
                 body: formData,
@@ -545,17 +772,110 @@ if ($productsResult) {
                 console.log('[QUOTE POPUP] Réponse reçue, URL finale:', response.url);
                 console.log('[QUOTE POPUP] Status:', response.status);
 
-                // Le devis a été sauvegardé avec succès (VTiger redirige vers la page Potentials)
-                console.log('[QUOTE POPUP] Devis sauvegardé, redirection vers liste des devis...');
+                // Pour un nouveau devis, récupérer l'ID via l'API
+                if (!recordId) {
+                    console.log('[QUOTE POPUP] Nouveau devis - récupération de l\'ID via get_last_quote.php...');
+                    console.log('[QUOTE POPUP] URL: /get_last_quote.php?potential_id=' + potentialId);
+                    return fetch('/get_last_quote.php?potential_id=' + potentialId)
+                        .then(function(resp) {
+                            console.log('[QUOTE POPUP] get_last_quote.php response status:', resp.status);
+                            return resp.text();
+                        })
+                        .then(function(text) {
+                            console.log('[QUOTE POPUP] get_last_quote.php réponse brute:', text);
+                            try {
+                                var data = JSON.parse(text);
+                                console.log('[QUOTE POPUP] Dernier devis (parsed):', data);
+                                if (data.success && data.quote_id) {
+                                    console.log('[QUOTE POPUP] Quote ID trouvé:', data.quote_id);
+                                    return data.quote_id;
+                                }
+                                console.warn('[QUOTE POPUP] Impossible de récupérer l\'ID du devis, data:', data);
+                                return null;
+                            } catch(e) {
+                                console.error('[QUOTE POPUP] Erreur parsing JSON:', e);
+                                return null;
+                            }
+                        })
+                        .catch(function(err) {
+                            console.error('[QUOTE POPUP] Erreur fetch get_last_quote.php:', err);
+                            return null;
+                        });
+                }
+                console.log('[QUOTE POPUP] Devis existant, recordId:', recordId);
+                return recordId;
+            })
+            .then(function(quoteId) {
+                console.log('[QUOTE POPUP] Quote ID final:', quoteId);
+                console.log('[QUOTE POPUP] Conditions pour envoi PDF:');
+                console.log('[QUOTE POPUP]   - selectedPdfs.length > 0:', selectedPdfs.length > 0, '(' + selectedPdfs.length + ')');
+                console.log('[QUOTE POPUP]   - recipientEmail:', !!recipientEmail, '(' + recipientEmail + ')');
+                console.log('[QUOTE POPUP]   - quoteId:', !!quoteId, '(' + quoteId + ')');
+
+                // Si des PDFs sont sélectionnés, les envoyer
+                if (selectedPdfs.length > 0 && recipientEmail && quoteId) {
+                    console.log('[QUOTE POPUP] ==> TOUTES LES CONDITIONS REMPLIES, envoi des PDFs...');
+                    updateLoadingMessage('Envoi des documents PDF par email...');
+
+                    return sendPdfEmails(quoteId).then(function(pdfResult) {
+                        console.log('[QUOTE POPUP] Résultat envoi PDF:', pdfResult);
+                        if (pdfResult.success) {
+                            updateLoadingMessage('Email envoyé avec succès !');
+                        } else if (pdfResult.skip) {
+                            console.log('[QUOTE POPUP] Envoi PDF ignoré');
+                        } else {
+                            console.warn('[QUOTE POPUP] Erreur envoi PDF:', pdfResult.error);
+                            updateLoadingMessage('Erreur: ' + (pdfResult.error || 'Echec envoi email'));
+                        }
+                        return { quoteId: quoteId, pdfResult: pdfResult };
+                    });
+                }
+
+                console.log('[QUOTE POPUP] ==> CONDITIONS NON REMPLIES, pas d\'envoi PDF');
+                return { quoteId: quoteId };
+            })
+            .then(function(result) {
+                // Le devis a été sauvegardé avec succès
+                console.log('[QUOTE POPUP] Résultat final:', result);
 
                 var quotesListUrl = '/index.php?module=Potentials&relatedModule=Quotes&view=Detail&record=' + potentialId + '&mode=showRelatedList&relationId=35&tab_label=Quotes&app=SALES';
 
-                if (window.opener && !window.opener.closed) {
-                    window.opener.location.href = quotesListUrl;
-                    window.close();
-                } else {
-                    window.location.href = quotesListUrl;
+                // Déterminer le message et le délai selon le résultat
+                var delayMs = 2000; // 2 secondes minimum
+                var message = 'Devis sauvegardé avec succès !';
+
+                if (result && result.pdfResult) {
+                    if (result.pdfResult.success) {
+                        message = 'Devis sauvegardé et email envoyé avec succès !';
+                        delayMs = 3000; // 3 secondes pour voir le message de succès
+                    } else if (result.pdfResult.error) {
+                        message = 'Devis sauvegardé mais erreur email: ' + result.pdfResult.error;
+                        delayMs = 5000; // 5 secondes pour lire l'erreur
+                    } else if (result.pdfResult.skip) {
+                        message = 'Devis sauvegardé (pas d\'email à envoyer)';
+                    }
                 }
+
+                console.log('[QUOTE POPUP] Message:', message, 'Délai:', delayMs);
+
+                // Mode debug: ne pas fermer automatiquement
+                if (window.DEBUG_NO_CLOSE) {
+                    updateLoadingMessage(message, 'Mode DEBUG: fermeture auto désactivée. Consultez la console.');
+                    console.log('[QUOTE POPUP] DEBUG_NO_CLOSE actif - pas de redirection');
+                    return;
+                }
+
+                updateLoadingMessage(message, 'Redirection dans ' + (delayMs/1000) + ' secondes...');
+
+                // Délai pour montrer le message
+                setTimeout(function() {
+                    if (window.opener && !window.opener.closed) {
+                        window.opener.location.href = quotesListUrl;
+                        window.close();
+                    } else {
+                        window.location.href = quotesListUrl;
+                    }
+                }, delayMs);
             })
             .catch(function(error) {
                 console.error('[QUOTE POPUP] Erreur:', error);
@@ -569,12 +889,29 @@ if ($productsResult) {
             overlay.id = 'loadingOverlay';
             overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;';
             overlay.innerHTML = '<div style="background:white;padding:40px;border-radius:15px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
-                '<div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>' +
-                '<p style="color:#333;font-size:18px;margin:0;">Enregistrement en cours...</p>' +
-                '<p style="color:#666;font-size:14px;margin-top:10px;">Veuillez patienter</p>' +
+                '<div id="loadingSpinner" style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>' +
+                '<p id="loadingMainMessage" style="color:#333;font-size:18px;margin:0;">Enregistrement en cours...</p>' +
+                '<p id="loadingSubMessage" style="color:#666;font-size:14px;margin-top:10px;">Veuillez patienter</p>' +
                 '</div>' +
                 '<style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>';
             document.body.appendChild(overlay);
+        }
+
+        function updateLoadingMessage(message, submessage) {
+            var mainMsg = document.getElementById('loadingMainMessage');
+            var subMsg = document.getElementById('loadingSubMessage');
+            var spinner = document.getElementById('loadingSpinner');
+            if (mainMsg) mainMsg.textContent = message;
+            if (submessage && subMsg) subMsg.textContent = submessage;
+
+            // Si c'est un message de succès, changer le style
+            if (message.toLowerCase().includes('succès') || message.toLowerCase().includes('envoyé')) {
+                if (spinner) {
+                    spinner.style.animation = 'none';
+                    spinner.style.border = 'none';
+                    spinner.innerHTML = '<i class="fas fa-check-circle" style="font-size:50px;color:#28a745;"></i>';
+                }
+            }
         }
 
         // Sauvegarder le devis existant (mise à jour)

@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-01-19 18:05:23
+/* Smarty version 4.5.5, created on 2026-02-01 17:27:23
   from '/var/www/CNK-DEM/layouts/v7/modules/Settings/LayoutEditor/FieldsList.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_696e5643333d87_70827860',
+  'unifunc' => 'content_697f70db505c63_48855116',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_696e5643333d87_70827860 (Smarty_Internal_Template $_smarty_tpl) {
+function content_697f70db505c63_48855116 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('IS_SORTABLE', $_smarty_tpl->tpl_vars['SELECTED_MODULE_MODEL']->value->isSortableAllowed());
 $_smarty_tpl->_assignInScope('ALL_BLOCK_LABELS', array());?><div class="row fieldsListContainer" style="padding:1% 0"><div class="col-sm-6"><button class="btn btn-default addButton addCustomBlock" type="button"><i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo vtranslate('LBL_ADD_CUSTOM_BLOCK',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </button></div><div class="col-sm-6"><?php if ($_smarty_tpl->tpl_vars['IS_SORTABLE']->value) {?><span class="pull-right"><button class="btn btn-success saveFieldSequence" type="button" style="opacity:0;margin-right:0px;"><?php echo vtranslate('LBL_SAVE_LAYOUT',$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>

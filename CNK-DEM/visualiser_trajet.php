@@ -417,10 +417,29 @@ $distance = $recordModel->get('cf_961'); // Distance
                                 // Mettre à jour l'affichage de la distance
                                 document.getElementById('distance-display').innerHTML =
                                     '<strong>' + distanceKm + ' km</strong><br>' +
-                                    '<small style="font-size: 16px;">' + durationText + '</small>';
+                                    '<small style="font-size: 16px;">' + durationText + '</small>' +
+                                    '<br><small id="save-status" style="font-size: 12px; color: #ffc107;">Sauvegarde en cours...</small>';
 
                                 // Sauvegarder la distance dans le CRM
-                                fetch('index.php?module=Potentials&action=CalculateDistance&record=<?php echo intval($recordId); ?>&distance=' + distanceKm + '&duration=' + encodeURIComponent(durationText));
+                                fetch('index.php?module=Potentials&action=CalculateDistance&record=<?php echo intval($recordId); ?>&distance=' + distanceKm + '&duration=' + encodeURIComponent(durationText))
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        const statusEl = document.getElementById('save-status');
+                                        if (data && data.result && data.result.success) {
+                                            statusEl.style.color = '#28a745';
+                                            statusEl.innerHTML = '✓ Distance sauvegardée';
+                                        } else {
+                                            statusEl.style.color = '#dc3545';
+                                            statusEl.innerHTML = '✗ Erreur: ' + (data.result ? data.result.error : 'Erreur inconnue');
+                                            console.error('Erreur sauvegarde distance:', data);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        const statusEl = document.getElementById('save-status');
+                                        statusEl.style.color = '#dc3545';
+                                        statusEl.innerHTML = '✗ Erreur de connexion';
+                                        console.error('Erreur fetch:', error);
+                                    });
                             }
                         } else {
                             document.getElementById('map').innerHTML =
