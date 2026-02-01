@@ -1,0 +1,492 @@
+{*+**********************************************************************************
+* Unified Devis Tab - Quote management embedded in unified view
+* Uses common design system from UnifiedTabbedView.tpl
+************************************************************************************}
+{strip}
+<div class="devis-tab-container" id="devisTabContainer"
+     data-potential-id="{$POTENTIAL_ID}"
+     data-contact-id="{$CONTACT_ID}"
+     data-csrf-token="{$CSRF_TOKEN}"
+     data-current-user-id="{$CURRENT_USER_ID}">
+
+    {* Existing Quotes - Compact horizontal chips *}
+    {if $QUOTES|@count > 0}
+    <div class="quotes-bar">
+        <span class="quotes-label"><i class="fa fa-folder-open"></i> Devis ({$QUOTES|@count}):</span>
+        <div class="quotes-chips">
+            {foreach from=$QUOTES item=QUOTE}
+            <div class="quote-chip" data-quoteid="{$QUOTE.quoteid}" onclick="UnifiedDevis.loadQuote({$QUOTE.quoteid})" title="{$QUOTE.subject|escape}">
+                <span class="chip-no">{$QUOTE.quote_no|escape}</span>
+                <span class="chip-date">{$QUOTE.created_date}</span>
+                <span class="chip-total">{$QUOTE.total|number_format:0:',':' '}€</span>
+            </div>
+            {/foreach}
+        </div>
+        <button type="button" class="btn btn-sm" id="unified_btnPaiement" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;" onclick="UnifiedDevis.openStripePayments()">
+            <i class="fa fa-credit-card"></i> Paiement
+        </button>
+        <button type="button" class="btn btn-sm btn-success" id="unified_btnBDC" style="display:none;" onclick="UnifiedDevis.openBDCModal()">
+            <i class="fa fa-file-text-o"></i> BDC
+        </button>
+        <button type="button" class="btn btn-sm btn-info" id="unified_btnViewPdf" style="display:none;" onclick="UnifiedDevis.viewPDF()">
+            <i class="fa fa-file-pdf-o"></i> PDF
+        </button>
+    </div>
+    {/if}
+
+    {* Hidden form for VTiger submission *}
+    <form id="unifiedQuoteForm" method="POST" action="index.php" style="display:none;">
+        <input type="hidden" name="module" value="Quotes">
+        <input type="hidden" name="action" value="Save">
+        <input type="hidden" name="record" id="unified_recordId" value="">
+        <input type="hidden" name="potential_id" value="{$POTENTIAL_ID}">
+        <input type="hidden" name="contact_id" value="{$CONTACT_ID}">
+        <input type="hidden" name="sourceRecord" value="{$POTENTIAL_ID}">
+        <input type="hidden" name="sourceModule" value="Potentials">
+        <input type="hidden" name="relationOperation" value="true">
+        <input type="hidden" name="currency_id" value="1">
+        <input type="hidden" name="assigned_user_id" value="{$CURRENT_USER_ID}">
+        <input type="hidden" name="subject" id="unified_hidden_subject" value="">
+        <input type="hidden" name="cf_1005" id="unified_hidden_cf_1005" value="">
+        <input type="hidden" name="quotestage" id="unified_hidden_quotestage" value="Created">
+        <input type="hidden" name="cf_1125" id="unified_hidden_cf_1125" value="">
+        <input type="hidden" name="cf_1127" id="unified_hidden_cf_1127" value="0">
+        <input type="hidden" name="cf_1129" id="unified_hidden_cf_1129" value="0">
+        <input type="hidden" name="cf_1139" id="unified_hidden_cf_1139" value="">
+        <input type="hidden" name="cf_1141" value="14">
+        <input type="hidden" name="cf_1133" value="43">
+        <input type="hidden" name="cf_1135" value="57">
+        <input type="hidden" name="cf_1269" id="unified_hidden_cf_1269" value="">
+        <input type="hidden" name="totalProductCount" id="unified_hidden_totalProductCount" value="0">
+        <div id="unifiedHiddenProductsContainer"></div>
+    </form>
+
+    {* Quote Form *}
+    <div class="quote-form-container">
+        <input type="hidden" id="unified_selectedQuoteId" value="">
+
+        {* Section Info - Compact inline *}
+        <div class="form-section section-info">
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label><span class="required">*</span> Sujet</label>
+                    <input type="text" id="unified_subject" value="Dev-{$POTENTIAL_NAME|escape}" required>
+                </div>
+                <div class="form-group">
+                    <label>Date validite</label>
+                    <input type="date" id="unified_cf_1005" value="{$DEFAULT_VALIDITY_DATE}">
+                </div>
+            </div>
+        </div>
+
+        {* Section Forfait + Produits - Side by side *}
+        <div class="forfait-products-row">
+            {* Left: Forfait *}
+            <div class="form-section section-forfait">
+                <div class="form-section-title title-purple">
+                    <i class="fa fa-truck"></i>
+                    Forfait
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Type forfait</label>
+                        <select id="unified_cf_1125">
+                            <option value="">-- Select --</option>
+                            <option value="ECO">ECO</option>
+                            <option value="ECO PLUS">ECO PLUS</option>
+                            <option value="CONFORT">CONFORT</option>
+                            <option value="LUXE">LUXE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type demenagement</label>
+                        <select id="unified_cf_1269">
+                            <option value="">-- Select --</option>
+                            <option value="Groupage">Groupage</option>
+                            <option value="Spécial" selected>Spécial</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-2" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Forfait HT</label>
+                        <input type="number" id="unified_cf_1127" value="" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Forfait TTC</label>
+                        <input type="number" id="unified_cf_1127_ttc" value="" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row-2" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Supplement</label>
+                        <input type="number" id="unified_cf_1129" value="" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Forfait + Suppl. TTC</label>
+                        <input type="number" id="unified_forfait_total_ttc" value="0" step="0.01" readonly style="background: #f0f0f0;">
+                    </div>
+                </div>
+            </div>
+
+            {* Right: Products *}
+            <div class="form-section section-products">
+                <div class="form-section-title title-green">
+                    <i class="fa fa-cubes"></i>
+                    Produits et services
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group" style="position: relative;">
+                        <label>Rechercher</label>
+                        <input type="text" id="unified_productSearch" placeholder="🔍 Ajouter un produit...">
+                        <div id="unified_productResults" style="position:absolute;background:white;border:2px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:250px;overflow-y:auto;display:none;z-index:100;box-shadow:0 4px 15px rgba(0,0,0,0.1);left:0;right:0;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Assurance</label>
+                        <select id="unified_cf_1139">
+                            <option value="">-- Select --</option>
+                            {for $i=4000 to 26000 step 2000}
+                            <option value="{$i}" {if $i == 4000}selected{/if}>{$i|number_format:0:',':' '} €</option>
+                            {/for}
+                        </select>
+                    </div>
+                </div>
+                <table id="unified_productsTable" class="data-table" style="display:none">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th style="width:80px">Qte</th>
+                            <th style="width:100px">PU</th>
+                            <th style="width:90px">Total</th>
+                            <th style="width:50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="unified_productsList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        {* Section Tarification - Full width below *}
+        <div class="form-section section-tarification">
+            <div class="totals-row">
+                <div class="total-box total-ht">
+                    <div class="total-label">Total HT</div>
+                    <div class="total-value" id="unified_montant_total_ht">0.00 €</div>
+                </div>
+                <div class="total-box total-ttc">
+                    <div class="total-label">Total TTC</div>
+                    <div class="total-value" id="unified_montant_total_ttc">0.00 €</div>
+                </div>
+                <div class="total-box total-acompte">
+                    <div class="total-label">Acompte</div>
+                    <div class="total-value" id="unified_acompte_ttc">0.00 €</div>
+                </div>
+                <div class="total-box total-solde">
+                    <div class="total-label">Solde</div>
+                    <div class="total-value" id="unified_solde_ttc">0.00 €</div>
+                </div>
+            </div>
+        </div>
+
+        {* Section PDF Templates *}
+        {if $PDF_TEMPLATES|@count > 0}
+        <div class="form-section section-pdf">
+            <div class="form-section-title title-red">
+                <i class="fa fa-file-pdf-o"></i>
+                Documents PDF
+                <button type="button" class="btn btn-default btn-sm" onclick="UnifiedDevis.toggleAllPdfTemplates()" style="margin-left: auto; padding: 4px 10px; font-size: 11px;">
+                    <i class="fa fa-check-square-o"></i> Tout
+                </button>
+            </div>
+            <div class="pdf-templates-grid">
+                {foreach from=$PDF_TEMPLATES item=TEMPLATE}
+                <div class="pdf-template-item" onclick="UnifiedDevis.togglePdfTemplate(this, {$TEMPLATE.id})">
+                    <label>
+                        <input type="checkbox" class="unified-pdf-template-checkbox" value="{$TEMPLATE.id}" data-name="{$TEMPLATE.name|escape}">
+                        {$TEMPLATE.name|escape}
+                    </label>
+                </div>
+                {/foreach}
+            </div>
+            <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
+                <input type="email" id="unified_pdfRecipientEmail" value="{$CONTACT_EMAIL|escape}" placeholder="Email destinataire" style="flex: 1;">
+                <span id="unified_pdfSendStatus" style="font-size: 12px;"></span>
+            </div>
+        </div>
+        {/if}
+    </div>
+
+    {* Actions *}
+    <div class="actions-bar" style="display: flex; gap: 10px; justify-content: center;">
+        <button type="button" class="btn btn-success" id="unified_btnSave" style="display:none;" onclick="UnifiedDevis.saveQuote()">
+            <i class="fa fa-save"></i> Sauvegarder
+        </button>
+        <button type="button" class="btn btn-purple" onclick="UnifiedDevis.createQuote()">
+            <i class="fa fa-plus"></i> Creer un devis
+        </button>
+    </div>
+</div>
+{/strip}
+
+<style>
+/* Devis Tab - Compact & Modern Styles */
+.devis-tab-container .form-section {
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.devis-tab-container .form-section-title {
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.devis-tab-container .form-group {
+    margin-bottom: 8px;
+}
+
+.devis-tab-container .form-group label {
+    font-size: 11px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.devis-tab-container .form-group input,
+.devis-tab-container .form-group select {
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+/* 4 columns for forfait section */
+.devis-tab-container .form-row-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+/* 2 columns grid */
+.devis-tab-container .form-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+/* Forfait + Products side by side */
+.devis-tab-container .forfait-products-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.devis-tab-container .forfait-products-row .form-section {
+    margin-bottom: 0;
+}
+
+/* Orange title for Tarification */
+.devis-tab-container .form-section-title.title-orange {
+    color: #e67e22;
+}
+
+.devis-tab-container .form-section-title.title-orange i {
+    color: #e67e22;
+}
+
+/* Tarification full width */
+.devis-tab-container .section-tarification {
+    border-top: 3px solid #e67e22;
+}
+
+/* Products section styling */
+.devis-tab-container .section-products {
+    border-left: 3px solid #28a745;
+}
+
+/* Totals row - compact horizontal */
+.devis-tab-container .totals-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.devis-tab-container .total-box {
+    flex: 1;
+    min-width: 100px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.devis-tab-container .total-box .total-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+.devis-tab-container .total-box .total-value {
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+.devis-tab-container .total-box.total-ht {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.devis-tab-container .total-box.total-ttc {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+}
+
+.devis-tab-container .total-box.total-acompte {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+}
+
+.devis-tab-container .total-box.total-solde {
+    background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+    color: white;
+}
+
+/* Quotes bar - horizontal compact */
+.devis-tab-container .quotes-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border: 1px solid #e0e0e0;
+    flex-wrap: wrap;
+}
+
+.devis-tab-container .quotes-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #667eea;
+    white-space: nowrap;
+}
+
+.devis-tab-container .quotes-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.devis-tab-container .quote-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid transparent;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+}
+
+.devis-tab-container .quote-chip:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.devis-tab-container .quote-chip.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #4a5fc1;
+}
+
+.devis-tab-container .quote-chip .chip-no {
+    font-weight: 600;
+}
+
+.devis-tab-container .quote-chip .chip-date {
+    opacity: 0.7;
+    font-size: 11px;
+}
+
+.devis-tab-container .quote-chip .chip-total {
+    opacity: 0.85;
+}
+
+/* PDF templates - horizontal compact */
+.devis-tab-container .pdf-templates-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.devis-tab-container .pdf-template-item {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 20px;
+}
+
+/* Compact actions bar */
+.devis-tab-container .actions-bar {
+    padding: 15px;
+    margin-top: 15px;
+}
+
+/* Products table compact */
+.devis-tab-container .data-table th,
+.devis-tab-container .data-table td {
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+@media (max-width: 992px) {
+    .devis-tab-container .form-row-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .devis-tab-container .forfait-products-row {
+        grid-template-columns: 1fr;
+    }
+
+    .devis-tab-container .section-products {
+        border-left: none;
+        border-top: 3px solid #28a745;
+    }
+}
+
+@media (max-width: 576px) {
+    .devis-tab-container .form-row-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .devis-tab-container .form-row-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .devis-tab-container .totals-row {
+        flex-direction: column;
+    }
+
+    .devis-tab-container .quotes-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .devis-tab-container .quotes-chips {
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+var unifiedAllProducts = {$PRODUCTS_JSON};
+var unifiedPotentialId = {$POTENTIAL_ID};
+var unifiedContactId = {$CONTACT_ID|default:0};
+var unifiedCsrfToken = '{$CSRF_TOKEN}';
+</script>
