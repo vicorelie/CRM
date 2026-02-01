@@ -30,8 +30,9 @@
                 </button>
             {/if}
             {foreach item=DETAIL_VIEW_BASIC_LINK from=$DETAILVIEW_LINKS['DETAILVIEWBASIC']}
-                <button class="btn {if $DETAIL_VIEW_BASIC_LINK->getLabel() eq 'LBL_GENERATE_QUOTE'}btn-generate-quote{else}btn-default{/if}" id="{$MODULE_NAME}_detailView_basicAction_{Vtiger_Util_Helper::replaceSpaceWithUnderScores($DETAIL_VIEW_BASIC_LINK->getLabel())}"
-                        {if $DETAIL_VIEW_BASIC_LINK->getLabel() eq 'LBL_GENERATE_QUOTE'}style="background: #8e44ad; border-color: #8e44ad; color: white;"{/if}
+                {* Hide "Générer un devis" button - functionality available in "Gestion client" *}
+                {if $DETAIL_VIEW_BASIC_LINK->getLabel() neq 'LBL_GENERATE_QUOTE'}
+                <button class="btn btn-default" id="{$MODULE_NAME}_detailView_basicAction_{Vtiger_Util_Helper::replaceSpaceWithUnderScores($DETAIL_VIEW_BASIC_LINK->getLabel())}"
                         {if $DETAIL_VIEW_BASIC_LINK->isPageLoadLink()}
                             onclick="window.location.href = '{$DETAIL_VIEW_BASIC_LINK->getUrl()}&app={$SELECTED_MENU_CATEGORY}'"
                         {else}
@@ -42,17 +43,25 @@
                         {/if}>
                     {vtranslate($DETAIL_VIEW_BASIC_LINK->getLabel(), $MODULE_NAME)}
                 </button>
+                {/if}
             {/foreach}
 
-            {* Bouton Visualiser Trajet *}
+            {* Bouton Vue Unifiée - Combine Details, Devis, Map et Inventaire *}
+            <button class="btn" id="unified-view-button"
+                    onclick="window.location.href='index.php?module=Potentials&view=Unified&record={$RECORD->getId()}&app={$SELECTED_MENU_CATEGORY}'"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; font-weight: 600; padding: 8px 15px;">
+                <i class="fa fa-th-large"></i> Gestion client
+            </button>
+
+            {* Boutons masqués - fonctionnalités disponibles dans "Gestion client" *}
+            {*
             <button class="btn btn-success" id="visualiser-trajet-button" onclick="window.open('visualiser_trajet.php?record={$RECORD->getId()}', 'trajet_window', 'width=1400,height=900,scrollbars=yes,resizable=yes'); return false;">
                 <i class="fa fa-map-marker"></i> Visualiser Trajet
             </button>
-
-            {* Bouton Inventaire *}
             <button class="btn" id="inventory-button" onclick="window.open('inventaire_popup.php?record={$RECORD->getId()}', 'inventory_popup', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;" style="background-color: #667EEA !important; border-color: #667EEA !important; color: white;">
                 <i class="fa fa-archive"></i> Inventaire
             </button>
+            *}
             {if !empty($DETAILVIEW_LINKS['DETAILVIEW']) && ($DETAILVIEW_LINKS['DETAILVIEW']|@count gt 0)}
                 <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
                    {vtranslate('LBL_MORE', $MODULE_NAME)}&nbsp;&nbsp;<i class="caret"></i>

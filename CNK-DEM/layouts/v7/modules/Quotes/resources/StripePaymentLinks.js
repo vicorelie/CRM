@@ -245,25 +245,28 @@ function renderStripePaymentsContent(recordId, data) {
                 paymentLink = paymentLink + separator + 'prefilled_email=' + encodeURIComponent(contactEmail);
             }
 
+            // Style commun pour les petits boutons d'action
+            var smallBtnStyle = 'padding: 2px 5px; font-size: 11px; line-height: 1.2;';
+
             // Bouton de suppression seulement si le paiement n'est pas déjà payé
             var deleteBtn = (payment.status !== 'paid')
-                ? `<button class="btn btn-xs btn-danger deletePaymentBtn" data-id="${payment.id}" data-record="${recordId}" title="Supprimer"><i class="fa fa-trash"></i></button>`
+                ? `<button class="btn btn-xs btn-danger deletePaymentBtn" style="${smallBtnStyle}" data-id="${payment.id}" data-record="${recordId}" title="Supprimer"><i class="fa fa-trash"></i></button>`
                 : '';
 
             // Bouton de modification de statut
-            var changeStatusBtn = `<button class="btn btn-xs btn-warning changeStatusBtn" data-id="${payment.id}" data-record="${recordId}" data-status="${payment.status}" title="Modifier le statut"><i class="fa fa-edit"></i></button>`;
+            var changeStatusBtn = `<button class="btn btn-xs btn-warning changeStatusBtn" style="${smallBtnStyle}" data-id="${payment.id}" data-record="${recordId}" data-status="${payment.status}" title="Modifier le statut"><i class="fa fa-edit"></i></button>`;
 
             var linkHtml = '';
             if (paymentLink) {
-                linkHtml = `<a href="${paymentLink}" target="_blank" class="btn btn-xs btn-info" title="Ouvrir le lien"><i class="fa fa-external-link"></i></a>
-                   <button class="btn btn-xs btn-default copyLinkBtn" data-link="${paymentLink}" title="Copier le lien"><i class="fa fa-copy"></i></button>
-                   <button class="btn btn-xs btn-primary sendEmailBtn" data-link="${paymentLink}" data-amount="${payment.amount}" data-description="${payment.description || 'Paiement'}" data-record="${recordId}" title="Envoyer par email"><i class="fa fa-envelope"></i></button>`;
+                linkHtml = `<a href="${paymentLink}" target="_blank" class="btn btn-xs btn-info" style="${smallBtnStyle}" title="Ouvrir le lien"><i class="fa fa-external-link"></i></a>
+                   <button class="btn btn-xs btn-default copyLinkBtn" style="${smallBtnStyle}" data-link="${paymentLink}" title="Copier le lien"><i class="fa fa-copy"></i></button>
+                   <button class="btn btn-xs btn-primary sendEmailBtn" style="${smallBtnStyle}" data-link="${paymentLink}" data-amount="${payment.amount}" data-description="${payment.description || 'Paiement'}" data-record="${recordId}" title="Envoyer par email"><i class="fa fa-envelope"></i></button>`;
             }
 
             // Bouton facture PDF (si une facture est liée au paiement)
             var invoiceBtn = '';
             if (payment.invoice_id) {
-                invoiceBtn = `<a href="index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF&source_module=Invoice&formodule=Invoice&record=${payment.invoice_id}&pdftemplateid=26" target="_blank" class="btn btn-xs btn-success" title="Voir la facture PDF"><i class="fa fa-file-pdf-o"></i></a>`;
+                invoiceBtn = `<a href="index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF&source_module=Invoice&formodule=Invoice&record=${payment.invoice_id}&pdftemplateid=26" target="_blank" class="btn btn-xs btn-success" style="${smallBtnStyle}" title="Voir la facture PDF"><i class="fa fa-file-pdf-o"></i></a>`;
             }
             linkHtml += ` ${invoiceBtn} ${changeStatusBtn} ${deleteBtn}`;
 
