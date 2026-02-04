@@ -10,6 +10,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		// Expose AJAX methods
 		$this->exposeMethod('getBDCList');
 		$this->exposeMethod('createBDCFromQuote');
+		$this->exposeMethod('getQuoteData');
+		$this->exposeMethod('getSalesOrderData');
+		$this->exposeMethod('getVendorAddress');
 	}
 
 	/**
@@ -76,6 +79,10 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 
 				case 'inventaire':
 					echo $this->renderInventaireTab($viewer, $recordModel);
+					break;
+
+				case 'odm':
+					echo $this->renderODMTab($viewer, $recordModel);
 					break;
 
 				default:
@@ -284,6 +291,143 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 	}
 
 	/**
+	 * Render the ODM (Bon de Commande) tab content
+	 */
+	private function renderODMTab($viewer, $recordModel) {
+		$db = PearDatabase::getInstance();
+		$recordId = $recordModel->getId();
+		$contactId = $recordModel->get('contact_id');
+
+		// Get current user
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$currentUserId = $currentUser->getId();
+		$isAdmin = ($currentUser->get('is_admin') === 'on');
+
+		// Load only VALIDATED quotes (cf_1162 = '1')
+		$validatedQuotes = [];
+		$quotesQuery = "SELECT q.quoteid, q.quote_no, q.subject, q.quotestage, q.total,
+						qcf.cf_1125, qcf.cf_1127, qcf.cf_1129, qcf.cf_1139, qcf.cf_1162,
+						qcf.cf_1055, qcf.cf_1057, qcf.cf_1269,
+						DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+						FROM vtiger_quotes q
+						LEFT JOIN vtiger_quotescf qcf ON qcf.quoteid = q.quoteid
+						INNER JOIN vtiger_crmentity c ON c.crmid = q.quoteid
+						WHERE q.potentialid = ? AND c.deleted = 0 AND qcf.cf_1162 = '1'
+						ORDER BY c.createdtime DESC";
+		$result = $db->pquery($quotesQuery, [$recordId]);
+		while($row = $db->fetchByAssoc($result)) {
+			$validatedQuotes[] = $row;
+		}
+
+		// Load existing SalesOrders for this Potential with custom fields
+		$salesOrders = [];
+		$soQuery = "SELECT so.salesorderid, so.salesorder_no, so.subject, so.sostatus, so.total,
+					socf.cf_1186, socf.cf_1180, socf.cf_1182, socf.cf_1184, socf.cf_1170,
+					socf.cf_1166, socf.cf_1168,
+					DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+					FROM vtiger_salesorder so
+					LEFT JOIN vtiger_salesordercf socf ON socf.salesorderid = so.salesorderid
+					INNER JOIN vtiger_crmentity c ON c.crmid = so.salesorderid
+					WHERE so.potentialid = ? AND c.deleted = 0
+					ORDER BY c.createdtime DESC";
+		$result = $db->pquery($soQuery, [$recordId]);
+		while($row = $db->fetchByAssoc($result)) {
+			$salesOrders[] = $row;
+		}
+
+		// Load products for product search
+		$products = [];
+		$productsQuery = "SELECT p.productid as id, p.productname, p.unit_price,
+						 COALESCE(pcf.cf_1051, 43) as pct_acompte,
+						 COALESCE(pcf.cf_1053, 57) as pct_solde
+						 FROM vtiger_products p
+						 INNER JOIN vtiger_crmentity c ON c.crmid = p.productid
+						 LEFT JOIN vtiger_productcf pcf ON pcf.productid = p.productid
+						 WHERE c.deleted = 0 ORDER BY p.productname ASC";
+		$result = $db->pquery($productsQuery, []);
+		while($row = $db->fetchByAssoc($result)) {
+			$products[] = [
+				'id' => $row['id'],
+				'productname' => $row['productname'],
+				'unit_price' => $row['unit_price'],
+				'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
+				'pct_solde' => floatval($row['pct_solde']) ?: 57
+			];
+		}
+
+		// Load Vendors (Prestataires)
+		$vendors = [];
+		$vendorsQuery = "SELECT v.vendorid, v.vendorname
+						 FROM vtiger_vendor v
+						 INNER JOIN vtiger_crmentity c ON c.crmid = v.vendorid
+						 WHERE c.deleted = 0
+						 ORDER BY v.vendorname ASC";
+		$result = $db->pquery($vendorsQuery, []);
+		while($row = $db->fetchByAssoc($result)) {
+			$vendors[] = [
+				'id' => $row['vendorid'],
+				'name' => $row['vendorname']
+			];
+		}
+
+		// Get CSRF token
+		include_once 'libraries/csrf-magic/csrf-magic.php';
+		$csrfToken = function_exists('csrf_get_tokens') ? csrf_get_tokens() : '';
+
+		// Load CHARGEMENT and LIVRAISON data from Potential
+		$potentialData = [
+			// Dates
+			'cf_1043' => $recordModel->get('cf_1043'), // Date déménagement chargement
+			'cf_1045' => $recordModel->get('cf_1045'), // Période début
+			'cf_1047' => $recordModel->get('cf_1047'), // Période fin
+			'cf_1049' => $recordModel->get('cf_1049'), // Date déménagement livraison
+			// Volume et Distance
+			'cf_961' => $recordModel->get('cf_961'),   // Distance
+			'cf_939' => $recordModel->get('cf_939'),   // Volume inventaire
+			'cf_1259' => $recordModel->get('cf_1259'), // Volume final
+			// CHARGEMENT
+			'cf_955' => $recordModel->get('cf_955'),   // Adresse chargement
+			'cf_933' => $recordModel->get('cf_933'),   // Ville chargement
+			'cf_935' => $recordModel->get('cf_935'),   // Code postal chargement
+			'cf_1097' => $recordModel->get('cf_1097'), // Type logement chargement
+			'cf_1011' => $recordModel->get('cf_1011'), // Etage chargement
+			'cf_1075' => $recordModel->get('cf_1075'), // Ascenseur chargement
+			'cf_1019' => $recordModel->get('cf_1019'), // Escaliers chargement
+			'cf_1067' => $recordModel->get('cf_1067'), // Transbordement chargement
+			'cf_1023' => $recordModel->get('cf_1023'), // Distance portage chargement
+			'cf_1091' => $recordModel->get('cf_1091'), // Demande stationnement chargement
+			'cf_1071' => $recordModel->get('cf_1071'), // Passage fenêtre chargement
+			'cf_1035' => $recordModel->get('cf_1035'), // Monte meuble chargement
+			// LIVRAISON
+			'cf_957' => $recordModel->get('cf_957'),   // Adresse livraison
+			'cf_949' => $recordModel->get('cf_949'),   // Ville livraison
+			'cf_951' => $recordModel->get('cf_951'),   // Code postal livraison
+			'cf_1009' => $recordModel->get('cf_1009'), // Type logement livraison
+			'cf_1013' => $recordModel->get('cf_1013'), // Etage livraison
+			'cf_1077' => $recordModel->get('cf_1077'), // Ascenseur livraison
+			'cf_1021' => $recordModel->get('cf_1021'), // Escaliers livraison
+			'cf_1069' => $recordModel->get('cf_1069'), // Transbordement livraison
+			'cf_1025' => $recordModel->get('cf_1025'), // Distance portage livraison
+			'cf_1089' => $recordModel->get('cf_1089'), // Demande stationnement livraison
+			'cf_1073' => $recordModel->get('cf_1073'), // Passage fenêtre livraison
+			'cf_1037' => $recordModel->get('cf_1037'), // Monte meuble livraison
+		];
+
+		$viewer->assign('POTENTIAL_ID', $recordId);
+		$viewer->assign('CONTACT_ID', $contactId);
+		$viewer->assign('CURRENT_USER_ID', $currentUserId);
+		$viewer->assign('IS_ADMIN', $isAdmin);
+		$viewer->assign('VALIDATED_QUOTES', $validatedQuotes);
+		$viewer->assign('SALESORDERS', $salesOrders);
+		$viewer->assign('PRODUCTS_JSON', json_encode($products));
+		$viewer->assign('VENDORS', $vendors);
+		$viewer->assign('CSRF_TOKEN', $csrfToken);
+		$viewer->assign('POTENTIAL_DATA', $potentialData);
+
+		return $viewer->view('UnifiedODMTab.tpl', 'Potentials', true);
+	}
+
+	/**
 	 * Get list of SalesOrders (BDC) for a Quote
 	 */
 	public function getBDCList(Vtiger_Request $request) {
@@ -334,6 +478,258 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 	}
 
 	/**
+	 * Get Quote data for ODM tab display
+	 */
+	public function getQuoteData(Vtiger_Request $request) {
+		header('Content-Type: application/json');
+		$db = PearDatabase::getInstance();
+		$quoteId = $request->get('quoteId');
+
+		if (empty($quoteId)) {
+			echo json_encode(['success' => false, 'error' => 'Quote ID manquant']);
+			return;
+		}
+
+		try {
+			// Get Quote via RecordModel (more reliable)
+			$quoteModel = Vtiger_Record_Model::getInstanceById($quoteId, 'Quotes');
+
+			if (!$quoteModel || !$quoteModel->getId()) {
+				echo json_encode(['success' => false, 'error' => 'Devis non trouvé']);
+				return;
+			}
+
+			// Build quote data from model
+			$quoteData = [
+				'quoteid' => $quoteModel->getId(),
+				'quote_no' => $quoteModel->get('quote_no'),
+				'subject' => $quoteModel->get('subject'),
+				'total' => $quoteModel->get('hdnGrandTotal'),
+				'subtotal' => $quoteModel->get('hdnSubTotal'),
+				'createdtime' => date('d/m/Y', strtotime($quoteModel->get('createdtime'))),
+				// Custom fields - Forfait
+				'cf_1125' => $quoteModel->get('cf_1125'), // Type formule
+				'cf_1269' => $quoteModel->get('cf_1269'), // Type déménagement
+				'cf_1127' => $quoteModel->get('cf_1127'), // Tarif forfait
+				'cf_1129' => $quoteModel->get('cf_1129'), // Supplément forfait
+				'cf_1131' => $quoteModel->get('cf_1131'), // Description forfait
+				'cf_1133' => $quoteModel->get('cf_1133'), // % acompte
+				'cf_1135' => $quoteModel->get('cf_1135'), // % solde
+				'cf_1137' => $quoteModel->get('cf_1137'), // Total forfait
+				// Custom fields - Assurance
+				'cf_1139' => $quoteModel->get('cf_1139'), // Montant assurance
+				'cf_1141' => $quoteModel->get('cf_1141'), // Tarif pour 1000
+				'cf_1143' => $quoteModel->get('cf_1143'), // Tarif assurance
+				'cf_1145' => $quoteModel->get('cf_1145'), // Description assurance
+				// Custom fields - Totals
+				'cf_1055' => $quoteModel->get('cf_1055'), // Total acompte
+				'cf_1057' => $quoteModel->get('cf_1057'), // Total solde
+				'cf_1162' => $quoteModel->get('cf_1162'), // Validé
+				// Prestataire
+				'prestataire' => $quoteModel->get('prestataire'), // Vendor/Prestataire
+			];
+
+			// Get products from inventory with percentages
+			$productsQuery = "SELECT ivp.productid, ivp.quantity, ivp.listprice, ivp.discount_percent,
+							  ivp.discount_amount, ivp.comment, ivp.description, ivp.lineitem_id,
+							  p.productname,
+							  COALESCE(pcf.cf_1051, 43) as pct_acompte,
+							  COALESCE(pcf.cf_1053, 57) as pct_solde,
+							  (ivp.quantity * ivp.listprice - COALESCE(ivp.discount_amount, 0)
+							   - (ivp.quantity * ivp.listprice * COALESCE(ivp.discount_percent, 0) / 100)) as netprice
+							  FROM vtiger_inventoryproductrel ivp
+							  LEFT JOIN vtiger_products p ON p.productid = ivp.productid
+							  LEFT JOIN vtiger_productcf pcf ON pcf.productid = ivp.productid
+							  WHERE ivp.id = ? AND ivp.productid > 0
+							  ORDER BY ivp.sequence_no";
+			$productsResult = $db->pquery($productsQuery, [$quoteId]);
+
+			$products = [];
+			while ($row = $db->fetchByAssoc($productsResult)) {
+				$products[] = [
+					'productid' => $row['productid'],
+					'productname' => $row['productname'] ?: $row['description'],
+					'quantity' => floatval($row['quantity']),
+					'listprice' => floatval($row['listprice']),
+					'netprice' => floatval($row['netprice']),
+					'discount_percent' => floatval($row['discount_percent']),
+					'discount_amount' => floatval($row['discount_amount']),
+					'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
+					'pct_solde' => floatval($row['pct_solde']) ?: 57
+				];
+			}
+
+			$quoteData['products'] = $products;
+			$quoteData['hdnSubTotal'] = floatval($quoteData['subtotal']);
+			$quoteData['hdnGrandTotal'] = floatval($quoteData['total']);
+
+			echo json_encode(['success' => true, 'data' => $quoteData]);
+
+		} catch (Exception $e) {
+			error_log('[UnifiedTabAjax] getQuoteData error: ' . $e->getMessage());
+			echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Get SalesOrder (BDC) data for editing in UnifiedODM tab
+	 */
+	public function getSalesOrderData(Vtiger_Request $request) {
+		header('Content-Type: application/json');
+		$db = PearDatabase::getInstance();
+		$salesOrderId = $request->get('salesorder_id');
+
+		if (empty($salesOrderId)) {
+			echo json_encode(['success' => false, 'message' => 'SalesOrder ID manquant']);
+			return;
+		}
+
+		try {
+			// Use RecordModel to get data
+			$soModel = Vtiger_Record_Model::getInstanceById($salesOrderId, 'SalesOrder');
+
+			$soData = [
+				'salesorderid' => $salesOrderId,
+				'salesorder_no' => $soModel->get('salesorder_no'),
+				'subject' => $soModel->get('subject'),
+				'sostatus' => $soModel->get('sostatus'),
+				'duedate' => $soModel->get('duedate'),
+				'potential_id' => $soModel->get('potential_id'),
+				'contact_id' => $soModel->get('contact_id'),
+				'quote_id' => $soModel->get('quote_id'),
+				'prestataire' => $soModel->get('prestataire'),
+				'subtotal' => $soModel->get('hdnSubTotal'),
+				'total' => $soModel->get('hdnGrandTotal'),
+				// Custom fields - Forfait
+				'cf_1186' => $soModel->get('cf_1186'), // Type de forfait
+				'cf_1180' => $soModel->get('cf_1180'), // Tarif forfait
+				'cf_1182' => $soModel->get('cf_1182'), // Supplément forfait
+				'cf_1184' => $soModel->get('cf_1184'), // Total forfait
+				// Custom fields - Assurance
+				'cf_1170' => $soModel->get('cf_1170'), // Montant assurance
+				'cf_1172' => $soModel->get('cf_1172'), // Tarif pour 1000
+				'cf_1174' => $soModel->get('cf_1174'), // Tarif assurance calculé
+				// Custom fields - Percentages and descriptions
+				'cf_1176' => $soModel->get('cf_1176'), // % Acompte
+				'cf_1178' => $soModel->get('cf_1178'), // % Solde
+				'cf_1188' => $soModel->get('cf_1188'), // Description forfait
+				'cf_1190' => $soModel->get('cf_1190'), // Description assurance
+				// Custom fields - Totals
+				'cf_1166' => $soModel->get('cf_1166'), // Total acompte
+				'cf_1168' => $soModel->get('cf_1168'), // Total solde
+				// Custom fields - Dates
+				'cf_1309' => $soModel->get('cf_1309'), // Date chargement
+				'cf_1310' => $soModel->get('cf_1310'), // Période début
+				'cf_1311' => $soModel->get('cf_1311'), // Période fin
+				'cf_1324' => $soModel->get('cf_1324'), // Date livraison
+				// Custom fields - Volumes
+				'cf_1349' => $soModel->get('cf_1349'), // Vol. final
+				'cf_1350' => $soModel->get('cf_1350'), // Distance
+				'cf_1351' => $soModel->get('cf_1351'), // Vol. inventaire
+				// Custom fields - CHARGEMENT
+				'cf_1312' => $soModel->get('cf_1312'), // Adresse chargement
+				'cf_1313' => $soModel->get('cf_1313'), // Ville chargement
+				'cf_1314' => $soModel->get('cf_1314'), // CP chargement
+				'cf_1315' => $soModel->get('cf_1315'), // Type logement chargement
+				'cf_1316' => $soModel->get('cf_1316'), // Etage chargement
+				'cf_1317' => $soModel->get('cf_1317'), // Ascenseur chargement
+				'cf_1318' => $soModel->get('cf_1318'), // Escaliers chargement
+				'cf_1319' => $soModel->get('cf_1319'), // Transbordement chargement
+				'cf_1320' => $soModel->get('cf_1320'), // Distance portage chargement
+				'cf_1321' => $soModel->get('cf_1321'), // Demande stationnement chargement
+				'cf_1322' => $soModel->get('cf_1322'), // Passage fenêtre chargement
+				'cf_1323' => $soModel->get('cf_1323'), // Monte meuble chargement
+				// Custom fields - LIVRAISON
+				'cf_1325' => $soModel->get('cf_1325'), // Adresse livraison
+				'cf_1326' => $soModel->get('cf_1326'), // Ville livraison
+				'cf_1327' => $soModel->get('cf_1327'), // CP livraison
+				'cf_1328' => $soModel->get('cf_1328'), // Type logement livraison
+				'cf_1329' => $soModel->get('cf_1329'), // Etage livraison
+				'cf_1330' => $soModel->get('cf_1330'), // Ascenseur livraison
+				'cf_1331' => $soModel->get('cf_1331'), // Escaliers livraison
+				'cf_1332' => $soModel->get('cf_1332'), // Transbordement livraison
+				'cf_1333' => $soModel->get('cf_1333'), // Distance portage livraison
+				'cf_1334' => $soModel->get('cf_1334'), // Demande stationnement livraison
+				'cf_1335' => $soModel->get('cf_1335'), // Passage fenêtre livraison
+				'cf_1336' => $soModel->get('cf_1336'), // Monte meuble livraison
+				// Type de déménagement
+				'cf_1352' => $soModel->get('cf_1352'), // Type de déménagement
+			];
+
+			// Get products from inventory with percentages
+			$productsQuery = "SELECT ivp.productid, ivp.quantity, ivp.listprice, ivp.discount_percent,
+							  ivp.discount_amount, ivp.comment, ivp.description, ivp.lineitem_id,
+							  p.productname,
+							  COALESCE(pcf.cf_1051, 43) as pct_acompte,
+							  COALESCE(pcf.cf_1053, 57) as pct_solde,
+							  (ivp.quantity * ivp.listprice - COALESCE(ivp.discount_amount, 0)
+							   - (ivp.quantity * ivp.listprice * COALESCE(ivp.discount_percent, 0) / 100)) as netprice
+							  FROM vtiger_inventoryproductrel ivp
+							  LEFT JOIN vtiger_products p ON p.productid = ivp.productid
+							  LEFT JOIN vtiger_productcf pcf ON pcf.productid = ivp.productid
+							  WHERE ivp.id = ? AND ivp.productid > 0
+							  ORDER BY ivp.sequence_no";
+			$productsResult = $db->pquery($productsQuery, [$salesOrderId]);
+
+			$products = [];
+			while ($row = $db->fetchByAssoc($productsResult)) {
+				$products[] = [
+					'productid' => $row['productid'],
+					'productname' => $row['productname'] ?: $row['description'],
+					'quantity' => floatval($row['quantity']),
+					'listprice' => floatval($row['listprice']),
+					'netprice' => floatval($row['netprice']),
+					'discount_percent' => floatval($row['discount_percent']),
+					'discount_amount' => floatval($row['discount_amount']),
+					'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
+					'pct_solde' => floatval($row['pct_solde']) ?: 57
+				];
+			}
+
+			$soData['products'] = $products;
+			$soData['hdnSubTotal'] = floatval($soData['subtotal']);
+			$soData['hdnGrandTotal'] = floatval($soData['total']);
+
+			echo json_encode(['success' => true, 'data' => $soData]);
+
+		} catch (Exception $e) {
+			error_log('[UnifiedTabAjax] getSalesOrderData error: ' . $e->getMessage());
+			echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Get Vendor (Prestataire) address for billing
+	 */
+	public function getVendorAddress(Vtiger_Request $request) {
+		header('Content-Type: application/json');
+		$vendorId = $request->get('vendor_id');
+
+		if (empty($vendorId)) {
+			echo json_encode(['success' => false, 'error' => 'Vendor ID manquant']);
+			return;
+		}
+
+		try {
+			$vendorModel = Vtiger_Record_Model::getInstanceById($vendorId, 'Vendors');
+
+			$addressData = [
+				'street' => $vendorModel->get('street') ?: '',
+				'city' => $vendorModel->get('city') ?: '',
+				'state' => $vendorModel->get('state') ?: '',
+				'postalcode' => $vendorModel->get('postalcode') ?: '',
+				'country' => $vendorModel->get('country') ?: ''
+			];
+
+			echo json_encode(['success' => true, 'data' => $addressData]);
+
+		} catch (Exception $e) {
+			error_log('[UnifiedTabAjax] getVendorAddress error: ' . $e->getMessage());
+			echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
 	 * Create a SalesOrder (BDC) from a Quote
 	 */
 	public function createBDCFromQuote(Vtiger_Request $request) {
@@ -357,6 +753,18 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$quoteTotalsResult = $db->pquery($quoteTotalsQuery, [$quoteId]);
 			$quoteTotals = $db->fetchByAssoc($quoteTotalsResult);
 
+			// Get Potential name for subject
+			$potentialId = $quoteModel->get('potential_id');
+			$potentialName = '';
+			if ($potentialId) {
+				try {
+					$potentialModel = Vtiger_Record_Model::getInstanceById($potentialId, 'Potentials');
+					$potentialName = $potentialModel->get('potentialname');
+				} catch (Exception $e) {
+					// Keep empty if potential not found
+				}
+			}
+
 			// Get Contact address for billing
 			$contactId = $quoteModel->get('contact_id');
 			$billStreet = $billCity = $billState = $billCode = $billCountry = '';
@@ -374,12 +782,28 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				}
 			}
 
+			// Get Prestataire (Vendor) address for billing if available
+			$prestataireId = $quoteModel->get('prestataire');
+			if ($prestataireId) {
+				try {
+					$vendorModel = Vtiger_Record_Model::getInstanceById($prestataireId, 'Vendors');
+					$billStreet = $vendorModel->get('street');
+					$billCity = $vendorModel->get('city');
+					$billState = $vendorModel->get('state');
+					$billCode = $vendorModel->get('postalcode');
+					$billCountry = $vendorModel->get('country');
+				} catch (Exception $e) {
+					// Keep contact address if vendor not found
+				}
+			}
+
 			// Create new SalesOrder
 			$salesOrderModel = Vtiger_Record_Model::getCleanInstance('SalesOrder');
 
-			// Copy basic fields from Quote
-			$salesOrderModel->set('subject', $quoteModel->get('subject'));
-			$salesOrderModel->set('potential_id', $quoteModel->get('potential_id'));
+			// Set subject as "Ord-" + potential name
+			$subject = $potentialName ? 'Ord-' . $potentialName : $quoteModel->get('subject');
+			$salesOrderModel->set('subject', $subject);
+			$salesOrderModel->set('potential_id', $potentialId);
 			$salesOrderModel->set('contact_id', $contactId);
 			$salesOrderModel->set('account_id', $quoteModel->get('account_id'));
 			$salesOrderModel->set('quote_id', $quoteId);
@@ -388,7 +812,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$salesOrderModel->set('conversion_rate', $quoteTotals['conversion_rate'] ?: 1);
 			$salesOrderModel->set('assigned_user_id', $quoteModel->get('assigned_user_id'));
 
-			// Set billing address from Contact
+			// Set billing address
 			$salesOrderModel->set('bill_street', $billStreet);
 			$salesOrderModel->set('bill_city', $billCity);
 			$salesOrderModel->set('bill_state', $billState);
@@ -401,6 +825,32 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$salesOrderModel->set('ship_state', $quoteModel->get('ship_state'));
 			$salesOrderModel->set('ship_code', $quoteModel->get('ship_code'));
 			$salesOrderModel->set('ship_country', $quoteModel->get('ship_country'));
+
+			// Copy custom fields from Quote to SalesOrder (same mapping as Inventory/views/Edit.php)
+			$fieldMapping = array(
+				'cf_1125' => 'cf_1186',  // TYPE DE FORFAIT
+				'cf_1127' => 'cf_1180',  // TARIF FORFAIT
+				'cf_1129' => 'cf_1182',  // SUPPLÉMENT FORFAIT
+				'cf_1131' => 'cf_1188',  // DESCRIPTION FORFAIT
+				'cf_1137' => 'cf_1184',  // TOTAL FORFAIT
+				'cf_1133' => 'cf_1176',  // POURCENTAGE ACOMPTE FORFAIT
+				'cf_1135' => 'cf_1178',  // POURCENTAGE SOLDE FORFAIT
+				'cf_1139' => 'cf_1170',  // MONTANT ASSURANCE
+				'cf_1141' => 'cf_1172',  // TARIF POUR 1000
+				'cf_1143' => 'cf_1174',  // TARIF ASSURANCE
+				'cf_1145' => 'cf_1190',  // DESCRIPTION ASSURANCE
+				'cf_1055' => 'cf_1166',  // TOTAL ACOMPTE
+				'cf_1057' => 'cf_1168',  // TOTAL SOLDE
+				'prestataire' => 'prestataire',  // PRESTATAIRE
+				'cf_1269' => 'cf_1352',  // TYPE DE DÉMÉNAGEMENT
+			);
+
+			foreach ($fieldMapping as $sourceField => $targetField) {
+				$value = $quoteModel->get($sourceField);
+				if ($value !== null && $value !== '') {
+					$salesOrderModel->set($targetField, $value);
+				}
+			}
 
 			// Save the SalesOrder first
 			$salesOrderModel->save();

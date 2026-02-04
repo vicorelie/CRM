@@ -71,10 +71,16 @@
                 return;
             }
 
-            console.log('[UnifiedView] Loading tab:', tabName);
+            console.log('[UnifiedView] Loading tab:', tabName, 'forceReload:', forceReload);
+
+            // Show loading indicator if reloading
+            if (forceReload) {
+                tabPane.html('<div class="tab-loader" style="padding: 40px; text-align: center;"><i class="fa fa-spinner fa-spin fa-2x"></i><br><br>Chargement...</div>');
+            }
 
             // Use dedicated AJAX view for loading tab content
-            var ajaxUrl = 'index.php?module=Potentials&view=UnifiedTabAjax&record=' + this.recordId + '&tab=' + tabName;
+            // Add timestamp to prevent any caching
+            var ajaxUrl = 'index.php?module=Potentials&view=UnifiedTabAjax&record=' + this.recordId + '&tab=' + tabName + '&_t=' + Date.now();
 
             console.log('[UnifiedView] AJAX URL:', ajaxUrl);
 
@@ -147,6 +153,15 @@
                         UnifiedInventaire.init();
                     } else {
                         console.error('[UnifiedView] UnifiedInventaire not defined!');
+                    }
+                    break;
+
+                case 'odm':
+                    console.log('[UnifiedView] Initializing ODM tab');
+                    if (window.UnifiedODM) {
+                        UnifiedODM.init(this.recordId);
+                    } else {
+                        console.error('[UnifiedView] UnifiedODM not defined!');
                     }
                     break;
             }
@@ -2026,6 +2041,763 @@
             // Reload the tab to discard changes
             UnifiedTabbedView.loadedTabs['inventaire'] = false;
             UnifiedTabbedView.loadTabContent('inventaire');
+        }
+    };
+
+    /**
+     * UnifiedODM - Handles ODM (Ordre de Mission / Bon de Commande) tab functionality
+     * Uses same embedded form design as UnifiedDevis
+     */
+    window.UnifiedODM = {
+        potentialId: null,
+        contactId: null,
+        csrfToken: null,
+        selectedProducts: {},
+        productCounter: 0,
+        TVA_RATE: 1.20,
+        currentSOId: null,
+        sourceQuoteId: null,
+        quoteData: null,  // Store quote data for copying fields to BDC
+
+        /**
+         * Initialize the ODM tab
+         */
+        init: function(recordId) {
+            var self = this;
+            this.potentialId = recordId;
+            this.contactId = typeof odmContactId !== 'undefined' ? odmContactId : 0;
+            this.csrfToken = typeof odmCsrfToken !== 'undefined' ? odmCsrfToken : '';
+            console.log('[UnifiedODM] Initialized for record:', recordId);
+
+            // Initialize product search
+            this.initProductSearch();
+
+            // Initialize field change listeners for calculations
+            this.initFieldListeners();
+        },
+
+        /**
+         * Initialize product search functionality
+         */
+        initProductSearch: function() {
+            var self = this;
+            var searchInput = jQuery('#odm_productSearch');
+            var resultsDiv = jQuery('#odm_productResults');
+
+            if (searchInput.length === 0) return;
+
+            searchInput.on('input', function() {
+                var query = jQuery(this).val().toLowerCase();
+                if (query.length < 2) {
+                    resultsDiv.hide();
+                    return;
+                }
+
+                var products = typeof odmAllProducts !== 'undefined' ? odmAllProducts : [];
+                var matches = products.filter(function(p) {
+                    return p.productname.toLowerCase().indexOf(query) !== -1;
+                }).slice(0, 10);
+
+                if (matches.length === 0) {
+                    resultsDiv.hide();
+                    return;
+                }
+
+                var html = '';
+                matches.forEach(function(p) {
+                    html += '<div class="product-result" style="padding:10px;cursor:pointer;border-bottom:1px solid #eee;" data-id="' + p.id + '" data-name="' + p.productname + '" data-price="' + p.unit_price + '">';
+                    html += '<strong>' + p.productname + '</strong><br>';
+                    html += '<small style="color:#888;">' + parseFloat(p.unit_price).toFixed(2) + ' €</small>';
+                    html += '</div>';
+                });
+                resultsDiv.html(html).show();
+
+                resultsDiv.find('.product-result').on('click', function() {
+                    var id = jQuery(this).data('id');
+                    var name = jQuery(this).data('name');
+                    var price = jQuery(this).data('price');
+                    self.addProduct(id, name, price, 1);
+                    searchInput.val('');
+                    resultsDiv.hide();
+                });
+            });
+
+            // Hide results on click outside
+            jQuery(document).on('click', function(e) {
+                if (!jQuery(e.target).closest('#odm_productSearch, #odm_productResults').length) {
+                    resultsDiv.hide();
+                }
+            });
+        },
+
+        /**
+         * Initialize field listeners for calculations
+         */
+        initFieldListeners: function() {
+            var self = this;
+
+            // Forfait fields
+            jQuery('#odm_cf_1180, #odm_cf_1182').on('input change', function() {
+                self.calculateTotals();
+            });
+
+            // Assurance field
+            jQuery('#odm_cf_1170').on('change', function() {
+                self.calculateTotals();
+            });
+        },
+
+        /**
+         * Add a product to the list
+         * @param id - product ID
+         * @param name - product name
+         * @param price - unit price
+         * @param qty - quantity
+         * @param pctAcompte - percentage for acompte (default 43)
+         * @param pctSolde - percentage for solde (default 57)
+         */
+        addProduct: function(id, name, price, qty, pctAcompte, pctSolde) {
+            var self = this;
+            this.productCounter++;
+            var idx = this.productCounter;
+
+            pctAcompte = parseFloat(pctAcompte) || 43;
+            pctSolde = parseFloat(pctSolde) || 57;
+
+            this.selectedProducts[idx] = {
+                id: id,
+                name: name,
+                price: parseFloat(price),
+                qty: parseInt(qty) || 1,
+                pctAcompte: pctAcompte,
+                pctSolde: pctSolde
+            };
+
+            var row = '<tr data-idx="' + idx + '" data-pct-acompte="' + pctAcompte + '" data-pct-solde="' + pctSolde + '">';
+            row += '<td>' + name + '</td>';
+            row += '<td><input type="number" class="product-qty" value="' + qty + '" min="1" style="width:60px;"></td>';
+            row += '<td><input type="number" class="product-price" value="' + parseFloat(price).toFixed(2) + '" step="0.01" style="width:80px;"></td>';
+            row += '<td class="product-total">' + (parseFloat(price) * qty).toFixed(2) + ' €</td>';
+            row += '<td><button type="button" class="btn-remove" onclick="UnifiedODM.removeProduct(' + idx + ')"><i class="fa fa-times"></i></button></td>';
+            row += '</tr>';
+
+            jQuery('#odm_productsList').append(row);
+            jQuery('#odm_productsTable').show();
+
+            // Add event listeners for qty/price changes
+            jQuery('#odm_productsList tr[data-idx="' + idx + '"]').find('.product-qty, .product-price').on('input change', function() {
+                var tr = jQuery(this).closest('tr');
+                var newQty = parseFloat(tr.find('.product-qty').val()) || 1;
+                var newPrice = parseFloat(tr.find('.product-price').val()) || 0;
+                self.selectedProducts[idx].qty = newQty;
+                self.selectedProducts[idx].price = newPrice;
+                tr.find('.product-total').text((newQty * newPrice).toFixed(2) + ' €');
+                self.calculateTotals();
+            });
+
+            this.calculateTotals();
+        },
+
+        /**
+         * Remove a product from the list
+         */
+        removeProduct: function(idx) {
+            delete this.selectedProducts[idx];
+            jQuery('#odm_productsList tr[data-idx="' + idx + '"]').remove();
+
+            if (Object.keys(this.selectedProducts).length === 0) {
+                jQuery('#odm_productsTable').hide();
+            }
+
+            this.calculateTotals();
+        },
+
+        /**
+         * Calculate all totals
+         */
+        calculateTotals: function() {
+            // Read percentages from hidden fields (copied from quote)
+            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 43;
+            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 57;
+
+            var forfaitHT = parseFloat(jQuery('#odm_cf_1180').val()) || 0;
+            var supplementHT = parseFloat(jQuery('#odm_cf_1182').val()) || 0;
+
+            // Products totals with individual percentages
+            var produitsHT = 0;
+            var produitsAcompteHT = 0;
+            var produitsSoldeHT = 0;
+
+            jQuery('#odm_productsList tr').each(function() {
+                var row = jQuery(this);
+                var totalCell = row.find('.product-total');
+                if (totalCell.length) {
+                    var lineTotal = parseFloat(totalCell.text()) || 0;
+                    produitsHT += lineTotal;
+
+                    // Get product-specific percentages
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 43;
+                    var pctSolde = 100 - pctAcompte;
+
+                    produitsAcompteHT += lineTotal * pctAcompte / 100;
+                    produitsSoldeHT += lineTotal * pctSolde / 100;
+                }
+            });
+
+            // Assurance calculation: ((montant / 1000) - 4) * tarif_pour_1000
+            // Same formula as Save.php: (($montantAssurance / 1000) - 4) * $tarifPour1000
+            var assuranceValue = parseFloat(jQuery('#odm_cf_1170').val()) || 0;
+            var tarifPour1000 = parseFloat(jQuery('#odm_hidden_cf_1172').val()) || 14;
+            var assuranceHT = 0;
+            if (assuranceValue > 0 && tarifPour1000 > 0) {
+                assuranceHT = ((assuranceValue / 1000) - 4) * tarifPour1000;
+            }
+
+            // Forfait acompte: (forfait * PCT_ACOMPTE%) + supplement (supplement = 100% acompte)
+            var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
+            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
+
+            // Forfait solde: forfait * PCT_SOLDE%
+            var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
+            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT;
+
+            // TTC
+            var acompteTTC = totalAcompteHT * this.TVA_RATE;
+            var soldeTTC = totalSoldeHT * this.TVA_RATE;
+
+            // Grand totals
+            var totalHT = forfaitHT + supplementHT + produitsHT + assuranceHT;
+            var totalTTC = totalHT * this.TVA_RATE;
+
+            // Total forfait TTC
+            var forfaitTotalTTC = (forfaitHT + supplementHT) * this.TVA_RATE;
+
+            // Update display
+            jQuery('#odm_cf_1184').val(forfaitTotalTTC.toFixed(2));
+            jQuery('#odm_montant_total_ht').text(totalHT.toFixed(2) + ' €');
+            jQuery('#odm_montant_total_ttc').text(totalTTC.toFixed(2) + ' €');
+            jQuery('#odm_acompte_ttc').text(acompteTTC.toFixed(2) + ' €');
+            jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
+
+            // Update hidden fields for saving
+            jQuery('#odm_hidden_cf_1174').val(assuranceHT.toFixed(2)); // Tarif assurance calculé
+            jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2)); // Total acompte TTC
+            jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2)); // Total solde TTC
+        },
+
+        /**
+         * Create BDC from a validated quote - load quote data and show form
+         */
+        createFromQuote: function(quoteId) {
+            var self = this;
+            console.log('[UnifiedODM] Creating BDC from quote:', quoteId);
+
+            this.currentSOId = null;
+            this.sourceQuoteId = quoteId;
+            this.selectedProducts = {};
+            this.productCounter = 0;
+
+            // Clear form
+            jQuery('#odm_productsList').empty();
+            jQuery('#odm_productsTable').hide();
+            jQuery('#odm_selectedSOId').val('');
+            jQuery('#odm_sourceQuoteId').val(quoteId);
+
+            // Mark selected quote chip
+            jQuery('.quote-chip').removeClass('selected');
+            jQuery('.quote-chip[data-quoteid="' + quoteId + '"]').addClass('selected');
+            jQuery('.odm-chip').removeClass('selected');
+
+            // Show form and actions
+            jQuery('#odmFormContainer').show();
+            jQuery('#odmActionsBar').show();
+            jQuery('#odm_btnSaveText').text('Créer ODM');
+            jQuery('#odm_btnSave').removeClass('btn-primary').addClass('btn-success');
+
+            // Load quote data via AJAX
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Potentials',
+                    view: 'UnifiedTabAjax',
+                    mode: 'getQuoteData',
+                    quoteId: quoteId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data) {
+                        self.populateFormFromQuote(response.data);
+                    } else {
+                        app.helper.showErrorNotification({message: response.message || 'Erreur de chargement du devis'});
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('[UnifiedODM] Error loading quote:', error);
+                    app.helper.showErrorNotification({message: 'Erreur: ' + error});
+                }
+            });
+        },
+
+        /**
+         * Populate form from quote data
+         */
+        populateFormFromQuote: function(data) {
+            var self = this;
+
+            // Store quote data for later use when saving
+            this.quoteData = data;
+
+            // Subject: Ord-{potential name}
+            var subject = 'Ord-' + (data.subject || '').replace(/^Dev-/, '');
+            jQuery('#odm_subject').val(subject);
+
+            // Due date from quote validity date
+            jQuery('#odm_duedate').val(data.cf_1005 || '');
+
+            // Forfait fields (map from quote)
+            jQuery('#odm_cf_1186').val(data.cf_1125 || '');  // Type formule
+            jQuery('#odm_cf_1180').val(data.cf_1127 || 0);   // Forfait HT
+            jQuery('#odm_cf_1182').val(data.cf_1129 || 0);   // Supplement
+
+            // Assurance - cf_1139=montant, cf_1141=tarif pour 1000
+            jQuery('#odm_cf_1170').val(data.cf_1139 || '');
+            jQuery('#odm_hidden_cf_1172').val(data.cf_1141 || 14); // Tarif pour 1000 (default 14)
+
+            // Pourcentages acompte/solde du forfait
+            jQuery('#odm_hidden_cf_1176').val(data.cf_1133 || 43); // % acompte
+            jQuery('#odm_hidden_cf_1178').val(data.cf_1135 || 57); // % solde
+
+            // Description forfait
+            jQuery('#odm_hidden_cf_1188').val(data.cf_1131 || '');
+
+            // Prestataire
+            if (data.prestataire) {
+                jQuery('#odm_prestataire').val(data.prestataire);
+            }
+
+            // Type de déménagement (cf_1269 in Quote -> cf_1352 in SalesOrder)
+            jQuery('#odm_cf_1352').val(data.cf_1269 || '');
+
+            // Products (with percentages from quote)
+            if (data.products && data.products.length > 0) {
+                data.products.forEach(function(p) {
+                    self.addProduct(p.productid, p.productname, p.listprice, p.quantity, p.pct_acompte || 43, p.pct_solde || 57);
+                });
+            }
+
+            // Calculate totals
+            this.calculateTotals();
+        },
+
+        /**
+         * Load existing SalesOrder into form
+         */
+        loadSalesOrder: function(salesOrderId) {
+            var self = this;
+            console.log('[UnifiedODM] Loading SalesOrder:', salesOrderId);
+
+            this.currentSOId = salesOrderId;
+            this.sourceQuoteId = null;
+            this.selectedProducts = {};
+            this.productCounter = 0;
+
+            // Clear form
+            jQuery('#odm_productsList').empty();
+            jQuery('#odm_productsTable').hide();
+            jQuery('#odm_selectedSOId').val(salesOrderId);
+            jQuery('#odm_sourceQuoteId').val('');
+
+            // Mark selected chip
+            jQuery('.odm-chip').removeClass('selected');
+            jQuery('.odm-chip[data-salesorderid="' + salesOrderId + '"]').addClass('selected');
+            jQuery('.quote-chip').removeClass('selected');
+
+            // Show form and actions
+            jQuery('#odmFormContainer').show();
+            jQuery('#odmActionsBar').show();
+            jQuery('#odm_btnViewPdf').show();
+            jQuery('#odm_btnSaveText').text('Enregistrer ODM');
+            jQuery('#odm_btnSave').removeClass('btn-success').addClass('btn-primary');
+
+            // Load SalesOrder data via AJAX
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Potentials',
+                    view: 'UnifiedTabAjax',
+                    mode: 'getSalesOrderData',
+                    salesorder_id: salesOrderId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data) {
+                        self.populateFormFromSalesOrder(response.data);
+                    } else {
+                        app.helper.showErrorNotification({message: response.message || 'Erreur de chargement du BDC'});
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('[UnifiedODM] Error loading SalesOrder:', error);
+                    app.helper.showErrorNotification({message: 'Erreur: ' + error});
+                }
+            });
+        },
+
+        /**
+         * Populate form from SalesOrder data
+         */
+        populateFormFromSalesOrder: function(data) {
+            var self = this;
+
+            jQuery('#odm_subject').val(data.subject || '');
+            jQuery('#odm_duedate').val(data.duedate || '');
+            jQuery('#odm_sostatus').val(data.sostatus || 'Created');
+
+            // Forfait fields
+            jQuery('#odm_cf_1186').val(data.cf_1186 || '');
+            jQuery('#odm_cf_1180').val(data.cf_1180 || 0);
+            jQuery('#odm_cf_1182').val(data.cf_1182 || 0);
+            // Assurance: convert to integer to match select options (10000.00 -> 10000)
+            var assuranceVal = data.cf_1170 ? parseInt(parseFloat(data.cf_1170)) : '';
+            jQuery('#odm_cf_1170').val(assuranceVal);
+
+            // Assurance rate fields (for calculation)
+            jQuery('#odm_hidden_cf_1172').val(data.cf_1172 || 14); // Tarif pour 1000
+            jQuery('#odm_hidden_cf_1174').val(data.cf_1174 || ''); // Tarif assurance calculé
+
+            // Preserve quote_id and other fields from existing ODM
+            jQuery('#odm_hidden_quote_id').val(data.quote_id || '');
+            jQuery('#odm_hidden_cf_1176').val(data.cf_1176 || 43); // % Acompte
+            jQuery('#odm_hidden_cf_1178').val(data.cf_1178 || 57); // % Solde
+            jQuery('#odm_hidden_cf_1188').val(data.cf_1188 || ''); // Description forfait
+            jQuery('#odm_hidden_cf_1190').val(data.cf_1190 || ''); // Description assurance
+
+            // Prestataire
+            if (data.prestataire) {
+                jQuery('#odm_prestataire').val(data.prestataire);
+            }
+
+            // Type de déménagement
+            jQuery('#odm_cf_1352').val(data.cf_1352 || '');
+
+            // Dates (visible fields)
+            jQuery('#odm_cf_1309').val(data.cf_1309 || '');
+            jQuery('#odm_cf_1324').val(data.cf_1324 || '');
+
+            // Volumes/Distance (metric inputs)
+            jQuery('#odm_cf_1350_input').val(data.cf_1350 || '');
+            jQuery('#odm_cf_1351_input').val(data.cf_1351 || '');
+            jQuery('#odm_cf_1349_input').val(data.cf_1349 || '');
+
+            // CHARGEMENT fields
+            jQuery('#odm_cf_1312').val(data.cf_1312 || '');
+            jQuery('#odm_cf_1313').val(data.cf_1313 || '');
+            jQuery('#odm_cf_1314').val(data.cf_1314 || '');
+            jQuery('#odm_cf_1315').val(data.cf_1315 || '');
+            jQuery('#odm_cf_1316').val(data.cf_1316 || '');
+            jQuery('#odm_cf_1317').val(data.cf_1317 || '');
+            jQuery('#odm_cf_1318').val(data.cf_1318 || '0');
+            jQuery('#odm_cf_1319').val(data.cf_1319 || '0');
+            jQuery('#odm_cf_1320').val(data.cf_1320 || '');
+            jQuery('#odm_cf_1321').val(data.cf_1321 || '0');
+            jQuery('#odm_cf_1322').val(data.cf_1322 || '0');
+            jQuery('#odm_cf_1323').val(data.cf_1323 || '');
+
+            // LIVRAISON fields
+            jQuery('#odm_cf_1325').val(data.cf_1325 || '');
+            jQuery('#odm_cf_1326').val(data.cf_1326 || '');
+            jQuery('#odm_cf_1327').val(data.cf_1327 || '');
+            jQuery('#odm_cf_1328').val(data.cf_1328 || '');
+            jQuery('#odm_cf_1329').val(data.cf_1329 || '');
+            jQuery('#odm_cf_1330').val(data.cf_1330 || '');
+            jQuery('#odm_cf_1331').val(data.cf_1331 || '0');
+            jQuery('#odm_cf_1332').val(data.cf_1332 || '0');
+            jQuery('#odm_cf_1333').val(data.cf_1333 || '');
+            jQuery('#odm_cf_1334').val(data.cf_1334 || '0');
+            jQuery('#odm_cf_1335').val(data.cf_1335 || '0');
+            jQuery('#odm_cf_1336').val(data.cf_1336 || '');
+
+            // Also sync to hidden fields for save
+            jQuery('.editable-field').each(function() {
+                var hiddenId = jQuery(this).data('hidden');
+                if (hiddenId) {
+                    jQuery('#' + hiddenId).val(jQuery(this).val());
+                }
+            });
+
+            // Products - avec pourcentages acompte/solde
+            if (data.products && data.products.length > 0) {
+                data.products.forEach(function(p) {
+                    self.addProduct(p.productid, p.productname, p.listprice, p.quantity, p.pct_acompte || 43, p.pct_solde || 57);
+                });
+            }
+
+            this.calculateTotals();
+        },
+
+        /**
+         * Cancel editing and hide form
+         */
+        cancelEdit: function() {
+            jQuery('#odmFormContainer').hide();
+            jQuery('#odmActionsBar').hide();
+            jQuery('#odm_btnViewPdf').hide();
+            jQuery('.odm-chip, .quote-chip').removeClass('selected');
+
+            // Clear form
+            jQuery('#odm_subject').val('');
+            jQuery('#odm_duedate').val('');
+            jQuery('#odm_cf_1186').val('');
+            jQuery('#odm_cf_1180').val('');
+            jQuery('#odm_cf_1182').val('');
+            jQuery('#odm_cf_1184').val('0');
+            jQuery('#odm_cf_1170').val('');
+            jQuery('#odm_productsList').empty();
+            jQuery('#odm_productsTable').hide();
+
+            this.selectedProducts = {};
+            this.productCounter = 0;
+            this.currentSOId = null;
+            this.sourceQuoteId = null;
+            this.quoteData = null;
+
+            // Reset totals
+            jQuery('#odm_montant_total_ht').text('0.00 €');
+            jQuery('#odm_montant_total_ttc').text('0.00 €');
+            jQuery('#odm_acompte_ttc').text('0.00 €');
+            jQuery('#odm_solde_ttc').text('0.00 €');
+        },
+
+        /**
+         * Save the BDC
+         */
+        saveBDC: function() {
+            var self = this;
+
+            // Validate subject
+            var subject = jQuery('#odm_subject').val();
+            if (!subject) {
+                app.helper.showErrorNotification({message: 'Le sujet est obligatoire'});
+                return;
+            }
+
+            // Check if prestataire is selected - fetch billing address before saving
+            var prestataireId = jQuery('#odm_prestataire').val();
+            if (prestataireId) {
+                // Fetch vendor address and set billing fields before saving
+                jQuery.ajax({
+                    url: 'index.php',
+                    type: 'POST',
+                    data: {
+                        module: 'Potentials',
+                        view: 'UnifiedTabAjax',
+                        mode: 'getVendorAddress',
+                        vendor_id: prestataireId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            // Set billing address fields from vendor
+                            jQuery('#odm_hidden_bill_street').val(response.data.street || '');
+                            jQuery('#odm_hidden_bill_city').val(response.data.city || '');
+                            jQuery('#odm_hidden_bill_state').val(response.data.state || '');
+                            jQuery('#odm_hidden_bill_code').val(response.data.postalcode || '');
+                            jQuery('#odm_hidden_bill_country').val(response.data.country || '');
+                        }
+                        // Continue with save
+                        self.doSaveBDC();
+                    },
+                    error: function() {
+                        // Continue saving even if vendor address fetch fails
+                        console.warn('[UnifiedODM] Could not fetch vendor address, saving without it');
+                        self.doSaveBDC();
+                    }
+                });
+            } else {
+                // No prestataire, clear billing address and save directly
+                jQuery('#odm_hidden_bill_street').val('');
+                jQuery('#odm_hidden_bill_city').val('');
+                jQuery('#odm_hidden_bill_state').val('');
+                jQuery('#odm_hidden_bill_code').val('');
+                jQuery('#odm_hidden_bill_country').val('');
+                this.doSaveBDC();
+            }
+        },
+
+        /**
+         * Actual save logic (called after vendor address is fetched if needed)
+         */
+        doSaveBDC: function() {
+            var self = this;
+            var subject = jQuery('#odm_subject').val();
+
+            // Build hidden form - basic fields
+            jQuery('#odm_hidden_subject').val(subject);
+            jQuery('#odm_hidden_duedate').val(jQuery('#odm_duedate').val());
+            jQuery('#odm_hidden_sostatus').val(jQuery('#odm_sostatus').val());
+            jQuery('#odm_hidden_prestataire').val(jQuery('#odm_prestataire').val());
+            jQuery('#odm_hidden_cf_1352').val(jQuery('#odm_cf_1352').val()); // Type de déménagement
+            // Only set quote_id if we're creating from a quote, otherwise preserve existing value
+            if (this.sourceQuoteId) {
+                jQuery('#odm_hidden_quote_id').val(this.sourceQuoteId);
+            }
+            // Note: if editing existing ODM, quote_id is already set by populateFormFromSalesOrder
+            jQuery('#odm_recordId').val(this.currentSOId || '');
+
+            // Forfait fields
+            jQuery('#odm_hidden_cf_1186').val(jQuery('#odm_cf_1186').val());
+            jQuery('#odm_hidden_cf_1180').val(jQuery('#odm_cf_1180').val() || 0);
+            jQuery('#odm_hidden_cf_1182').val(jQuery('#odm_cf_1182').val() || 0);
+            jQuery('#odm_hidden_cf_1184').val(jQuery('#odm_cf_1184').val() || 0);
+            jQuery('#odm_hidden_cf_1170').val(jQuery('#odm_cf_1170').val());
+
+            // IMPORTANT: Sync ALL editable fields to hidden form
+            // This ensures CHARGEMENT, LIVRAISON, dates, volumes are saved
+            jQuery('.editable-field').each(function() {
+                var hiddenId = jQuery(this).data('hidden');
+                if (hiddenId) {
+                    jQuery('#' + hiddenId).val(jQuery(this).val());
+                }
+            });
+
+            // Copy additional fields from quote ONLY when creating from a quote
+            // When editing existing ODM, these fields are already loaded by populateFormFromSalesOrder
+            if (this.quoteData) {
+                jQuery('#odm_hidden_cf_1172').val(this.quoteData.cf_1141 || '');  // Tarif pour 1000
+                jQuery('#odm_hidden_cf_1174').val(this.quoteData.cf_1143 || '');  // Tarif assurance
+                jQuery('#odm_hidden_cf_1176').val(this.quoteData.cf_1133 || 43);  // % Acompte
+                jQuery('#odm_hidden_cf_1178').val(this.quoteData.cf_1135 || 57);  // % Solde
+                jQuery('#odm_hidden_cf_1188').val(this.quoteData.cf_1131 || '');  // Description forfait
+                jQuery('#odm_hidden_cf_1190').val(this.quoteData.cf_1145 || '');  // Description assurance
+            }
+
+            // Calculate totals for hidden fields (same logic as calculateTotals)
+            var forfaitHT = parseFloat(jQuery('#odm_cf_1180').val()) || 0;
+            var supplement = parseFloat(jQuery('#odm_cf_1182').val()) || 0;
+            var productsHT = 0;
+            for (var idx in this.selectedProducts) {
+                var p = this.selectedProducts[idx];
+                productsHT += p.price * p.qty;
+            }
+
+            // Assurance calculation: ((montant / 1000) - 4) * tarif_pour_1000
+            var assuranceValue = parseFloat(jQuery('#odm_cf_1170').val()) || 0;
+            var tarifPour1000 = parseFloat(jQuery('#odm_hidden_cf_1172').val()) || 14;
+            var assuranceHT = 0;
+            if (assuranceValue > 0 && tarifPour1000 > 0) {
+                assuranceHT = ((assuranceValue / 1000) - 4) * tarifPour1000;
+            }
+
+            // Include assurance in total
+            var totalHT = forfaitHT + supplement + productsHT + assuranceHT;
+            var totalTTC = totalHT * this.TVA_RATE;
+
+            jQuery('#odm_hdnSubTotal').val(totalHT.toFixed(2));
+            jQuery('#odm_hdnGrandTotal').val(totalTTC.toFixed(2));
+            jQuery('#odm_pre_tax_total').val(totalHT.toFixed(2));
+
+            // Update assurance tarif field
+            jQuery('#odm_hidden_cf_1174').val(assuranceHT.toFixed(2));
+
+            // Acompte/Solde - use percentages from hidden fields
+            var PCT_ACOMPTE = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 43;
+            var PCT_SOLDE = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 57;
+
+            // Calculate acompte/solde like calculateTotals does
+            var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE / 100) + supplement + assuranceHT;
+            var forfaitSoldeHT = forfaitHT * PCT_SOLDE / 100;
+            var acompteTTC = forfaitAcompteHT * this.TVA_RATE;
+            var soldeTTC = forfaitSoldeHT * this.TVA_RATE;
+
+            jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2));
+            jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+
+            // Build products
+            var container = jQuery('#odmHiddenProductsContainer');
+            container.empty();
+
+            var productKeys = Object.keys(this.selectedProducts);
+            jQuery('#odm_hidden_totalProductCount').val(productKeys.length);
+
+            productKeys.forEach(function(idx, i) {
+                var p = self.selectedProducts[idx];
+                var lineNum = i + 1;
+                var lineTotal = (p.price * p.qty).toFixed(2);
+
+                container.append('<input type="hidden" name="hdnProductId' + lineNum + '" value="' + p.id + '">');
+                container.append('<input type="hidden" name="productName' + lineNum + '" value="' + p.name + '">');
+                container.append('<input type="hidden" name="qty' + lineNum + '" value="' + p.qty + '">');
+                container.append('<input type="hidden" name="listPrice' + lineNum + '" value="' + p.price.toFixed(2) + '">');
+                container.append('<input type="hidden" name="lineItemType' + lineNum + '" value="Products">');
+                container.append('<input type="hidden" name="discount' + lineNum + '" value="0">');
+                container.append('<input type="hidden" name="discount_type' + lineNum + '" value="zero">');
+                container.append('<input type="hidden" name="productTotal' + lineNum + '" value="' + lineTotal + '">');
+                container.append('<input type="hidden" name="netPrice' + lineNum + '" value="' + lineTotal + '">');
+            });
+
+            // Submit form
+            app.helper.showProgress('Enregistrement du BDC...');
+
+            var formData = new FormData(jQuery('#unifiedODMForm')[0]);
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    app.helper.hideProgress();
+                    console.log('[UnifiedODM] Save response received, length:', response ? response.length : 0);
+
+                    // VTiger Save action returns HTML (detail view or redirect)
+                    // Check for common error patterns
+                    var hasError = false;
+                    if (typeof response === 'string') {
+                        hasError = response.indexOf('error') !== -1 &&
+                                   response.indexOf('Fatal error') !== -1 ||
+                                   response.indexOf('Exception') !== -1 ||
+                                   response.indexOf('failed') !== -1;
+                    }
+
+                    if (!hasError) {
+                        app.helper.showSuccessNotification({message: 'BDC enregistré avec succès!'});
+                        self.cancelEdit();
+
+                        // Reset state to allow creating new BDC
+                        self.currentSOId = null;
+                        self.sourceQuoteId = null;
+                        self.quoteData = null;
+
+                        // Force reload tab after short delay to ensure DB commit
+                        setTimeout(function() {
+                            console.log('[UnifiedODM] Forcing tab reload after save');
+                            if (window.UnifiedTabbedView) {
+                                UnifiedTabbedView.invalidateTab('odm');
+                                UnifiedTabbedView.loadTabContent('odm', true); // Force reload
+                            }
+                        }, 300);
+                    } else {
+                        console.error('[UnifiedODM] Error detected in response');
+                        app.helper.showErrorNotification({message: 'Erreur lors de la sauvegarde'});
+                    }
+                },
+                error: function(xhr, status, error) {
+                    app.helper.hideProgress();
+                    console.error('[UnifiedODM] Save error:', error, 'Status:', status);
+                    app.helper.showErrorNotification({message: 'Erreur: ' + error});
+                }
+            });
+        },
+
+        /**
+         * View PDF
+         */
+        viewPDF: function() {
+            if (!this.currentSOId) return;
+            window.open('index.php?module=SalesOrder&view=Detail&record=' + this.currentSOId + '&mode=showDetailViewByMode&requestMode=full', '_blank');
         }
     };
 

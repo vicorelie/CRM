@@ -12,12 +12,16 @@ Bienvenue dans le guide d'utilisation du CRM CNK-DEM. Ce document vous accompagn
 2. [Navigation générale](#2-navigation-générale)
 3. [Gestion des contacts](#3-gestion-des-contacts)
 4. [Gestion des affaires (Potentiels)](#4-gestion-des-affaires-potentiels)
-5. [Création de devis](#5-création-de-devis)
-6. [Création rapide de devis (Popup)](#6-création-rapide-de-devis-popup)
-7. [Gestion des paiements Stripe](#7-gestion-des-paiements-stripe)
-8. [Génération de factures](#8-génération-de-factures)
-9. [Génération de PDF](#9-génération-de-pdf)
-10. [Rappels et notifications](#10-rappels-et-notifications)
+5. [Vue unifiée de gestion client](#5-vue-unifiée-de-gestion-client)
+6. [Création de devis](#6-création-de-devis)
+7. [Création rapide de devis (Popup)](#7-création-rapide-de-devis-popup)
+8. [Gestion des paiements Stripe](#8-gestion-des-paiements-stripe)
+9. [Génération de factures](#9-génération-de-factures)
+10. [Génération de PDF](#10-génération-de-pdf)
+11. [Envoi de devis par email](#11-envoi-de-devis-par-email)
+12. [Bon de Commande (ODM)](#12-bon-de-commande-odm)
+13. [Rappels et notifications](#13-rappels-et-notifications)
+14. [Maintenance et administration](#14-maintenance-et-administration)
 
 ---
 
@@ -116,10 +120,81 @@ Dans chaque module (Contacts, Devis, etc.) :
 
 - **Vue Kanban** : visualisez vos affaires par étape
 - **Convertir en devis** : depuis une affaire, créez directement un devis
+- **Vue unifiée** : accédez à la gestion complète du client (voir section suivante)
 
 ---
 
-## 5. Création de devis
+## 5. Vue unifiée de gestion client
+
+La vue unifiée est une interface moderne qui centralise toutes les informations et actions liées à un client. Elle permet de gérer devis, carte, inventaire et détails depuis une seule page.
+
+### Accéder à la vue unifiée
+
+1. Ouvrez une **Affaire**
+2. Cliquez sur le bouton **Gestion client** (icône grille)
+3. La vue unifiée s'ouvre avec 4 onglets
+
+### Les 4 onglets
+
+| Onglet | Icône | Description |
+|--------|-------|-------------|
+| **Détails** | ℹ️ | Informations générales du client et de l'affaire |
+| **Devis** | 📄 | Gestion des devis : création, modification, envoi |
+| **Google Map** | 📍 | Visualisation des adresses de départ/arrivée avec calcul de distance |
+| **Inventaire** | 📦 | Gestion de l'inventaire des biens à déménager |
+
+### Onglet Devis
+
+L'onglet Devis offre une interface complète pour gérer les devis :
+
+#### Sélection des devis existants
+- Les devis existants sont affichés sous forme de **chips** (pastilles)
+- Cliquez sur un chip pour charger le devis
+- Les devis **validés** ont un contour vert
+- Le devis sélectionné est mis en surbrillance
+
+#### Formulaire de devis
+Le formulaire permet de créer ou modifier un devis avec :
+- **Sujet** et **Date de validité**
+- **Type de formule** : ECO, ECO PLUS, CONFORT, LUXE
+- **Type de déménagement** : Groupage, Spécial
+- **Forfait HT/TTC** et **Supplément**
+- **Produits et services** avec recherche dynamique
+- **Assurance**
+
+#### Actions rapides (boutons en haut)
+Quand un devis est sélectionné, trois boutons apparaissent :
+
+| Bouton | Action |
+|--------|--------|
+| **💳 Paiement** | Ouvre le modal de gestion des paiements Stripe |
+| **📋 ODM** | Génère un Ordre de Mission (Bon de Commande) |
+| **📄 PDF** | Affiche le PDF du devis sélectionné |
+
+#### Génération de PDF et envoi par email
+1. Sélectionnez un ou plusieurs **modèles PDF** en cliquant dessus
+2. Cliquez sur **Tout** pour tout sélectionner/désélectionner
+3. Entrez l'**email du destinataire**
+4. Cliquez sur **📧 Envoyer mail** pour envoyer les PDF par email
+
+### Onglet Google Map
+
+L'onglet Google Map affiche :
+- L'**adresse de départ** (icône verte)
+- L'**adresse d'arrivée** (icône rouge)
+- La **carte interactive** avec l'itinéraire
+- La **distance** calculée automatiquement
+
+### Onglet Inventaire
+
+L'onglet Inventaire permet de :
+- Ajouter des éléments à l'inventaire par catégorie
+- Calculer automatiquement le **volume total** en m³
+- Utiliser les boutons +/- pour ajuster les quantités
+
+---
+
+## 6. Création de devis (mode classique)
 
 ### Créer un devis standard
 
@@ -166,7 +241,7 @@ Cliquez sur **Enregistrer** pour créer le devis.
 
 ---
 
-## 6. Création rapide de devis (Popup)
+## 7. Création rapide de devis (Popup)
 
 ### Accéder au formulaire rapide
 
@@ -206,7 +281,7 @@ Le formulaire est organisé en sections :
 
 ---
 
-## 7. Gestion des paiements Stripe
+## 8. Gestion des paiements Stripe
 
 ### Accéder à la gestion des paiements
 
@@ -304,7 +379,7 @@ L'email contient :
 
 ---
 
-## 8. Génération de factures
+## 9. Génération de factures
 
 ### Génération automatique
 
@@ -332,7 +407,7 @@ La facture générée contient :
 
 ---
 
-## 9. Génération de PDF
+## 10. Génération de PDF
 
 ### Générer un PDF de devis
 
@@ -361,7 +436,91 @@ La facture générée contient :
 
 ---
 
-## 10. Rappels et notifications
+## 11. Envoi de devis par email
+
+### Depuis la vue unifiée
+
+La méthode la plus simple pour envoyer des devis PDF par email :
+
+1. Ouvrez la **Vue unifiée** d'une affaire
+2. Allez dans l'onglet **Devis**
+3. Sélectionnez un devis existant
+4. Dans la section **Documents PDF** :
+   - Cochez les modèles de PDF à envoyer
+   - Vérifiez l'email du destinataire
+5. Cliquez sur **📧 Envoyer mail**
+
+### Contenu de l'email
+
+L'email envoyé contient :
+- Les PDF sélectionnés en pièces jointes
+- Un message professionnel avec vos coordonnées
+- Les détails du devis (numéro, montant)
+
+### Depuis la fiche devis classique
+
+1. Ouvrez un **Devis**
+2. Dans le panneau latéral **PDF Maker**
+3. Sélectionnez le template souhaité
+4. Cliquez sur **Envoyer par email**
+
+---
+
+## 12. Bon de Commande (ODM)
+
+Le Bon de Commande, aussi appelé **Ordre de Mission (ODM)**, est un document récapitulatif du déménagement.
+
+### Générer un ODM
+
+Depuis la **Vue unifiée** :
+
+1. Sélectionnez le devis concerné
+2. Cliquez sur le bouton **📋 ODM**
+3. Le modal de génération s'ouvre
+4. Vérifiez les informations :
+   - Dates de déménagement
+   - Adresses de départ/arrivée
+   - Équipe assignée
+   - Véhicules
+5. Cliquez sur **Générer**
+
+### Contenu de l'ODM
+
+L'Ordre de Mission contient :
+- Informations du client
+- **Prestataire** (entreprise exécutante, récupéré du devis)
+- Dates et horaires du déménagement (chargement/livraison)
+- Adresses complètes (départ/arrivée) avec détails logistiques
+- Volume et distance
+- **Type de déménagement** (Groupage, Spécial)
+- **Type de formule** (ECO, ECO PLUS, CONFORT, LUXE)
+- Garantie assurance
+- Matériel et produits associés
+- Instructions particulières
+- Montant à encaisser (solde)
+- Zone de signature
+
+### Champs automatiquement récupérés du devis
+
+Lors de la création d'un ODM depuis un devis, les champs suivants sont automatiquement pré-remplis :
+- Prestataire (entreprise exécutante)
+- Adresse de facturation (depuis l'adresse du prestataire)
+- Type de déménagement
+- Type de formule
+- Montants (forfait, assurance, acompte, solde)
+- Produits et services
+
+### Utilisation de l'ODM
+
+L'ODM est destiné à :
+- L'équipe de déménagement (feuille de route)
+- Le chef d'équipe (planification)
+- Le prestataire externe (si sous-traitance)
+- L'archivage administratif
+
+---
+
+## 13. Rappels et notifications
 
 ### Créer un rappel
 
@@ -400,6 +559,14 @@ Le système peut envoyer des rappels automatiques pour :
 - **Numérotation automatique** : les devis sont numérotés automatiquement
 - **Copier un devis** : utilisez "Dupliquer" pour créer un devis similaire
 - **Historique** : consultez l'historique des modifications
+- **Vue unifiée** : utilisez la vue unifiée pour gérer plusieurs devis rapidement
+
+### Vue unifiée
+
+- **Utilisez la vue unifiée** pour un accès rapide à toutes les fonctionnalités
+- **Sélectionnez vos modèles PDF** avant d'envoyer par email
+- **Vérifiez l'email** du destinataire avant l'envoi
+- **Les devis validés** sont indiqués par un contour vert
 
 ### Paiements
 
@@ -435,6 +602,56 @@ Le système peut envoyer des rappels automatiques pour :
 - Essayez avec un autre navigateur
 - Cliquez sur "Télécharger" au lieu de "Aperçu"
 
+### La vue unifiée ne charge pas
+
+- Rafraîchissez la page (F5 ou Ctrl+R)
+- Vérifiez votre connexion internet
+- Videz le cache du navigateur (Ctrl+Shift+Suppr)
+- Réessayez depuis la fiche affaire
+
+### L'email avec les PDF n'est pas envoyé
+
+- Vérifiez que l'adresse email est correcte
+- Assurez-vous d'avoir sélectionné au moins un modèle PDF
+- Vérifiez que le devis est bien chargé
+- Consultez les logs si le problème persiste
+
+### Le bouton ODM n'apparaît pas
+
+- Assurez-vous d'avoir sélectionné un devis
+- Rafraîchissez la page
+- Vérifiez vos permissions utilisateur
+
+---
+
+## 14. Maintenance et administration
+
+### Problème de création de champs
+
+Si vous ne pouvez pas créer de nouveaux champs dans VTiger (le champ disparaît après rafraîchissement), exécutez le script de correction des séquences :
+
+```bash
+php /var/www/CNK-DEM/fix_sequences.php
+```
+
+Ce script vérifie et corrige les séquences d'ID désynchronisées dans la base de données.
+
+### Vider le cache VTiger
+
+En cas de problème d'affichage ou de fonctionnalités qui ne marchent pas :
+
+```bash
+rm -rf /var/www/CNK-DEM/cache/*
+rm -rf /var/www/CNK-DEM/test/cache/*
+```
+
+Puis videz le cache de votre navigateur (Ctrl+Shift+R).
+
+### Templates PDF
+
+Les templates PDF personnalisés sont disponibles dans :
+- `/var/www/CNK-DEM/docs/ODM_TEMPLATE_PDFMAKER_V2.html` - Template ODM
+
 ---
 
 ## Contacts et support
@@ -446,5 +663,6 @@ Pour toute question ou problème :
 
 ---
 
-*Document mis à jour : Janvier 2026*
+*Document mis à jour : 4 Février 2026*
 *Version CRM : CNK-DEM basé sur Vtiger 8.4.0*
+*Dernières fonctionnalités : Vue unifiée, Envoi PDF par email, ODM avec prestataire, Script fix_sequences*
