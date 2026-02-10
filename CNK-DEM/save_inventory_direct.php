@@ -64,7 +64,7 @@ try {
 }
 
 /**
- * Génère le HTML de l'inventaire pour PDFMaker
+ * Génère le HTML de l'inventaire pour PDFMaker (format compact sans catégories)
  */
 function generateInventoryHTML($conn, $inventory) {
     if (empty($inventory) || !is_array($inventory)) {
@@ -72,88 +72,76 @@ function generateInventoryHTML($conn, $inventory) {
     }
 
     // Charger les items depuis la base de données avec leurs volumes
-    $itemsResult = $conn->query("SELECT category, category_label, item_name, item_volume
+    $itemsResult = $conn->query("SELECT category, item_name, item_volume
                                 FROM aridem_inventory_items
                                 WHERE active = 1
                                 ORDER BY category, sequence, item_name");
 
     $itemsDB = [];
-    $categoriesInfo = [];
-
     if ($itemsResult && $itemsResult->num_rows > 0) {
         while ($row = $itemsResult->fetch_assoc()) {
             $cat = $row['category'];
             if (!isset($itemsDB[$cat])) {
                 $itemsDB[$cat] = [];
-                $categoriesInfo[$cat] = [
-                    'label' => $row['category_label']
-                ];
             }
             $itemsDB[$cat][$row['item_name']] = floatval($row['item_volume']);
         }
     }
 
-    // Générer le HTML
-    $html = '';
-    $position = 1;
+    // Collecter tous les items dans une liste plate
+    $allItems = [];
+    $grandTotal = 0;
 
     foreach ($inventory as $catId => $catItems) {
-        if (!isset($categoriesInfo[$catId])) {
+        if (!isset($itemsDB[$catId])) {
             continue;
         }
-
-        $catInfo = $categoriesInfo[$catId];
-        $catItemsWithData = [];
-
-        // Collecter les items avec leurs données
         foreach ($catItems as $itemName => $qty) {
             if ($qty > 0 && isset($itemsDB[$catId][$itemName])) {
                 $volume = $itemsDB[$catId][$itemName];
-                $catItemsWithData[] = [
+                $total = $qty * $volume;
+                $grandTotal += $total;
+                $allItems[] = [
                     'name' => $itemName,
                     'qty' => $qty,
                     'volume' => $volume,
-                    'total' => $qty * $volume
+                    'total' => $total
                 ];
             }
         }
-
-        if (count($catItemsWithData) > 0) {
-            $html .= '<table border="0" style="font-size:10px; margin-bottom: 20px; width:100%; border-collapse:collapse;">
-                <thead>
-                    <tr>
-                        <th bgcolor="#BDB9B9" style="width:5%; color:#000000; font-weight:600; padding:10px; border-right:2px solid white; text-align:center;">&nbsp;</th>
-                        <th bgcolor="#BDB9B9" style="text-align: left; width:45%; color:#000000; font-weight:600; padding:10px; border-right:2px solid white;"><strong>' . htmlspecialchars($catInfo['label']) . '</strong></th>
-                        <th bgcolor="#BDB9B9" style="width:15%; color:#000000; font-weight:600; padding:10px; border-right:2px solid white; text-align:center;"><strong>Volume/unité</strong></th>
-                        <th bgcolor="#BDB9B9" style="width:15%; color:#000000; font-weight:600; padding:10px; border-right:2px solid white; text-align:center;"><strong>Quantité</strong></th>
-                        <th bgcolor="#BDB9B9" style="width:15%; color:#000000; font-weight:600; padding:10px; text-align:center;"><strong>Total</strong></th>
-                    </tr>
-                </thead>
-                <tbody>';
-
-            $catTotal = 0;
-            foreach ($catItemsWithData as $item) {
-                $catTotal += $item['total'];
-                $html .= '<tr>
-                    <td bgcolor="#BDB9B9" style="padding:10px; border-bottom:2px solid white; text-align:center;">' . $position++ . '</td>
-                    <td bgcolor="#EEEEEE" style="text-align:left; padding:10px; border-bottom:2px solid white;">' . htmlspecialchars($item['name']) . '</td>
-                    <td bgcolor="#EEEEEE" style="text-align:right; padding:10px; border-bottom:2px solid white;">' . number_format($item['volume'], 3, ',', ' ') . ' m³</td>
-                    <td bgcolor="#EEEEEE" style="text-align:center; padding:10px; border-bottom:2px solid white;">' . $item['qty'] . '</td>
-                    <td bgcolor="#EEEEEE" style="text-align:right; padding:10px; border-bottom:2px solid white;"><strong>' . number_format($item['total'], 3, ',', ' ') . ' m³</strong></td>
-                </tr>';
-            }
-
-            $html .= '<tr>
-                    <td colspan="5" bgcolor="white" style="padding:10px; border-bottom:2px solid white;">&nbsp;</td>
-                </tr>
-                <tr>
-                    <td colspan="4" bgcolor="white" style="padding:10px; border-bottom:1px solid #BDB9B9; text-align:left;"><strong>Volume total</strong></td>
-                    <td bgcolor="#BDB9B9" style="padding:10px; border-bottom:2px solid #BDB9B9; text-align:right;"><strong>' . number_format($catTotal, 2, ',', ' ') . ' m³</strong></td>
-                </tr>
-            </tbody>
-        </table>';
-        }
     }
+
+    if (empty($allItems)) {
+        return '';
+    }
+
+    // Générer le HTML compact - une seule table
+    $html = '<table border="0" style="font-size:9px; width:100%; border-collapse:collapse;">
+        <thead>
+            <tr>
+                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:left; width:50%;"><strong>Article</strong></th>
+                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:center; width:15%;"><strong>Qté</strong></th>
+                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:right; width:15%;"><strong>Vol.</strong></th>
+                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:right; width:20%;"><strong>Total</strong></th>
+            </tr>
+        </thead>
+        <tbody>';
+
+    foreach ($allItems as $item) {
+        $html .= '<tr>
+            <td style="padding:3px 6px; border-bottom:1px solid #ddd;">' . htmlspecialchars($item['name']) . '</td>
+            <td style="padding:3px 6px; border-bottom:1px solid #ddd; text-align:center;">' . $item['qty'] . '</td>
+            <td style="padding:3px 6px; border-bottom:1px solid #ddd; text-align:right;">' . number_format($item['volume'], 2, ',', '') . '</td>
+            <td style="padding:3px 6px; border-bottom:1px solid #ddd; text-align:right;"><strong>' . number_format($item['total'], 2, ',', '') . '</strong></td>
+        </tr>';
+    }
+
+    $html .= '<tr>
+            <td colspan="3" bgcolor="#f5f5f5" style="padding:4px 6px; text-align:right;"><strong>Volume total :</strong></td>
+            <td bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:right;"><strong>' . number_format($grandTotal, 2, ',', ' ') . ' m³</strong></td>
+        </tr>
+    </tbody>
+    </table>';
 
     return $html;
 }

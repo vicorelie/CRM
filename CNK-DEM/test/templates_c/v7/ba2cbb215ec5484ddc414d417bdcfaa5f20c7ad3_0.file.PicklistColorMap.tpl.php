@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-01 17:56:31
+/* Smarty version 4.5.5, created on 2026-02-10 14:10:29
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/PicklistColorMap.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_697f77afb7ad00_81845218',
+  'unifunc' => 'content_698b2035800c57_26541405',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_697f77afb7ad00_81845218 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698b2035800c57_26541405 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <style type="text/css">
     <?php

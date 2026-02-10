@@ -8,6 +8,7 @@
 5. [Tests](#tests)
 6. [Passage en production](#passage-en-production)
 7. [Dépannage](#dépannage)
+8. [Nouvelles fonctionnalités (Février 2026)](#nouvelles-fonctionnalités-février-2026)
 
 ---
 
@@ -94,6 +95,21 @@ Les champs suivants ont été ajoutés au module Devis :
 
 ## 3. Utilisation
 
+### Accès à la gestion des paiements
+
+Il existe deux façons d'accéder à la gestion des paiements Stripe :
+
+#### Option 1 : Depuis la fiche Devis
+1. Ouvrez un devis dans VTiger
+2. Cliquez sur le bouton **Gérer paiements Stripe** dans la barre d'actions
+
+#### Option 2 : Depuis la Vue Unifiée (recommandé)
+1. Ouvrez une **Affaire**
+2. Cliquez sur **Gestion client** pour accéder à la vue unifiée
+3. Allez dans l'onglet **Devis**
+4. Sélectionnez un devis existant
+5. Cliquez sur le bouton **💳 Paiement** qui apparaît
+
 ### Générer des liens de paiement
 
 1. Ouvrez un devis dans VTiger
@@ -118,6 +134,17 @@ Quand un client paie :
 1. Le webhook Stripe notifie VTiger
 2. Le statut passe automatiquement à "Payé"
 3. Un commentaire est ajouté au devis avec les détails du paiement
+4. Une **facture est générée automatiquement**
+
+### Consulter les factures générées
+
+Dans le modal de gestion des paiements, les paiements validés (statut "Payé") affichent un bouton **📄 PDF** (vert) :
+
+1. Cliquez sur le bouton **📄 PDF** à côté d'un paiement payé
+2. La facture PDF s'ouvre dans un nouvel onglet
+3. Vous pouvez télécharger ou imprimer la facture
+
+> **Note** : Le bouton PDF n'apparaît que pour les paiements avec le statut "Payé" et une facture associée.
 
 ---
 
@@ -274,12 +301,53 @@ En cas de problème :
 
 ---
 
+---
+
+## 8. Nouvelles fonctionnalités (Février 2026)
+
+### Accès depuis la Vue Unifiée
+
+La gestion des paiements Stripe est maintenant accessible depuis la **Vue Unifiée** :
+
+1. Ouvrez une affaire
+2. Cliquez sur **Gestion client**
+3. Onglet **Devis** → Sélectionnez un devis
+4. Cliquez sur **💳 Paiement**
+
+### Bouton PDF Facture
+
+Le modal de gestion des paiements affiche désormais un **bouton PDF** pour chaque paiement validé :
+
+| Statut | Bouton PDF |
+|--------|------------|
+| En attente | ❌ Non affiché |
+| Payé | ✅ Bouton vert "📄 PDF" |
+| Échoué | ❌ Non affiché |
+| Annulé | ❌ Non affiché |
+
+### Génération automatique de factures
+
+Quand un paiement passe au statut "Payé" :
+1. Une facture est automatiquement créée dans VTiger
+2. Le numéro de facture est séquentiel et unique
+3. Les produits du devis sont copiés dans la facture
+4. Le bouton PDF apparaît dans le modal
+
+---
+
 ## 🎉 Félicitations !
 
 Votre intégration Stripe Payment Links est maintenant opérationnelle.
 
+**Fonctionnalités disponibles :**
+- ✅ Génération de liens de paiement
+- ✅ Suivi des paiements en temps réel
+- ✅ Génération automatique de factures
+- ✅ Accès aux PDF des factures depuis le modal
+- ✅ Intégration avec la Vue Unifiée
+- ✅ Envoi de liens par email
+
 **Prochaines étapes possibles :**
-- Ajouter les liens automatiquement dans les emails
 - Créer des rapports de paiements
 - Gérer les remboursements
-- Intégrer Stripe aux factures (en plus des devis)
+- Configurer des rappels automatiques

@@ -383,4 +383,18 @@ class Leads_Module_Model extends Vtiger_Module_Model {
 	public function getUtilityActionsNames() {
 		return array('Import', 'Export', 'Merge', 'ConvertLead', 'DuplicatesHandling');
 	}
+
+	public function getModuleBasicLinks() {
+		$basicLinks = parent::getModuleBasicLinks();
+
+		// Replace standard Import button with our choice dropdown
+		foreach ($basicLinks as &$link) {
+			if ($link['linklabel'] === 'LBL_IMPORT') {
+				$link['linkurl'] = 'javascript:Leads_List_Js.showImportChoice()';
+				break;
+			}
+		}
+
+		return $basicLinks;
+	}
 }

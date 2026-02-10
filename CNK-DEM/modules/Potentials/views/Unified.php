@@ -30,11 +30,39 @@ class Potentials_Unified_View extends Vtiger_Index_View {
 
 		$recordModel = Vtiger_Record_Model::getInstanceById($recordId, $moduleName);
 
+		// Get contact information
+		$contactId = $recordModel->get('contact_id');
+		$contactName = '';
+		$contactPhone = '';
+		$contactEmail = '';
+
+		if (!empty($contactId)) {
+			$contactModel = Vtiger_Record_Model::getInstanceById($contactId, 'Contacts');
+			if ($contactModel) {
+				$firstname = $contactModel->get('firstname') ?: '';
+				$lastname = $contactModel->get('lastname') ?: '';
+				$contactName = trim($firstname . ' ' . $lastname);
+				$contactPhone = $contactModel->get('mobile') ?: $contactModel->get('phone') ?: '';
+				$contactEmail = $contactModel->get('email') ?: '';
+			}
+		}
+
+		// Fallback to potential fields if no contact
+		if (empty($contactName)) {
+			$contactName = $recordModel->get('potentialname');
+		}
+		if (empty($contactPhone)) {
+			$contactPhone = $recordModel->get('cf_981'); // Phone field in Potentials
+		}
+
 		$viewer = $this->getViewer($request);
 		$viewer->assign('RECORD', $recordModel);
 		$viewer->assign('RECORD_ID', $recordId);
 		$viewer->assign('MODULE_NAME', $moduleName);
 		$viewer->assign('ACTIVE_TAB', $request->get('tab', 'details'));
+		$viewer->assign('CONTACT_NAME', $contactName);
+		$viewer->assign('CONTACT_PHONE', $contactPhone);
+		$viewer->assign('CONTACT_EMAIL', $contactEmail);
 
 		$viewer->view('UnifiedTabbedView.tpl', $moduleName);
 	}

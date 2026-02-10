@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-01 19:28:21
+/* Smarty version 4.5.5, created on 2026-02-10 14:09:17
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_697f8d35857065_35757215',
+  'unifunc' => 'content_698b1feddb8658_19252220',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6c3f04d3f2e8c8f29d10d7f6974b1d96a41863ad' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl',
-      1 => 1769962873,
+      1 => 1770720358,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_697f8d35857065_35757215 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698b1feddb8658_19252220 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.date_format.php','function'=>'smarty_modifier_date_format',),1=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="details-tab-container" id="detailsTabContainer" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
@@ -189,7 +189,7 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></optgroup><?php
 </label><?php if ($_smarty_tpl->tpl_vars['IS_EDITABLE']->value) {?><input type="text" class="unified-field-input" name="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldname="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldtype="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
-" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FIELD_VALUE']->value, ENT_QUOTES, 'UTF-8', true);?>
+" value="<?php echo htmlspecialchars((string)decode_html($_smarty_tpl->tpl_vars['FIELD_VALUE']->value), ENT_QUOTES, 'UTF-8', true);?>
 "><?php } else { ?><div class="field-value field-readonly" data-field-type="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
 "><?php $_smarty_tpl->_subTemplateRender(vtemplate_path($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getUITypeModel()->getDetailViewTemplateName(),$_smarty_tpl->tpl_vars['MODULE_NAME']->value), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array('FIELD_MODEL'=>$_smarty_tpl->tpl_vars['FIELD_MODEL']->value,'USER_MODEL'=>$_smarty_tpl->tpl_vars['USER_MODEL']->value,'MODULE'=>$_smarty_tpl->tpl_vars['MODULE_NAME']->value,'RECORD'=>$_smarty_tpl->tpl_vars['RECORD']->value), 0, true);
 ?></div><?php }?></div><?php }
@@ -299,7 +299,7 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></optgroup><?php
 </label><?php if ($_smarty_tpl->tpl_vars['IS_EDITABLE']->value) {?><input type="text" class="unified-field-input" name="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldname="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldtype="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
-" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FIELD_VALUE']->value, ENT_QUOTES, 'UTF-8', true);?>
+" value="<?php echo htmlspecialchars((string)decode_html($_smarty_tpl->tpl_vars['FIELD_VALUE']->value), ENT_QUOTES, 'UTF-8', true);?>
 "><?php } else { ?><div class="field-value field-readonly" data-field-type="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
 "><?php $_smarty_tpl->_subTemplateRender(vtemplate_path($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getUITypeModel()->getDetailViewTemplateName(),$_smarty_tpl->tpl_vars['MODULE_NAME']->value), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array('FIELD_MODEL'=>$_smarty_tpl->tpl_vars['FIELD_MODEL']->value,'USER_MODEL'=>$_smarty_tpl->tpl_vars['USER_MODEL']->value,'MODULE'=>$_smarty_tpl->tpl_vars['MODULE_NAME']->value,'RECORD'=>$_smarty_tpl->tpl_vars['RECORD']->value), 0, true);
 ?></div><?php }?></div><?php }
@@ -417,7 +417,7 @@ $_smarty_tpl->_assignInScope('DATE_VALUE', smarty_modifier_date_format($_smarty_
 </label><?php if ($_smarty_tpl->tpl_vars['IS_EDITABLE']->value) {?><input type="text" class="unified-field-input" name="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldname="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldtype="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
-" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FIELD_VALUE']->value, ENT_QUOTES, 'UTF-8', true);?>
+" value="<?php echo htmlspecialchars((string)decode_html($_smarty_tpl->tpl_vars['FIELD_VALUE']->value), ENT_QUOTES, 'UTF-8', true);?>
 "><?php } else { ?><div class="field-value field-readonly"><?php if ($_smarty_tpl->tpl_vars['FIELD_VALUE']->value) {
 echo $_smarty_tpl->tpl_vars['FIELD_VALUE']->value;
 } else { ?>--<?php }?></div><?php }?></div><?php }
@@ -477,7 +477,7 @@ $_smarty_tpl->_assignInScope('DATE_VALUE', smarty_modifier_date_format($_smarty_
 </label><?php if ($_smarty_tpl->tpl_vars['IS_EDITABLE']->value) {?><input type="text" class="unified-field-input" name="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldname="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldtype="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
-" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FIELD_VALUE']->value, ENT_QUOTES, 'UTF-8', true);?>
+" value="<?php echo htmlspecialchars((string)decode_html($_smarty_tpl->tpl_vars['FIELD_VALUE']->value), ENT_QUOTES, 'UTF-8', true);?>
 "><?php } else { ?><div class="field-value field-readonly"><?php if ($_smarty_tpl->tpl_vars['FIELD_VALUE']->value) {
 echo $_smarty_tpl->tpl_vars['FIELD_VALUE']->value;
 } else { ?>--<?php }?></div><?php }?></div><?php }
@@ -644,7 +644,7 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></optgroup><?php
 </label><?php if ($_smarty_tpl->tpl_vars['IS_EDITABLE']->value) {?><input type="text" class="unified-field-input" name="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldname="<?php echo $_smarty_tpl->tpl_vars['FIELD_NAME']->value;?>
 " data-fieldtype="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
-" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FIELD_VALUE']->value, ENT_QUOTES, 'UTF-8', true);?>
+" value="<?php echo htmlspecialchars((string)decode_html($_smarty_tpl->tpl_vars['FIELD_VALUE']->value), ENT_QUOTES, 'UTF-8', true);?>
 "><?php } else { ?><div class="field-value field-readonly" data-field-type="<?php echo $_smarty_tpl->tpl_vars['fieldDataType']->value;?>
 "><?php $_smarty_tpl->_subTemplateRender(vtemplate_path($_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getUITypeModel()->getDetailViewTemplateName(),$_smarty_tpl->tpl_vars['MODULE_NAME']->value), $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array('FIELD_MODEL'=>$_smarty_tpl->tpl_vars['FIELD_MODEL']->value,'USER_MODEL'=>$_smarty_tpl->tpl_vars['USER_MODEL']->value,'MODULE'=>$_smarty_tpl->tpl_vars['MODULE_NAME']->value,'RECORD'=>$_smarty_tpl->tpl_vars['RECORD']->value), 0, true);
 ?></div><?php }?></div><?php }

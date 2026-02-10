@@ -12,7 +12,7 @@
         {if $ADRESSE_ORIGINE}
         <div class="card" style="padding: 0; overflow: hidden;">
             <div class="card-header header-green" style="margin: 0; border-radius: 12px 12px 0 0;">
-                <i class="fa fa-street-view"></i> Chargement : {$ADRESSE_ORIGINE|escape}
+                <i class="fa fa-street-view"></i> Chargement : {$ADRESSE_ORIGINE}
             </div>
             <div id="unified-streetview-origin" style="width: 100%; height: 280px;"></div>
         </div>
@@ -20,7 +20,7 @@
         {if $ADRESSE_DESTINATION}
         <div class="card" style="padding: 0; overflow: hidden;">
             <div class="card-header header-red" style="margin: 0; border-radius: 12px 12px 0 0;">
-                <i class="fa fa-street-view"></i> Livraison : {$ADRESSE_DESTINATION|escape}
+                <i class="fa fa-street-view"></i> Livraison : {$ADRESSE_DESTINATION}
             </div>
             <div id="unified-streetview-destination" style="width: 100%; height: 280px;"></div>
         </div>

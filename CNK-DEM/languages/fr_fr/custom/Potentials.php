@@ -4,4 +4,5 @@ $languageStrings = array(
 'FaceBook'	=>	'FaceBook',
 'Mailing'	=>	'Mailing',
 'A Rappeler'	=>	'A Rappeler',
+'Pas interesse'	=>	'Pas interesse',
 );

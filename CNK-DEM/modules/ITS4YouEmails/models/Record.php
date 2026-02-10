@@ -1244,4 +1244,19 @@ class ITS4YouEmails_Record_Model extends Vtiger_Record_Model
 
 		$this->setBannedWords(array_merge((array)$ITS4YouEmails_BannedWords, ['#ITS4YouEmails_Do_Not_Send_Mail#']));
 	}
+
+    public static function isSelectedDefaultFromSMTP($smtpRecord, $defaultFrom)
+    {
+        if (empty($defaultFrom)) {
+            return $smtpRecord->get('user_id') === Users_Record_Model::getCurrentUserModel()->getId();
+        }
+
+        $parts = explode('_', $defaultFrom, 2);
+
+        if ($parts[0] === '2') {
+            return $parts[1] == $smtpRecord->getId();
+        }
+
+        return false;
+    }
 }

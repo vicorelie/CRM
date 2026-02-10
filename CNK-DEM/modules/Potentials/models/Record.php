@@ -10,6 +10,13 @@
 
 class Potentials_Record_Model extends Vtiger_Record_Model {
 
+	/**
+	 * Override: Clicking on a Potential opens the Unified (Gestion Client) view
+	 */
+	function getDetailViewUrl() {
+		return 'index.php?module='.$this->getModuleName().'&view=Unified&record='.$this->getId();
+	}
+
 	function getCreateInvoiceUrl() {
 		$invoiceModuleModel = Vtiger_Module_Model::getInstance('Invoice');
 		return $invoiceModuleModel->getCreateRecordUrl().'&sourceRecord='.$this->getId().'&sourceModule='.$this->getModuleName().'&potential_id='.$this->getId().'&account_id='.$this->get('related_to').'&contact_id='.$this->get('contact_id');

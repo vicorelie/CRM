@@ -54,7 +54,15 @@ class ITS4YouEmails_ComposeEmail_View extends Vtiger_ComposeEmail_View
         $viewer = $this->getViewer($request);
         $viewer->assign('MODULE', $moduleName);
         $viewer->assign('QUALIFIED_MODULE', $qualifiedModuleName);
-        $viewer->assign('SOURCEMODULE', $this->getSourceModule($request));
+        $sourceModule = $this->getSourceModule($request);
+        $viewer->assign('SOURCEMODULE', $sourceModule);
+        $viewer->assign('SOURCE_MODULE', $sourceModule);
+
+        // Ensure RECORDID is set for template picker and AJAX substitution
+        $recordId = $this->getRecordId($request);
+        if (!empty($recordId)) {
+            $viewer->assign('RECORDID', $recordId);
+        }
 
 	    $this->retrieveModeData($request);
 		$this->retrieveRelatedModules($request);
@@ -634,7 +642,17 @@ class ITS4YouEmails_ComposeEmail_View extends Vtiger_ComposeEmail_View
             return $request->get('parentModule');
         }
 
-        return $request->get('sourceModule');
+        $sourceModule = $request->get('sourceModule');
+
+        if (empty($sourceModule)) {
+            $sourceModule = $request->get('source_module');
+        }
+
+        if (empty($sourceModule)) {
+            $sourceModule = $request->get('fieldModule');
+        }
+
+        return $sourceModule;
     }
 
     /**
@@ -911,7 +929,7 @@ class ITS4YouEmails_ComposeEmail_View extends Vtiger_ComposeEmail_View
         $recordId = $this->getRecordId($request);
         $subject = $request->get('subject', '');
         $body = $request->get('body', '');
-        $sourceModule = $request->get('sourceModule');
+        $sourceModule = $this->getSourceModule($request);
 
         if (!empty($emailTemplateIds)) {
             if ($this->isEmailListView($request)) {
@@ -1044,7 +1062,7 @@ class ITS4YouEmails_ComposeEmail_View extends Vtiger_ComposeEmail_View
     {
         $emailTemplateId = $this->getEmailTemplateIds($request);
         $savedDefaultFrom = ITS4YouEmails_Utils_Helper::getSavedFromField($emailTemplateId);
-        $selectedDefaultFrom = '';
+        $selectedDefaultFrom = $savedDefaultFrom;
         $fromEmails = array();
         $userDefaultFrom = ITS4YouEmails_Utils_Helper::getUserFromEmails($fromEmails, $savedDefaultFrom);
         $organizationDefaultFrom = ITS4YouEmails_Utils_Helper::getOrganizationFromEmails($fromEmails, $savedDefaultFrom);

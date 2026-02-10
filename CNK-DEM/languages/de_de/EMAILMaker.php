@@ -551,7 +551,7 @@ $languageStrings = array(
 	'LBL_ITS4YOUSTYLES_INSTALLEW_INFO' => 'To install this extensions please use Installer extensions.', 
 	'LBL_SET_VALUE' => 'Set Value', 
 	'LBL_UNSUBSCRIBE_MANUAL' => 'Unsubscribe manual', 
-	'LBL_LICENSE_USED_BY_OTHER_USERS' => 'License used by other users', 
+	'LBL_LICENSE_USED_BY_OTHER_USERS' => 'The number of licenses purchased for users has been reached. User license limit reached.', 
 	'LBL_LOAD_RELATED_DOCUMENTS' => 'Related documents load', 
 	'LBL_RELATED_DOCUMENTS_BY_FOLDER' => 'Related documents by folders', 
 	'SIGNATURE_VARIABLES' => 'Signature variables', 
@@ -564,7 +564,7 @@ $languageStrings = array(
 	'LBL_PDF_CONTENT' => 'PDF Content', 
 	'LBL_CHECK_OPTOUT' => 'Check Email Opt Out', 
 	'LBL_ASSIGNED_USER_SMTP' => 'Assigned user SMTP server', 
-	'LBL_IMPORT_EINVOICE_XML' => 'Import EInvoice XML', 
+	'LBL_IMPORT_EINVOICE_XML' => 'Attach EInvoice XML', 
 );
 
 $jsLanguageStrings = array(

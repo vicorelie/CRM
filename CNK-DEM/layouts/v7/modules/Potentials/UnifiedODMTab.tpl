@@ -18,14 +18,14 @@
                 <span class="quotes-label"><i class="fa fa-check-circle" style="color: #27ae60;"></i> Devis validés ({$VALIDATED_QUOTES|@count}):</span>
                 <div class="quotes-chips">
                     {foreach from=$VALIDATED_QUOTES item=QUOTE}
-                    <div class="quote-chip validated" data-quoteid="{$QUOTE.quoteid}" onclick="UnifiedODM.createFromQuote({$QUOTE.quoteid})" title="Créer BDC depuis {$QUOTE.quote_no|escape}">
+                    <div class="quote-chip validated" data-quoteid="{$QUOTE.quoteid}" onclick="UnifiedODM.createFromQuote({$QUOTE.quoteid})" title="Créer BDC depuis {$QUOTE.quote_no}">
                         <div class="chip-line1">
-                            <span class="chip-no">{$QUOTE.quote_no|escape}</span>
+                            <span class="chip-no">{$QUOTE.quote_no}</span>
                             <span class="chip-sep">/</span>
                             <span class="chip-date">{$QUOTE.created_date}</span>
                         </div>
                         <div class="chip-line2">
-                            <span class="chip-formule">{$QUOTE.cf_1125|default:'-'|escape}</span>
+                            <span class="chip-formule">{$QUOTE.cf_1125|default:'-'}</span>
                             <span class="chip-sep">/</span>
                             <span class="chip-total">{$QUOTE.total|number_format:0:',':' '}€</span>
                         </div>
@@ -48,14 +48,14 @@
                 <span class="odm-label"><i class="fa fa-clipboard"></i> BDC ({$SALESORDERS|@count}):</span>
                 <div class="odm-chips">
                     {foreach from=$SALESORDERS item=SO}
-                    <div class="odm-chip{if $SO.sostatus eq 'Approved'} approved{/if}" data-salesorderid="{$SO.salesorderid}" onclick="UnifiedODM.loadSalesOrder({$SO.salesorderid})" title="{$SO.subject|escape}">
+                    <div class="odm-chip{if $SO.sostatus eq 'Approved'} approved{/if}" data-salesorderid="{$SO.salesorderid}" onclick="UnifiedODM.loadSalesOrder({$SO.salesorderid})" title="{decode_html($SO.subject)}">
                         <div class="chip-line1">
-                            <span class="chip-no">{$SO.salesorder_no|escape}</span>
+                            <span class="chip-no">{$SO.salesorder_no}</span>
                             <span class="chip-sep">/</span>
                             <span class="chip-date">{$SO.created_date}</span>
                         </div>
                         <div class="chip-line2">
-                            <span class="chip-formule">{$SO.cf_1186|default:'-'|escape}</span>
+                            <span class="chip-formule">{$SO.cf_1186|default:'-'}</span>
                             <span class="chip-sep">/</span>
                             <span class="chip-total">{$SO.total|number_format:0:',':' '}€</span>
                         </div>
@@ -190,7 +190,7 @@
                     <select id="odm_prestataire" style="width: 120px;">
                         <option value="">--</option>
                         {foreach from=$VENDORS item=VENDOR}
-                        <option value="{$VENDOR.id}">{$VENDOR.name|escape}</option>
+                        <option value="{$VENDOR.id}">{$VENDOR.name}</option>
                         {/foreach}
                     </select>
                 </div>
@@ -535,6 +535,33 @@
         </div>
     </div>
 
+    {* Section PDF Templates *}
+    {if $PDF_TEMPLATES|@count > 0}
+    <div class="form-section section-pdf" id="odmPdfSection" style="display:none;">
+        <div class="form-section-title title-red">
+            <i class="fa fa-file-pdf-o"></i>
+            Documents PDF à envoyer
+            <button type="button" class="btn btn-sm" onclick="UnifiedODM.toggleAllPdfTemplates()" style="margin-left: auto; padding: 4px 10px; font-size: 11px;background: #f8f9fa; color: #333; border: 2px solid #e0e0e0;">
+                <i class="fa fa-check-square-o"></i> Tout
+            </button>
+        </div>
+        <div class="pdf-templates-grid">
+            {foreach from=$PDF_TEMPLATES item=TEMPLATE}
+            <div class="pdf-template-item" onclick="UnifiedODM.togglePdfTemplate(this, {$TEMPLATE.id})">
+                <input type="checkbox" class="odm-pdf-template-checkbox" value="{$TEMPLATE.id}" data-name="{decode_html($TEMPLATE.name)}" style="display:none;">
+                <span class="pdf-template-name">{$TEMPLATE.name}</span>
+            </div>
+            {/foreach}
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
+            <input type="email" id="odm_pdfRecipientEmail" value="" placeholder="Email prestataire" style="flex: 1;">
+            <button type="button" class="btn btn-info" id="odm_btnSendMail" style="display:none;" onclick="UnifiedODM.sendMail()">
+                <i class="fa fa-envelope"></i> Envoyer mail
+            </button>
+        </div>
+    </div>
+    {/if}
+
     {* Actions *}
     <div class="actions-bar" id="odmActionsBar" style="display: none; gap: 10px; justify-content: center;">
         <button type="button" class="btn btn-default" onclick="UnifiedODM.cancelEdit()">
@@ -574,6 +601,51 @@
 .odm-tab-container .form-section-title.title-purple i { color: #667eea; }
 .odm-tab-container .form-section-title.title-green { color: #28a745; }
 .odm-tab-container .form-section-title.title-green i { color: #28a745; }
+.odm-tab-container .form-section-title.title-red { color: #e74c3c; }
+.odm-tab-container .form-section-title.title-red i { color: #e74c3c; }
+
+/* PDF Section */
+.odm-tab-container .section-pdf {
+    border-left: 3px solid #e74c3c;
+}
+
+.odm-tab-container .pdf-templates-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.odm-tab-container .pdf-template-item {
+    padding: 8px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f0f0f0;
+    border: 2px solid transparent;
+}
+
+.odm-tab-container .pdf-template-item:hover {
+    background: #e8e8e8;
+}
+
+.odm-tab-container .pdf-template-item.checked {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-color: #1e7e34;
+}
+
+.odm-tab-container #odm_pdfRecipientEmail {
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.odm-tab-container #odm_pdfRecipientEmail:focus {
+    border-color: #17a2b8;
+    outline: none;
+}
 
 .odm-tab-container .form-group {
     margin-bottom: 8px;
@@ -1258,6 +1330,11 @@ var odmAllProducts = {$PRODUCTS_JSON|default:'[]'};
 var odmPotentialId = {$POTENTIAL_ID};
 var odmContactId = {$CONTACT_ID|default:0};
 var odmCsrfToken = '{$CSRF_TOKEN}';
+var odmPdfTemplates = [
+{foreach from=$PDF_TEMPLATES item=TPL name=tplLoop}
+    {ldelim}id: {$TPL.id}, name: '{$TPL.name|escape:'javascript'}'{rdelim}{if !$smarty.foreach.tplLoop.last},{/if}
+{/foreach}
+];
 
 // Données du Potential pour CHARGEMENT/LIVRAISON
 var odmPotentialData = {

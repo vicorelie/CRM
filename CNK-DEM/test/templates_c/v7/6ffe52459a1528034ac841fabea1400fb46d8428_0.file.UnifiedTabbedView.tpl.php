@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-01 19:28:21
+/* Smarty version 4.5.5, created on 2026-02-10 14:09:17
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_697f8d3522dc60_61577298',
+  'unifunc' => 'content_698b1fed3b7152_05611208',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6ffe52459a1528034ac841fabea1400fb46d8428' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl',
-      1 => 1769767295,
+      1 => 1770719007,
       2 => 'file',
     ),
   ),
@@ -20,11 +20,54 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_697f8d3522dc60_61577298 (Smarty_Internal_Template $_smarty_tpl) {
-?><div class="unified-view-wrapper"><div class="unified-container"><div class="unified-tabs-header"><div class="unified-header-left"><div class="header-info"><h1><i class="fa fa-th-large"></i> Gestion client</h1><p class="subtitle"><?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['RECORD']->value->get('potentialname'), ENT_QUOTES, 'UTF-8', true);?>
-</p></div></div><ul class="unified-tabs" role="tablist" id="unifiedTabNav"><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>"><a href="#unified-tab-details" data-tab="details" data-toggle="tab" role="tab" class="tab-link tab-blue"><i class="fa fa-info-circle"></i><span>Details</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>"><a href="#unified-tab-devis" data-tab="devis" data-toggle="tab" role="tab" class="tab-link tab-purple"><i class="fa fa-file-text-o"></i><span>Devis</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>"><a href="#unified-tab-map" data-tab="map" data-toggle="tab" role="tab" class="tab-link tab-green"><i class="fa fa-map-marker"></i><span>Google Map</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>"><a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange"><i class="fa fa-archive"></i><span>Inventaire</span></a></li></ul><div class="unified-header-right"><a href="index.php?module=Potentials&view=Detail&record=<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
+function content_698b1fed3b7152_05611208 (Smarty_Internal_Template $_smarty_tpl) {
+?><div class="unified-view-wrapper"><div class="unified-container"><div class="unified-tabs-header"><div class="unified-header-left"><div class="header-info"><h1><i class="fa fa-user-circle"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_NAME']->value;?>
+</h1><?php if (!empty($_smarty_tpl->tpl_vars['CONTACT_PHONE']->value)) {?><p class="contact-detail"><i class="fa fa-phone"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_PHONE']->value;?>
+</p><?php }
+if (!empty($_smarty_tpl->tpl_vars['CONTACT_EMAIL']->value)) {?><p class="contact-detail"><i class="fa fa-envelope"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_EMAIL']->value;?>
+</p><?php }?></div></div><ul class="unified-tabs" role="tablist" id="unifiedTabNav"><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>"><a href="#unified-tab-details" data-tab="details" data-toggle="tab" role="tab" class="tab-link tab-blue"><i class="fa fa-info-circle"></i><span>Details</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>"><a href="#unified-tab-devis" data-tab="devis" data-toggle="tab" role="tab" class="tab-link tab-purple"><i class="fa fa-file-text-o"></i><span>Devis</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>"><a href="#unified-tab-map" data-tab="map" data-toggle="tab" role="tab" class="tab-link tab-green"><i class="fa fa-map-marker"></i><span>Google Map</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>"><a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange"><i class="fa fa-archive"></i><span>Inventaire</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'odm') {?>active<?php }?>"><a href="#unified-tab-odm" data-tab="odm" data-toggle="tab" role="tab" class="tab-link tab-teal"><i class="fa fa-clipboard"></i><span>ODM</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'mail') {?>active<?php }?>"><a href="#unified-tab-mail" data-tab="mail" data-toggle="tab" role="tab" class="tab-link tab-pink"><i class="fa fa-envelope"></i><span>Mail</span></a></li></ul><div class="unified-header-right"><a href="index.php?module=Potentials&view=Detail&record=<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
 " class="back-link"><i class="fa fa-arrow-left"></i> <span>Retour</span></a></div></div><div class="tab-content unified-tab-content" id="unifiedTabbedView" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
-"><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>" id="unified-tab-details"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des details...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>" id="unified-tab-devis"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des devis...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>" id="unified-tab-map"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de la carte...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>" id="unified-tab-inventaire"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'inventaire...</p></div></div></div></div></div></div>
+"><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>" id="unified-tab-details"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des details...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>" id="unified-tab-devis"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des devis...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>" id="unified-tab-map"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de la carte...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>" id="unified-tab-inventaire"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'inventaire...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'odm') {?>active<?php }?>" id="unified-tab-odm"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des ODM...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'mail') {?>active<?php }?>" id="unified-tab-mail"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'historique mail...</p></div></div></div></div></div></div>
+
+<div class="modal fade" id="sendEmailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8;">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-envelope"></i> Envoyer un Email au Client</h4>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <form id="sendEmailForm">
+                                        <div class="form-group">
+                        <label><strong>Email destinataire</strong> <span class="required">*</span></label>
+                        <input type="email" class="form-control" id="recipientEmail" name="email" required placeholder="client@example.com">
+                        <small class="help-block">L'email du contact sera pré-rempli automatiquement</small>
+                    </div>
+
+                                        <div class="form-group" style="margin-top: 20px;">
+                        <label><strong>Template Email</strong> <span class="required">*</span></label>
+                        <select class="form-control select2" id="emailTemplate" name="email_template" required style="width: 100%;">
+                            <option value="">-- Sélectionner un template --</option>
+                        </select>
+                    </div>
+
+                                        <div class="form-group" style="margin-top: 20px;">
+                        <label><strong>PDFs à joindre</strong></label>
+                        <div id="pdfTemplatesList" style="margin-top: 10px;">
+                            <p class="text-muted">Chargement des templates PDF...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding: 15px 25px; background: #f8f9fa;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="confirmSendEmail">
+                    <i class="fa fa-send"></i> Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 /* ============================================
@@ -94,6 +137,20 @@ function content_697f8d3522dc60_61577298 (Smarty_Internal_Template $_smarty_tpl)
     font-size: 0.85em;
 }
 
+.unified-header-left .contact-detail {
+    margin: 2px 0 0 0;
+    opacity: 0.9;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.unified-header-left .contact-detail i {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
 .unified-header-right {
     display: flex;
     align-items: center;
@@ -120,6 +177,12 @@ function content_697f8d3522dc60_61577298 (Smarty_Internal_Template $_smarty_tpl)
 .unified-header-right .back-link:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateX(-3px);
+}
+
+.unified-header-right .btn-send-email:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Tab Navigation - Centered */
@@ -184,6 +247,10 @@ function content_697f8d3522dc60_61577298 (Smarty_Internal_Template $_smarty_tpl)
 .unified-tabs > li.active .tab-link.tab-green::after { background: #28a745; }
 .unified-tabs > li.active .tab-link.tab-orange { color: #e67e22; }
 .unified-tabs > li.active .tab-link.tab-orange::after { background: #e67e22; }
+.unified-tabs > li.active .tab-link.tab-teal { color: #17a2b8; }
+.unified-tabs > li.active .tab-link.tab-teal::after { background: #17a2b8; }
+.unified-tabs > li.active .tab-link.tab-pink { color: #e91e63; }
+.unified-tabs > li.active .tab-link.tab-pink::after { background: #e91e63; }
 
 /* Tab Content */
 .unified-tab-content {
@@ -923,6 +990,123 @@ input[type="number"] { -moz-appearance: textfield; }
         }
         UnifiedTabbedView.init(<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
 );
+
+        // Gestion du bouton Envoyer Email
+        jQuery('#sendEmailBtn').on('click', function() {
+            var recordId = <?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
+;
+
+            // Ouvrir la modale
+            jQuery('#sendEmailModal').modal('show');
+
+            // Charger toutes les données en un seul appel
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'GetEmailData',
+                    record: recordId
+                },
+                success: function(response) {
+                    var data = response.result || response;
+
+                    // Email du contact
+                    if (data.contact_email) {
+                        jQuery('#recipientEmail').val(data.contact_email);
+                    }
+
+                    // Templates EMAILMaker
+                    var select = jQuery('#emailTemplate');
+                    select.empty().append('<option value="">-- Sélectionner un template --</option>');
+                    if (data.email_templates && data.email_templates.length > 0) {
+                        for (var i = 0; i < data.email_templates.length; i++) {
+                            var tpl = data.email_templates[i];
+                            select.append('<option value="' + tpl.id + '">' + tpl.name + '</option>');
+                        }
+                    }
+
+                    // Templates PDFMaker
+                    var container = jQuery('#pdfTemplatesList');
+                    if (data.pdf_templates && data.pdf_templates.length > 0) {
+                        var html = '<div class="pdf-templates-grid">';
+                        for (var j = 0; j < data.pdf_templates.length; j++) {
+                            var pdf = data.pdf_templates[j];
+                            html += '<div class="pdf-template-item">';
+                            html += '<label style="cursor: pointer;">';
+                            html += '<input type="checkbox" name="pdf_templates[]" value="' + pdf.id + '"> ';
+                            html += pdf.name;
+                            html += '</label>';
+                            html += '</div>';
+                        }
+                        html += '</div>';
+                        container.html(html);
+                    } else {
+                        container.html('<p class="text-muted">Aucun template PDF disponible</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur chargement données email:', error);
+                    alert('Erreur lors du chargement des données. Veuillez réessayer.');
+                }
+            });
+        });
+
+        // Envoyer l'email
+        jQuery('#confirmSendEmail').on('click', function() {
+            var email = jQuery('#recipientEmail').val();
+            var emailTemplateId = jQuery('#emailTemplate').val();
+            var pdfTemplates = [];
+
+            jQuery('input[name="pdf_templates[]"]:checked').each(function() {
+                pdfTemplates.push(jQuery(this).val());
+            });
+
+            if (!email) {
+                alert('Veuillez saisir une adresse email');
+                return;
+            }
+
+            if (!emailTemplateId) {
+                alert('Veuillez sélectionner un template email');
+                return;
+            }
+
+            // Afficher un loader
+            jQuery('#confirmSendEmail').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Envoi en cours...');
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'SendEmail',
+                    record: <?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
+,
+                    email: email,
+                    email_template: emailTemplateId,
+                    pdf_templates: pdfTemplates
+                },
+                success: function(response) {
+                    var data = response.result || response;
+                    if (data.success) {
+                        jQuery('#sendEmailModal').modal('hide');
+                        alert('Email envoyé avec succès !');
+                    } else {
+                        alert('Erreur: ' + (data.error || 'Impossible d\'envoyer l\'email'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur envoi email:', error, xhr.responseText);
+                    alert('Erreur lors de l\'envoi de l\'email');
+                },
+                complete: function() {
+                    jQuery('#confirmSendEmail').prop('disabled', false).html('<i class="fa fa-send"></i> Envoyer');
+                }
+            });
+        });
     });
 })();
 <?php echo '</script'; ?>

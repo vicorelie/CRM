@@ -15,14 +15,14 @@
         <span class="quotes-label"><i class="fa fa-folder-open"></i> Devis ({$QUOTES|@count}):</span>
         <div class="quotes-chips">
             {foreach from=$QUOTES item=QUOTE}
-            <div class="quote-chip{if $QUOTE.cf_1162 eq '1'} validated{/if}" data-quoteid="{$QUOTE.quoteid}" onclick="UnifiedDevis.loadQuote({$QUOTE.quoteid})" title="{$QUOTE.subject|escape}">
+            <div class="quote-chip{if $QUOTE.cf_1162 eq '1'} validated{/if}" data-quoteid="{$QUOTE.quoteid}" onclick="UnifiedDevis.loadQuote({$QUOTE.quoteid})" title="{decode_html($QUOTE.subject)}">
                 <div class="chip-line1">
-                    <span class="chip-no">{$QUOTE.quote_no|escape}</span>
+                    <span class="chip-no">{$QUOTE.quote_no}</span>
                     <span class="chip-sep">/</span>
                     <span class="chip-date">{$QUOTE.created_date}</span>
                 </div>
                 <div class="chip-line2">
-                    <span class="chip-formule">{$QUOTE.cf_1125|default:'-'|escape}</span>
+                    <span class="chip-formule">{$QUOTE.cf_1125|default:'-'}</span>
                     <span class="chip-sep">/</span>
                     <span class="chip-total">{$QUOTE.total|number_format:0:',':' '}€</span>
                 </div>
@@ -92,7 +92,7 @@
             <div class="form-row-{if $IS_ADMIN}4{else}2{/if}">
                 <div class="form-group">
                     <label><span class="required">*</span> Sujet</label>
-                    <input type="text" id="unified_subject" value="Dev-{$POTENTIAL_NAME|escape}" required>
+                    <input type="text" id="unified_subject" value="Dev-{decode_html($POTENTIAL_NAME)|escape:'html'}" required>
                 </div>
                 <div class="form-group">
                     <label>Date validite</label>
@@ -104,7 +104,7 @@
                     <select id="unified_prestataire">
                         <option value="">-- Sélectionner --</option>
                         {foreach from=$VENDORS item=VENDOR}
-                        <option value="{$VENDOR.id}">{$VENDOR.name|escape}</option>
+                        <option value="{$VENDOR.id}">{$VENDOR.name}</option>
                         {/foreach}
                     </select>
                 </div>
@@ -126,7 +126,7 @@
             <div class="form-section section-forfait">
                 <div class="form-section-title title-purple">
                     <i class="fa fa-truck"></i>
-                    Forfait
+                    Formule
                 </div>
                 <div class="form-row-2">
                     <div class="form-group">
@@ -150,11 +150,11 @@
                 </div>
                 <div class="form-row-2" style="margin-top: 10px;">
                     <div class="form-group">
-                        <label>Forfait HT</label>
+                        <label>Formule HT</label>
                         <input type="number" id="unified_cf_1127" value="" placeholder="0.00" step="0.01" min="0">
                     </div>
                     <div class="form-group">
-                        <label>Forfait TTC</label>
+                        <label>Formule TTC</label>
                         <input type="number" id="unified_cf_1127_ttc" value="" placeholder="0.00" step="0.01" min="0">
                     </div>
                 </div>
@@ -164,7 +164,7 @@
                         <input type="number" id="unified_cf_1129" value="" placeholder="0.00" step="0.01" min="0">
                     </div>
                     <div class="form-group">
-                        <label>Forfait + Suppl. TTC</label>
+                        <label>Formule + Suppl. TTC</label>
                         <input type="number" id="unified_forfait_total_ttc" value="0" step="0.01" readonly style="background: #f0f0f0;">
                     </div>
                 </div>
@@ -242,13 +242,13 @@
             <div class="pdf-templates-grid">
                 {foreach from=$PDF_TEMPLATES item=TEMPLATE}
                 <div class="pdf-template-item" onclick="UnifiedDevis.togglePdfTemplate(this, {$TEMPLATE.id})">
-                    <input type="checkbox" class="unified-pdf-template-checkbox" value="{$TEMPLATE.id}" data-name="{$TEMPLATE.name|escape}" style="display:none;">
-                    <span class="pdf-template-name">{$TEMPLATE.name|escape}</span>
+                    <input type="checkbox" class="unified-pdf-template-checkbox" value="{$TEMPLATE.id}" data-name="{decode_html($TEMPLATE.name)}" style="display:none;">
+                    <span class="pdf-template-name">{$TEMPLATE.name}</span>
                 </div>
                 {/foreach}
             </div>
             <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
-                <input type="email" id="unified_pdfRecipientEmail" value="{$CONTACT_EMAIL|escape}" placeholder="Email destinataire" style="flex: 1;">
+                <input type="email" id="unified_pdfRecipientEmail" value="{$CONTACT_EMAIL}" placeholder="Email destinataire" style="flex: 1;">
                 <button type="button" class="btn btn-info" id="unified_btnSendMail" style="display:none;" onclick="UnifiedDevis.sendMail()">
                     <i class="fa fa-envelope"></i> Envoyer mail
                 </button>

@@ -85,6 +85,10 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					echo $this->renderODMTab($viewer, $recordModel);
 					break;
 
+				case 'mail':
+					echo $this->renderMailTab($viewer, $recordModel);
+					break;
+
 				default:
 					echo $this->renderDetailsTab($request, $viewer, $recordModel);
 					break;
@@ -370,6 +374,20 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			];
 		}
 
+		// Load PDF templates for SalesOrder (Bon de Commande)
+		$pdfTemplates = [];
+		$pdfQuery = "SELECT templateid, filename, description FROM vtiger_pdfmaker
+					 WHERE module = 'SalesOrder' AND deleted = 0
+					 ORDER BY filename ASC";
+		$result = $db->pquery($pdfQuery, []);
+		while($row = $db->fetchByAssoc($result)) {
+			$pdfTemplates[] = [
+				'id' => $row['templateid'],
+				'name' => $row['filename'],
+				'description' => $row['description']
+			];
+		}
+
 		// Get CSRF token
 		include_once 'libraries/csrf-magic/csrf-magic.php';
 		$csrfToken = function_exists('csrf_get_tokens') ? csrf_get_tokens() : '';
@@ -423,6 +441,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('VENDORS', $vendors);
 		$viewer->assign('CSRF_TOKEN', $csrfToken);
 		$viewer->assign('POTENTIAL_DATA', $potentialData);
+		$viewer->assign('PDF_TEMPLATES', $pdfTemplates);
 
 		return $viewer->view('UnifiedODMTab.tpl', 'Potentials', true);
 	}
@@ -655,6 +674,19 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				// Type de déménagement
 				'cf_1352' => $soModel->get('cf_1352'), // Type de déménagement
 			];
+
+			// Get prestataire (vendor) email for PDF sending
+			$prestataireId = $soModel->get('prestataire');
+			$prestataireEmail = '';
+			if (!empty($prestataireId)) {
+				try {
+					$vendorModel = Vtiger_Record_Model::getInstanceById($prestataireId, 'Vendors');
+					$prestataireEmail = $vendorModel->get('email');
+				} catch (Exception $e) {
+					// Ignore
+				}
+			}
+			$soData['prestataire_email'] = $prestataireEmail;
 
 			// Get products from inventory with percentages
 			$productsQuery = "SELECT ivp.productid, ivp.quantity, ivp.listprice, ivp.discount_percent,
@@ -924,5 +956,43 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			error_log('[UnifiedTabAjax] createBDCFromQuote error: ' . $e->getMessage());
 			echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 		}
+	}
+
+	/**
+	 * Render the Mail tab content
+	 */
+	private function renderMailTab($viewer, $recordModel) {
+		$db = PearDatabase::getInstance();
+		$recordId = $recordModel->getId();
+		$contactId = $recordModel->get('contact_id');
+
+		// Get contact email
+		$contactEmail = '';
+		if (!empty($contactId)) {
+			$emailResult = $db->pquery("SELECT email FROM vtiger_contactdetails WHERE contactid = ?", [$contactId]);
+			if ($db->num_rows($emailResult) > 0) {
+				$contactEmail = $db->query_result($emailResult, 0, 'email');
+			}
+		}
+
+		// Load existing quotes for this potential
+		$quotes = [];
+		$quotesQuery = "SELECT q.quoteid, q.quote_no, q.subject, q.total,
+						qcf.cf_1125, qcf.cf_1162,
+						DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+						FROM vtiger_quotes q
+						LEFT JOIN vtiger_quotescf qcf ON qcf.quoteid = q.quoteid
+						INNER JOIN vtiger_crmentity c ON c.crmid = q.quoteid
+						WHERE q.potentialid = ? AND c.deleted = 0
+						ORDER BY c.createdtime DESC";
+		$result = $db->pquery($quotesQuery, [$recordId]);
+		while($row = $db->fetchByAssoc($result)) {
+			$quotes[] = $row;
+		}
+
+		$viewer->assign('RECORD_ID', $recordId);
+		$viewer->assign('CONTACT_EMAIL', $contactEmail);
+		$viewer->assign('QUOTES', $quotes);
+		return $viewer->view('UnifiedMailTab.tpl', 'Potentials', true);
 	}
 }

@@ -3,22 +3,35 @@
 <head>
 	<title>Ordre de Mission</title>
 	<meta charset="UTF-8">
-	<style type="text/css">body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#111;line-height:1.2;margin:0;padding:0;}
+	<style type="text/css">body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#111;line-height:1.3em;margin:0;padding:0;}
     .page{padding:4px 15px;}
 
     .topbar{background:#1F314D;color:#fff;padding:6px 10px;margin-bottom:6px;}
     .topbar .name{font-size:12pt;font-weight:bold;color:#fff;}
     .topbar .tag{font-size:7.5pt;color:#fff;}
+    .topbar .doc-title{font-size:11pt;font-weight:bold;color:#fff;}
+    .topbar .doc-no{font-size:9pt;color:#fff;}
+    .topbar .exemplaire{font-size:8pt;font-weight:bold;color:#fff;background:#3a4a66;padding:2px 6px;margin-top:2px;}
+    .topbar .legal-ref{font-size:6.5pt;color:#ddd;margin-top:2px;}
 
-    .row:after{content:"";display:table;clear:both;}
-    .colL{float:left;width:55%;}
-    .colR{float:right;width:42%;}
     .box{font-size:8.5pt;}
 
+    .info-box{background:#f5f5f5;border:1px solid #ddd;padding:6px 8px;margin-bottom:6px;font-size:8.5pt;}
+    .text-sm{font-size:7.5pt;color:#555;}
+
     .title{font-weight:bold;background:#1F314D;color:#fff;padding:4px 6px;margin:6px 0 4px;font-size:9pt;}
+    .section-title{font-weight:bold;background:#1F314D;color:#fff;padding:4px 6px;margin:8px 0 6px;font-size:9pt;}
+
     .tbl{width:100%;border-collapse:collapse;margin:4px 0 6px;}
     .tbl td,.tbl th{border:1px solid #444;padding:4px 5px;vertical-align:top;font-size:8.5pt;}
     .tbl th{background:#e6e6e6;font-weight:bold;}
+    .mission-tbl td,.mission-tbl th{text-align:center;}
+
+    .detail-list{margin-top:4px;padding-top:4px;border-top:1px dashed #ccc;}
+    .detail-table{width:100%;border-collapse:collapse;}
+    .detail-table td{border:none;padding:1px 2px;font-size:7.5pt;}
+    .detail-lbl{color:#555;width:50%;}
+    .detail-val{font-weight:bold;color:#111;}
 
     .right{text-align:right;}
     .center{text-align:center;}
@@ -35,127 +48,237 @@
     .fill-row td{padding:6px 5px;font-size:8pt;border:none;}
     .fill-row .lbl{width:35%;color:#333;font-weight:bold;}
     .fill-row .input{width:65%;border-bottom:1px dotted #666;}
+
+    .fill-section{background:#fffde7;border:1px solid #ffd54f;padding:8px 10px;margin-bottom:6px;}
+    .fill-input{border-bottom:1px dotted #666;padding:0 40px;}
+
+    .conditions-box{background:#e3f2fd;border:1px solid #90caf9;padding:6px 8px;margin-bottom:6px;font-size:7.5pt;}
+
+    .obs-box{border:1px solid #ccc;padding:6px 8px;background:#fff;margin-bottom:6px;}
+    .obs-title{font-weight:bold;color:#1F314D;font-size:8pt;margin-bottom:4px;}
+    .obs-line{border-bottom:1px dotted #999;height:14px;margin-bottom:2px;}
+
+    .hours-box{width:100%;border:1px solid #ccc;border-collapse:collapse;}
+    .hours-box td{border:1px solid #ccc;padding:4px 6px;font-size:8pt;}
+    .hour-label{background:#f0f0f0;width:25%;font-weight:bold;color:#1F314D;}
+
+    .signature-box{background:#f5f5f5;border:1px solid #ddd;padding:8px;text-align:center;}
+    .sig-title{font-weight:bold;color:#1F314D;font-size:8pt;margin-bottom:25px;}
+    .sig-line{border-top:1px solid #999;padding-top:3px;font-style:italic;color:#666;font-size:7pt;}
+
+    .checkbox-item{font-size:7.5pt;padding:2px 0;}
+
+    .alert-box{background:#fff8e1;border:1px solid #ffb300;padding:6px 8px;margin-top:8px;font-size:6.5pt;text-align:justify;}
 	</style>
 </head>
 <body>
-<div class="page"><!-- TOP BAR -->
+<div class="page">
 <div class="topbar">
-<table cellpadding="0" cellspacing="0" width="100%">
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
 	<tbody>
 		<tr>
-			<td style="width:60%;vertical-align:top;color:#fff;">
-			<div class="name" style="color:#fff;"><strong>CNK DEM</strong></div>
+			<td valign="top" width="55%">
+			<div class="name">CNK DEM</div>
 
-			<div class="tag" style="color:#fff;">Votre sp&eacute;cialiste du d&eacute;m&eacute;nagement</div>
+			<div class="tag">Votre sp&eacute;cialiste du d&eacute;m&eacute;nagement</div>
 			</td>
-			<td style="width:40%;vertical-align:top;text-align:right;color:#fff;">
-			<div style="font-size:11pt;font-weight:bold;color:#fff;">ORDRE DE MISSION</div>
+			<td align="right" valign="top" width="45%">
+			<div class="doc-title">LETTRE DE VOITURE</div>
 
-			<div style="font-size:9pt;color:#fff;">N&deg; $SALESORDER_SALESORDER_NO$</div>
+			<div class="doc-no">N&deg; $SALESORDER_SALESORDER_NO$</div>
 
-			<div style="font-size:7pt;color:#ddd;">Document obligatoire - Arr&ecirc;t&eacute; 09/11/1999</div>
+			<div class="exemplaire">EXEMPLAIRE CHARGEMENT</div>
+
+			<div class="legal-ref">Document obligatoire - Arr&ecirc;t&eacute; 09/11/1999</div>
 			</td>
 		</tr>
 	</tbody>
 </table>
 </div>
-<!-- CLIENT / PRESTATAIRE -->
 
-<div class="row">
-<div class="colL box"><strong>Client :</strong> $R_CONTACTID_CONTACT_NO$ - $R_CONTACTID_FIRSTNAME$ $R_CONTACTID_LASTNAME$<br />
-T&eacute;l : $R_CONTACTID_MOBILE$ | Email : $R_CONTACTID_EMAIL$</div>
-
-<div class="colR box"><strong>Entreprise ex&eacute;cutante :</strong> $SALESORDER_PRESTATAIRE$</div>
-</div>
-<!-- DETAIL DE LA MISSION -->
-
-<table class="tbl">
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
 	<tbody>
 		<tr>
-			<th class="center">Devis</th>
-			<th class="center">Date</th>
-			<th class="center">Volume</th>
-			<th class="center">Distance</th>
-			<th class="center">Nature</th>
-			<th class="center">Formule</th>
-		</tr>
-		<tr>
-			<td class="center">$R_QUOTEID_QUOTE_NO$</td>
-			<td class="center">$SALESORDER_CREATEDTIME$</td>
-			<td class="center"><strong>$SALESORDER_CF_1349$ m&sup3;</strong></td>
-			<td class="center"><strong>$SALESORDER_CF_1350$ km</strong></td>
-			<td class="center">$SALESORDER_CF_1352$</td>
-			<td class="center"><strong>$SALESORDER_CF_1186$</strong></td>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Client</strong><br />
+			$R_CONTACTID_FIRSTNAME$ $R_CONTACTID_LASTNAME$<br />
+			<span style="font-size:7.5pt;color:#555;">T&eacute;l : $R_CONTACTID_MOBILE$ | $R_CONTACTID_EMAIL$</span></td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Entreprise ex&eacute;cutante</strong><br />
+			$SALESORDER_PRESTATAIRE$</td></tr>
+			</table>
+			</td>
 		</tr>
 	</tbody>
 </table>
-<!-- CHARGEMENT / LIVRAISON -->
+
+<table class="tbl mission-tbl">
+	<tbody>
+		<tr>
+			<th>Devis</th>
+			<th>Date</th>
+			<th>Volume</th>
+			<th>Distance</th>
+			<th>Nature</th>
+			<th>Formule</th>
+		</tr>
+		<tr>
+			<td>$R_QUOTEID_QUOTE_NO$</td>
+			<td>$SALESORDER_CREATEDTIME$</td>
+			<td><strong>$SALESORDER_CF_1349$ m&sup3;</strong></td>
+			<td><strong>$SALESORDER_CF_1350$ km</strong></td>
+			<td>$SALESORDER_CF_1352$</td>
+			<td><strong>$SALESORDER_CF_1186$</strong></td>
+		</tr>
+	</tbody>
+</table>
 
 <table class="tbl">
 	<tbody>
 		<tr>
-			<th style="width:50%;">CHARGEMENT</th>
-			<th style="width:50%;">LIVRAISON</th>
+			<th width="50%">CHARGEMENT</th>
+			<th width="50%">LIVRAISON</th>
 		</tr>
 		<tr>
 			<td><strong>Date :</strong> $SALESORDER_CF_1309$ ($SALESORDER_CF_1310$ - $SALESORDER_CF_1311$)<br />
 			<strong>Adresse :</strong> $SALESORDER_CF_1312$, $SALESORDER_CF_1314$ $SALESORDER_CF_1313$
-			<table cellpadding="0" cellspacing="0" class="info-row" style="border:none;margin:2px 0 0;">
+			<div class="detail-list">
+			<table class="detail-table">
 				<tbody>
 					<tr>
-						<td class="label" style="border:none;">Type logement :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1315$</td>
+						<td class="detail-lbl">Type logement</td>
+						<td class="detail-val">$SALESORDER_CF_1315$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">&Eacute;tage / Ascenseur :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1316$ / $SALESORDER_CF_1317$</td>
+						<td class="detail-lbl">&Eacute;tage / Ascenseur</td>
+						<td class="detail-val">$SALESORDER_CF_1316$ / $SALESORDER_CF_1317$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Monte-meubles :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1323$</td>
+						<td class="detail-lbl">Monte-meubles</td>
+						<td class="detail-val">$SALESORDER_CF_1323$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Passage fen&ecirc;tre :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1322$</td>
+						<td class="detail-lbl">Passage fen&ecirc;tre</td>
+						<td class="detail-val">$SALESORDER_CF_1322$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Transbordement :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1319$</td>
+						<td class="detail-lbl">Transbordement</td>
+						<td class="detail-val">$SALESORDER_CF_1319$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Portage / Statio. :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1320$m / $SALESORDER_CF_1321$</td>
+						<td class="detail-lbl">Portage / Statio.</td>
+						<td class="detail-val">$SALESORDER_CF_1320$m / $SALESORDER_CF_1321$</td>
 					</tr>
 				</tbody>
 			</table>
+			</div>
 			</td>
 			<td><strong>Date :</strong> $SALESORDER_CF_1324$<br />
 			<strong>Adresse :</strong> $SALESORDER_CF_1325$, $SALESORDER_CF_1327$ $SALESORDER_CF_1326$
-			<table cellpadding="0" cellspacing="0" class="info-row" style="border:none;margin:2px 0 0;">
+			<div class="detail-list">
+			<table class="detail-table">
 				<tbody>
 					<tr>
-						<td class="label" style="border:none;">Type logement :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1328$</td>
+						<td class="detail-lbl">Type logement</td>
+						<td class="detail-val">$SALESORDER_CF_1328$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">&Eacute;tage / Ascenseur :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1329$ / $SALESORDER_CF_1330$</td>
+						<td class="detail-lbl">&Eacute;tage / Ascenseur</td>
+						<td class="detail-val">$SALESORDER_CF_1329$ / $SALESORDER_CF_1330$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Monte-meubles :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1336$</td>
+						<td class="detail-lbl">Monte-meubles</td>
+						<td class="detail-val">$SALESORDER_CF_1336$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Passage fen&ecirc;tre :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1335$</td>
+						<td class="detail-lbl">Passage fen&ecirc;tre</td>
+						<td class="detail-val">$SALESORDER_CF_1335$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Transbordement :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1332$</td>
+						<td class="detail-lbl">Transbordement</td>
+						<td class="detail-val">$SALESORDER_CF_1332$</td>
 					</tr>
 					<tr>
-						<td class="label" style="border:none;">Portage / Statio. :</td>
-						<td class="value" style="border:none;">$SALESORDER_CF_1333$m / $SALESORDER_CF_1334$</td>
+						<td class="detail-lbl">Portage / Statio.</td>
+						<td class="detail-val">$SALESORDER_CF_1333$m / $SALESORDER_CF_1334$</td>
+					</tr>
+				</tbody>
+			</table>
+			</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Garantie</strong><br />
+			Assurance compl&eacute;mentaire - Valeur d&eacute;clar&eacute;e : <strong>$SALESORDER_CF_1170$ &euro;</strong></td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Mat&eacute;riel</strong><br />
+			#PRODUCTBLOC_PRODUCTS_START#&bull; $PRODUCTTITLE$ x$PRODUCTQUANTITY$ #PRODUCTBLOC_PRODUCTS_END#</td></tr>
+			</table>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="4" cellspacing="0" width="100%" style="margin:8px 0 6px;" bgcolor="#1F314D">
+<tr><td><strong style="color:#fff;font-size:9pt;">&Agrave; remplir lors de l&#39;ex&eacute;cution</strong></td></tr>
+</table>
+
+<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ffd54f;margin-bottom:6px;" bgcolor="#fffde7">
+	<tr>
+		<td valign="top" width="50%"><strong>V&eacute;hicule(s) :</strong> ____________________</td>
+		<td align="right" valign="top" width="50%"><strong>N&deg; de licence :</strong> ____________________</td>
+	</tr>
+</table>
+
+<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #90caf9;margin-bottom:6px;font-size:7.5pt;" bgcolor="#e3f2fd">
+<tr><td>
+L&#39;op&eacute;ration s&#39;effectuera aux conditions g&eacute;n&eacute;rales de vente du contrat de d&eacute;m&eacute;nagement approuv&eacute;es par le client et joint au devis-contrat ainsi qu&#39;aux conditions particuli&egrave;res suivantes :<br /><br />
+<strong>Prix et modalit&eacute;s de paiement :</strong> selon modalit&eacute;s du devis $R_QUOTEID_QUOTE_NO$ du $R_QUOTEID_CREATEDTIME$<br />
+<strong>Conditions commerciales :</strong> 43% d&#39;acompte &agrave; la commande, Solde &agrave; la livraison
+</td></tr>
+</table>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ccc;margin-bottom:6px;" bgcolor="#ffffff">
+			<tr><td valign="top">
+			<strong style="color:#1F314D;font-size:8pt;">Observations du repr&eacute;sentant au chargement</strong><br /><br />
+			____________________________________________________<br />
+			____________________________________________________<br />
+			____________________________________________________
+			</td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="0" cellspacing="0" class="hours-box">
+				<tbody>
+					<tr>
+						<td class="hour-label"><strong>Heures</strong></td>
+						<td>D&eacute;part d&eacute;p&ocirc;t : ....................</td>
+					</tr>
+					<tr>
+						<td class="hour-label">&nbsp;</td>
+						<td>Arriv&eacute;e lieu chargement : ....................</td>
+					</tr>
+					<tr>
+						<td class="hour-label">&nbsp;</td>
+						<td>D&eacute;part lieu chargement : ....................</td>
 					</tr>
 				</tbody>
 			</table>
@@ -163,55 +286,296 @@ T&eacute;l : $R_CONTACTID_MOBILE$ | Email : $R_CONTACTID_EMAIL$</div>
 		</tr>
 	</tbody>
 </table>
-<!-- GARANTIE -->
 
-<table class="tbl">
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:8px;" width="100%">
 	<tbody>
 		<tr>
-			<td style="width:50%;"><strong>Garantie :</strong> Assurance compl&eacute;mentaire - Valeur d&eacute;clar&eacute;e : <strong>$SALESORDER_CF_1170$ &euro;</strong></td>
-			<td style="width:50%;"><strong>Mat&eacute;riel :</strong><br />
-			#PRODUCTBLOC_PRODUCTS_START#. $PRODUCTTITLE$ x$PRODUCTQUANTITY$<br />
-			#PRODUCTBLOC_PRODUCTS_END#</td>
-		</tr>
-	</tbody>
-</table>
-<!-- A REMPLIR LORS DE L'EXECUTION -->
-
-<div class="title">&Agrave; REMPLIR LORS DE L&#39;EX&Eacute;CUTION</div>
-
-<table class="tbl">
-	<tbody>
-		<tr>
-			<td style="width:50%;padding:6px;">
-				<table cellpadding="0" cellspacing="0" class="fill-row" style="width:100%;">
-					<tr><td class="lbl">N&deg; licence</td><td class="input">&nbsp;</td></tr>
-					<tr><td class="lbl">V&eacute;hicule(s)</td><td class="input">&nbsp;</td></tr>
-					<tr><td class="lbl">Chef d'&eacute;quipe</td><td class="input">&nbsp;</td></tr>
-					<tr><td class="lbl">Chauffeur</td><td class="input">&nbsp;</td></tr>
-					<tr><td class="lbl">D&eacute;m&eacute;nageur(s)</td><td class="input">&nbsp;</td></tr>
-					<tr><td class="lbl">Poids Lourds</td><td class="input">&nbsp;</td></tr>
-				</table>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ddd;text-align:center;" bgcolor="#f5f5f5">
+			<tr><td>
+			<strong style="color:#1F314D;font-size:8pt;">Signature du repr&eacute;sentant de l&#39;entreprise</strong><br /><br /><br /><br />
+			_______________________________<br />
+			<span style="font-style:italic;color:#666;font-size:7pt;">Signature</span>
+			</td></tr>
+			</table>
 			</td>
-			<td style="width:50%;">
-			<p><strong>Instructions :</strong></p>
-			<p>$SALESORDER_CF_1188$</p>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ddd;text-align:center;" bgcolor="#f5f5f5">
+			<tr><td>
+			<strong style="color:#1F314D;font-size:8pt;">Signature du client</strong><br /><br />
+			<span style="font-size:8pt;">A _________________ le _________________</span><br /><br />
+			_______________________________<br />
+			<span style="font-style:italic;color:#666;font-size:7pt;">Signature</span>
+			</td></tr>
+			</table>
 			</td>
 		</tr>
 	</tbody>
 </table>
-<!-- MONTANT -->
-
-<table class="tbl">
-	<tbody>
-		<tr class="solde-row">
-			<td class="right" style="width:70%;"><strong>Montant &agrave; encaisser (Solde) :</strong></td>
-			<td class="center" style="width:30%;"><span style="font-size:11pt;font-weight:bold;">$SALESORDER_CF_1168$ &euro;</span></td>
-		</tr>
-	</tbody>
-</table>
-<!-- FOOTER -->
-
-<div class="legal">$COMPANY_NAME$ - SIRET: $COMPANY_SIRET$ - TVA: $COMPANY_TVA$ | $COMPANY_ADDRESS$, $COMPANY_ZIP$ $COMPANY_CITY$ - T&eacute;l: $COMPANY_PHONE$</div>
 </div>
+
+<pagebreak />
+
+<div class="page">
+<div class="topbar">
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
+	<tbody>
+		<tr>
+			<td valign="top" width="55%">
+			<div class="name">CNK DEM</div>
+
+			<div class="tag">Votre sp&eacute;cialiste du d&eacute;m&eacute;nagement</div>
+			</td>
+			<td align="right" valign="top" width="45%">
+			<div class="doc-title">LETTRE DE VOITURE</div>
+
+			<div class="doc-no">N&deg; $SALESORDER_SALESORDER_NO$</div>
+
+			<div class="exemplaire">EXEMPLAIRE LIVRAISON</div>
+
+			<div class="legal-ref">Document obligatoire - Arr&ecirc;t&eacute; 09/11/1999</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Client</strong><br />
+			$R_CONTACTID_FIRSTNAME$ $R_CONTACTID_LASTNAME$<br />
+			<span style="font-size:7.5pt;color:#555;">T&eacute;l : $R_CONTACTID_MOBILE$ | $R_CONTACTID_EMAIL$</span></td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Entreprise ex&eacute;cutante</strong><br />
+			$SALESORDER_PRESTATAIRE$</td></tr>
+			</table>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="tbl mission-tbl">
+	<tbody>
+		<tr>
+			<th>Devis</th>
+			<th>Date</th>
+			<th>Volume</th>
+			<th>Distance</th>
+			<th>Nature</th>
+			<th>Formule</th>
+		</tr>
+		<tr>
+			<td>$R_QUOTEID_QUOTE_NO$</td>
+			<td>$SALESORDER_CREATEDTIME$</td>
+			<td><strong>$SALESORDER_CF_1349$ m&sup3;</strong></td>
+			<td><strong>$SALESORDER_CF_1350$ km</strong></td>
+			<td>$SALESORDER_CF_1352$</td>
+			<td><strong>$SALESORDER_CF_1186$</strong></td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="tbl">
+	<tbody>
+		<tr>
+			<th width="50%">CHARGEMENT</th>
+			<th width="50%">LIVRAISON</th>
+		</tr>
+		<tr>
+			<td><strong>Date :</strong> $SALESORDER_CF_1309$ ($SALESORDER_CF_1310$ - $SALESORDER_CF_1311$)<br />
+			<strong>Adresse :</strong> $SALESORDER_CF_1312$, $SALESORDER_CF_1314$ $SALESORDER_CF_1313$
+			<div class="detail-list">
+			<table class="detail-table">
+				<tbody>
+					<tr>
+						<td class="detail-lbl">Type logement</td>
+						<td class="detail-val">$SALESORDER_CF_1315$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">&Eacute;tage / Ascenseur</td>
+						<td class="detail-val">$SALESORDER_CF_1316$ / $SALESORDER_CF_1317$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Monte-meubles</td>
+						<td class="detail-val">$SALESORDER_CF_1323$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Passage fen&ecirc;tre</td>
+						<td class="detail-val">$SALESORDER_CF_1322$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Transbordement</td>
+						<td class="detail-val">$SALESORDER_CF_1319$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Portage / Statio.</td>
+						<td class="detail-val">$SALESORDER_CF_1320$m / $SALESORDER_CF_1321$</td>
+					</tr>
+				</tbody>
+			</table>
+			</div>
+			</td>
+			<td><strong>Date :</strong> $SALESORDER_CF_1324$<br />
+			<strong>Adresse :</strong> $SALESORDER_CF_1325$, $SALESORDER_CF_1327$ $SALESORDER_CF_1326$
+			<div class="detail-list">
+			<table class="detail-table">
+				<tbody>
+					<tr>
+						<td class="detail-lbl">Type logement</td>
+						<td class="detail-val">$SALESORDER_CF_1328$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">&Eacute;tage / Ascenseur</td>
+						<td class="detail-val">$SALESORDER_CF_1329$ / $SALESORDER_CF_1330$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Monte-meubles</td>
+						<td class="detail-val">$SALESORDER_CF_1336$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Passage fen&ecirc;tre</td>
+						<td class="detail-val">$SALESORDER_CF_1335$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Transbordement</td>
+						<td class="detail-val">$SALESORDER_CF_1332$</td>
+					</tr>
+					<tr>
+						<td class="detail-lbl">Portage / Statio.</td>
+						<td class="detail-val">$SALESORDER_CF_1333$m / $SALESORDER_CF_1334$</td>
+					</tr>
+				</tbody>
+			</table>
+			</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Garantie</strong><br />
+			Assurance compl&eacute;mentaire - Valeur d&eacute;clar&eacute;e : <strong>$SALESORDER_CF_1170$ &euro;</strong></td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td><strong>Mat&eacute;riel</strong><br />
+			#PRODUCTBLOC_PRODUCTS_START#&bull; $PRODUCTTITLE$ x$PRODUCTQUANTITY$ #PRODUCTBLOC_PRODUCTS_END#</td></tr>
+			</table>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="4" cellspacing="0" width="100%" style="margin:8px 0 6px;" bgcolor="#1F314D">
+<tr><td><strong style="color:#fff;font-size:9pt;">&Agrave; remplir lors de l&#39;ex&eacute;cution</strong></td></tr>
+</table>
+
+<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ffd54f;margin-bottom:6px;" bgcolor="#fffde7">
+	<tr>
+		<td valign="top" width="50%"><strong>V&eacute;hicule(s) :</strong> ____________________</td>
+		<td align="right" valign="top" width="50%"><strong>N&deg; de licence :</strong> ____________________</td>
+	</tr>
+</table>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:8px;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#ffffff">
+			<tr><td><strong>D&eacute;claration de fin de travail</strong><br />
+			<span style="font-size:7.5pt;color:#555;">Au cours de la visite du mobilier et des lieux, par pi&egrave;ce, portez vos &eacute;ventuelles observations ci-apr&egrave;s.</span></td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="0" cellspacing="0" class="hours-box">
+				<tbody>
+					<tr>
+						<td class="hour-label"><strong>Heures</strong></td>
+						<td>Arriv&eacute;e lieu livraison : ................. <strong>le :</strong> .................</td>
+					</tr>
+					<tr>
+						<td class="hour-label">&nbsp;</td>
+						<td>D&eacute;part lieu livraison : .................</td>
+					</tr>
+					<tr>
+						<td class="hour-label">&nbsp;</td>
+						<td>Retour d&eacute;p&ocirc;t : .................</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ccc;margin-bottom:6px;height:110px;" bgcolor="#ffffff">
+			<tr><td valign="top">
+			<strong style="color:#1F314D;font-size:8pt;">Observations du client</strong><br /><br />
+			<span style="font-size:8pt;">Re&ccedil;u mon mobilier :</span><br />
+			<span style="font-size:7.5pt;">&#9744; au complet et sans r&eacute;serves apr&egrave;s v&eacute;rification avec le chef d&#39;&eacute;quipe</span><br />
+			<span style="font-size:7.5pt;">&#9744; avec r&eacute;serves d&eacute;taill&eacute;es ci-dessous</span><br /><br />
+			____________________________________________________<br />
+			____________________________________________________
+			</td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ccc;margin-bottom:6px;height:110px;" bgcolor="#ffffff">
+			<tr><td valign="top">
+			<strong style="color:#1F314D;font-size:8pt;">Observations du repr&eacute;sentant de l&#39;entreprise</strong><br /><br />
+			____________________________________________________<br />
+			____________________________________________________<br />
+			____________________________________________________<br />
+			____________________________________________________
+			</td></tr>
+			</table>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:8px;" width="100%">
+	<tbody>
+		<tr>
+			<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ddd;text-align:center;" bgcolor="#f5f5f5">
+			<tr><td>
+			<strong style="color:#1F314D;font-size:8pt;">Signature du client</strong><br /><br /><br /><br />
+			_______________________________<br />
+			<span style="font-style:italic;color:#666;font-size:7pt;">Signature</span>
+			</td></tr>
+			</table>
+			</td>
+			<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ddd;text-align:center;" bgcolor="#f5f5f5">
+			<tr><td>
+			<strong style="color:#1F314D;font-size:8pt;">Signature du repr&eacute;sentant</strong><br /><br /><br /><br />
+			_______________________________<br />
+			<span style="font-style:italic;color:#666;font-size:7pt;">Signature</span>
+			</td></tr>
+			</table>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ffb300;margin-top:8px;font-size:6.5pt;text-align:justify;" bgcolor="#fff8e1"><tr><td><strong>IMPORTANT :</strong> La livraison donne lieu &agrave; des formalit&eacute;s imp&eacute;ratives : reportez-vous &agrave; l&#39;article 16 des conditions g&eacute;n&eacute;rales figurant au verso du devis-contrat. Dans tous les cas, vous devez donner d&eacute;charge &agrave; l&#39;entreprise en fin de livraison en signant ce document. <strong>En cas de dommages, utilisez la grille ci-dessus pour identifier avec pr&eacute;cision les pertes et avaries constat&eacute;es, la mention &quot;sous r&eacute;serve de d&eacute;ballage ou de contr&ocirc;le&quot; n&#39;ayant aucune valeur de preuve.</strong> Si vos r&eacute;serves &eacute;mises &agrave; la r&eacute;ception du mobilier ne sont pas accept&eacute;es par le professionnel, ou si vous n&#39;avez &eacute;mis aucune r&eacute;serve &agrave; la livraison, vous ne disposez alors que d&#39;un d&eacute;lai de dix jours calendaires &agrave; compter de la r&eacute;ception des objets transport&eacute;s pour &eacute;mettre par lettre recommand&eacute;e une protestation motiv&eacute;e sur l&#39;&eacute;tat du mobilier r&eacute;ceptionn&eacute;. (article L.224-63 du code de la consommation).</td></tr></table>
+</div>
+
 </body>
 </html>

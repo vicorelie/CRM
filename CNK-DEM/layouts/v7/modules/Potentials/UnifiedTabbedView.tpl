@@ -9,8 +9,13 @@
         <div class="unified-tabs-header">
             <div class="unified-header-left">
                 <div class="header-info">
-                    <h1><i class="fa fa-th-large"></i> Gestion client</h1>
-                    <p class="subtitle">{$RECORD->get('potentialname')|escape}</p>
+                    <h1><i class="fa fa-user-circle"></i> {$CONTACT_NAME}</h1>
+                    {if !empty($CONTACT_PHONE)}
+                        <p class="contact-detail"><i class="fa fa-phone"></i> {$CONTACT_PHONE}</p>
+                    {/if}
+                    {if !empty($CONTACT_EMAIL)}
+                        <p class="contact-detail"><i class="fa fa-envelope"></i> {$CONTACT_EMAIL}</p>
+                    {/if}
                 </div>
             </div>
             <ul class="unified-tabs" role="tablist" id="unifiedTabNav">
@@ -36,6 +41,18 @@
                     <a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange">
                         <i class="fa fa-archive"></i>
                         <span>Inventaire</span>
+                    </a>
+                </li>
+                <li role="presentation" class="{if $ACTIVE_TAB eq 'odm'}active{/if}">
+                    <a href="#unified-tab-odm" data-tab="odm" data-toggle="tab" role="tab" class="tab-link tab-teal">
+                        <i class="fa fa-clipboard"></i>
+                        <span>ODM</span>
+                    </a>
+                </li>
+                <li role="presentation" class="{if $ACTIVE_TAB eq 'mail'}active{/if}">
+                    <a href="#unified-tab-mail" data-tab="mail" data-toggle="tab" role="tab" class="tab-link tab-pink">
+                        <i class="fa fa-envelope"></i>
+                        <span>Mail</span>
                     </a>
                 </li>
             </ul>
@@ -80,10 +97,70 @@
                     </div>
                 </div>
             </div>
+            <div role="tabpanel" class="tab-pane {if $ACTIVE_TAB eq 'odm'}active{/if}" id="unified-tab-odm">
+                <div class="tab-loader" data-loaded="false">
+                    <div class="loading-indicator">
+                        <div class="spinner"></div>
+                        <p>Chargement des ODM...</p>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane {if $ACTIVE_TAB eq 'mail'}active{/if}" id="unified-tab-mail">
+                <div class="tab-loader" data-loaded="false">
+                    <div class="loading-indicator">
+                        <div class="spinner"></div>
+                        <p>Chargement de l'historique mail...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {/strip}
+
+{* Modale pour envoyer un email *}
+<div class="modal fade" id="sendEmailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8;">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-envelope"></i> Envoyer un Email au Client</h4>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <form id="sendEmailForm">
+                    {* Email du contact *}
+                    <div class="form-group">
+                        <label><strong>Email destinataire</strong> <span class="required">*</span></label>
+                        <input type="email" class="form-control" id="recipientEmail" name="email" required placeholder="client@example.com">
+                        <small class="help-block">L'email du contact sera pré-rempli automatiquement</small>
+                    </div>
+
+                    {* Template Email *}
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label><strong>Template Email</strong> <span class="required">*</span></label>
+                        <select class="form-control select2" id="emailTemplate" name="email_template" required style="width: 100%;">
+                            <option value="">-- Sélectionner un template --</option>
+                        </select>
+                    </div>
+
+                    {* PDFs à joindre *}
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label><strong>PDFs à joindre</strong></label>
+                        <div id="pdfTemplatesList" style="margin-top: 10px;">
+                            <p class="text-muted">Chargement des templates PDF...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding: 15px 25px; background: #f8f9fa;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="confirmSendEmail">
+                    <i class="fa fa-send"></i> Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 /* ============================================
@@ -153,6 +230,20 @@
     font-size: 0.85em;
 }
 
+.unified-header-left .contact-detail {
+    margin: 2px 0 0 0;
+    opacity: 0.9;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.unified-header-left .contact-detail i {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
 .unified-header-right {
     display: flex;
     align-items: center;
@@ -179,6 +270,12 @@
 .unified-header-right .back-link:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateX(-3px);
+}
+
+.unified-header-right .btn-send-email:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Tab Navigation - Centered */
@@ -243,6 +340,10 @@
 .unified-tabs > li.active .tab-link.tab-green::after { background: #28a745; }
 .unified-tabs > li.active .tab-link.tab-orange { color: #e67e22; }
 .unified-tabs > li.active .tab-link.tab-orange::after { background: #e67e22; }
+.unified-tabs > li.active .tab-link.tab-teal { color: #17a2b8; }
+.unified-tabs > li.active .tab-link.tab-teal::after { background: #17a2b8; }
+.unified-tabs > li.active .tab-link.tab-pink { color: #e91e63; }
+.unified-tabs > li.active .tab-link.tab-pink::after { background: #e91e63; }
 
 /* Tab Content */
 .unified-tab-content {
@@ -976,6 +1077,121 @@ input[type="number"] { -moz-appearance: textfield; }
             return;
         }
         UnifiedTabbedView.init({$RECORD_ID});
+
+        // Gestion du bouton Envoyer Email
+        jQuery('#sendEmailBtn').on('click', function() {
+            var recordId = {$RECORD_ID};
+
+            // Ouvrir la modale
+            jQuery('#sendEmailModal').modal('show');
+
+            // Charger toutes les données en un seul appel
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'GetEmailData',
+                    record: recordId
+                },
+                success: function(response) {
+                    var data = response.result || response;
+
+                    // Email du contact
+                    if (data.contact_email) {
+                        jQuery('#recipientEmail').val(data.contact_email);
+                    }
+
+                    // Templates EMAILMaker
+                    var select = jQuery('#emailTemplate');
+                    select.empty().append('<option value="">-- Sélectionner un template --</option>');
+                    if (data.email_templates && data.email_templates.length > 0) {
+                        for (var i = 0; i < data.email_templates.length; i++) {
+                            var tpl = data.email_templates[i];
+                            select.append('<option value="' + tpl.id + '">' + tpl.name + '</option>');
+                        }
+                    }
+
+                    // Templates PDFMaker
+                    var container = jQuery('#pdfTemplatesList');
+                    if (data.pdf_templates && data.pdf_templates.length > 0) {
+                        var html = '<div class="pdf-templates-grid">';
+                        for (var j = 0; j < data.pdf_templates.length; j++) {
+                            var pdf = data.pdf_templates[j];
+                            html += '<div class="pdf-template-item">';
+                            html += '<label style="cursor: pointer;">';
+                            html += '<input type="checkbox" name="pdf_templates[]" value="' + pdf.id + '"> ';
+                            html += pdf.name;
+                            html += '</label>';
+                            html += '</div>';
+                        }
+                        html += '</div>';
+                        container.html(html);
+                    } else {
+                        container.html('<p class="text-muted">Aucun template PDF disponible</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur chargement données email:', error);
+                    alert('Erreur lors du chargement des données. Veuillez réessayer.');
+                }
+            });
+        });
+
+        // Envoyer l'email
+        jQuery('#confirmSendEmail').on('click', function() {
+            var email = jQuery('#recipientEmail').val();
+            var emailTemplateId = jQuery('#emailTemplate').val();
+            var pdfTemplates = [];
+
+            jQuery('input[name="pdf_templates[]"]:checked').each(function() {
+                pdfTemplates.push(jQuery(this).val());
+            });
+
+            if (!email) {
+                alert('Veuillez saisir une adresse email');
+                return;
+            }
+
+            if (!emailTemplateId) {
+                alert('Veuillez sélectionner un template email');
+                return;
+            }
+
+            // Afficher un loader
+            jQuery('#confirmSendEmail').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Envoi en cours...');
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'SendEmail',
+                    record: {$RECORD_ID},
+                    email: email,
+                    email_template: emailTemplateId,
+                    pdf_templates: pdfTemplates
+                },
+                success: function(response) {
+                    var data = response.result || response;
+                    if (data.success) {
+                        jQuery('#sendEmailModal').modal('hide');
+                        alert('Email envoyé avec succès !');
+                    } else {
+                        alert('Erreur: ' + (data.error || 'Impossible d\'envoyer l\'email'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur envoi email:', error, xhr.responseText);
+                    alert('Erreur lors de l\'envoi de l\'email');
+                },
+                complete: function() {
+                    jQuery('#confirmSendEmail').prop('disabled', false).html('<i class="fa fa-send"></i> Envoyer');
+                }
+            });
+        });
     });
 })();
 </script>

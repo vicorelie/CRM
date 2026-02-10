@@ -246,9 +246,22 @@ class Quotes_SendQuotePDFs_Action extends Vtiger_Action_Controller {
                     $this->log("Config SMTP trouvée: " . $row['server']);
 
                     $mail->isSMTP();
+                    $mail->SMTPDebug = 0; // 0 = off, 2 = verbose debug
 
-                    // Le serveur peut être au format "tls://smtp.example.com"
+                    // Options SSL pour éviter les erreurs de certificat
+                    $mail->SMTPOptions = array(
+                        'ssl' => array(
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                            'allow_self_signed' => true
+                        )
+                    );
+
+                    // Le serveur peut être au format "tls://smtp.example.com" ou "smtp.gmail.com:587"
                     $server = $row['server'];
+                    $portFromServer = null;
+
+                    // Gérer le format tls:// ou ssl://
                     $serverinfo = explode("://", $server);
                     if (count($serverinfo) > 1) {
                         $smtpsecure = $serverinfo[0];
@@ -260,8 +273,19 @@ class Quotes_SendQuotePDFs_Action extends Vtiger_Action_Controller {
                         }
                     }
 
+                    // Gérer le format smtp.gmail.com:587
+                    if (strpos($server, ':') !== false) {
+                        list($server, $portFromServer) = explode(':', $server);
+                    }
+
                     $mail->Host = $server;
-                    $mail->Port = !empty($row['server_port']) ? $row['server_port'] : 587;
+                    $mail->Port = !empty($row['server_port']) ? $row['server_port'] : (!empty($portFromServer) ? $portFromServer : 587);
+
+                    // Gmail utilise STARTTLS sur port 587
+                    if (strpos($server, 'gmail.com') !== false && $mail->Port == 587) {
+                        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    }
+
                     $mail->Username = $row['server_username'];
 
                     // IMPORTANT: Le mot de passe est chiffré dans VTiger

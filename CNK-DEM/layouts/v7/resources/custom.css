@@ -410,12 +410,42 @@ input[type="checkbox"]::after {
 }
 
 /* ========================================
-   LISTES
+   LISTES - Hauteur uniforme (max 2 lignes)
+   Désactivé pour Leads (Prospects) : pas de troncature
    ======================================== */
-
-.listViewEntriesTable tbody td,
-table[name="listViewEntriesTable"] tbody td,
-.listview-table tbody td,
-#listViewContents table tbody td {
-    border: 1px solid #DBEAFE !important;
+.listViewEntryValue .value {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    line-height: 1.4 !important;
+    max-height: 2.8em !important;
 }
+
+
+
+
+/* Titres de colonnes compacts */
+.listViewEntriesTable > thead > tr > th,
+.listview-table > thead > tr > th {
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.listViewEntriesTable > thead > tr > th a,
+.listview-table > thead > tr > th a {
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}
+
+
+
+/* Masquer les boutons Click-to-Call Twilio */
+.twilio-call-btn {
+    display: none !important;
+}
+
+

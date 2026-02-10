@@ -1743,53 +1743,107 @@
         },
 
         renderAllCategories: function() {
+            this.renderAvailableItems();
+            this.renderSelectedItems();
+        },
+
+        renderAvailableItems: function() {
             var self = this;
-            var container = jQuery('#unified-categories-container');
+            var container = jQuery('#unified-available-items');
             var html = '';
 
             Object.keys(this.itemsDb).forEach(function(categoryId) {
-                var catInfo = self.categoriesInfo[categoryId];
-                html += self.renderCategory(categoryId, catInfo);
+                var items = self.itemsDb[categoryId];
+                items.forEach(function(item) {
+                    var safeName = item.name.replace(/'/g, "\\'");
+                    var qty = self.inventory[categoryId] ? (self.inventory[categoryId][item.name] || 0) : 0;
+                    html += '<div class="avail-item' + (qty > 0 ? ' already-added' : '') + '" onclick="UnifiedInventaire.addItemToSelection(\'' + categoryId + '\', \'' + safeName + '\')">';
+                    html += '<span class="avail-name">' + item.name + '</span>';
+                    html += '<span class="avail-vol">' + item.volume + ' m\u00b3</span>';
+                    if (qty > 0) {
+                        html += '<span class="avail-qty">' + qty + '</span>';
+                    }
+                    html += '<i class="fa fa-plus avail-add"></i>';
+                    html += '</div>';
+                });
             });
 
             container.html(html);
         },
 
-        renderCategory: function(categoryId, catInfo) {
+        renderSelectedItems: function() {
             var self = this;
-            var items = this.itemsDb[categoryId];
+            var container = jQuery('#unified-selected-items');
+            var html = '';
+            var hasItems = false;
 
-            var html = '<div class="category-section" id="unified-category-' + categoryId + '">';
-            html += '<div class="items-list">';
-
-            items.forEach(function(item) {
-                var qty = self.inventory[categoryId] ? (self.inventory[categoryId][item.name] || 0) : 0;
-                var safeId = 'unified_qty_' + categoryId + '_' + item.name.replace(/[^a-z0-9]/gi, '_');
-                var safeName = item.name.replace(/'/g, "\\'");
-
-                html += '<div class="item-row">';
-                html += '<div style="flex: 1; display: flex; align-items: center; gap: 8px;">';
-                html += '<div class="item-name">' + item.name + '</div>';
-                html += '<div class="item-volume">' + item.volume + ' m³</div>';
-                html += '</div>';
-                html += '<div style="display: flex; align-items: center; gap: 4px;">';
-                html += '<button class="btn-qty" onclick="UnifiedInventaire.changeQty(\'' + categoryId + '\', \'' + safeName + '\', -1)">-</button>';
-                html += '<input type="number" class="qty-input" id="' + safeId + '" value="' + qty + '" min="0" onchange="UnifiedInventaire.setQty(\'' + categoryId + '\', \'' + safeName + '\', this.value)">';
-                html += '<button class="btn-qty" onclick="UnifiedInventaire.changeQty(\'' + categoryId + '\', \'' + safeName + '\', 1)">+</button>';
-                html += '</div>';
-                html += '</div>';
+            Object.keys(this.inventory).forEach(function(categoryId) {
+                if (!self.itemsDb[categoryId]) return;
+                self.itemsDb[categoryId].forEach(function(item) {
+                    var qty = self.inventory[categoryId][item.name] || 0;
+                    if (qty > 0) {
+                        hasItems = true;
+                        var safeName = item.name.replace(/'/g, "\\'");
+                        var safeId = 'unified_sel_' + categoryId + '_' + item.name.replace(/[^a-z0-9]/gi, '_');
+                        html += '<div class="selected-item">';
+                        html += '<span class="sel-name">' + item.name + '</span>';
+                        html += '<span class="sel-vol">' + item.volume + ' m\u00b3</span>';
+                        html += '<div class="sel-qty-controls">';
+                        html += '<button class="btn-qty" onclick="UnifiedInventaire.changeQty(\'' + categoryId + '\', \'' + safeName + '\', -1)">\u2212</button>';
+                        html += '<input type="number" class="qty-input" id="' + safeId + '" value="' + qty + '" min="0" onchange="UnifiedInventaire.setQty(\'' + categoryId + '\', \'' + safeName + '\', this.value)">';
+                        html += '<button class="btn-qty" onclick="UnifiedInventaire.changeQty(\'' + categoryId + '\', \'' + safeName + '\', 1)">+</button>';
+                        html += '</div>';
+                        html += '<button class="btn-remove" onclick="UnifiedInventaire.removeItemFromSelection(\'' + categoryId + '\', \'' + safeName + '\')"><i class="fa fa-times"></i></button>';
+                        html += '</div>';
+                    }
+                });
             });
 
-            html += '</div></div>';
-            return html;
+            if (!hasItems) {
+                html = '<div class="empty-selection"><i class="fa fa-arrow-left"></i><p>Cliquez sur un article pour l\'ajouter</p></div>';
+            }
+
+            container.html(html);
+        },
+
+        addItemToSelection: function(category, itemName) {
+            if (!this.inventory[category]) this.inventory[category] = {};
+            if (!this.inventory[category][itemName]) {
+                this.inventory[category][itemName] = 1;
+            } else {
+                this.inventory[category][itemName]++;
+            }
+            this.renderAvailableItems();
+            this.renderSelectedItems();
+            this.updateTotalVolume();
+            this.triggerDebouncedAutoSave();
+        },
+
+        removeItemFromSelection: function(category, itemName) {
+            if (this.inventory[category]) {
+                this.inventory[category][itemName] = 0;
+            }
+            this.renderAvailableItems();
+            this.renderSelectedItems();
+            this.updateTotalVolume();
+            this.triggerDebouncedAutoSave();
         },
 
         changeQty: function(category, itemName, delta) {
             if (!this.inventory[category]) this.inventory[category] = {};
-            this.inventory[category][itemName] = Math.max(0, (this.inventory[category][itemName] || 0) + delta);
+            var newQty = Math.max(0, (this.inventory[category][itemName] || 0) + delta);
+            this.inventory[category][itemName] = newQty;
 
-            var safeId = 'unified_qty_' + category + '_' + itemName.replace(/[^a-z0-9]/gi, '_');
-            jQuery('#' + safeId).val(this.inventory[category][itemName]);
+            if (newQty === 0) {
+                // Item removed - re-render both panels
+                this.renderAvailableItems();
+                this.renderSelectedItems();
+            } else {
+                // Just update the input value + left panel badge
+                var safeId = 'unified_sel_' + category + '_' + itemName.replace(/[^a-z0-9]/gi, '_');
+                jQuery('#' + safeId).val(newQty);
+                this.renderAvailableItems();
+            }
 
             this.updateTotalVolume();
             this.triggerDebouncedAutoSave();
@@ -1797,7 +1851,16 @@
 
         setQty: function(category, itemName, value) {
             if (!this.inventory[category]) this.inventory[category] = {};
-            this.inventory[category][itemName] = Math.max(0, parseInt(value) || 0);
+            var newQty = Math.max(0, parseInt(value) || 0);
+            this.inventory[category][itemName] = newQty;
+
+            if (newQty === 0) {
+                this.renderAvailableItems();
+                this.renderSelectedItems();
+            } else {
+                this.renderAvailableItems();
+            }
+
             this.updateTotalVolume();
             this.triggerDebouncedAutoSave();
         },
@@ -1826,38 +1889,26 @@
         },
 
         initSearch: function() {
-            var self = this;
             jQuery('#unified-inventory-search').on('input', function() {
                 var searchTerm = jQuery(this).val().toLowerCase().trim();
-                var allItems = jQuery('.inventaire-tab-container .item-row');
-                var allSections = jQuery('.inventaire-tab-container .category-section');
-                var visibleCount = 0;
+                var allItems = jQuery('#unified-available-items .avail-item');
 
                 if (searchTerm === '') {
                     allItems.show();
-                    allSections.show();
                     jQuery('#unified-inventory-search-results').text('');
                     return;
                 }
 
-                allSections.hide();
-                allItems.hide();
-
-                var visibleSections = [];
-
+                var visibleCount = 0;
                 allItems.each(function() {
-                    var itemName = jQuery(this).find('.item-name').text().toLowerCase();
+                    var itemName = jQuery(this).find('.avail-name').text().toLowerCase();
                     if (itemName.indexOf(searchTerm) !== -1) {
                         jQuery(this).show();
                         visibleCount++;
-                        var parentSection = jQuery(this).closest('.category-section');
-                        if (visibleSections.indexOf(parentSection[0]) === -1) {
-                            visibleSections.push(parentSection[0]);
-                        }
+                    } else {
+                        jQuery(this).hide();
                     }
                 });
-
-                jQuery(visibleSections).show();
 
                 var resultsDiv = jQuery('#unified-inventory-search-results');
                 if (visibleCount === 0) {
@@ -1900,13 +1951,14 @@
                     app.helper.showSuccessNotification({message: 'Article cree avec succes!'});
                     self.toggleNewArticleForm();
 
-                    // Reload items and re-render
+                    // Reload items and re-render both panels
                     self.loadItemsFromDatabase().then(function() {
                         if (!self.inventory['divers']) {
                             self.inventory['divers'] = {};
                         }
                         self.inventory['divers'][name] = quantity;
-                        self.renderAllCategories();
+                        self.renderAvailableItems();
+                        self.renderSelectedItems();
                         self.updateTotalVolume();
                     });
                 } else {

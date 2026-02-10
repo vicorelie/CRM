@@ -575,4 +575,30 @@ jQuery.Class("EMAILMaker_Actions_Js", {
 jQuery(document).ready(function () {
     var instance = new EMAILMaker_Actions_Js();
     instance.registerEvents();
+
+    // Override standard compose email to use ITS4YouEmails/EMAILMaker flow
+    // This ensures EMAILMaker templates are shown and variables are substituted
+    Vtiger_Helper_Js.requestToShowComposeEmailForm = function(selectedId, fieldname, fieldmodule) {
+        var selectedFields = [];
+        selectedFields.push(fieldname);
+        var selectedIds = [];
+        if (typeof selectedId === 'string' || typeof selectedId === 'number') {
+            selectedIds.push(selectedId);
+        } else {
+            selectedIds = selectedId;
+        }
+        // Build field_lists in the format expected by ITS4YouEmails: ["recordId|fieldName|moduleName"]
+        var fieldList = selectedIds[0] + '|' + fieldname + '|' + fieldmodule;
+        var params = {
+            'module': 'ITS4YouEmails',
+            'view': 'ComposeEmail',
+            'sourceModule': fieldmodule,
+            'fieldModule': fieldmodule,
+            'selectedFields[]': selectedFields,
+            'selected_ids[]': selectedIds,
+            'field_lists': JSON.stringify([fieldList])
+        };
+        app.helper.showProgress();
+        EMAILMaker_Actions_Js.showComposeEmailForm(params);
+    };
 });

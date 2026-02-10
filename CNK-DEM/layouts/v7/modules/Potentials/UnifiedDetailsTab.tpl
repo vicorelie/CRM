@@ -224,7 +224,7 @@
                                 <div class="form-group">
                                     <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
                                     {if $IS_EDITABLE}
-                                        <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$FIELD_VALUE|escape:'html'}">
+                                        <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
                                     {else}
                                         <div class="field-value field-readonly" data-field-type="{$fieldDataType}">
                                             {include file=vtemplate_path($FIELD_MODEL->getUITypeModel()->getDetailViewTemplateName(), $MODULE_NAME) FIELD_MODEL=$FIELD_MODEL USER_MODEL=$USER_MODEL MODULE=$MODULE_NAME RECORD=$RECORD}
@@ -379,7 +379,7 @@
                                 <div class="form-group">
                                     <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
                                     {if $IS_EDITABLE}
-                                        <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$FIELD_VALUE|escape:'html'}">
+                                        <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
                                     {else}
                                         <div class="field-value field-readonly" data-field-type="{$fieldDataType}">
                                             {include file=vtemplate_path($FIELD_MODEL->getUITypeModel()->getDetailViewTemplateName(), $MODULE_NAME) FIELD_MODEL=$FIELD_MODEL USER_MODEL=$USER_MODEL MODULE=$MODULE_NAME RECORD=$RECORD}
@@ -540,7 +540,7 @@
                             <div class="form-group">
                                 <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
                                 {if $IS_EDITABLE}
-                                    <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$FIELD_VALUE|escape:'html'}">
+                                    <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
                                 {else}
                                     <div class="field-value field-readonly">{if $FIELD_VALUE}{$FIELD_VALUE}{else}--{/if}</div>
                                 {/if}
@@ -618,7 +618,7 @@
                             <div class="form-group">
                                 <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
                                 {if $IS_EDITABLE}
-                                    <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$FIELD_VALUE|escape:'html'}">
+                                    <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
                                 {else}
                                     <div class="field-value field-readonly">{if $FIELD_VALUE}{$FIELD_VALUE}{else}--{/if}</div>
                                 {/if}
@@ -855,7 +855,7 @@
                         <div class="form-group">
                             <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
                             {if $IS_EDITABLE}
-                                <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$FIELD_VALUE|escape:'html'}">
+                                <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
                             {else}
                                 <div class="field-value field-readonly" data-field-type="{$fieldDataType}">
                                     {include file=vtemplate_path($FIELD_MODEL->getUITypeModel()->getDetailViewTemplateName(), $MODULE_NAME) FIELD_MODEL=$FIELD_MODEL USER_MODEL=$USER_MODEL MODULE=$MODULE_NAME RECORD=$RECORD}

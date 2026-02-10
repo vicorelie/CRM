@@ -59,10 +59,9 @@
                         <div class="row toEmailField">
                             <div class="col-lg-12">
                                 <div class="col-lg-2">
-                                    <span class="pull-right">{vtranslate('LBL_FROM_EMAIL',$MODULE)}&nbsp</span>
+                                    <span class="pull-right">{vtranslate('LBL_FROM_EMAIL',$MODULE)}&nbsp;</span>
                                 </div>
                                 <div class="col-lg-6">
-                                    {assign var=CURRENT_USER_ID value=Users_Record_Model::getCurrentUserModel()->getId()}
                                     <select name="from_email" class="select2 inputElement">
                                         <optgroup label="{vtranslate('LBL_FROM_EMAIL',$MODULE)}">
                                             {html_options  options=$FROM_EMAILS selected=$SELECTED_DEFAULT_FROM}
@@ -71,7 +70,7 @@
                                             <optgroup label="{vtranslate('LBL_SMTP',$MODULE)}">
                                                 {foreach from=$SMTP_RECORDS item=SMTP_RECORD key=SMTP_RECORD_ID}
                                                     {if !$SMTP_RECORD->isEmpty('from_email_field')}
-                                                        <option value="s::{$SMTP_RECORD->getId()}" {if $SMTP_RECORD->get('user_id') eq $CURRENT_USER_ID}selected="selected"{/if}>{$SMTP_RECORD->get('from_name_field')} &lt;{$SMTP_RECORD->get('from_email_field')}&gt;</option>
+                                                        <option value="s::{$SMTP_RECORD->getId()}" {if ITS4YouEmails_Record_Model::isSelectedDefaultFromSMTP($SMTP_RECORD, $SELECTED_DEFAULT_FROM)}selected="selected"{/if}>{$SMTP_RECORD->get('from_name_field')} &lt;{$SMTP_RECORD->get('from_email_field')}&gt;</option>
                                                     {/if}
                                                 {/foreach}
                                             </optgroup>
@@ -229,6 +228,7 @@
                                     {/if}
                                 </div>
                                 <div class="col-lg-4 insertTemplate" style="text-align: right;">
+                                    <button id="selectPDFTemplate" type="button" class="btn btn-danger pull-right" style="margin-left:5px;" data-source-module="{$SOURCE_MODULE}"><i class="fa fa-file-pdf-o"></i> Joindre PDF</button>
                                     <button id="selectEmailTemplate" class="btn btn-success pull-right" data-url="{ITS4YouEmails_Record_Model::getSelectTemplateUrl($SOURCERECORD, $SOURCEMODULE)}">{vtranslate('LBL_SELECT_EMAIL_TEMPLATE',$MODULE)}</button>
                                 </div>
                             </div>

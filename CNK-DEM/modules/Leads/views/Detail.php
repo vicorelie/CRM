@@ -190,6 +190,16 @@ class Leads_Detail_View extends Accounts_Detail_View {
 					cursor: not-allowed;
 				}
 
+				.btn-convert-direct {
+					background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+					box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+				}
+
+				.btn-convert-direct:hover:not(:disabled) {
+					background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+					box-shadow: 0 6px 16px rgba(245, 158, 11, 0.5) !important;
+				}
+
 				.btn-secondary {
 					background: #edf2f7;
 					color: #4a5568;
@@ -290,16 +300,85 @@ class Leads_Detail_View extends Accounts_Detail_View {
 						</button>
 					</div>
 				</form>
+
+				<div style="margin-top:20px; padding-top:20px; border-top:2px solid #e2e8f0;">
+					<p style="font-size:13px; color:#718096; margin-bottom:12px; text-align:center;">
+						<i class="fas fa-info-circle"></i> Ou convertir directement sans confirmer l'email
+					</p>
+					<button type="button" class="btn btn-primary btn-convert-direct" id="convertDirectBtn" style="width:100%;">
+						<i class="fas fa-bolt"></i>
+						Convertir sans confirmation
+					</button>
+				</div>
 			</div>
 
 			<script>
 				$(document).ready(function() {
+					const emailPrincipal = '<?= strtolower($emailPrincipal) ?>';
+					const recordId = <?= $recordId ?>;
+
+					// Bouton "Convertir sans confirmation"
+					$('#convertDirectBtn').on('click', function(e) {
+						e.preventDefault();
+
+						// Désactiver le bouton et afficher le spinner
+						const $btn = $(this);
+						$btn.prop('disabled', true);
+						$btn.html('<span class="spinner"></span> Conversion en cours...');
+
+						// Requête AJAX pour convertir directement avec l'email principal
+						$.ajax({
+							url: 'index.php',
+							method: 'POST',
+							data: {
+								module: 'Leads',
+								action: 'ConfirmEmailAndConvert',
+								record: recordId,
+								email: emailPrincipal
+							},
+							success: function(response) {
+								console.log('Response complète:', response);
+
+								if (response.success) {
+									showAlert('Conversion en Contact et Affaire réussie ! Redirection vers la gestion client...', 'success');
+
+									// Rediriger vers la vue unifiée (Gestion client) avec l'onglet Details après 2 secondes
+									setTimeout(function() {
+										if (response.result && response.result.potentialId) {
+											window.location.href = 'index.php?module=Potentials&view=Unified&record=' + response.result.potentialId + '&tab=details';
+										} else {
+											window.location.href = 'index.php?module=Leads';
+										}
+									}, 2000);
+								} else {
+									var errorMsg = 'Une erreur est survenue';
+									if (response.error) {
+										if (typeof response.error === 'string') {
+											errorMsg = response.error;
+										} else if (response.error.message) {
+											errorMsg = response.error.message;
+										}
+									}
+									console.error('Erreur de conversion:', errorMsg);
+									console.error('Response.error:', response.error);
+									showAlert('Erreur: ' + errorMsg, 'error');
+									$btn.prop('disabled', false);
+									$btn.html('<i class="fas fa-bolt"></i> Convertir sans confirmation');
+								}
+							},
+							error: function() {
+								showAlert('Erreur lors de la conversion. Veuillez réessayer.', 'error');
+								$btn.prop('disabled', false);
+								$btn.html('<i class="fas fa-bolt"></i> Convertir sans confirmation');
+							}
+						});
+					});
+
+					// Formulaire de confirmation manuelle
 					$('#confirmEmailForm').on('submit', function(e) {
 						e.preventDefault();
 
 						const emailConfirmation = $('#emailConfirmation').val().trim().toLowerCase();
-						const emailPrincipal = '<?= strtolower($emailPrincipal) ?>';
-						const recordId = <?= $recordId ?>;
 
 						// Validation côté client
 						if (!emailConfirmation) {
@@ -331,12 +410,12 @@ class Leads_Detail_View extends Accounts_Detail_View {
 								console.log('Response complète:', response);
 
 								if (response.success) {
-									showAlert('Email confirmé ! Conversion en Contact et Affaire réussie. Redirection...', 'success');
+									showAlert('Email confirmé ! Conversion en Contact et Affaire réussie. Redirection vers la gestion client...', 'success');
 
-									// Rediriger vers l'affaire créée en mode édition après 2 secondes
+									// Rediriger vers la vue unifiée (Gestion client) avec l'onglet Details après 2 secondes
 									setTimeout(function() {
 										if (response.result && response.result.potentialId) {
-											window.location.href = 'index.php?module=Potentials&view=Edit&record=' + response.result.potentialId;
+											window.location.href = 'index.php?module=Potentials&view=Unified&record=' + response.result.potentialId + '&tab=details';
 										} else {
 											window.location.href = 'index.php?module=Leads';
 										}

@@ -770,13 +770,16 @@ Emails_MassEdit_Js('ITS4YouEmails_MassEdit_Js', {
             jQuery('.popupModal').modal('hide');
 
             let ckEditorInstance = self.getckEditorInstance(),
-                selectedTemplateBody;
+                selectedTemplateBody,
+                selectedTemplateId;
 
             for (let id in responseData) {
                 let data = responseData[id],
                     DataInfo = data['info'],
                     subject = jQuery('<div/>').html(DataInfo['subject']).text(),
                     body = DataInfo['body'];
+
+                selectedTemplateId = id;
 
                 if('EmailTemplates' === data['module']) {
                     subject = data['name'];
@@ -799,7 +802,40 @@ Emails_MassEdit_Js('ITS4YouEmails_MassEdit_Js', {
             }
 
             let sourceModule = jQuery('[name=source_module]').val(),
+                recordId = jQuery('[name=record]').val(),
                 showWarning = false;
+
+            // Fallback: get record ID from selected_ids if record field is not present
+            if (!recordId) {
+                try {
+                    let selectedIds = JSON.parse(jQuery('[name=selected_ids]').val());
+                    if (Array.isArray(selectedIds) && selectedIds.length === 1) {
+                        recordId = selectedIds[0];
+                    } else if (typeof selectedIds === 'string' || typeof selectedIds === 'number') {
+                        recordId = selectedIds;
+                    }
+                } catch(e) {}
+            }
+
+            // Substitute template variables via AJAX if source context is available
+            if (selectedTemplateId && sourceModule && recordId) {
+                app.request.post({
+                    data: {
+                        module: 'ITS4YouEmails',
+                        action: 'GetTemplateContent',
+                        template_id: selectedTemplateId,
+                        source_module: sourceModule,
+                        record_id: recordId
+                    }
+                }).then(function (err, result) {
+                    if (!err && result && result.success) {
+                        ckEditorInstance.loadContentsInCkeditor(result.body);
+                        if (result.subject) {
+                            $('#subject').val(jQuery('<div/>').html(result.subject).text());
+                        }
+                    }
+                });
+            }
 
             if (typeof selectedTemplateBody === 'string') {
                 let tokenDataPair = selectedTemplateBody.split('$');
@@ -838,6 +874,124 @@ Emails_MassEdit_Js('ITS4YouEmails_MassEdit_Js', {
 
         app.helper.showVerticalScroll(container.find('.modal-body'), params);
     },
+    registerSelectPDFTemplateEvent: function () {
+        var self = this,
+            form = self.getMassEmailForm();
+
+        form.on('click', '#selectPDFTemplate', function (e) {
+            e.preventDefault();
+            var sourceModule = jQuery(this).data('source-module') || jQuery('[name=source_module]').val();
+
+            app.helper.showProgress();
+            jQuery.ajax({
+                url: 'index.php',
+                method: 'POST',
+                data: {
+                    module: 'PDFMaker',
+                    action: 'GetTemplatesList',
+                    source_module: sourceModule
+                },
+                dataType: 'json',
+                success: function (response) {
+                    app.helper.hideProgress();
+                    var result = response.result || response;
+                    if (!result.success || !result.templates || jQuery.isEmptyObject(result.templates)) {
+                        Vtiger_Helper_Js.showPnotify({text: 'Aucun template PDF disponible pour ce module', type: 'info'});
+                        return;
+                    }
+
+                    // Get already selected PDF IDs
+                    var existingIds = (form.find('[name="pdf_template_ids"]').val() || '').split(';').filter(Boolean);
+
+                    // Build selection modal
+                    jQuery('#pdfTemplateSelectModal').remove();
+                    var modalHtml =
+                        '<div class="modal fade" id="pdfTemplateSelectModal" tabindex="-1" role="dialog" style="z-index:10500;">' +
+                        '<div class="modal-dialog modal-sm" role="document">' +
+                        '<div class="modal-content" style="border-radius:8px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.15);">' +
+                        '<div class="modal-header" style="background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff;border:0;padding:14px 18px;">' +
+                        '<button type="button" class="close" data-dismiss="modal" style="color:#fff;opacity:0.8;text-shadow:none;">&times;</button>' +
+                        '<h4 class="modal-title" style="font-weight:600;font-size:15px;"><i class="fa fa-file-pdf-o"></i>&nbsp; Joindre PDF</h4>' +
+                        '</div>' +
+                        '<div class="modal-body" style="padding:16px 18px;max-height:300px;overflow-y:auto;">';
+
+                    jQuery.each(result.templates, function (id, name) {
+                        var checked = jQuery.inArray(String(id), existingIds) !== -1 ? ' checked' : '';
+                        modalHtml +=
+                            '<div class="checkbox" style="margin:6px 0;">' +
+                            '<label style="font-weight:normal;font-size:13px;">' +
+                            '<input type="checkbox" class="pdfTemplateCheck" value="' + id + '" data-name="' + jQuery('<span/>').text(name).html() + '"' + checked + ' />' +
+                            '&nbsp; <i class="fa fa-file-pdf-o" style="color:#c0392b;"></i>&nbsp; ' + jQuery('<span/>').text(name).html() +
+                            '</label></div>';
+                    });
+
+                    modalHtml +=
+                        '</div>' +
+                        '<div class="modal-footer" style="padding:12px 18px;">' +
+                        '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Annuler</button>' +
+                        '<button type="button" class="btn btn-danger btn-sm" id="confirmPDFSelection"><i class="fa fa-check"></i>&nbsp; Valider</button>' +
+                        '</div></div></div></div>';
+
+                    jQuery('body').append(modalHtml);
+                    var $pdfModal = jQuery('#pdfTemplateSelectModal');
+                    // Open modal without backdrop to avoid blocking parent modal
+                    $pdfModal.modal({
+                        backdrop: false,
+                        keyboard: true
+                    });
+
+                    $pdfModal.find('#confirmPDFSelection').on('click', function () {
+                        var selectedIds = [],
+                            selectedNames = [];
+
+                        $pdfModal.find('.pdfTemplateCheck:checked').each(function () {
+                            selectedIds.push(jQuery(this).val());
+                            selectedNames.push(jQuery(this).data('name'));
+                        });
+
+                        // Update hidden field
+                        form.find('[name="pdf_template_ids"]').val(selectedIds.join(';'));
+
+                        // Remove old PDF attachment indicators
+                        form.find('.pdf-attachment-indicator').remove();
+
+                        // Add visual indicators in attachments area
+                        if (selectedIds.length > 0) {
+                            var $attachments = form.find('#attachments');
+                            jQuery.each(selectedNames, function (i, name) {
+                                $attachments.append(
+                                    '<div class="MultiFile-label pdf-attachment-indicator" style="margin-top:4px;">' +
+                                    '<a class="removePDFAttachment cursorPointer" data-id="' + selectedIds[i] + '">x </a>' +
+                                    '<i class="fa fa-file-pdf-o" style="color:#c0392b;"></i>&nbsp; ' +
+                                    '<span>' + name + '.pdf</span>' +
+                                    '</div>'
+                                );
+                            });
+
+                            // Register remove events
+                            form.find('.removePDFAttachment').off('click').on('click', function () {
+                                var removeId = jQuery(this).data('id').toString();
+                                var currentIds = (form.find('[name="pdf_template_ids"]').val() || '').split(';').filter(Boolean);
+                                currentIds = currentIds.filter(function (id) { return id !== removeId; });
+                                form.find('[name="pdf_template_ids"]').val(currentIds.join(';'));
+                                jQuery(this).closest('.pdf-attachment-indicator').remove();
+                            });
+                        }
+
+                        $pdfModal.modal('hide');
+                    });
+
+                    $pdfModal.on('hidden.bs.modal', function () {
+                        jQuery('#pdfTemplateSelectModal').remove();
+                    });
+                },
+                error: function () {
+                    app.helper.hideProgress();
+                    Vtiger_Helper_Js.showPnotify({text: 'Erreur lors du chargement des templates PDF', type: 'error'});
+                }
+            });
+        });
+    },
     registerEvents: function () {
         const container = this.getMassEmailForm();
 
@@ -864,6 +1018,7 @@ Emails_MassEdit_Js('ITS4YouEmails_MassEdit_Js', {
             this.registerEmailTemplateWarning();
             this.registerEventEmailTemplateListClick();
             this.registerModalHeight(container);
+            this.registerSelectPDFTemplateEvent();
         }
     },
     getEmailsSourceId: function (mailInfo) {
