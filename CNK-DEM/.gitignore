@@ -1,0 +1,13 @@
+# Environment variables (secrets)
+.env
+
+# Logs
+stripe/logs/*.log
+
+# Compiled templates
+test/templates_c/
+customerportal/writeable/templates_c/
+
+# OS files
+.DS_Store
+Thumbs.db

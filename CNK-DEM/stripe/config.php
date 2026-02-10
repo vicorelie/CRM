@@ -2,37 +2,55 @@
 /**
  * Configuration Stripe pour CNK-DEM
  *
- * Ce fichier contient TOUTES les configurations Stripe
+ * Les clés sensibles sont lues depuis le fichier .env
+ * Ne JAMAIS commiter de clés API dans ce fichier
  */
+
+// Load .env file
+$envFile = dirname(__DIR__) . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') === false) continue;
+        list($key, $value) = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        if (!getenv($key)) {
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+        }
+    }
+}
 
 return [
     // ==================== MODE ====================
     // 'test' pour les tests, 'live' pour la production
-    'mode' => 'test',
+    'mode' => getenv('STRIPE_MODE') ?: 'test',
 
     // ==================== CLÉS API ====================
     'api_keys' => [
         'test' => [
-            'secret_key' => 'sk_test_51SglQ9Dl2HMKNpLg4d75DN6H1lToHEHDvLNTPKTJuVSP0AjG9n5Se4mKqFMMvqIuH4Sr479J8pkzZd37lB4xM9XQ00biXwBYKe',
-            'publishable_key' => 'pk_test_51SglQ9Dl2HMKNpLgI4MXgBBfpKHgOAx9gus4Xu8aYLH3tcH1zNLKqiDsQyGHLqtpmBUcSmS0TyoEtGDxOHkRRSL800MiXVkLu8',
+            'secret_key' => getenv('STRIPE_TEST_SECRET_KEY') ?: '',
+            'publishable_key' => getenv('STRIPE_TEST_PUBLISHABLE_KEY') ?: '',
         ],
         'live' => [
-            'secret_key' => 'sk_live_VOTRE_CLE_SECRETE_PROD',
-            'publishable_key' => 'pk_live_VOTRE_CLE_PUBLIQUE_PROD',
+            'secret_key' => getenv('STRIPE_LIVE_SECRET_KEY') ?: '',
+            'publishable_key' => getenv('STRIPE_LIVE_PUBLISHABLE_KEY') ?: '',
         ],
     ],
 
     // ==================== WEBHOOK ====================
     'webhook' => [
         'url' => 'https://crm.cnkdem.com/stripe/webhook_standalone.php',
-        'secret' => 'whsec_XFlNKD8Tcm7MGt4aFDy0nrsGdeH2JdXz',
+        'secret' => getenv('STRIPE_WEBHOOK_SECRET') ?: '',
         'events' => [
             'checkout.session.completed',
             'payment_intent.succeeded',
             'payment_intent.payment_failed',
         ],
     ],
- 
+
     // ==================== CHAMPS VTIGER ====================
     'vtiger_fields' => [
         'quotes' => [
