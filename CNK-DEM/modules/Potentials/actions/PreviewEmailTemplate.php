@@ -19,6 +19,7 @@ class Potentials_PreviewEmailTemplate_Action extends Vtiger_Action_Controller {
             $recordId = $request->get('record');
             $emailTemplateId = $request->get('email_template');
             $quoteId = $request->get('quote_id');
+            $salesOrderId = $request->get('salesorder_id');
 
             if (empty($recordId) || empty($emailTemplateId)) {
                 throw new Exception('Paramètres manquants');
@@ -26,7 +27,10 @@ class Potentials_PreviewEmailTemplate_Action extends Vtiger_Action_Controller {
 
             $targetModule = 'Potentials';
             $targetRecordId = $recordId;
-            if (!empty($quoteId)) {
+            if (!empty($salesOrderId)) {
+                $targetModule = 'SalesOrder';
+                $targetRecordId = $salesOrderId;
+            } elseif (!empty($quoteId)) {
                 $targetModule = 'Quotes';
                 $targetRecordId = $quoteId;
             }

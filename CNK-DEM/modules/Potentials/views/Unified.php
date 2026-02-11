@@ -55,11 +55,15 @@ class Potentials_Unified_View extends Vtiger_Index_View {
 			$contactPhone = $recordModel->get('cf_981'); // Phone field in Potentials
 		}
 
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$isAdmin = ($currentUser->get('is_admin') === 'on');
+
 		$viewer = $this->getViewer($request);
 		$viewer->assign('RECORD', $recordModel);
 		$viewer->assign('RECORD_ID', $recordId);
 		$viewer->assign('MODULE_NAME', $moduleName);
 		$viewer->assign('ACTIVE_TAB', $request->get('tab', 'details'));
+		$viewer->assign('IS_ADMIN', $isAdmin);
 		$viewer->assign('CONTACT_NAME', $contactName);
 		$viewer->assign('CONTACT_PHONE', $contactPhone);
 		$viewer->assign('CONTACT_EMAIL', $contactEmail);

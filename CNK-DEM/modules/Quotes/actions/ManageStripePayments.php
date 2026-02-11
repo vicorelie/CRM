@@ -671,6 +671,19 @@ class Quotes_ManageStripePayments_Action extends Vtiger_BasicAjax_Action {
                         SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ?
                         WHERE quoteid = ?";
         $db->pquery($updateQuery, array($resteAPayer, $statutAcompte, $statutSolde, $quoteId));
+
+        // Mettre à jour le statut de l'affaire si l'acompte est payé
+        if ($statutAcompte === 'Payé') {
+            $potentialQuery = "SELECT potentialid FROM vtiger_quotes WHERE quoteid = ?";
+            $potentialResult = $db->pquery($potentialQuery, array($quoteId));
+            if ($db->num_rows($potentialResult) > 0) {
+                $potentialId = $db->query_result($potentialResult, 0, 'potentialid');
+                if (!empty($potentialId)) {
+                    $db->pquery("UPDATE vtiger_potential SET sales_stage = ? WHERE potentialid = ?",
+                        array('Acompte reglé', $potentialId));
+                }
+            }
+        }
     }
 
     /**

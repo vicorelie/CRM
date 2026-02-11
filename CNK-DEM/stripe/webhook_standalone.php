@@ -339,8 +339,47 @@ function recalculatePaymentStatus($quoteId) {
 
         logStripe("Statuts mis à jour - Reste: $resteAPayer EUR, Acompte: $statutAcompte, Solde: $statutSolde");
 
+        // Mettre à jour le statut de l'affaire (Potential) si l'acompte est payé
+        if ($statutAcompte === 'Payé') {
+            updatePotentialSalesStage($quoteId, 'Acompte reglé', $pdo);
+        }
+
     } catch (Exception $e) {
         logStripe("ERREUR recalculatePaymentStatus: " . $e->getMessage(), 'error');
+    }
+}
+
+/**
+ * Mettre à jour le sales_stage de l'affaire liée au devis
+ */
+function updatePotentialSalesStage($quoteId, $newStage, $pdo = null) {
+    logStripe("updatePotentialSalesStage: quoteId=$quoteId, newStage=$newStage");
+
+    try {
+        if (!$pdo) {
+            $pdo = getDbConnection();
+        }
+
+        // Récupérer l'affaire liée au devis
+        $stmt = $pdo->prepare("SELECT potentialid FROM vtiger_quotes WHERE quoteid = ?");
+        $stmt->execute([$quoteId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$result || empty($result['potentialid'])) {
+            logStripe("Aucune affaire liée au devis $quoteId");
+            return;
+        }
+
+        $potentialId = $result['potentialid'];
+
+        // Mettre à jour le sales_stage
+        $stmt = $pdo->prepare("UPDATE vtiger_potential SET sales_stage = ? WHERE potentialid = ?");
+        $stmt->execute([$newStage, $potentialId]);
+
+        logStripe("Affaire #$potentialId mise à jour: sales_stage = '$newStage'");
+
+    } catch (Exception $e) {
+        logStripe("ERREUR updatePotentialSalesStage: " . $e->getMessage(), 'error');
     }
 }
 
@@ -745,6 +784,11 @@ function generateInvoiceForPayment($quoteId, $paymentId, $amount, $description) 
             $stmt->execute([$resteAPayer, $statutAcompte, $statutSolde, $quoteId]);
 
             logStripe("✓ Devis mis à jour - Reste à payer: {$resteAPayer} EUR, Acompte: {$statutAcompte}, Solde: {$statutSolde}");
+
+            // Mettre à jour le statut de l'affaire si l'acompte est payé
+            if ($statutAcompte === 'Payé') {
+                updatePotentialSalesStage($quoteId, 'Acompte reglé', $pdo);
+            }
 
         // Valider la transaction (commit du lock sur vtiger_crmentity)
         $pdo->commit();

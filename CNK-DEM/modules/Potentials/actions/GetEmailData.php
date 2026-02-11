@@ -37,9 +37,29 @@ class Potentials_GetEmailData_Action extends Vtiger_Action_Controller {
             $result['contact_email'] = $contactEmail;
             $result['contact_id'] = $contactId;
 
-            // Déterminer le module cible selon qu'un devis est sélectionné ou non
-            $targetModule = !empty($quoteId) ? 'Quotes' : 'Potentials';
+            // Déterminer le module cible selon le contexte
+            $salesOrderId = $request->get('salesorder_id');
+            if (!empty($salesOrderId)) {
+                $targetModule = 'SalesOrder';
+            } elseif (!empty($quoteId)) {
+                $targetModule = 'Quotes';
+            } else {
+                $targetModule = 'Potentials';
+            }
             $result['target_module'] = $targetModule;
+
+            // Récupérer l'email du prestataire si c'est un BDC
+            $vendorEmail = '';
+            if (!empty($salesOrderId)) {
+                $vendorQuery = "SELECT v.email FROM vtiger_vendor v
+                                INNER JOIN vtiger_salesorder so ON so.prestataire = v.vendorid
+                                WHERE so.salesorderid = ?";
+                $vendorRes = $db->pquery($vendorQuery, [$salesOrderId]);
+                if ($vendorRes && $db->num_rows($vendorRes) > 0) {
+                    $vendorEmail = $db->query_result($vendorRes, 0, 'email');
+                }
+            }
+            $result['vendor_email'] = $vendorEmail;
 
             // 2. Récupérer les templates EMAILMaker filtrés par module cible
             $emailTemplates = [];

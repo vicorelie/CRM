@@ -43,12 +43,14 @@
                         <span>Inventaire</span>
                     </a>
                 </li>
+                {if $IS_ADMIN}
                 <li role="presentation" class="{if $ACTIVE_TAB eq 'odm'}active{/if}">
                     <a href="#unified-tab-odm" data-tab="odm" data-toggle="tab" role="tab" class="tab-link tab-teal">
                         <i class="fa fa-clipboard"></i>
                         <span>ODM</span>
                     </a>
                 </li>
+                {/if}
                 <li role="presentation" class="{if $ACTIVE_TAB eq 'mail'}active{/if}">
                     <a href="#unified-tab-mail" data-tab="mail" data-toggle="tab" role="tab" class="tab-link tab-pink">
                         <i class="fa fa-envelope"></i>
@@ -97,6 +99,7 @@
                     </div>
                 </div>
             </div>
+            {if $IS_ADMIN}
             <div role="tabpanel" class="tab-pane {if $ACTIVE_TAB eq 'odm'}active{/if}" id="unified-tab-odm">
                 <div class="tab-loader" data-loaded="false">
                     <div class="loading-indicator">
@@ -105,6 +108,7 @@
                     </div>
                 </div>
             </div>
+            {/if}
             <div role="tabpanel" class="tab-pane {if $ACTIVE_TAB eq 'mail'}active{/if}" id="unified-tab-mail">
                 <div class="tab-loader" data-loaded="false">
                     <div class="loading-indicator">

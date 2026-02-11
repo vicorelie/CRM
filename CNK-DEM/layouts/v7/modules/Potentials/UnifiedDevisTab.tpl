@@ -176,7 +176,12 @@
                 <div class="form-row-2">
                     <div class="form-group" style="position: relative;">
                         <label>Rechercher</label>
-                        <input type="text" id="unified_productSearch" placeholder="🔍 Ajouter un produit...">
+                        <div style="display:flex;gap:6px;">
+                            <input type="text" id="unified_productSearch" placeholder="Ajouter un produit..." style="flex:1;">
+                            <button type="button" class="btn btn-sm btn-success" onclick="UnifiedDevis.addManualProduct()" title="Ajouter manuellement" style="padding:6px 10px;border-radius:6px;white-space:nowrap;">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
                         <div id="unified_productResults" style="position:absolute;background:white;border:2px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:250px;overflow-y:auto;display:none;z-index:100;box-shadow:0 4px 15px rgba(0,0,0,0.1);left:0;right:0;"></div>
                     </div>
                     <div class="form-group">

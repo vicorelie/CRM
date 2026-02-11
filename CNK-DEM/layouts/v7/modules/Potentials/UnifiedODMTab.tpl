@@ -65,6 +65,9 @@
                 <button type="button" class="btn btn-sm" id="odm_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedODM.openPDFPreviewModal()">
                     <i class="fa fa-file-pdf-o"></i> PDF
                 </button>
+                <button type="button" class="btn btn-sm" id="odm_btnSendEmailBdc" style="display:none; background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); color: white; border: none;" onclick="UnifiedODM.openSendEmailModal()">
+                    <i class="fa fa-envelope"></i> Mail
+                </button>
             </div>
             {else}
             <div class="no-bdc-bar">
@@ -1429,7 +1432,84 @@
 }
 #odmPdfPreviewModal #odmPdfPreviewLoading .fa-spinner { color: #3498db; }
 #odmPdfPreviewModal #odmPdfPreviewLoading p { color: #7f8c9b; font-size: 13px; font-weight: 500; }
+
+/* ODM Send Email Modal */
+#odmSendEmailModal .modal-content { border-radius: 12px; overflow: hidden; }
+#odmSendEmailModal .modal-header { background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); color: white; border-bottom: none; }
+#odmSendEmailModal .modal-header .close { color: white; opacity: 0.8; }
+#odmSendEmailModal .modal-footer { background: #f8f9fa; border-top: 1px solid #e0e0e0; }
+#odmSendEmailModal .odm-email-form .form-group { margin-bottom: 12px; }
+#odmSendEmailModal .odm-email-form .form-group label { font-weight: 600; font-size: 13px; color: #333; margin-bottom: 4px; display: block; }
+#odmSendEmailModal .odm-email-form .form-group input,
+#odmSendEmailModal .odm-email-form .form-group select { width: 100%; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 13px; }
+#odmSendEmailModal .odm-email-form .form-group input:focus,
+#odmSendEmailModal .odm-email-form .form-group select:focus { border-color: #e91e63; outline: none; box-shadow: 0 0 0 3px rgba(233,30,99,0.1); }
+#odmSendEmailModal .odm-pdf-att-box label { display: block; padding: 6px 10px; margin: 3px 0; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+#odmSendEmailModal .odm-pdf-att-box label:hover { background: #f8f9fa; }
+#odmSendEmailModal .odm-pdf-att-box label input { margin-right: 6px; accent-color: #e91e63; }
+#odmSendEmailModal .odm-email-preview { border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+#odmSendEmailModal .odm-email-preview-subject { padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; font-size: 13px; font-weight: 600; }
+#odmSendEmailModal .odm-email-preview-subject input { width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; }
+#odmSendEmailModal .odm-email-preview-body { min-height: 200px; }
+#odmSendEmailModal .odm-email-preview-body [contenteditable] { padding: 12px; font-size: 13px; min-height: 200px; outline: none; }
 </style>
+
+{* Modal Envoi Email BDC *}
+<div class="modal fade" id="odmSendEmailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-envelope"></i> Envoyer un Email - BDC</h4>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="odm-email-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Email destinataire <span style="color:#e74c3c;">*</span></label>
+                            <input type="email" id="odmEmailTo" placeholder="client@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>CC</label>
+                            <input type="email" id="odmEmailCc" placeholder="cc@example.com">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Template Email <span style="color:#e74c3c;">*</span></label>
+                            <select id="odmEmailTemplate">
+                                <option value="">-- Choisir un template --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa fa-paperclip"></i> PDFs à joindre</label>
+                            <div id="odmEmailPdfList" class="odm-pdf-att-box" style="max-height:120px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:8px;padding:4px;">
+                                <p class="text-muted" style="margin:6px;font-size:12px;">Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="odmEmailPreviewField" style="display:none;">
+                        <label style="font-weight:600;font-size:13px;color:#333;margin-bottom:6px;display:block;">Aperçu</label>
+                        <div class="odm-email-preview">
+                            <div class="odm-email-preview-subject">
+                                <input type="text" id="odmEmailPreviewSubject" placeholder="Objet">
+                            </div>
+                            <div class="odm-email-preview-body">
+                                <div id="odmEmailPreviewBody" contenteditable="true"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="odmEmailSendBtn" disabled>
+                    <i class="fa fa-send"></i> Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 var odmAllProducts = {$PRODUCTS_JSON|default:'[]'};
@@ -1570,6 +1650,99 @@ jQuery(document).ready(function() {
         if (hiddenId) {
             jQuery('#' + hiddenId).val(jQuery(this).val());
         }
+    });
+
+    // === ODM Send Email Logic ===
+
+    // Template change → load preview
+    jQuery('#odmEmailTemplate').on('change', function() {
+        var templateId = jQuery(this).val();
+        var soId = jQuery('#odm_selectedSOId').val();
+        if (!templateId || !soId) {
+            jQuery('#odmEmailPreviewField').hide();
+            jQuery('#odmEmailSendBtn').prop('disabled', true);
+            return;
+        }
+        jQuery('#odmEmailPreviewBody').html('<div style="text-align:center;padding:30px;color:#999;"><i class="fa fa-spinner fa-spin"></i> Chargement...</div>');
+        jQuery('#odmEmailPreviewField').show();
+        jQuery.ajax({
+            url: 'index.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { module: 'Potentials', action: 'PreviewEmailTemplate', record: odmPotentialId, email_template: templateId, salesorder_id: soId },
+            success: function(response) {
+                var data = response.result || response;
+                if (data.subject) jQuery('#odmEmailPreviewSubject').val(data.subject);
+                if (data.body) {
+                    jQuery('#odmEmailPreviewBody').html(data.body);
+                }
+                jQuery('#odmEmailSendBtn').prop('disabled', false);
+            },
+            error: function() {
+                jQuery('#odmEmailPreviewBody').html('<div style="color:#e74c3c;padding:10px;">Erreur de chargement</div>');
+            }
+        });
+    });
+
+    // Send email
+    jQuery('#odmEmailSendBtn').on('click', function() {
+        var toEmail = jQuery('#odmEmailTo').val();
+        var ccEmail = jQuery('#odmEmailCc').val();
+        var templateId = jQuery('#odmEmailTemplate').val();
+        var soId = jQuery('#odm_selectedSOId').val();
+        if (!toEmail) { alert('Veuillez saisir une adresse email'); return; }
+        if (!templateId) { alert('Veuillez sélectionner un template email'); return; }
+
+        var pdfTemplates = [];
+        jQuery('#odmEmailPdfList input:checked').each(function() { pdfTemplates.push(jQuery(this).val()); });
+
+        var customSubject = jQuery('#odmEmailPreviewSubject').val();
+        var customBody = jQuery('#odmEmailPreviewBody').html();
+
+        var $btn = jQuery(this);
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Envoi...');
+
+        jQuery.ajax({
+            url: 'index.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                module: 'Potentials',
+                action: 'SendEmail',
+                record: odmPotentialId,
+                email: toEmail,
+                cc: ccEmail,
+                email_template: templateId,
+                pdf_templates: pdfTemplates,
+                salesorder_id: soId,
+                custom_subject: customSubject,
+                custom_body: customBody
+            },
+            success: function(response) {
+                var data = response.result || response;
+                if (data.success) {
+                    jQuery('#odmSendEmailModal').modal('hide');
+                    alert('Email envoyé avec succès !');
+                } else {
+                    alert('Erreur: ' + (data.error || "Impossible d'envoyer l'email"));
+                }
+            },
+            error: function() {
+                alert("Erreur lors de l'envoi de l'email");
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html('<i class="fa fa-send"></i> Envoyer');
+            }
+        });
+    });
+
+    // Reset modal on open
+    jQuery('#odmSendEmailModal').on('show.bs.modal', function() {
+        jQuery('#odmEmailPreviewField').hide();
+        jQuery('#odmEmailPreviewBody').html('');
+        jQuery('#odmEmailPreviewSubject').val('');
+        jQuery('#odmEmailTemplate').val('');
+        jQuery('#odmEmailSendBtn').prop('disabled', true);
     });
 });
 </script>

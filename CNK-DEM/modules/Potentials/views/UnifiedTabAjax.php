@@ -82,6 +82,11 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					break;
 
 				case 'odm':
+					$currentUser = Users_Record_Model::getCurrentUserModel();
+					if ($currentUser->get('is_admin') !== 'on') {
+						echo '<div class="alert alert-danger">Accès réservé aux administrateurs</div>';
+						break;
+					}
 					echo $this->renderODMTab($viewer, $recordModel);
 					break;
 
@@ -568,7 +573,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			while ($row = $db->fetchByAssoc($productsResult)) {
 				$products[] = [
 					'productid' => $row['productid'],
-					'productname' => $row['productname'] ?: $row['description'],
+					'productname' => !empty($row['description']) ? $row['description'] : $row['productname'],
 					'quantity' => floatval($row['quantity']),
 					'listprice' => floatval($row['listprice']),
 					'netprice' => floatval($row['netprice']),
@@ -708,7 +713,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			while ($row = $db->fetchByAssoc($productsResult)) {
 				$products[] = [
 					'productid' => $row['productid'],
-					'productname' => $row['productname'] ?: $row['description'],
+					'productname' => !empty($row['description']) ? $row['description'] : $row['productname'],
 					'quantity' => floatval($row['quantity']),
 					'listprice' => floatval($row['listprice']),
 					'netprice' => floatval($row['netprice']),

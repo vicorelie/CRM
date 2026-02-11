@@ -34,15 +34,20 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $pdfTemplateIds = $request->get('pdf_templates');
             $docAttachmentIds = $request->get('doc_attachments');
             $quoteId = $request->get('quote_id');
+            $salesOrderId = $request->get('salesorder_id');
             $customSubject = $request->getRaw('custom_subject');
             $customBody = $request->getRaw('custom_body');
 
-            $this->log("Record: $recordId, Email: $toEmail, CC: $ccEmail, EmailTemplate: $emailTemplateId, PDFs: " . json_encode($pdfTemplateIds) . ", Docs: " . json_encode($docAttachmentIds) . ", QuoteId: $quoteId");
+            $this->log("Record: $recordId, Email: $toEmail, CC: $ccEmail, EmailTemplate: $emailTemplateId, PDFs: " . json_encode($pdfTemplateIds) . ", Docs: " . json_encode($docAttachmentIds) . ", QuoteId: $quoteId, SOId: $salesOrderId");
 
             // Déterminer le module et record cible
             $targetModule = 'Potentials';
             $targetRecordId = $recordId;
-            if (!empty($quoteId)) {
+            if (!empty($salesOrderId)) {
+                $targetModule = 'SalesOrder';
+                $targetRecordId = $salesOrderId;
+                $this->log("Mode BDC: module=$targetModule, targetRecord=$targetRecordId");
+            } elseif (!empty($quoteId)) {
                 $targetModule = 'Quotes';
                 $targetRecordId = $quoteId;
                 $this->log("Mode Devis: module=$targetModule, targetRecord=$targetRecordId");

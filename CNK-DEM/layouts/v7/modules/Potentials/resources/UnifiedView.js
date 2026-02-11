@@ -528,14 +528,21 @@
             resultsDiv.show();
         },
 
+        MANUAL_PRODUCT_ID: 1879,
+
         addProduct: function(product, qty) {
-            if (this.selectedProducts[product.id]) {
+            var isManual = (String(product.id) === String(this.MANUAL_PRODUCT_ID));
+
+            // Allow duplicates for manual products, block for catalog products
+            if (!isManual && this.selectedProducts[product.id]) {
                 app.helper.showErrorNotification({message: 'Ce produit est deja dans la liste'});
                 return;
             }
 
             this.productCounter++;
-            this.selectedProducts[product.id] = true;
+            if (!isManual) {
+                this.selectedProducts[product.id] = true;
+            }
 
             var productName = product.name || 'Produit inconnu';
             var unitPrice = parseFloat(product.unit_price || 0).toFixed(2);
@@ -544,6 +551,8 @@
             var pctAcompte = product.pct_acompte || 43;
             var pctSolde = product.pct_solde || 57;
             var counter = this.productCounter;
+            var removeFunc = isManual ? 'removeManualProduct' : 'removeProduct';
+            var removeArgs = isManual ? 'this' : 'this,' + product.id;
 
             var row = jQuery('<tr></tr>');
             row.attr('data-product-id', product.id);
@@ -551,18 +560,47 @@
             row.attr('data-pct-solde', pctSolde);
             row.css('border-bottom', '1px solid #dee2e6');
             row.html(
-                '<td style="padding:10px"><input type="text" name="productName' + counter + '" value="' + productName.replace(/"/g, '&quot;') + '" class="form-control"></td>' +
+                '<td style="padding:10px"><input type="text" name="productName' + counter + '" value="' + productName.replace(/"/g, '&quot;') + '" class="form-control' + (isManual ? ' unified-name-input' : '') + '"></td>' +
                 '<td style="padding:10px"><input type="number" name="qty' + counter + '" value="' + quantity + '" step="1" min="1" class="form-control unified-qty-input" onchange="UnifiedDevis.updateLineTotal(this)" oninput="UnifiedDevis.updateLineTotal(this)"></td>' +
                 '<td style="padding:10px"><input type="number" name="listPrice' + counter + '" value="' + unitPrice + '" step="0.01" min="0" class="form-control unified-price-input" onchange="UnifiedDevis.updateLineTotal(this)" oninput="UnifiedDevis.updateLineTotal(this)"></td>' +
                 '<td style="padding:10px"><span class="product-total" style="font-weight:bold;color:#667eea;">' + lineTotal + '</span> EUR</td>' +
-                '<td style="padding:10px"><button type="button" onclick="UnifiedDevis.removeProduct(this,' + product.id + ')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></td>'
+                '<td style="padding:10px"><button type="button" onclick="UnifiedDevis.' + removeFunc + '(' + removeArgs + ')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></td>'
             );
+
+            // Auto-save on name change for manual products
+            if (isManual) {
+                var self = this;
+                row.find('.unified-name-input').on('change', function() {
+                    self.triggerDebouncedAutoSave();
+                });
+            }
 
             jQuery('#unified_productsList').append(row);
             jQuery('#unified_productsTable').show();
             this.updateMontantTotal();
 
             // Debounced auto-save for products
+            this.triggerDebouncedAutoSave();
+        },
+
+        addManualProduct: function() {
+            this.addProduct({
+                id: this.MANUAL_PRODUCT_ID,
+                name: '',
+                unit_price: 0,
+                pct_acompte: 43,
+                pct_solde: 57
+            }, 1);
+            // Focus on the last added name input
+            jQuery('#unified_productsList tr:last .unified-name-input').attr('placeholder', 'Nom du produit').focus();
+        },
+
+        removeManualProduct: function(btn) {
+            jQuery(btn).closest('tr').remove();
+            if (jQuery('#unified_productsList').children().length === 0) {
+                jQuery('#unified_productsTable').hide();
+            }
+            this.updateMontantTotal();
             this.triggerDebouncedAutoSave();
         },
 
@@ -2565,6 +2603,7 @@
             jQuery('#odmFormContainer').show();
             jQuery('#odmActionsBar').show();
             jQuery('#odm_btnViewPdf').show();
+            jQuery('#odm_btnSendEmailBdc').show();
             jQuery('#odm_btnSaveText').text('Enregistrer ODM');
             jQuery('#odm_btnSave').removeClass('btn-success').addClass('btn-primary');
 
@@ -2692,6 +2731,7 @@
             jQuery('#odmFormContainer').hide();
             jQuery('#odmActionsBar').hide();
             jQuery('#odm_btnViewPdf').hide();
+            jQuery('#odm_btnSendEmailBdc').hide();
             jQuery('.odm-chip, .quote-chip').removeClass('selected');
 
             // Clear form
@@ -3050,6 +3090,74 @@
             }
 
             modal.modal('show');
+        },
+
+        /**
+         * Open Send Email modal for the selected BDC
+         */
+        openSendEmailModal: function() {
+            var soId = this.currentSOId;
+            if (!soId) {
+                app.helper.showErrorNotification({message: 'Veuillez d\'abord sélectionner un BDC'});
+                return;
+            }
+
+            var potentialId = jQuery('#odmTabContainer').data('potential-id');
+
+            // Load email data (templates, PDFs, contact email)
+            app.helper.showProgress('Chargement...');
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'GetEmailData',
+                    record: potentialId,
+                    salesorder_id: soId
+                },
+                success: function(response) {
+                    app.helper.hideProgress();
+                    var data = response.result || response;
+                    if (!data.success) {
+                        app.helper.showErrorNotification({message: data.error || 'Erreur de chargement'});
+                        return;
+                    }
+
+                    // Populate email templates dropdown
+                    var $tplSelect = jQuery('#odmEmailTemplate');
+                    $tplSelect.empty().append('<option value="">-- Choisir un template --</option>');
+                    if (data.email_templates && data.email_templates.length > 0) {
+                        data.email_templates.forEach(function(tpl) {
+                            $tplSelect.append('<option value="' + tpl.id + '">' + tpl.name + '</option>');
+                        });
+                    }
+
+                    // Populate PDF templates checkboxes
+                    var $pdfList = jQuery('#odmEmailPdfList');
+                    $pdfList.empty();
+                    if (data.pdf_templates && data.pdf_templates.length > 0) {
+                        data.pdf_templates.forEach(function(tpl) {
+                            $pdfList.append(
+                                '<label><input type="checkbox" value="' + tpl.id + '" data-name="' + tpl.name + '"> ' +
+                                '<i class="fa fa-file-pdf-o" style="color:#e74c3c;"></i> ' + tpl.name + '</label>'
+                            );
+                        });
+                    } else {
+                        $pdfList.html('<p class="text-muted" style="margin:6px;font-size:12px;">Aucun template PDF</p>');
+                    }
+
+                    // Set prestataire email (fallback to contact email)
+                    jQuery('#odmEmailTo').val(data.vendor_email || data.contact_email || '');
+
+                    // Show modal
+                    jQuery('#odmSendEmailModal').modal('show');
+                },
+                error: function() {
+                    app.helper.hideProgress();
+                    app.helper.showErrorNotification({message: 'Erreur de chargement des données email'});
+                }
+            });
         }
     };
 
