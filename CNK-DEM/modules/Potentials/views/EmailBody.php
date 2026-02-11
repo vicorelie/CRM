@@ -34,12 +34,23 @@ $result = $adb->pquery($sql, [$emailId]);
 
 if ($adb->num_rows($result) > 0) {
     $body = $adb->query_result($result, 0, 'body');
-    // If body is HTML-entity encoded (starts with &lt;), decode it
-    if (strpos(trim($body), '&lt;') === 0) {
+
+    // Decode HTML entities if body contains encoded HTML tags anywhere
+    if (strpos($body, '&lt;') !== false) {
         $body = html_entity_decode($body, ENT_QUOTES, 'UTF-8');
     }
+
+    // If body is not a full HTML document, wrap it in one for proper rendering
+    $trimmedBody = trim($body);
+    $isFullDocument = (stripos($trimmedBody, '<!DOCTYPE') === 0 || stripos($trimmedBody, '<html') === 0);
+
     header('Content-Type: text/html; charset=UTF-8');
-    echo $body;
+
+    if ($isFullDocument) {
+        echo $body;
+    } else {
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:10px;font-family:Arial,sans-serif;">' . $body . '</body></html>';
+    }
 } else {
     echo '<html><body><p style="text-align:center;padding:40px;color:#999;">Email introuvable</p></body></html>';
 }

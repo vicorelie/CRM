@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 14:10:29
+/* Smarty version 4.5.5, created on 2026-02-10 23:44:37
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/partials/SidebarEssentials.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698b20357af353_40858563',
+  'unifunc' => 'content_698ba6c5adc649_62102108',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698b20357af353_40858563 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698ba6c5adc649_62102108 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="sidebar-menu">

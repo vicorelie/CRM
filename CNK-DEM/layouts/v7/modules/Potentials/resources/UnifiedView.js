@@ -679,7 +679,6 @@
             jQuery('#unified_selectedQuoteId').val(quoteId);
             console.log('[UnifiedDevis] unified_selectedQuoteId set to:', jQuery('#unified_selectedQuoteId').val());
             jQuery('#unified_btnPaiement').show();
-            jQuery('#unified_btnBDC').show();
             jQuery('#unified_btnViewPdf').show();
             this.updatePdfSendStatus();
 
@@ -789,24 +788,121 @@
             this.updatePdfSendStatus();
         },
 
-        viewPDF: function() {
+        openPDFPreviewModal: function() {
             var quoteId = jQuery('#unified_selectedQuoteId').val();
-            console.log('[UnifiedDevis] viewPDF called, quoteId:', quoteId);
-
             if (!quoteId) {
                 app.helper.showErrorNotification({message: 'Veuillez d\'abord selectionner un devis'});
                 return;
             }
 
-            // Use template "DEVIS (CNK DEM)" - ID 21
-            // Format similar to StripePaymentLinks.js invoice PDF
-            var url = 'index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF' +
-                      '&source_module=Quotes&formodule=Quotes' +
-                      '&record=' + quoteId +
-                      '&pdftemplateid=21';
+            var templates = window.unifiedPdfTemplates || [];
+            if (templates.length === 0) {
+                app.helper.showErrorNotification({message: 'Aucun modele PDF disponible'});
+                return;
+            }
 
-            console.log('[UnifiedDevis] PDF URL:', url);
-            window.open(url, '_blank');
+            var modalId = 'pdfPreviewModal';
+            var modal = jQuery('#' + modalId);
+
+            // Build template list HTML
+            var listHtml = '';
+            templates.forEach(function(tpl, index) {
+                var activeClass = (index === 0) ? ' active' : '';
+                listHtml += '<div class="pdf-tpl-item' + activeClass + '" data-templateid="' + tpl.id + '">' +
+                            '<i class="fa fa-file-pdf-o"></i> ' +
+                            '<span>' + tpl.name + '</span>' +
+                            '</div>';
+            });
+
+            // Preview URL for the first template
+            var firstPreviewUrl = 'index.php?module=PDFMaker&action=IndexAjax&mode=getPreviewContent' +
+                                  '&source_module=Quotes&pdftemplateid=' + templates[0].id +
+                                  '&record=' + quoteId + '&generate_type=inline';
+
+            if (modal.length === 0) {
+                // Create modal
+                modal = jQuery(
+                    '<div class="modal fade" id="' + modalId + '" tabindex="-1" role="dialog">' +
+                        '<div class="modal-dialog" role="document" style="width: 90%; max-width: 1200px;">' +
+                            '<div class="modal-content">' +
+                                '<div class="modal-header" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white;">' +
+                                    '<button type="button" class="close" data-dismiss="modal" style="color: rgba(255,255,255,0.7); opacity: 1;">&times;</button>' +
+                                    '<h4 class="modal-title"><i class="fa fa-file-pdf-o"></i> Apercu PDF</h4>' +
+                                '</div>' +
+                                '<div class="modal-body" style="padding: 0; display: flex; height: 78vh;">' +
+                                    '<div class="pdf-tpl-sidebar" id="pdfTplSidebar" style="width: 230px; min-width: 230px; overflow-y: auto; padding: 14px 0;">' +
+                                        '<div class="pdf-tpl-sidebar-title">Modeles</div>' +
+                                        listHtml +
+                                    '</div>' +
+                                    '<div style="flex: 1; position: relative; border-radius: 0 0 16px 0; overflow: hidden;">' +
+                                        '<div id="pdfPreviewLoading" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;">' +
+                                            '<i class="fa fa-spinner fa-spin fa-3x"></i>' +
+                                            '<p style="margin-top: 12px;">Chargement...</p>' +
+                                        '</div>' +
+                                        '<iframe id="pdfPreviewIframe" src="' + firstPreviewUrl + '" style="width: 100%; height: 100%; border: none; display: block;"></iframe>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="modal-footer">' +
+                                    '<button type="button" class="btn btn-info" id="pdfPreviewDownload"><i class="fa fa-download"></i> Telecharger</button>' +
+                                    '<button type="button" class="btn btn-default" id="pdfPreviewPrint"><i class="fa fa-print"></i> Imprimer</button>' +
+                                    '<button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>'
+                );
+                jQuery('body').append(modal);
+
+                // Click on template item
+                modal.on('click', '.pdf-tpl-item', function() {
+                    var tplId = jQuery(this).data('templateid');
+                    var currentQuoteId = jQuery('#unified_selectedQuoteId').val();
+
+                    modal.find('.pdf-tpl-item').removeClass('active');
+                    jQuery(this).addClass('active');
+
+                    jQuery('#pdfPreviewLoading').css('display', 'flex');
+
+                    var previewUrl = 'index.php?module=PDFMaker&action=IndexAjax&mode=getPreviewContent' +
+                                     '&source_module=Quotes&pdftemplateid=' + tplId +
+                                     '&record=' + currentQuoteId + '&generate_type=inline';
+                    jQuery('#pdfPreviewIframe').attr('src', previewUrl);
+                });
+
+                // Hide spinner when iframe loads
+                modal.find('#pdfPreviewIframe').on('load', function() {
+                    jQuery('#pdfPreviewLoading').hide();
+                });
+
+                // Download
+                modal.on('click', '#pdfPreviewDownload', function() {
+                    var tplId = modal.find('.pdf-tpl-item.active').data('templateid');
+                    var currentQuoteId = jQuery('#unified_selectedQuoteId').val();
+                    var downloadUrl = 'index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF' +
+                                      '&source_module=Quotes&formodule=Quotes' +
+                                      '&record=' + currentQuoteId +
+                                      '&pdftemplateid=' + tplId;
+                    window.open(downloadUrl, '_blank');
+                });
+
+                // Print
+                modal.on('click', '#pdfPreviewPrint', function() {
+                    var iframe = document.getElementById('pdfPreviewIframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    }
+                });
+            } else {
+                // Modal exists - update for current quote
+                modal.find('#pdfTplSidebar').html(
+                    '<div class="pdf-tpl-sidebar-title">Modeles</div>' +
+                    listHtml
+                );
+                jQuery('#pdfPreviewIframe').attr('src', firstPreviewUrl);
+            }
+
+            modal.modal('show');
         },
 
         openStripePayments: function() {
@@ -2847,9 +2943,113 @@
         /**
          * View PDF
          */
-        viewPDF: function() {
-            if (!this.currentSOId) return;
-            window.open('index.php?module=SalesOrder&view=Detail&record=' + this.currentSOId + '&mode=showDetailViewByMode&requestMode=full', '_blank');
+        openPDFPreviewModal: function() {
+            var soId = this.currentSOId;
+            if (!soId) {
+                app.helper.showErrorNotification({message: 'Veuillez d\'abord selectionner un BDC'});
+                return;
+            }
+
+            var templates = window.odmPdfTemplates || [];
+            if (templates.length === 0) {
+                app.helper.showErrorNotification({message: 'Aucun modele PDF disponible'});
+                return;
+            }
+
+            var modalId = 'odmPdfPreviewModal';
+            var modal = jQuery('#' + modalId);
+
+            var listHtml = '';
+            templates.forEach(function(tpl, index) {
+                var activeClass = (index === 0) ? ' active' : '';
+                listHtml += '<div class="pdf-tpl-item' + activeClass + '" data-templateid="' + tpl.id + '">' +
+                            '<i class="fa fa-file-pdf-o"></i> ' +
+                            '<span>' + tpl.name + '</span>' +
+                            '</div>';
+            });
+
+            var firstPreviewUrl = 'index.php?module=PDFMaker&action=IndexAjax&mode=getPreviewContent' +
+                                  '&source_module=SalesOrder&pdftemplateid=' + templates[0].id +
+                                  '&record=' + soId + '&generate_type=inline';
+
+            if (modal.length === 0) {
+                modal = jQuery(
+                    '<div class="modal fade" id="' + modalId + '" tabindex="-1" role="dialog">' +
+                        '<div class="modal-dialog" role="document" style="width: 90%; max-width: 1200px;">' +
+                            '<div class="modal-content">' +
+                                '<div class="modal-header" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white;">' +
+                                    '<button type="button" class="close" data-dismiss="modal" style="color: rgba(255,255,255,0.7); opacity: 1;">&times;</button>' +
+                                    '<h4 class="modal-title"><i class="fa fa-file-pdf-o"></i> Apercu PDF - BDC</h4>' +
+                                '</div>' +
+                                '<div class="modal-body" style="padding: 0; display: flex; height: 78vh;">' +
+                                    '<div class="pdf-tpl-sidebar" id="odmPdfTplSidebar" style="width: 230px; min-width: 230px; overflow-y: auto; padding: 14px 0;">' +
+                                        '<div class="pdf-tpl-sidebar-title">Modeles</div>' +
+                                        listHtml +
+                                    '</div>' +
+                                    '<div style="flex: 1; position: relative; border-radius: 0 0 16px 0; overflow: hidden;">' +
+                                        '<div id="odmPdfPreviewLoading" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;">' +
+                                            '<i class="fa fa-spinner fa-spin fa-3x"></i>' +
+                                            '<p style="margin-top: 12px;">Chargement...</p>' +
+                                        '</div>' +
+                                        '<iframe id="odmPdfPreviewIframe" src="' + firstPreviewUrl + '" style="width: 100%; height: 100%; border: none; display: block;"></iframe>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="modal-footer">' +
+                                    '<button type="button" class="btn btn-info" id="odmPdfPreviewDownload"><i class="fa fa-download"></i> Telecharger</button>' +
+                                    '<button type="button" class="btn btn-default" id="odmPdfPreviewPrint"><i class="fa fa-print"></i> Imprimer</button>' +
+                                    '<button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>'
+                );
+                jQuery('body').append(modal);
+
+                modal.on('click', '.pdf-tpl-item', function() {
+                    var tplId = jQuery(this).data('templateid');
+                    var currentSOId = UnifiedODM.currentSOId;
+
+                    modal.find('.pdf-tpl-item').removeClass('active');
+                    jQuery(this).addClass('active');
+
+                    jQuery('#odmPdfPreviewLoading').css('display', 'flex');
+
+                    var previewUrl = 'index.php?module=PDFMaker&action=IndexAjax&mode=getPreviewContent' +
+                                     '&source_module=SalesOrder&pdftemplateid=' + tplId +
+                                     '&record=' + currentSOId + '&generate_type=inline';
+                    jQuery('#odmPdfPreviewIframe').attr('src', previewUrl);
+                });
+
+                modal.find('#odmPdfPreviewIframe').on('load', function() {
+                    jQuery('#odmPdfPreviewLoading').hide();
+                });
+
+                modal.on('click', '#odmPdfPreviewDownload', function() {
+                    var tplId = modal.find('.pdf-tpl-item.active').data('templateid');
+                    var currentSOId = UnifiedODM.currentSOId;
+                    var downloadUrl = 'index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF' +
+                                      '&source_module=SalesOrder&formodule=SalesOrder' +
+                                      '&record=' + currentSOId +
+                                      '&pdftemplateid=' + tplId;
+                    window.open(downloadUrl, '_blank');
+                });
+
+                modal.on('click', '#odmPdfPreviewPrint', function() {
+                    var iframe = document.getElementById('odmPdfPreviewIframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    }
+                });
+            } else {
+                modal.find('#odmPdfTplSidebar').html(
+                    '<div class="pdf-tpl-sidebar-title">Modeles</div>' +
+                    listHtml
+                );
+                jQuery('#odmPdfPreviewIframe').attr('src', firstPreviewUrl);
+            }
+
+            modal.modal('show');
         }
     };
 

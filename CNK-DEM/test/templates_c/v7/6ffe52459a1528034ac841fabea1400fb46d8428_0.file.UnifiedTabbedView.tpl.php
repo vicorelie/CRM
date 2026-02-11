@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 14:09:17
+/* Smarty version 4.5.5, created on 2026-02-10 23:22:50
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698b1fed3b7152_05611208',
+  'unifunc' => 'content_698ba1aa986897_37763243',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698b1fed3b7152_05611208 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698ba1aa986897_37763243 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="unified-view-wrapper"><div class="unified-container"><div class="unified-tabs-header"><div class="unified-header-left"><div class="header-info"><h1><i class="fa fa-user-circle"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_NAME']->value;?>
 </h1><?php if (!empty($_smarty_tpl->tpl_vars['CONTACT_PHONE']->value)) {?><p class="contact-detail"><i class="fa fa-phone"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_PHONE']->value;?>
 </p><?php }

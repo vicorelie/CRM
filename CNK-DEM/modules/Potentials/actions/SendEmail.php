@@ -32,9 +32,12 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $ccEmail = $request->get('cc');
             $emailTemplateId = $request->get('email_template');
             $pdfTemplateIds = $request->get('pdf_templates');
+            $docAttachmentIds = $request->get('doc_attachments');
             $quoteId = $request->get('quote_id');
+            $customSubject = $request->getRaw('custom_subject');
+            $customBody = $request->getRaw('custom_body');
 
-            $this->log("Record: $recordId, Email: $toEmail, CC: $ccEmail, EmailTemplate: $emailTemplateId, PDFs: " . json_encode($pdfTemplateIds) . ", QuoteId: $quoteId");
+            $this->log("Record: $recordId, Email: $toEmail, CC: $ccEmail, EmailTemplate: $emailTemplateId, PDFs: " . json_encode($pdfTemplateIds) . ", Docs: " . json_encode($docAttachmentIds) . ", QuoteId: $quoteId");
 
             // Déterminer le module et record cible
             $targetModule = 'Potentials';
@@ -85,10 +88,18 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $subject = $emailContentModel->getSubject();
             $body = $emailContentModel->getBody();
 
+            // Utiliser le contenu personnalisé si l'utilisateur a modifié l'aperçu
+            if (!empty($customSubject)) {
+                $subject = $customSubject;
+                $this->log("Subject personnalisé utilisé");
+            }
+            if (!empty($customBody)) {
+                $body = $customBody;
+                $this->log("Body personnalisé utilisé");
+            }
+
             $this->log("Subject: $subject");
             $this->log("Body length: " . strlen($body));
-            // Debug: premiers 500 chars du body pour vérifier la substitution
-            $this->log("Body preview: " . substr(strip_tags($body), 0, 500));
 
             if (empty($subject)) {
                 $subject = 'Information concernant votre dossier';
@@ -178,18 +189,65 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 }
             }
 
+            // Ajouter les fichiers uploadés par l'utilisateur
+            $uploadedFilePaths = [];
+            if (!empty($_FILES['file_attachments']['name'])) {
+                $fileCount = count($_FILES['file_attachments']['name']);
+                $this->log("Fichiers uploadés: $fileCount");
+                for ($i = 0; $i < $fileCount; $i++) {
+                    if ($_FILES['file_attachments']['error'][$i] === UPLOAD_ERR_OK) {
+                        $tmpPath = $_FILES['file_attachments']['tmp_name'][$i];
+                        $fileName = basename($_FILES['file_attachments']['name'][$i]);
+                        $mail->AddAttachment($tmpPath, $fileName);
+                        $uploadedFilePaths[] = $tmpPath;
+                        $this->log("Fichier joint: $fileName");
+                    }
+                }
+            }
+
+            // Ajouter les Documents VTiger sélectionnés par l'utilisateur
+            if (!empty($docAttachmentIds) && is_array($docAttachmentIds)) {
+                $this->log("Documents sélectionnés: " . count($docAttachmentIds));
+                $rootDir = vglobal('root_directory') ?: dirname(__FILE__) . '/../../../';
+                foreach ($docAttachmentIds as $docId) {
+                    try {
+                        $documentModel = Vtiger_Record_Model::getInstanceById($docId, 'Documents');
+                        $fileDetails = $documentModel->getFileDetails();
+                        if (!empty($fileDetails) && !empty($fileDetails['path'])) {
+                            $storedName = !empty($fileDetails['storedname']) ? $fileDetails['storedname'] : $fileDetails['name'];
+                            $filePath = $rootDir . $fileDetails['path'] . $fileDetails['attachmentsid'] . '_' . $storedName;
+                            $displayName = $fileDetails['name'];
+                            $this->log("Document path: $filePath");
+                            if (file_exists($filePath)) {
+                                $mail->AddAttachment($filePath, $displayName);
+                                $this->log("Document VTiger joint: $displayName");
+                            } else {
+                                $this->log("Fichier introuvable: $filePath");
+                            }
+                        }
+                    } catch (Exception $e) {
+                        $this->log("Erreur document $docId: " . $e->getMessage());
+                    }
+                }
+            }
+
             // Ajouter les documents attachés au template EMAILMaker
             $documentIds = $emailContentModel->getAttachments();
             if (!empty($documentIds)) {
+                if (!isset($rootDir)) {
+                    $rootDir = vglobal('root_directory') ?: dirname(__FILE__) . '/../../../';
+                }
                 foreach ($documentIds as $documentId) {
                     try {
                         $documentModel = Vtiger_Record_Model::getInstanceById($documentId, 'Documents');
                         $fileDetails = $documentModel->getFileDetails();
-                        if (!empty($fileDetails) && !empty($fileDetails['path']) && !empty($fileDetails['name'])) {
-                            $filePath = $fileDetails['path'] . $fileDetails['attachmentsid'] . '_' . $fileDetails['name'];
+                        if (!empty($fileDetails) && !empty($fileDetails['path'])) {
+                            $storedName = !empty($fileDetails['storedname']) ? $fileDetails['storedname'] : $fileDetails['name'];
+                            $filePath = $rootDir . $fileDetails['path'] . $fileDetails['attachmentsid'] . '_' . $storedName;
+                            $displayName = $fileDetails['name'];
                             if (file_exists($filePath)) {
-                                $mail->AddAttachment($filePath, $fileDetails['name']);
-                                $this->log("Document EMAILMaker joint: " . $fileDetails['name']);
+                                $mail->AddAttachment($filePath, $displayName);
+                                $this->log("Document EMAILMaker joint: $displayName");
                             }
                         }
                     } catch (Exception $e) {
@@ -206,9 +264,30 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             }
             $this->log("MailSend OK");
 
+            // Collecter les noms de toutes les pièces jointes pour l'historique
+            $attachmentNames = [];
+            foreach ($pdfAttachments as $att) {
+                $attachmentNames[] = ['name' => $att['name'], 'type' => 'pdf'];
+            }
+            if (!empty($docAttachmentIds) && is_array($docAttachmentIds)) {
+                foreach ($docAttachmentIds as $docId) {
+                    try {
+                        $docModel = Vtiger_Record_Model::getInstanceById($docId, 'Documents');
+                        $attachmentNames[] = ['name' => $docModel->get('notes_title') ?: $docModel->get('filename'), 'type' => 'document', 'id' => $docId];
+                    } catch (Exception $e) {}
+                }
+            }
+            if (!empty($_FILES['file_attachments']['name'])) {
+                for ($fi = 0; $fi < count($_FILES['file_attachments']['name']); $fi++) {
+                    if ($_FILES['file_attachments']['error'][$fi] === UPLOAD_ERR_OK) {
+                        $attachmentNames[] = ['name' => basename($_FILES['file_attachments']['name'][$fi]), 'type' => 'upload'];
+                    }
+                }
+            }
+
             // Enregistrer l'email dans l'historique VTiger
             $ccString = !empty($ccAddresses) ? implode(',', $ccAddresses) : '';
-            $this->saveEmailToHistory($recordId, $toEmail, $ccString, $subject, $body, $emailTemplateId, !empty($pdfTemplateIds));
+            $this->saveEmailToHistory($recordId, $toEmail, $ccString, $subject, $body, $emailTemplateId, $attachmentNames);
             $this->log("Email enregistré dans l'historique");
 
             // Nettoyer les fichiers temporaires PDF
@@ -271,7 +350,7 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
     /**
      * Enregistrer l'email envoyé dans l'historique VTiger
      */
-    private function saveEmailToHistory($potentialId, $toEmail, $ccEmail, $subject, $body, $templateId, $hasAttachments) {
+    private function saveEmailToHistory($potentialId, $toEmail, $ccEmail, $subject, $body, $templateId, $attachments = []) {
         try {
             $db = PearDatabase::getInstance();
             $currentUser = Users_Record_Model::getCurrentUserModel();
@@ -306,8 +385,10 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $toEmailJson = json_encode([$toEmail]);
             $this->log("INSERT its4you_emails: crmId=$crmId, from=$fromEmail, to=$toEmailJson, related_to=$potentialId, contact_id=$contactId");
 
-            $sql = "INSERT INTO its4you_emails (its4you_emails_id, from_email, to_email, cc_email, bcc_email, subject, body, email_flag, related_to, contact_id, user_id, email_template_ids, emails_module)
-                    VALUES (?, ?, ?, ?, '', ?, ?, 'SENT', ?, ?, ?, ?, 'Potentials')";
+            $attachmentJson = !empty($attachments) ? json_encode($attachments) : '';
+
+            $sql = "INSERT INTO its4you_emails (its4you_emails_id, from_email, to_email, cc_email, bcc_email, subject, body, email_flag, related_to, contact_id, user_id, email_template_ids, attachment_ids, emails_module)
+                    VALUES (?, ?, ?, ?, '', ?, ?, 'SENT', ?, ?, ?, ?, ?, 'Potentials')";
             $result2 = $db->pquery($sql, [
                 $crmId,
                 $fromEmail,
@@ -318,7 +399,8 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 $potentialId,
                 $contactId ?: 0,
                 $userId,
-                $templateId
+                $templateId,
+                $attachmentJson
             ]);
             $this->log("INSERT its4you_emails result: " . ($result2 ? 'OK' : 'FAILED'));
 

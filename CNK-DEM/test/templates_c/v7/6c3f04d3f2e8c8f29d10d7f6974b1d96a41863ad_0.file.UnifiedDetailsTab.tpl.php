@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 14:09:17
+/* Smarty version 4.5.5, created on 2026-02-10 23:22:50
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698b1feddb8658_19252220',
+  'unifunc' => 'content_698ba1aae55b48_65348799',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698b1feddb8658_19252220 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698ba1aae55b48_65348799 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.date_format.php','function'=>'smarty_modifier_date_format',),1=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="details-tab-container" id="detailsTabContainer" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>

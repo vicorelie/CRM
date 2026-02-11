@@ -73,6 +73,56 @@ class Potentials_GetEmailData_Action extends Vtiger_Action_Controller {
             }
             $result['pdf_templates'] = $pdfTemplates;
 
+            // 4. Récupérer les Documents liés à l'affaire
+            $documents = [];
+            $docIds = [];
+            if (!empty($recordId)) {
+                $query3 = "SELECT n.notesid, n.title, n.filename, n.filesize, n.filetype
+                           FROM vtiger_notes n
+                           INNER JOIN vtiger_crmentity ce ON ce.crmid = n.notesid AND ce.deleted = 0
+                           INNER JOIN vtiger_senotesrel rel ON rel.notesid = n.notesid
+                           WHERE rel.crmid = ? AND n.filename IS NOT NULL AND n.filename != ''
+                           ORDER BY n.title ASC";
+                $res3 = $db->pquery($query3, [$recordId]);
+                if ($res3) {
+                    for ($i = 0; $i < $db->num_rows($res3); $i++) {
+                        $row = $db->query_result_rowdata($res3, $i);
+                        $documents[] = [
+                            'id' => $row['notesid'],
+                            'title' => $row['title'],
+                            'filename' => $row['filename'],
+                            'filesize' => intval($row['filesize']),
+                            'filetype' => $row['filetype']
+                        ];
+                        $docIds[] = $row['notesid'];
+                    }
+                }
+            }
+
+            // 5. Toujours inclure "INVENTAIRE CNK TRANSPORT" même s'il n'est pas lié à l'affaire
+            $query4 = "SELECT n.notesid, n.title, n.filename, n.filesize, n.filetype
+                       FROM vtiger_notes n
+                       INNER JOIN vtiger_crmentity ce ON ce.crmid = n.notesid AND ce.deleted = 0
+                       WHERE n.title LIKE '%INVENTAIRE CNK TRANSPORT%' AND n.filename IS NOT NULL AND n.filename != ''
+                       ORDER BY n.title ASC";
+            $res4 = $db->pquery($query4, []);
+            if ($res4) {
+                for ($i = 0; $i < $db->num_rows($res4); $i++) {
+                    $row = $db->query_result_rowdata($res4, $i);
+                    if (!in_array($row['notesid'], $docIds)) {
+                        $documents[] = [
+                            'id' => $row['notesid'],
+                            'title' => $row['title'],
+                            'filename' => $row['filename'],
+                            'filesize' => intval($row['filesize']),
+                            'filetype' => $row['filetype']
+                        ];
+                    }
+                }
+            }
+
+            $result['documents'] = $documents;
+
             $result['success'] = true;
             $response->setResult($result);
 

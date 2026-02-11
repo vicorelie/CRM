@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 14:40:23
+/* Smarty version 4.5.5, created on 2026-02-11 00:34:22
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/PhoneDetailView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698b2737ec5d07_12302362',
+  'unifunc' => 'content_698bb26e6b64d3_03919504',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698b2737ec5d07_12302362 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698bb26e6b64d3_03919504 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.regex_replace.php','function'=>'smarty_modifier_regex_replace',),));
 ?>
 

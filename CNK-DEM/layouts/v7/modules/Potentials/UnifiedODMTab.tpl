@@ -62,7 +62,7 @@
                     </div>
                     {/foreach}
                 </div>
-                <button type="button" class="btn btn-sm" id="odm_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedODM.viewPDF()">
+                <button type="button" class="btn btn-sm" id="odm_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedODM.openPDFPreviewModal()">
                     <i class="fa fa-file-pdf-o"></i> PDF
                 </button>
             </div>
@@ -1323,6 +1323,112 @@
         align-items: flex-start;
     }
 }
+
+/* PDF Preview Modal (ODM) */
+#odmPdfPreviewModal .modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+}
+#odmPdfPreviewModal .modal-header {
+    border-bottom: none;
+    padding: 16px 24px;
+}
+#odmPdfPreviewModal .modal-header .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+#odmPdfPreviewModal .modal-header .modal-title .fa { margin-right: 10px; opacity: 0.9; }
+#odmPdfPreviewModal .modal-header .close { font-size: 28px; text-shadow: none; margin-top: -2px; }
+#odmPdfPreviewModal .pdf-tpl-sidebar {
+    background: linear-gradient(180deg, #f8f9fb 0%, #f1f3f6 100%) !important;
+    border-right: 1px solid #e2e6ea !important;
+}
+#odmPdfPreviewModal .pdf-tpl-sidebar-title {
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    color: #9aa0a8 !important;
+    letter-spacing: 1.2px !important;
+    font-weight: 700 !important;
+    padding: 12px 18px 8px !important;
+    margin-bottom: 4px;
+}
+#odmPdfPreviewModal .pdf-tpl-item {
+    padding: 11px 18px;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: #5a6370;
+    border-left: 3px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 2px 8px 2px 0;
+    border-radius: 0 8px 8px 0;
+    line-height: 1.4;
+}
+#odmPdfPreviewModal .pdf-tpl-item:hover {
+    background: rgba(52, 152, 219, 0.08);
+    color: #2c3e50;
+    border-left-color: #bdc3c7;
+}
+#odmPdfPreviewModal .pdf-tpl-item.active {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.12) 0%, rgba(41, 128, 185, 0.08) 100%);
+    border-left-color: #3498db;
+    color: #1a6fb5;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(52, 152, 219, 0.15);
+}
+#odmPdfPreviewModal .pdf-tpl-item .fa { margin-right: 10px; color: #e74c3c; font-size: 13px; opacity: 0.8; }
+#odmPdfPreviewModal .pdf-tpl-item.active .fa { opacity: 1; }
+#odmPdfPreviewModal .modal-body { background: #e8eaed; }
+#odmPdfPreviewModal .modal-footer {
+    border-top: 1px solid #e9ecef;
+    background: #fafbfc;
+    padding: 12px 24px !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+#odmPdfPreviewModal .modal-footer .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s ease;
+}
+#odmPdfPreviewModal .modal-footer .btn-info {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+#odmPdfPreviewModal .modal-footer .btn-info:hover {
+    box-shadow: 0 4px 14px rgba(52, 152, 219, 0.45);
+    transform: translateY(-1px);
+}
+#odmPdfPreviewModal .modal-footer .btn-default {
+    background: white;
+    color: #5a6370;
+    border: 1px solid #dde1e5;
+}
+#odmPdfPreviewModal .modal-footer .btn-default:hover {
+    background: #f0f2f5;
+    color: #2c3e50;
+}
+#odmPdfPreviewModal #odmPdfPreviewLoading {
+    background: rgba(232, 234, 237, 0.85);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: absolute;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+#odmPdfPreviewModal #odmPdfPreviewLoading .fa-spinner { color: #3498db; }
+#odmPdfPreviewModal #odmPdfPreviewLoading p { color: #7f8c9b; font-size: 13px; font-weight: 500; }
 </style>
 
 <script>

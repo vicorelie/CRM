@@ -231,6 +231,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('QUOTES', $quotes);
 		$viewer->assign('PRODUCTS_JSON', json_encode($products));
 		$viewer->assign('PDF_TEMPLATES', $pdfTemplates);
+		$viewer->assign('PDF_TEMPLATES_JSON', json_encode($pdfTemplates));
 		$viewer->assign('VENDORS', $vendors);
 		$viewer->assign('CSRF_TOKEN', $csrfToken);
 		$viewer->assign('DEFAULT_VALIDITY_DATE', $defaultValidityDate);

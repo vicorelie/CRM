@@ -862,6 +862,24 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
         self::$rep["$" . $prefix . "NETTOTAL$"] = $Products["TOTAL"]["NETTOTAL"];
         self::$rep["$" . $prefix . "TAXTOTAL$"] = $Products["TOTAL"]["TAXTOTAL"];
         self::$rep["$" . $prefix . "FINALDISCOUNT$"] = $Products["TOTAL"]["FINALDISCOUNT"];
+
+        // CNK-DEM: Pour les Devis, utiliser les totaux stockés en base (incluent forfait + assurance)
+        // plutôt que les totaux recalculés uniquement à partir des lignes produits
+        if ($module === 'Quotes' && $is_related === false) {
+            $storedPreTax = floatval($focus->column_fields['pre_tax_total']);
+            $storedTotal = floatval($focus->column_fields['hdnGrandTotal']);
+            if ($storedPreTax > 0) {
+                $storedTax = $storedTotal - $storedPreTax;
+                self::$rep["$" . $prefix . "TOTALWITHOUTVAT$"] = $this->formatCurrencyToPDF($storedPreTax);
+                self::$rep["$" . $prefix . "TOTALAFTERDISCOUNT$"] = $this->formatCurrencyToPDF($storedPreTax);
+                self::$rep["$" . $prefix . "NETTOTAL$"] = $this->formatCurrencyToPDF($storedPreTax);
+                self::$rep["$" . $prefix . "VAT$"] = $this->formatCurrencyToPDF($storedTax);
+                self::$rep["$" . $prefix . "TAXTOTAL$"] = $this->formatCurrencyToPDF($storedTax);
+                self::$rep["$" . $prefix . "TOTALWITHVAT$"] = $this->formatCurrencyToPDF($storedTotal);
+                self::$rep["$" . $prefix . "VATPERCENT$"] = '20';
+            }
+        }
+
         $this->replaceContent();
         if ($is_related === false) {
 

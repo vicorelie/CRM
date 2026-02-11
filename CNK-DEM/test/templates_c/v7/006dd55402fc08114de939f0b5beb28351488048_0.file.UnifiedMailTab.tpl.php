@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 14:21:28
+/* Smarty version 4.5.5, created on 2026-02-11 01:57:11
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedMailTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698b22c8a5a2e8_43313587',
+  'unifunc' => 'content_698bc5d7ca14f9_05132399',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '006dd55402fc08114de939f0b5beb28351488048' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedMailTab.tpl',
-      1 => 1770720486,
+      1 => 1770767816,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698b22c8a5a2e8_43313587 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698bc5d7ca14f9_05132399 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="mail-tab-container" id="mailTabContainer" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
@@ -325,7 +325,7 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div><?ph
 }
 
 /* Send Email Modal */
-#sendEmailModal .modal-dialog { max-width: 600px; }
+#sendEmailModal .modal-dialog { max-width: 850px; width: 90%; }
 #sendEmailModal .modal-content {
     border: none;
     border-radius: 12px;
@@ -335,90 +335,104 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div><?ph
 #sendEmailModal .send-modal-header {
     background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
     color: white;
-    padding: 20px 24px;
+    padding: 12px 20px;
     position: relative;
 }
 #sendEmailModal .send-modal-header .close {
     color: white;
     opacity: 0.8;
-    font-size: 22px;
+    font-size: 20px;
     position: absolute;
-    right: 16px;
-    top: 16px;
+    right: 14px;
+    top: 10px;
     text-shadow: none;
 }
 #sendEmailModal .send-modal-header .close:hover { opacity: 1; }
 #sendEmailModal .send-modal-header h4 {
     margin: 0;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
-#sendEmailModal .send-modal-header h4 i { font-size: 20px; }
+#sendEmailModal .send-modal-header h4 i { font-size: 16px; }
 #sendEmailModal .send-modal-header p {
-    margin: 6px 0 0;
-    font-size: 12px;
+    margin: 2px 0 0;
+    font-size: 11px;
     opacity: 0.85;
 }
-#sendEmailModal .modal-body { padding: 24px; }
+#sendEmailModal .modal-body {
+    padding: 16px 20px;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+#sendEmailModal .send-fields-row {
+    display: flex;
+    gap: 12px;
+}
+#sendEmailModal .send-fields-row .send-field { flex: 1; }
 #sendEmailModal .send-field {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 #sendEmailModal .send-field:last-child { margin-bottom: 0; }
 #sendEmailModal .send-field label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
+    gap: 6px;
+    font-size: 12px;
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 #sendEmailModal .send-field label i {
     color: #e91e63;
-    font-size: 14px;
-    width: 16px;
+    font-size: 12px;
+    width: 14px;
     text-align: center;
 }
 #sendEmailModal .send-field label .required-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     background: #e91e63;
     border-radius: 50%;
     display: inline-block;
 }
 #sendEmailModal .send-field .form-control {
-    border: 2px solid #e8e8e8;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
     transition: border-color 0.2s, box-shadow 0.2s;
     height: auto;
 }
 #sendEmailModal .send-field .form-control:focus {
     border-color: #e91e63;
-    box-shadow: 0 0 0 3px rgba(233,30,99,0.1);
+    box-shadow: 0 0 0 2px rgba(233,30,99,0.1);
     outline: none;
 }
+#sendEmailModal #emailPreviewBody:focus {
+    border-color: #e91e63;
+    box-shadow: 0 0 0 2px rgba(233,30,99,0.1);
+}
+#sendEmailModal #emailPreviewBody img { max-width: 100%; height: auto; }
 #sendEmailModal .pdf-attachments-box {
-    border: 2px solid #e8e8e8;
-    border-radius: 8px;
-    padding: 12px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 6px 8px;
     background: #fafafa;
-    max-height: 140px;
+    max-height: 110px;
     overflow-y: auto;
 }
 #sendEmailModal .pdf-attachments-box label {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 8px;
+    gap: 8px;
+    padding: 4px 6px;
     margin: 0;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: #333;
     transition: background 0.15s;
@@ -426,28 +440,92 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div><?ph
 #sendEmailModal .pdf-attachments-box label:hover {
     background: #fff0f5;
 }
+/* File Upload */
+#sendEmailModal .file-upload-box {
+    border: 1.5px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+#sendEmailModal .file-upload-dropzone {
+    padding: 10px;
+    text-align: center;
+    background: #fafafa;
+    color: #999;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+#sendEmailModal .file-upload-dropzone.dragover {
+    background: #fff0f5;
+    border-color: #e91e63;
+    color: #e91e63;
+}
+#sendEmailModal .file-upload-dropzone i {
+    font-size: 18px;
+    margin-right: 6px;
+}
+#sendEmailModal .file-upload-dropzone a {
+    color: #e91e63;
+    font-weight: 600;
+    text-decoration: none;
+}
+#sendEmailModal .file-attachments-list {
+    max-height: 90px;
+    overflow-y: auto;
+}
+#sendEmailModal .file-attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    border-top: 1px solid #f0f0f0;
+    background: #fff;
+}
+#sendEmailModal .file-attachment-item .fa-file-excel-o { color: #27ae60; }
+#sendEmailModal .file-attachment-item .fa-file-pdf-o { color: #e91e63; }
+#sendEmailModal .file-attachment-item .fa-file-image-o { color: #3498db; }
+#sendEmailModal .file-attachment-item .fa-file-word-o { color: #2980b9; }
+#sendEmailModal .file-attachment-item .file-name {
+    flex: 1;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#sendEmailModal .file-attachment-item .file-size {
+    color: #999;
+    font-size: 10px;
+}
+#sendEmailModal .file-attachment-item .file-remove {
+    color: #ccc;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 0.15s;
+}
+#sendEmailModal .file-attachment-item .file-remove:hover { color: #e74c3c; }
 #sendEmailModal .pdf-attachments-box label input[type="checkbox"] {
     accent-color: #e91e63;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 #sendEmailModal .pdf-attachments-box .text-muted {
-    font-size: 12px;
-    padding: 4px 8px;
+    font-size: 11px;
+    padding: 2px 6px;
     margin: 0;
 }
 #sendEmailModal .modal-footer {
-    padding: 16px 24px;
+    padding: 10px 20px;
     border-top: 1px solid #f0f0f0;
     display: flex;
     justify-content: flex-end;
     gap: 10px;
 }
 #sendEmailModal .btn-cancel-send {
-    padding: 9px 20px;
-    border-radius: 8px;
+    padding: 6px 16px;
+    border-radius: 6px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     background: #f5f5f5;
     border: 1px solid #ddd;
     color: #666;
@@ -458,10 +536,10 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div><?ph
     color: #333;
 }
 #sendEmailModal .btn-confirm-send {
-    padding: 9px 24px;
-    border-radius: 8px;
+    padding: 6px 20px;
+    border-radius: 6px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
     border: none;
     color: white;
@@ -506,6 +584,22 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div><?ph
     display: block;
 }
 
+/* View Email Attachments */
+.view-att-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    margin: 2px 4px 2px 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #333;
+}
+.view-att-chip .fa { font-size: 12px; }
+
 @media (max-width: 768px) {
     .mail-toolbar { flex-direction: column; gap: 10px; align-items: stretch; }
     .btn-send-email-main { width: 100%; text-align: center; }
@@ -522,6 +616,81 @@ jQuery(document).ready(function() {
 
     loadEmailHistory();
 
+    // File attachments management
+    var uploadedFiles = [];
+
+    jQuery('#fileBrowseLink').on('click', function(e) {
+        e.preventDefault();
+        jQuery('#emailFileAttachments').click();
+    });
+
+    jQuery('#emailFileAttachments').on('change', function() {
+        var files = this.files;
+        for (var i = 0; i < files.length; i++) {
+            uploadedFiles.push(files[i]);
+        }
+        renderFileList();
+        this.value = '';
+    });
+
+    // Drag and drop
+    var dropzone = jQuery('#fileDropzone');
+    dropzone.on('dragover', function(e) { e.preventDefault(); jQuery(this).addClass('dragover'); });
+    dropzone.on('dragleave drop', function(e) { e.preventDefault(); jQuery(this).removeClass('dragover'); });
+    dropzone.on('drop', function(e) {
+        var files = e.originalEvent.dataTransfer.files;
+        for (var i = 0; i < files.length; i++) {
+            uploadedFiles.push(files[i]);
+        }
+        renderFileList();
+    });
+
+    function getFileIcon(name) {
+        var ext = name.split('.').pop().toLowerCase();
+        if (['xls', 'xlsx', 'csv'].indexOf(ext) !== -1) return 'fa-file-excel-o';
+        if (ext === 'pdf') return 'fa-file-pdf-o';
+        if (['doc', 'docx'].indexOf(ext) !== -1) return 'fa-file-word-o';
+        if (['png', 'jpg', 'jpeg', 'gif'].indexOf(ext) !== -1) return 'fa-file-image-o';
+        return 'fa-file-o';
+    }
+
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' o';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' Ko';
+        return (bytes / 1048576).toFixed(1) + ' Mo';
+    }
+
+    function renderFileList() {
+        var $list = jQuery('#fileAttachmentsList');
+        $list.empty();
+        if (uploadedFiles.length === 0) return;
+        uploadedFiles.forEach(function(file, idx) {
+            $list.append(
+                '<div class="file-attachment-item" data-idx="' + idx + '">' +
+                '<i class="fa ' + getFileIcon(file.name) + '"></i>' +
+                '<span class="file-name">' + file.name + '</span>' +
+                '<span class="file-size">' + formatSize(file.size) + '</span>' +
+                '<i class="fa fa-times file-remove" data-idx="' + idx + '"></i>' +
+                '</div>'
+            );
+        });
+    }
+
+    jQuery(document).on('click', '.file-remove', function() {
+        var idx = parseInt(jQuery(this).data('idx'));
+        uploadedFiles.splice(idx, 1);
+        renderFileList();
+    });
+
+    // Clear files and preview when modal opens
+    jQuery('#sendEmailModal').on('show.bs.modal', function() {
+        uploadedFiles = [];
+        renderFileList();
+        jQuery('#emailPreviewField').hide();
+        jQuery('#emailPreviewBody').html('');
+        jQuery('#emailPreviewSubject').val('');
+    });
+
     // Quote chip selection (toggle)
     jQuery(document).on('click', '.mail-quote-chip', function() {
         var quoteId = jQuery(this).data('quoteid');
@@ -533,6 +702,8 @@ jQuery(document).ready(function() {
             jQuery(this).addClass('selected');
             selectedQuoteId = quoteId;
         }
+        // Rafraîchir l'aperçu si un template est sélectionné
+        jQuery('#emailTemplate').trigger('change');
     });
 
     // Send email button
@@ -578,6 +749,80 @@ jQuery(document).ready(function() {
                 } else {
                     container.html('<p class="text-muted" style="margin:0;font-size:12px;"><i class="fa fa-info-circle"></i> Aucun template PDF disponible</p>');
                 }
+                // Documents de l'affaire
+                var docsContainer = jQuery('#documentsList');
+                var docsField = jQuery('#documentsField');
+                if (data.documents && data.documents.length > 0) {
+                    var docsHtml = '';
+                    for (var k = 0; k < data.documents.length; k++) {
+                        var doc = data.documents[k];
+                        var icon = 'fa-file-o';
+                        var iconColor = '#999';
+                        var ext = (doc.filename || '').split('.').pop().toLowerCase();
+                        if (['xls', 'xlsx', 'csv'].indexOf(ext) !== -1) { icon = 'fa-file-excel-o'; iconColor = '#27ae60'; }
+                        else if (ext === 'pdf') { icon = 'fa-file-pdf-o'; iconColor = '#e91e63'; }
+                        else if (['doc', 'docx'].indexOf(ext) !== -1) { icon = 'fa-file-word-o'; iconColor = '#2980b9'; }
+                        else if (['png', 'jpg', 'jpeg', 'gif'].indexOf(ext) !== -1) { icon = 'fa-file-image-o'; iconColor = '#3498db'; }
+                        var sizeStr = '';
+                        if (doc.filesize > 0) {
+                            if (doc.filesize < 1024) sizeStr = doc.filesize + ' o';
+                            else if (doc.filesize < 1048576) sizeStr = (doc.filesize / 1024).toFixed(0) + ' Ko';
+                            else sizeStr = (doc.filesize / 1048576).toFixed(1) + ' Mo';
+                            sizeStr = ' <span style="color:#999;font-size:11px;">(' + sizeStr + ')</span>';
+                        }
+                        docsHtml += '<label><input type="checkbox" name="doc_attachments[]" value="' + doc.id + '"> <i class="fa ' + icon + '" style="color:' + iconColor + ';"></i> ' + (doc.title || doc.filename) + sizeStr + '</label>';
+                    }
+                    docsContainer.html(docsHtml);
+                    docsField.show();
+                } else {
+                    docsField.hide();
+                }
+            }
+        });
+    });
+
+    // Preview email template on change
+    jQuery('#emailTemplate').on('change', function() {
+        var templateId = jQuery(this).val();
+        var $field = jQuery('#emailPreviewField');
+        var $subject = jQuery('#emailPreviewSubject');
+        var $body = jQuery('#emailPreviewBody');
+
+        if (!templateId) {
+            $field.hide();
+            $subject.val('');
+            $body.html('');
+            return;
+        }
+
+        $field.show();
+        $subject.val('Chargement...').prop('disabled', true);
+        $body.html('<div style="padding:20px;text-align:center;color:#999;"><i class="fa fa-spinner fa-spin"></i> Chargement...</div>').attr('contenteditable', 'false');
+
+        jQuery.ajax({
+            url: 'index.php',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                module: 'Potentials',
+                action: 'PreviewEmailTemplate',
+                record: recordId,
+                email_template: templateId,
+                quote_id: selectedQuoteId || ''
+            },
+            success: function(response) {
+                var data = response.result || response;
+                if (data.success) {
+                    $subject.val(data.subject || '').prop('disabled', false);
+                    $body.html(data.body || '').attr('contenteditable', 'true');
+                } else {
+                    $subject.val('Erreur').prop('disabled', false);
+                    $body.html('<div style="color:#e74c3c;font-size:12px;">' + (data.error || 'Erreur') + '</div>').attr('contenteditable', 'true');
+                }
+            },
+            error: function() {
+                $subject.val('Erreur de connexion').prop('disabled', false);
+                $body.html('<div style="color:#e74c3c;font-size:12px;">Erreur de connexion</div>').attr('contenteditable', 'true');
             }
         });
     });
@@ -610,13 +855,43 @@ jQuery(document).ready(function() {
                     jQuery('#viewEmailFrom').text(data.from || '-');
                     jQuery('#viewEmailTo').text(data.to || '-');
                     jQuery('#viewEmailDate').text(data.date || '-');
+                    // CC
+                    if (data.cc) {
+                        jQuery('#viewEmailCcRow').show();
+                        jQuery('#viewEmailCc').text(data.cc);
+                    } else {
+                        jQuery('#viewEmailCcRow').hide();
+                    }
                     jQuery('#viewEmailMeta').show();
 
-                    // Render email body in iframe using data URI (no server request needed)
+                    // Pièces jointes
+                    var $attBox = jQuery('#viewEmailAttachments');
+                    if (data.attachments && data.attachments.length > 0) {
+                        var attHtml = '';
+                        for (var a = 0; a < data.attachments.length; a++) {
+                            var att = data.attachments[a];
+                            var attIcon = 'fa-file-o';
+                            var attColor = '#999';
+                            var ext = (att.name || '').split('.').pop().toLowerCase();
+                            if (ext === 'pdf') { attIcon = 'fa-file-pdf-o'; attColor = '#e91e63'; }
+                            else if (['xls','xlsx','csv'].indexOf(ext) !== -1) { attIcon = 'fa-file-excel-o'; attColor = '#27ae60'; }
+                            else if (['doc','docx'].indexOf(ext) !== -1) { attIcon = 'fa-file-word-o'; attColor = '#2980b9'; }
+                            else if (['png','jpg','jpeg','gif'].indexOf(ext) !== -1) { attIcon = 'fa-file-image-o'; attColor = '#3498db'; }
+                            attHtml += '<span class="view-att-chip"><i class="fa ' + attIcon + '" style="color:' + attColor + ';"></i> ' + att.name + '</span>';
+                        }
+                        $attBox.html(attHtml).show();
+                    } else {
+                        $attBox.hide();
+                    }
+
+                    // Render email body in iframe using Blob URL
                     var emailBody = data.body;
-                    var base64 = btoa(unescape(encodeURIComponent(emailBody)));
-                    var dataUri = 'data:text/html;charset=utf-8;base64,' + base64;
-                    jQuery('#viewEmailBody').html('<iframe src="' + dataUri + '" style="width:100%;height:500px;border:none;display:block;" sandbox="allow-same-origin"></iframe>');
+                    if (emailBody.indexOf('<!DOCTYPE') === -1 && emailBody.indexOf('<html') === -1) {
+                        emailBody = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:10px;font-family:Arial,sans-serif;">' + emailBody + '</body></html>';
+                    }
+                    var blob = new Blob([emailBody], { type: 'text/html;charset=utf-8' });
+                    var blobUrl = URL.createObjectURL(blob);
+                    jQuery('#viewEmailBody').html('<iframe src="' + blobUrl + '" style="width:100%;height:500px;border:none;display:block;"></iframe>');
                 } else {
                     jQuery('#viewEmailSubject').text('Erreur');
                     jQuery('#viewEmailBody').html('<p class="text-center text-muted" style="padding:40px;">Email introuvable</p>');
@@ -703,15 +978,44 @@ jQuery(document).ready(function() {
         var $btn = jQuery('#confirmSendEmail');
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Envoi...');
 
-        var sendData = { module: 'Potentials', action: 'SendEmail', record: recordId, email: recipientEmail, cc: ccEmail, email_template: emailTemplate, pdf_templates: pdfTemplates };
+        // Use FormData to support file uploads
+        var formData = new FormData();
+        formData.append('module', 'Potentials');
+        formData.append('action', 'SendEmail');
+        formData.append('record', recordId);
+        formData.append('email', recipientEmail);
+        formData.append('cc', ccEmail);
+        formData.append('email_template', emailTemplate);
+        // Envoyer le contenu modifié si l'aperçu a été chargé
+        var customSubject = jQuery('#emailPreviewSubject').val();
+        var customBody = jQuery('#emailPreviewBody').html();
+        if (customSubject) {
+            formData.append('custom_subject', customSubject);
+        }
+        if (customBody) {
+            formData.append('custom_body', customBody);
+        }
+        for (var i = 0; i < pdfTemplates.length; i++) {
+            formData.append('pdf_templates[]', pdfTemplates[i]);
+        }
         if (selectedQuoteId) {
-            sendData.quote_id = selectedQuoteId;
+            formData.append('quote_id', selectedQuoteId);
+        }
+        // Append selected documents
+        jQuery('input[name="doc_attachments[]"]:checked').each(function() {
+            formData.append('doc_attachments[]', jQuery(this).val());
+        });
+        // Append uploaded files
+        for (var j = 0; j < uploadedFiles.length; j++) {
+            formData.append('file_attachments[]', uploadedFiles[j]);
         }
 
         jQuery.ajax({
             url: 'index.php',
             type: 'POST',
-            data: sendData,
+            data: formData,
+            processData: false,
+            contentType: false,
             dataType: 'json',
             success: function(response) {
                 var data = response.result || response;
@@ -741,13 +1045,15 @@ jQuery(document).ready(function() {
             </div>
             <div class="modal-body">
                 <form id="sendEmailForm">
-                    <div class="send-field">
-                        <label><i class="fa fa-user-o"></i> Destinataire <span class="required-dot"></span></label>
-                        <input type="email" class="form-control" id="recipientEmail" placeholder="adresse@email.com" required>
-                    </div>
-                    <div class="send-field">
-                        <label><i class="fa fa-users"></i> Cc <span style="font-weight:400;color:#999;font-size:11px;margin-left:2px;">(optionnel)</span></label>
-                        <input type="text" class="form-control" id="ccEmail" placeholder="email1@exemple.com, email2@exemple.com">
+                    <div class="send-fields-row">
+                        <div class="send-field">
+                            <label><i class="fa fa-user-o"></i> Destinataire <span class="required-dot"></span></label>
+                            <input type="email" class="form-control" id="recipientEmail" placeholder="adresse@email.com" required>
+                        </div>
+                        <div class="send-field">
+                            <label><i class="fa fa-users"></i> Cc <span style="font-weight:400;color:#999;font-size:10px;margin-left:2px;">(optionnel)</span></label>
+                            <input type="text" class="form-control" id="ccEmail" placeholder="email1@exemple.com, email2@exemple.com">
+                        </div>
                     </div>
                     <div class="send-field">
                         <label><i class="fa fa-file-text-o"></i> Template Email <span class="required-dot"></span></label>
@@ -755,10 +1061,32 @@ jQuery(document).ready(function() {
                             <option value="">-- Choisir un template --</option>
                         </select>
                     </div>
+                    <div class="send-field" id="emailPreviewField" style="display:none;">
+                        <label><i class="fa fa-eye"></i> Aperçu <span style="font-weight:400;color:#999;font-size:10px;margin-left:4px;">(modifiable)</span></label>
+                        <input type="text" class="form-control" id="emailPreviewSubject" placeholder="Objet du mail" style="border-radius:6px 6px 0 0;border-bottom:0;font-weight:600;font-size:12px;">
+                        <div id="emailPreviewBody" contenteditable="true" style="border:1.5px solid #e0e0e0;border-top:1px solid #eee;border-radius:0 0 6px 6px;background:#fff;padding:12px;font-size:12px;line-height:1.5;min-height:120px;max-height:300px;overflow-y:auto;outline:none;"></div>
+                    </div>
+                    <div class="send-fields-row">
+                        <div class="send-field">
+                            <label><i class="fa fa-paperclip"></i> Pièces jointes PDF</label>
+                            <div id="pdfTemplatesList" class="pdf-attachments-box">
+                                <p class="text-muted" style="margin:0;"><i class="fa fa-spinner fa-spin"></i> Chargement...</p>
+                            </div>
+                        </div>
+                        <div class="send-field" id="documentsField" style="display:none;">
+                            <label><i class="fa fa-folder-open-o"></i> Documents</label>
+                            <div id="documentsList" class="pdf-attachments-box"></div>
+                        </div>
+                    </div>
                     <div class="send-field">
-                        <label><i class="fa fa-paperclip"></i> Pièces jointes PDF</label>
-                        <div id="pdfTemplatesList" class="pdf-attachments-box">
-                            <p class="text-muted" style="margin:0;"><i class="fa fa-spinner fa-spin"></i> Chargement...</p>
+                        <label><i class="fa fa-file-o"></i> Fichiers joints <span style="font-weight:400;color:#999;font-size:10px;margin-left:2px;">(optionnel)</span></label>
+                        <div class="file-upload-box" id="fileUploadBox">
+                            <input type="file" id="emailFileAttachments" multiple accept=".xls,.xlsx,.csv,.pdf,.doc,.docx,.png,.jpg,.jpeg,.zip" style="display:none;">
+                            <div class="file-upload-dropzone" id="fileDropzone">
+                                <i class="fa fa-cloud-upload"></i>
+                                <span>Glisser des fichiers ici ou <a href="#" id="fileBrowseLink">parcourir</a></span>
+                            </div>
+                            <div id="fileAttachmentsList" class="file-attachments-list"></div>
                         </div>
                     </div>
                 </form>
@@ -783,7 +1111,10 @@ jQuery(document).ready(function() {
             <div id="viewEmailMeta" style="background:#f8f9fa;padding:10px 20px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;display:none;">
                 <div style="margin-bottom:4px;"><strong>De :</strong> <span id="viewEmailFrom"></span></div>
                 <div style="margin-bottom:4px;"><strong>&Agrave; :</strong> <span id="viewEmailTo"></span></div>
+                <div id="viewEmailCcRow" style="margin-bottom:4px;display:none;"><strong>Cc :</strong> <span id="viewEmailCc"></span></div>
                 <div><strong>Date :</strong> <span id="viewEmailDate"></span></div>
+            </div>
+            <div id="viewEmailAttachments" style="display:none;padding:8px 20px;border-bottom:1px solid #e0e0e0;background:#fafbfc;">
             </div>
             <div class="modal-body" style="padding:0;">
                 <div id="viewEmailBody">

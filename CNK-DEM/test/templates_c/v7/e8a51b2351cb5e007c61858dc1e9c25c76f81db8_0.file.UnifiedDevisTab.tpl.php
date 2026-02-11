@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 14:11:23
+/* Smarty version 4.5.5, created on 2026-02-11 00:09:47
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDevisTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698b206b9a00c5_59083229',
+  'unifunc' => 'content_698bacab7a9a81_32473158',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'e8a51b2351cb5e007c61858dc1e9c25c76f81db8' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDevisTab.tpl',
-      1 => 1770720416,
+      1 => 1770760505,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698b206b9a00c5_59083229 (Smarty_Internal_Template $_smarty_tpl) {
+function content_698bacab7a9a81_32473158 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="devis-tab-container" id="devisTabContainer" data-potential-id="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
@@ -42,7 +42,7 @@ $_smarty_tpl->tpl_vars['QUOTE']->do_else = false;
 </span><span class="chip-sep">/</span><span class="chip-total"><?php echo call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'number_format' ][ 0 ], array( $_smarty_tpl->tpl_vars['QUOTE']->value['total'],0,',',' ' ));?>
 €</span></div></div><?php
 }
-$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div><button type="button" class="btn btn-sm" id="unified_btnPaiement" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;" onclick="UnifiedDevis.openStripePayments()"><i class="fa fa-credit-card"></i> Paiement</button><button type="button" class="btn btn-sm" id="unified_btnBDC" style="display:none; background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; border: none;" onclick="UnifiedDevis.openBDCModal()"><i class="fa fa-file-text-o"></i> ODM</button><button type="button" class="btn btn-sm" id="unified_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedDevis.viewPDF()"><i class="fa fa-file-pdf-o"></i> PDF</button></div><?php }?><form id="unifiedQuoteForm" method="POST" action="index.php" style="display:none;"><input type="hidden" name="__vtrftk" value="<?php echo $_smarty_tpl->tpl_vars['CSRF_TOKEN']->value;?>
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div><button type="button" class="btn btn-sm" id="unified_btnPaiement" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;" onclick="UnifiedDevis.openStripePayments()"><i class="fa fa-credit-card"></i> Paiement</button><button type="button" class="btn btn-sm" id="unified_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedDevis.openPDFPreviewModal()"><i class="fa fa-file-pdf-o"></i> PDF</button></div><?php }?><form id="unifiedQuoteForm" method="POST" action="index.php" style="display:none;"><input type="hidden" name="__vtrftk" value="<?php echo $_smarty_tpl->tpl_vars['CSRF_TOKEN']->value;?>
 "><input type="hidden" name="module" value="Quotes"><input type="hidden" name="action" value="Save"><input type="hidden" name="record" id="unified_recordId" value=""><input type="hidden" name="potential_id" value="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
 "><input type="hidden" name="contact_id" value="<?php echo $_smarty_tpl->tpl_vars['CONTACT_ID']->value;?>
 "><input type="hidden" name="sourceRecord" value="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
@@ -490,6 +490,134 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div><div style
         justify-content: center;
     }
 }
+
+/* PDF Preview Modal */
+#pdfPreviewModal .modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+}
+#pdfPreviewModal .modal-header {
+    border-bottom: none;
+    padding: 16px 24px;
+}
+#pdfPreviewModal .modal-header .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+#pdfPreviewModal .modal-header .modal-title .fa {
+    margin-right: 10px;
+    opacity: 0.9;
+}
+#pdfPreviewModal .modal-header .close {
+    font-size: 28px;
+    text-shadow: none;
+    margin-top: -2px;
+}
+#pdfPreviewModal .pdf-tpl-sidebar {
+    background: linear-gradient(180deg, #f8f9fb 0%, #f1f3f6 100%) !important;
+    border-right: 1px solid #e2e6ea !important;
+}
+#pdfPreviewModal .pdf-tpl-sidebar-title {
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    color: #9aa0a8 !important;
+    letter-spacing: 1.2px !important;
+    font-weight: 700 !important;
+    padding: 12px 18px 8px !important;
+    margin-bottom: 4px;
+}
+#pdfPreviewModal .pdf-tpl-item {
+    padding: 11px 18px;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: #5a6370;
+    border-left: 3px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 2px 8px 2px 0;
+    border-radius: 0 8px 8px 0;
+    line-height: 1.4;
+}
+#pdfPreviewModal .pdf-tpl-item:hover {
+    background: rgba(52, 152, 219, 0.08);
+    color: #2c3e50;
+    border-left-color: #bdc3c7;
+}
+#pdfPreviewModal .pdf-tpl-item.active {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.12) 0%, rgba(41, 128, 185, 0.08) 100%);
+    border-left-color: #3498db;
+    color: #1a6fb5;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(52, 152, 219, 0.15);
+}
+#pdfPreviewModal .pdf-tpl-item .fa {
+    margin-right: 10px;
+    color: #e74c3c;
+    font-size: 13px;
+    opacity: 0.8;
+}
+#pdfPreviewModal .pdf-tpl-item.active .fa {
+    opacity: 1;
+}
+#pdfPreviewModal .modal-body {
+    background: #e8eaed;
+}
+#pdfPreviewModal .modal-footer {
+    border-top: 1px solid #e9ecef;
+    background: #fafbfc;
+    padding: 12px 24px !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+#pdfPreviewModal .modal-footer .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s ease;
+}
+#pdfPreviewModal .modal-footer .btn-info {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+#pdfPreviewModal .modal-footer .btn-info:hover {
+    box-shadow: 0 4px 14px rgba(52, 152, 219, 0.45);
+    transform: translateY(-1px);
+}
+#pdfPreviewModal .modal-footer .btn-default {
+    background: white;
+    color: #5a6370;
+    border: 1px solid #dde1e5;
+}
+#pdfPreviewModal .modal-footer .btn-default:hover {
+    background: #f0f2f5;
+    color: #2c3e50;
+}
+#pdfPreviewModal #pdfPreviewLoading {
+    background: rgba(232, 234, 237, 0.85);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: absolute;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+#pdfPreviewModal #pdfPreviewLoading .fa-spinner {
+    color: #3498db;
+}
+#pdfPreviewModal #pdfPreviewLoading p {
+    color: #7f8c9b;
+    font-size: 13px;
+    font-weight: 500;
+}
 </style>
 
 <?php echo '<script'; ?>
@@ -502,6 +630,8 @@ var unifiedContactId = <?php echo (($tmp = $_smarty_tpl->tpl_vars['CONTACT_ID']-
 ;
 var unifiedCsrfToken = '<?php echo $_smarty_tpl->tpl_vars['CSRF_TOKEN']->value;?>
 ';
+var unifiedPdfTemplates = <?php echo $_smarty_tpl->tpl_vars['PDF_TEMPLATES_JSON']->value;?>
+;
 <?php echo '</script'; ?>
 >
 <?php }

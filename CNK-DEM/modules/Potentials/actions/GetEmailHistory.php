@@ -48,7 +48,7 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
     private function getEmailDetail($emailId) {
         global $adb;
 
-        $sql = "SELECT e.body, e.subject, e.to_email, e.from_email, e.email_flag, ce.createdtime
+        $sql = "SELECT e.body, e.subject, e.to_email, e.cc_email, e.from_email, e.email_flag, e.attachment_ids, ce.createdtime
                 FROM its4you_emails e
                 INNER JOIN vtiger_crmentity ce ON ce.crmid = e.its4you_emails_id
                 WHERE e.its4you_emails_id = ? AND ce.deleted = 0";
@@ -70,9 +70,26 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
             $fromEmail = html_entity_decode($adb->query_result($result, 0, 'from_email'), ENT_QUOTES, 'UTF-8');
 
             $body = $adb->query_result($result, 0, 'body');
-            // Decode HTML entities if body is stored encoded
-            if (strpos(trim($body), '&lt;') === 0) {
+            // Decode HTML entities if body contains encoded HTML tags
+            if (strpos($body, '&lt;') !== false) {
                 $body = html_entity_decode($body, ENT_QUOTES, 'UTF-8');
+            }
+
+            // CC
+            $ccEmail = $adb->query_result($result, 0, 'cc_email');
+            if (!empty($ccEmail)) {
+                $ccEmail = html_entity_decode($ccEmail, ENT_QUOTES, 'UTF-8');
+            }
+
+            // Pièces jointes
+            $attachments = [];
+            $attachmentIds = $adb->query_result($result, 0, 'attachment_ids');
+            if (!empty($attachmentIds)) {
+                $attachmentIds = html_entity_decode($attachmentIds, ENT_QUOTES, 'UTF-8');
+                $decoded = json_decode($attachmentIds, true);
+                if (is_array($decoded)) {
+                    $attachments = $decoded;
+                }
             }
 
             return [
@@ -81,8 +98,10 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
                 'subject' => $subject,
                 'from' => $fromEmail,
                 'to' => $toEmail,
+                'cc' => $ccEmail ?: '',
                 'date' => date('d/m/Y H:i', strtotime($adb->query_result($result, 0, 'createdtime'))),
-                'status' => $adb->query_result($result, 0, 'email_flag')
+                'status' => $adb->query_result($result, 0, 'email_flag'),
+                'attachments' => $attachments
             ];
         }
         return ['success' => false, 'error' => 'Email introuvable'];
