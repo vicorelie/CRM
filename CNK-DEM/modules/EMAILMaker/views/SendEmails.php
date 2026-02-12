@@ -489,7 +489,7 @@ class EMAILMaker_SendEmails_View extends Vtiger_Index_View
 
                     $pos = strpos($body, '$logo$');
                     if ($pos !== false) {
-                        $body = str_replace('$logo$', '<img src="cid:logo" />', $body);
+                        $body = str_replace('$logo$', '<img src="cid:logo" style="max-width:150px;height:auto;" />', $body);
                         $logo = 1;
                     }
 

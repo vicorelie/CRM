@@ -1489,7 +1489,7 @@ class EMAILMaker_EMAILContent_Model extends EMAILMaker_EMAILContentUtils_Model
                 $coll = $field_name;
             }
             if ('logo' === $coll && !empty($CompanyDetails_Data['logoname'])) {
-                $value = '<img src="' . self::$site_url . LOGO_PATH . $CompanyDetails_Data["logoname"] . '">';
+                $value = '<img src="' . self::$site_url . LOGO_PATH . $CompanyDetails_Data["logoname"] . '" style="max-width:150px;height:auto;">';
             } elseif (($coll == "logo" || $coll == "stamp") && $ismulticompany && !empty($CompanyDetails_Data[$coll])) {
                 $value = $this->getAttachmentImage($CompanyDetails_Data[$coll], self::$site_url);
             } elseif (isset($CompanyDetails_Data[$field_name])) {

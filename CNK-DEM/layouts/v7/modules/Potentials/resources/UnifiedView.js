@@ -251,6 +251,7 @@
             jQuery('#unified_cf_1127_ttc').on('input change', function() { self.updateFromTTC(); });
             jQuery('#unified_cf_1129').on('input change', function() { self.updateTotalTTC(); });
             jQuery('#unified_cf_1139').on('change', function() { self.updateMontantTotal(); });
+            jQuery('#unified_montant_total_ttc').on('change', function() { self.updateFromTotalTTC(); });
 
             // Disable scroll on number inputs
             jQuery('#devisTabContainer').on('wheel', 'input[type="number"]', function(e) {
@@ -699,7 +700,64 @@
             jQuery('#unified_acompte_ttc').text(acompteTTC.toFixed(2) + ' €');
             jQuery('#unified_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
             jQuery('#unified_montant_total_ht').text(totalHT.toFixed(2) + ' €');
-            jQuery('#unified_montant_total_ttc').text(totalTTC.toFixed(2) + ' €');
+            jQuery('#unified_montant_total_ttc').val(totalTTC.toFixed(2));
+        },
+
+        updateFromTotalTTC: function() {
+            var totalTTC = parseFloat(jQuery('#unified_montant_total_ttc').val()) || 0;
+            var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
+
+            var produitsHT = 0;
+            jQuery('#unified_productsList tr').each(function() {
+                var totalCell = jQuery(this).find('.product-total');
+                if (totalCell.length) {
+                    produitsHT += parseFloat(totalCell.text()) || 0;
+                }
+            });
+
+            var assuranceValue = parseFloat(jQuery('#unified_cf_1139').val()) || 0;
+            var assuranceHT = assuranceValue > 0 ? ((assuranceValue - 4000) / 1000) * 14 : 0;
+
+            var forfaitTTC = totalTTC - (produitsHT * this.TVA_RATE) - (assuranceHT * this.TVA_RATE) - (supplementHT * this.TVA_RATE);
+            if (forfaitTTC < 0) forfaitTTC = 0;
+
+            var forfaitHT = forfaitTTC / this.TVA_RATE;
+
+            jQuery('#unified_cf_1127').val(forfaitHT.toFixed(2));
+            jQuery('#unified_cf_1127_ttc').val(forfaitTTC.toFixed(2));
+
+            var totalForfaitTTC = (forfaitHT + supplementHT) * this.TVA_RATE;
+            jQuery('#unified_forfait_total_ttc').val(totalForfaitTTC.toFixed(2));
+
+            var totalHT = totalTTC / this.TVA_RATE;
+            jQuery('#unified_montant_total_ht').text(totalHT.toFixed(2) + ' €');
+
+            // Recalculate acompte/solde
+            var PCT_ACOMPTE_FORFAIT = 43;
+            var PCT_SOLDE_FORFAIT = 57;
+
+            var produitsAcompteHT = 0;
+            var produitsSoldeHT = 0;
+            jQuery('#unified_productsList tr').each(function() {
+                var row = jQuery(this);
+                var totalCell = row.find('.product-total');
+                if (totalCell.length) {
+                    var lineTotal = parseFloat(totalCell.text()) || 0;
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 43;
+                    produitsAcompteHT += lineTotal * pctAcompte / 100;
+                    produitsSoldeHT += lineTotal * (100 - pctAcompte) / 100;
+                }
+            });
+
+            var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
+            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
+            var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
+            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT;
+
+            jQuery('#unified_acompte_ttc').text((totalAcompteHT * this.TVA_RATE).toFixed(2) + ' €');
+            jQuery('#unified_solde_ttc').text((totalSoldeHT * this.TVA_RATE).toFixed(2) + ' €');
+
+            this.triggerDebouncedAutoSave();
         },
 
         loadQuote: function(quoteId) {
@@ -1903,6 +1961,32 @@
             });
 
             container.html(html);
+            this.applySearchFilter();
+        },
+
+        applySearchFilter: function() {
+            var searchTerm = jQuery('#unified-inventory-search').val();
+            if (!searchTerm) return;
+            searchTerm = searchTerm.toLowerCase().trim();
+            if (searchTerm === '') return;
+
+            var visibleCount = 0;
+            jQuery('#unified-available-items .avail-item').each(function() {
+                var itemName = jQuery(this).find('.avail-name').text().toLowerCase();
+                if (itemName.indexOf(searchTerm) !== -1) {
+                    jQuery(this).show();
+                    visibleCount++;
+                } else {
+                    jQuery(this).hide();
+                }
+            });
+
+            var resultsDiv = jQuery('#unified-inventory-search-results');
+            if (visibleCount === 0) {
+                resultsDiv.text('Aucun article trouve').css('color', '#e74c3c');
+            } else {
+                resultsDiv.text(visibleCount + ' article(s) trouve(s)').css('color', '#27ae60');
+            }
         },
 
         renderSelectedItems: function() {

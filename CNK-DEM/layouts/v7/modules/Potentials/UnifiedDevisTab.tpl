@@ -218,7 +218,9 @@
                 </div>
                 <div class="total-box total-ttc">
                     <div class="total-label">Total TTC</div>
-                    <div class="total-value" id="unified_montant_total_ttc">0.00 €</div>
+                    <div class="total-value">
+                        <input type="number" id="unified_montant_total_ttc" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
                 </div>
                 <div class="total-box total-acompte">
                     <div class="total-label">Acompte</div>
@@ -463,6 +465,19 @@
 .devis-tab-container .total-box.total-ttc {
     background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     color: white;
+}
+
+.devis-tab-container .total-box.total-ttc input::-webkit-outer-spin-button,
+.devis-tab-container .total-box.total-ttc input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.devis-tab-container .total-box.total-ttc input[type=number] {
+    -moz-appearance: textfield;
+}
+.devis-tab-container .total-box.total-ttc input:focus {
+    outline: none;
+    border-bottom-color: rgba(255,255,255,0.9);
 }
 
 .devis-tab-container .total-box.total-acompte {
