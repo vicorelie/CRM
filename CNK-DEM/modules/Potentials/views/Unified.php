@@ -68,6 +68,15 @@ class Potentials_Unified_View extends Vtiger_Index_View {
 		$viewer->assign('CONTACT_PHONE', $contactPhone);
 		$viewer->assign('CONTACT_EMAIL', $contactEmail);
 
+		// Metrics data for global bar
+		$viewer->assign('METRIC_DISTANCE', $recordModel->get('cf_961') ?: '');
+		$viewer->assign('METRIC_VOL_INVENTAIRE', $recordModel->get('cf_939') ?: '');
+		$viewer->assign('METRIC_VOL_FINAL', $recordModel->get('cf_1259') ?: '');
+		$viewer->assign('METRIC_DATE_CHARGEMENT', $recordModel->get('cf_1043') ?: '');
+		$viewer->assign('METRIC_DATE_LIVRAISON', $recordModel->get('cf_1049') ?: '');
+		$viewer->assign('METRIC_PERIODE_DEBUT', $recordModel->get('cf_1045') ?: '');
+		$viewer->assign('METRIC_PERIODE_FIN', $recordModel->get('cf_1047') ?: '');
+
 		$viewer->view('UnifiedTabbedView.tpl', $moduleName);
 	}
 

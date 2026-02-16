@@ -147,6 +147,12 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             // Configurer le serveur SMTP
             setMailServerProperties($mail);
 
+            // Forcer le port Gmail si non défini
+            if (empty($mail->Port) || $mail->Port == 25) {
+                $mail->Port = 587;
+                $mail->SMTPSecure = 'tls';
+            }
+
             if (empty($mail->Host)) {
                 throw new Exception('Serveur email sortant non configuré dans VTiger');
             }
@@ -162,13 +168,13 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 $currentUser = Users_Record_Model::getCurrentUserModel();
                 $fromEmail = $currentUser->get('email1');
             }
-            $currentUser = Users_Record_Model::getCurrentUserModel();
-            $fromName = $currentUser->get('userlabel') ?: $currentUser->get('first_name') . ' ' . $currentUser->get('last_name');
-
             $mail->From = $fromEmail;
-            $mail->FromName = $fromName;
+            $mail->FromName = 'CNK DEM';
+            $mail->AddReplyTo($fromEmail, 'CNK DEM'); // Permet aux clients de répondre
             $mail->Subject = $subject;
+
             $mail->Body = $body;
+
             $mail->AddAddress($toEmail);
 
             // Ajouter les adresses CC

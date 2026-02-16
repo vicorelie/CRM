@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 23:22:47
+/* Smarty version 4.5.5, created on 2026-02-16 12:33:47
   from '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/GetPDFButtons.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698ba1a727b776_73146665',
+  'unifunc' => 'content_6992f28b72bbc1_88680768',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'e94950b7d40c616964afe9f450bb7966b7352e8a' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/PDFMaker/GetPDFButtons.tpl',
-      1 => 1766693999,
+      1 => 1770837834,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698ba1a727b776_73146665 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6992f28b72bbc1_88680768 (Smarty_Internal_Template $_smarty_tpl) {
 if ($_smarty_tpl->tpl_vars['ENABLE_PDFMAKER']->value == 'true' && $_smarty_tpl->tpl_vars['CRM_TEMPLATES_EXIST']->value == '0') {?><div class="pull-right" id="PDFMakerContentDiv" style="padding-left: 5px;"><div class="clearfix"><div class="btn-group pull-right"><button class="btn btn-default selectPDFTemplates"><i title="<?php echo vtranslate('LBL_EXPORT_TO_PDF','PDFMaker');?>
 " class="fa fa-file-pdf-o" aria-hidden="true"></i>&nbsp;<?php echo vtranslate('LBL_EXPORT_TO_PDF','PDFMaker');?>
 </button><button type="button" class="btn btn-default dropdown-toggle dropdown-toggle-split PDFMoreAction" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php echo vtranslate('LBL_MORE','PDFMaker');?>

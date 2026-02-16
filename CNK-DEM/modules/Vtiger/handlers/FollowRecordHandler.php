@@ -82,7 +82,8 @@ class FollowRecordHandler extends VTEventHandler {
 									$notificationMessage = ucwords($companyDetails['companyname']).' '.vtranslate('LBL_NOTIFICATION', $moduleName).' - '.$currentUserModel->getName();
 									$subject = vtranslate('LBL_STARRED_RECORD_UPDATED', $moduleName, $notificationMessage, $label);
 
-									$this->sendEmail($userRecordModel->get('email1'), $subject, $body, $recordId);
+									// Désactivé: envoi d'email automatique lors du follow
+									// $this->sendEmail($userRecordModel->get('email1'), $subject, $body, $recordId);
 								}
 							}
 						}

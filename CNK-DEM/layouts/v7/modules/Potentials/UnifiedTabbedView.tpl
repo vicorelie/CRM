@@ -10,12 +10,8 @@
             <div class="unified-header-left">
                 <div class="header-info">
                     <h1><i class="fa fa-user-circle"></i> {$CONTACT_NAME}</h1>
-                    {if !empty($CONTACT_PHONE)}
-                        <p class="contact-detail"><i class="fa fa-phone"></i> {$CONTACT_PHONE}</p>
-                    {/if}
-                    {if !empty($CONTACT_EMAIL)}
-                        <p class="contact-detail"><i class="fa fa-envelope"></i> {$CONTACT_EMAIL}</p>
-                    {/if}
+                    <p class="contact-detail" id="header-contact-phone" {if empty($CONTACT_PHONE)}style="display:none"{/if}><i class="fa fa-phone"></i> <span>{$CONTACT_PHONE}</span></p>
+                    <p class="contact-detail" id="header-contact-email" {if empty($CONTACT_EMAIL)}style="display:none"{/if}><i class="fa fa-envelope"></i> <span>{$CONTACT_EMAIL}</span></p>
                 </div>
             </div>
             <ul class="unified-tabs" role="tablist" id="unifiedTabNav">
@@ -25,10 +21,10 @@
                         <span>Details</span>
                     </a>
                 </li>
-                <li role="presentation" class="{if $ACTIVE_TAB eq 'devis'}active{/if}">
-                    <a href="#unified-tab-devis" data-tab="devis" data-toggle="tab" role="tab" class="tab-link tab-purple">
-                        <i class="fa fa-file-text-o"></i>
-                        <span>Devis</span>
+                <li role="presentation" class="{if $ACTIVE_TAB eq 'inventaire'}active{/if}">
+                    <a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange">
+                        <i class="fa fa-archive"></i>
+                        <span>Inventaire</span>
                     </a>
                 </li>
                 <li role="presentation" class="{if $ACTIVE_TAB eq 'map'}active{/if}">
@@ -37,10 +33,10 @@
                         <span>Google Map</span>
                     </a>
                 </li>
-                <li role="presentation" class="{if $ACTIVE_TAB eq 'inventaire'}active{/if}">
-                    <a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange">
-                        <i class="fa fa-archive"></i>
-                        <span>Inventaire</span>
+                <li role="presentation" class="{if $ACTIVE_TAB eq 'devis'}active{/if}">
+                    <a href="#unified-tab-devis" data-tab="devis" data-toggle="tab" role="tab" class="tab-link tab-purple">
+                        <i class="fa fa-file-text-o"></i>
+                        <span>Devis</span>
                     </a>
                 </li>
                 {if $IS_ADMIN}
@@ -62,6 +58,45 @@
                 <a href="index.php?module=Potentials&view=Detail&record={$RECORD_ID}" class="back-link">
                     <i class="fa fa-arrow-left"></i> <span>Retour</span>
                 </a>
+            </div>
+        </div>
+
+        {* Global Metrics Bar - Read only, visible on all tabs except Details *}
+        <div class="global-metrics-bar" id="globalMetricsBar" {if $ACTIVE_TAB eq 'details' || empty($ACTIVE_TAB)}style="display:none;"{/if}>
+            <div class="gm-section gm-dates">
+                <span class="gm-icon"><i class="fa fa-calendar" style="color:#3498db"></i></span>
+                <span class="gm-label">Dates :</span>
+                <span class="gm-date-mode" id="gm_date_mode">
+                    {if $METRIC_PERIODE_DEBUT neq '' || $METRIC_PERIODE_FIN neq ''}Période{else}Date fixe{/if}
+                </span>
+                <span class="gm-date-values" id="gm_date_values">
+                    <span class="gm-date-group gm-dates-period" {if $METRIC_PERIODE_DEBUT eq '' && $METRIC_PERIODE_FIN eq ''}style="display:none;"{/if}>
+                        <span class="gm-date-item"><i class="fa fa-calendar-plus-o" style="color:#3498db"></i> Du <strong id="gm_val_periode_debut">{if $METRIC_PERIODE_DEBUT}{$METRIC_PERIODE_DEBUT|date_format:'%d/%m/%Y'}{else}--{/if}</strong></span>
+                        <span class="gm-date-item"><i class="fa fa-calendar-times-o" style="color:#9b59b6"></i> Au <strong id="gm_val_periode_fin">{if $METRIC_PERIODE_FIN}{$METRIC_PERIODE_FIN|date_format:'%d/%m/%Y'}{else}--{/if}</strong></span>
+                    </span>
+                    <span class="gm-date-group gm-dates-fixed" {if $METRIC_PERIODE_DEBUT neq '' || $METRIC_PERIODE_FIN neq ''}style="display:none;"{/if}>
+                        <span class="gm-date-item"><i class="fa fa-upload" style="color:#27ae60"></i> Charg. <strong id="gm_val_date_charg">{if $METRIC_DATE_CHARGEMENT}{$METRIC_DATE_CHARGEMENT|date_format:'%d/%m/%Y'}{else}--{/if}</strong></span>
+                        <span class="gm-date-item"><i class="fa fa-download" style="color:#e74c3c"></i> Livr. <strong id="gm_val_date_livr">{if $METRIC_DATE_LIVRAISON}{$METRIC_DATE_LIVRAISON|date_format:'%d/%m/%Y'}{else}--{/if}</strong></span>
+                    </span>
+                </span>
+            </div>
+            <div class="gm-separator"></div>
+            <div class="gm-section gm-metrics">
+                <div class="gm-metric">
+                    <span class="gm-metric-label"><i class="fa fa-road" style="color:#3498db"></i> <span class="gm-label-text" data-full="Distance" data-short="Dist">Distance</span></span>
+                    <strong class="gm-metric-value" id="gm_val_distance">{if $METRIC_DISTANCE}{$METRIC_DISTANCE}{else}--{/if}</strong>
+                    <span class="gm-metric-unit">km</span>
+                </div>
+                <div class="gm-metric">
+                    <span class="gm-metric-label"><i class="fa fa-cube" style="color:#9b59b6"></i> Vol. inventaire</span>
+                    <strong class="gm-metric-value" id="gm_val_vol_inv">{if $METRIC_VOL_INVENTAIRE}{$METRIC_VOL_INVENTAIRE}{else}--{/if}</strong>
+                    <span class="gm-metric-unit">m&sup3;</span>
+                </div>
+                <div class="gm-metric">
+                    <span class="gm-metric-label"><i class="fa fa-cubes" style="color:#e67e22"></i> Vol. final</span>
+                    <strong class="gm-metric-value" id="gm_val_vol_final">{if $METRIC_VOL_FINAL}{$METRIC_VOL_FINAL}{else}--{/if}</strong>
+                    <span class="gm-metric-unit">m&sup3;</span>
+                </div>
             </div>
         </div>
 
@@ -1069,6 +1104,114 @@ input[type="number"] { -moz-appearance: textfield; }
         font-size: 16px;
     }
 }
+
+/* ============================================
+   GLOBAL METRICS BAR
+   ============================================ */
+.global-metrics-bar {
+    position: fixed;
+    top: 140px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
+    border-bottom: 1px solid #ddd;
+    padding: 6px 26px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.global-metrics-bar .gm-section { display: flex; align-items: center; gap: 8px; }
+.global-metrics-bar .gm-icon { font-size: 13px; }
+.global-metrics-bar .gm-label { font-size: 12px; font-weight: 600; color: #555; }
+.global-metrics-bar .gm-date-mode {
+    font-size: 11px; font-weight: 600; color: #fff; background: #3498db;
+    padding: 2px 10px; border-radius: 12px;
+}
+.global-metrics-bar .gm-date-values { display: flex; gap: 12px; }
+.global-metrics-bar .gm-date-group { display: flex; gap: 12px; }
+.global-metrics-bar .gm-date-item { font-size: 12px; color: #555; white-space: nowrap; }
+.global-metrics-bar .gm-date-item strong { color: #333; margin-left: 2px; }
+.global-metrics-bar .gm-date-item i { margin-right: 2px; }
+
+.global-metrics-bar .gm-separator {
+    width: 1px; height: 28px;
+    background: linear-gradient(to bottom, transparent, #bbb, transparent);
+}
+
+.global-metrics-bar .gm-metrics { display: flex; gap: 12px; }
+.global-metrics-bar .gm-metric {
+    display: flex; align-items: center; gap: 5px;
+    background: #fff; padding: 4px 12px; border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.global-metrics-bar .gm-metric-label { font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; }
+.global-metrics-bar .gm-metric-label i { margin-right: 3px; }
+.global-metrics-bar .gm-metric-value { font-size: 13px; font-weight: 700; color: #333; }
+.global-metrics-bar .gm-metric-unit { font-size: 10px; color: #888; }
+
+/* When metrics bar is visible, push tab content down */
+.unified-tab-content.with-metrics-bar {
+    padding-top: 95px !important;
+}
+
+@media (max-width: 992px) {
+    .global-metrics-bar {
+        flex-wrap: wrap;
+        padding: 8px 15px;
+        gap: 6px;
+    }
+    .global-metrics-bar .gm-separator { display: none; }
+}
+
+@media (max-width: 768px) {
+    /* Prevent zoom on input focus on mobile */
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+
+    .global-metrics-bar {
+        top: 135px !important;
+        padding: 5px 10px !important;
+        gap: 4px !important;
+        font-size: 10px !important;
+    }
+    .global-metrics-bar .gm-label {
+        font-size: 11px !important;
+    }
+    .global-metrics-bar .gm-label-text {
+        font-size: 0 !important;
+    }
+    .global-metrics-bar .gm-label-text:before {
+        content: attr(data-short);
+        font-size: 10px;
+    }
+    .global-metrics-bar .gm-date-mode {
+        font-size: 10px !important;
+        padding: 2px 8px !important;
+    }
+    .global-metrics-bar .gm-date-item {
+        font-size: 10px !important;
+    }
+    .global-metrics-bar .gm-metric {
+        padding: 3px 8px !important;
+        gap: 3px !important;
+    }
+    .global-metrics-bar .gm-metric-label {
+        font-size: 10px !important;
+    }
+    .global-metrics-bar .gm-metric-value {
+        font-size: 11px !important;
+    }
+    .global-metrics-bar .gm-metric-unit {
+        font-size: 9px !important;
+    }
+    .unified-tab-content.with-metrics-bar {
+        padding-top: 100px !important;
+    }
+}
 </style>
 
 <script type="text/javascript" src="layouts/v7/modules/Potentials/resources/UnifiedView.js?v={$smarty.now}"></script>
@@ -1081,6 +1224,66 @@ input[type="number"] { -moz-appearance: textfield; }
             return;
         }
         UnifiedTabbedView.init({$RECORD_ID});
+
+        // Global metrics bar - show/hide based on active tab
+        var metricsBar = jQuery('#globalMetricsBar');
+        var tabContent = jQuery('#unifiedTabbedView');
+        function toggleMetricsBar(tabName) {
+            if (tabName === 'details') {
+                metricsBar.slideUp(200);
+                tabContent.removeClass('with-metrics-bar');
+            } else {
+                metricsBar.slideDown(200);
+                tabContent.addClass('with-metrics-bar');
+            }
+        }
+        // Init on page load
+        var activeTab = jQuery('#unifiedTabNav li.active a').data('tab') || 'details';
+        toggleMetricsBar(activeTab);
+
+        // On tab switch
+        jQuery('#unifiedTabNav').on('shown.bs.tab click', 'a[data-toggle="tab"]', function() {
+            toggleMetricsBar(jQuery(this).data('tab'));
+        });
+
+        // Global function to update metrics bar from any tab
+        window.updateGlobalMetrics = function(field, value) {
+            var formatDate = function(v) {
+                if (!v) return '--';
+                var parts = v.split('-');
+                if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+                return v;
+            };
+            var map = {
+                'cf_961':  { el: '#gm_val_distance', fmt: 'number' },
+                'cf_939':  { el: '#gm_val_vol_inv', fmt: 'number' },
+                'cf_1259': { el: '#gm_val_vol_final', fmt: 'number' },
+                'cf_1043': { el: '#gm_val_date_charg', fmt: 'date' },
+                'cf_1049': { el: '#gm_val_date_livr', fmt: 'date' },
+                'cf_1045': { el: '#gm_val_periode_debut', fmt: 'date' },
+                'cf_1047': { el: '#gm_val_periode_fin', fmt: 'date' }
+            };
+            var m = map[field];
+            if (m) {
+                var display = (value && value !== '' && value !== '0') ? (m.fmt === 'date' ? formatDate(value) : value) : '--';
+                jQuery(m.el).text(display);
+            }
+            // Handle date mode switch (show/hide groups, all elements always in DOM)
+            if (field === 'cf_1043' || field === 'cf_1049' || field === 'cf_1045' || field === 'cf_1047') {
+                var debut = jQuery('#gm_val_periode_debut').text().trim();
+                var fin = jQuery('#gm_val_periode_fin').text().trim();
+                var isPeriod = (debut && debut !== '--') || (fin && fin !== '--');
+                if (isPeriod) {
+                    jQuery('#gm_date_mode').text('Période');
+                    jQuery('.gm-dates-period').show();
+                    jQuery('.gm-dates-fixed').hide();
+                } else {
+                    jQuery('#gm_date_mode').text('Date fixe');
+                    jQuery('.gm-dates-fixed').show();
+                    jQuery('.gm-dates-period').hide();
+                }
+            }
+        };
 
         // Gestion du bouton Envoyer Email
         jQuery('#sendEmailBtn').on('click', function() {

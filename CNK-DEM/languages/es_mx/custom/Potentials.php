@@ -8,4 +8,5 @@ $languageStrings = array(
 'NRP'	=>	'NRP',
 'NRP 2'	=>	'NRP 2',
 'Intéressé'	=>	'Intéressé',
+'FX NUM'	=>	'FX NUM',
 );

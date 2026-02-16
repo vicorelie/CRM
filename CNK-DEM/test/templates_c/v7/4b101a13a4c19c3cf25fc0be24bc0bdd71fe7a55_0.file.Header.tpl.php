@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 23:22:46
+/* Smarty version 4.5.5, created on 2026-02-16 12:32:00
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Header.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698ba1a6aa9fe1_18767306',
+  'unifunc' => 'content_6992f220064bb6_72242911',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '4b101a13a4c19c3cf25fc0be24bc0bdd71fe7a55' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Header.tpl',
-      1 => 1766693566,
+      1 => 1771232765,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698ba1a6aa9fe1_18767306 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6992f220064bb6_72242911 (Smarty_Internal_Template $_smarty_tpl) {
 ?><!DOCTYPE html><html><head><title><?php echo vtranslate($_smarty_tpl->tpl_vars['PAGETITLE']->value,$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </title><link rel="SHORTCUT ICON" href="layouts/v7/skins/images/favicon.ico"><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet"><link type='text/css' rel='stylesheet' href='<?php echo vresource_url("libraries/bootstrap-legacy/css/bootstrap-responsive.min.css");?>
 '> <link type='text/css' rel='stylesheet' href='<?php echo vresource_url("layouts/v7/lib/todc/css/bootstrap.min.css");?>
@@ -53,7 +53,7 @@ $_smarty_tpl->tpl_vars['cssModel']->do_else = false;
 " media="<?php echo $_smarty_tpl->tpl_vars['cssModel']->value->getMedia();?>
 " /><?php
 }
-$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?><style type="text/css">@media print {.noprint { display:none; }}</style><?php echo '<script'; ?>
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?><style type="text/css">@media print {.noprint { display:none; }}/* Prevent zoom on input focus on mobile */@media (max-width: 768px) {body input, body textarea, body select,input[type="text"], input[type="email"], input[type="number"],input[type="tel"], input[type="url"], input[type="search"],input[type="date"], input[type="time"], input[type="datetime-local"],.form-control, .inputElement {font-size: 16px !important;}}</style><?php echo '<script'; ?>
  type="text/javascript">var __pageCreationTime = (new Date()).getTime();<?php echo '</script'; ?>
 ><?php echo '<script'; ?>
  src="<?php echo vresource_url('layouts/v7/lib/jquery/jquery.min.js');?>
@@ -78,6 +78,36 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?><style type="tex
 ",'userlabel':"<?php echo htmlspecialchars((string)($_smarty_tpl->tpl_vars['CURRENT_USER_MODEL']->value->get('userlabel')), ENT_QUOTES, 'UTF-8', true);?>
 ",};<?php }
 echo '</script'; ?>
+><?php echo '<script'; ?>
+ type="text/javascript">
+		/* Prevent keyboard closing on mobile for search inputs */
+		(function() {
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if (isMobile) {
+				document.addEventListener('DOMContentLoaded', function() {
+					var searchInputsFocused = false;
+					document.addEventListener('focusin', function(e) {
+						if (e.target && e.target.classList && e.target.classList.contains('listSearchContributor')) {
+							searchInputsFocused = true;
+							setTimeout(function() { searchInputsFocused = false; }, 100);
+						}
+					});
+					document.addEventListener('blur', function(e) {
+						if (searchInputsFocused && e.target && e.target.classList && e.target.classList.contains('listSearchContributor')) {
+							e.preventDefault();
+							e.stopPropagation();
+							setTimeout(function() {
+								if (document.activeElement !== e.target) {
+									e.target.focus();
+								}
+							}, 10);
+							return false;
+						}
+					}, true);
+				});
+			}
+		})();
+		<?php echo '</script'; ?>
 ></head><?php $_smarty_tpl->_assignInScope('CURRENT_USER_MODEL', Users_Record_Model::getCurrentUserModel());?><body data-skinpath="<?php echo Vtiger_Theme::getBaseThemePath();?>
 " data-language="<?php echo $_smarty_tpl->tpl_vars['LANGUAGE']->value;?>
 " data-user-decimalseparator="<?php echo $_smarty_tpl->tpl_vars['CURRENT_USER_MODEL']->value->get('currency_decimal_separator');?>

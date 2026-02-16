@@ -12,13 +12,7 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 	public function process(Vtiger_Request $request) {
 		global $adb;
 
-		// DEBUG: Logger ce que nous recevons
 		$incomingRecordId = $request->get('record');
-		error_log("[QUOTES SAVE] Record ID reçu: " . var_export($incomingRecordId, true));
-		error_log("[QUOTES SAVE] Subject: " . $request->get('subject'));
-		error_log("[QUOTES SAVE] cf_1005 (validité): " . var_export($request->get('cf_1005'), true));
-		error_log("[QUOTES SAVE] cf_1125: " . var_export($request->get('cf_1125'), true));
-		error_log("[QUOTES SAVE] Mode: " . ($incomingRecordId ? 'MISE A JOUR' : 'CREATION'));
 
 		// CUSTOM: Calculer cf_1137 AVANT parent::process()
 		$forfaitTarif = floatval($request->get('cf_1127')) ?: 0;
@@ -33,12 +27,10 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		// CUSTOM: Recalculer les totaux à partir des Acompte/Solde (qui incluent le forfait)
 		// Récupérer le recordId - priorité à $this->savedRecordId (défini par parent::saveRecord())
 		$recordId = $this->savedRecordId;
-		error_log("[QUOTES SAVE] recordId depuis this->savedRecordId: " . var_export($recordId, true));
 
 		// Fallback sur request si savedRecordId n'est pas défini
 		if (!$recordId) {
 			$recordId = $request->get('record');
-			error_log("[QUOTES SAVE] recordId depuis request->get('record'): " . var_export($recordId, true));
 		}
 
 		// Dernier recours: chercher le dernier devis créé
@@ -46,11 +38,8 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 			$lastIdResult = $adb->pquery("SELECT MAX(crmid) as lastid FROM vtiger_crmentity WHERE setype = 'Quotes'", array());
 			if ($adb->num_rows($lastIdResult) > 0) {
 				$recordId = $adb->query_result($lastIdResult, 0, 'lastid');
-				error_log("[QUOTES SAVE] recordId depuis MAX(crmid): " . var_export($recordId, true));
 			}
 		}
-
-		error_log("[QUOTES SAVE] recordId final utilisé: " . var_export($recordId, true));
 
 		if (!$recordId) {
 			error_log("[QUOTES SAVE] ERREUR: Aucun recordId trouvé, abandon des mises à jour custom");
@@ -103,20 +92,13 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 			$productsSubTotal = floatval($adb->query_result($productsResult, 0, 'products_subtotal')) ?: 0;
 		}
 
-		// Récupérer la remise globale (discount_amount) depuis le request ou depuis la DB
-		$discountAmount = floatval($request->get('discount_amount')) ?: 0;
+		// Récupérer la remise globale depuis le request (hdnDiscountPercent / hdnDiscountAmount)
+		$reqDiscountPercent = floatval($request->get('hdnDiscountPercent')) ?: 0;
+		$reqDiscountAmount = floatval($request->get('hdnDiscountAmount')) ?: 0;
+		error_log("[QUOTES SAVE] Remise: hdnDiscountPercent={$reqDiscountPercent}, hdnDiscountAmount={$reqDiscountAmount}");
 
-		// Si pas dans le request, essayer de la récupérer depuis la DB
-		if ($discountAmount == 0) {
-			$discountResult = $adb->pquery("SELECT discount_amount FROM vtiger_quotes WHERE quoteid = ?", array($recordId));
-			if ($adb->num_rows($discountResult) > 0) {
-				$discountAmount = floatval($adb->query_result($discountResult, 0, 'discount_amount')) ?: 0;
-			}
-		}
-
-		// Calculer le total HT (produits + forfait + assurance)
+		// Calculer le total HT (produits + forfait + assurance) - AVANT remise
 		$subtotalBeforeDiscount = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
-		$totalHT = $subtotalBeforeDiscount - $discountAmount;
 
 		// TVA 20%
 		$taxRate = 0.20;
@@ -138,11 +120,11 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 				$productId = $adb->query_result($lineItemsResult, $i, 'productid');
 				$quantity = floatval($adb->query_result($lineItemsResult, $i, 'quantity')) ?: 0;
 				$listPrice = floatval($adb->query_result($lineItemsResult, $i, 'listprice')) ?: 0;
-				$discountPercent = floatval($adb->query_result($lineItemsResult, $i, 'discount_percent')) ?: 0;
-				$discountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
+				$lineDiscountPercent = floatval($adb->query_result($lineItemsResult, $i, 'discount_percent')) ?: 0;
+				$lineDiscountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
 
 				// Calculer le total après remise pour cette ligne
-				$lineTotal = ($quantity * $listPrice * (1 - $discountPercent / 100)) - $discountAmount;
+				$lineTotal = ($quantity * $listPrice * (1 - $lineDiscountPercent / 100)) - $lineDiscountAmount;
 
 				if ($lineTotal > 0 && $productId) {
 					// Déterminer si c'est un produit ou un service
@@ -200,10 +182,28 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		$totalAcompteHT = $totalProduitsAcompteHT + $forfaitAcompteHT + $assuranceTarif;
 		$totalSoldeHT = $totalProduitsSoldeHT + $forfaitSoldeHT;
 
-		// Calculer les montants TTC
+		// Appliquer la remise globale sur le HT
+		$globalDiscountPercent = 0;
+		$globalDiscountHT = 0;
+		if ($reqDiscountPercent > 0) {
+			$globalDiscountPercent = $reqDiscountPercent;
+			$globalDiscountHT = $subtotalBeforeDiscount * $reqDiscountPercent / 100;
+		} elseif ($reqDiscountAmount > 0) {
+			$globalDiscountHT = $reqDiscountAmount;
+		}
+		$totalHTAfterDiscount = $subtotalBeforeDiscount - $globalDiscountHT;
+		if ($totalHTAfterDiscount < 0) $totalHTAfterDiscount = 0;
+
+		// Appliquer la remise uniquement sur le Solde (l'Acompte ne change pas)
+		if ($globalDiscountHT > 0) {
+			$totalSoldeHT = $totalSoldeHT - $globalDiscountHT;
+			if ($totalSoldeHT < 0) $totalSoldeHT = 0;
+		}
+
+		// Calculer les montants TTC (Acompte inchangé, Solde après remise)
 		$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
 		$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
-		$grandTotal = $totalAcompteTTC + $totalSoldeTTC;
+		$grandTotal = $totalHTAfterDiscount * (1 + $taxRate);
 
 		// Calculer le montant déjà payé depuis vtiger_stripe_payments
 		$paidResult = $adb->pquery(
@@ -244,25 +244,23 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $resteAPayer, $statutAcompte, $statutSolde, $recordId)
 		);
 
-		// Calculer le montant de la taxe (TVA)
-		$taxAmount = $totalHT * $taxRate;
-
 		// Mettre à jour les totaux VTiger
-		// subtotal = Total AVANT remise (produits + forfait + assurance)
-		// pre_tax_total = Total APRÈS remise AVANT taxe
-		// tax_totalamount = Montant de la taxe
-		// total = Grand Total TTC
+		// subtotal = Total HT AVANT remise (produits + forfait + assurance)
+		// discount_percent = % de remise (appliqué sur HT)
+		// discount_amount = Montant remise en HT
+		// pre_tax_total = HT APRÈS remise
+		// total = Grand Total TTC après remise
 		$newSubTotal = $subtotalBeforeDiscount;
-		$newDiscountAmount = $discountAmount;
-		$newPreTaxTotal = $totalHT;
-		$newTaxAmount = $taxAmount;
+		$newDiscountPercent = $globalDiscountPercent > 0 ? $globalDiscountPercent : null;
+		$newDiscountAmount = $globalDiscountHT;
+		$newPreTaxTotal = $totalHTAfterDiscount;
 		$newTotal = $grandTotal;
 
 		// Note: Il n'y a PAS de colonne tax_totalamount dans vtiger_quotes
 		// La taxe est calculée à la volée comme: total - pre_tax_total
 		$updateResult2 = $adb->pquery(
-			"UPDATE vtiger_quotes SET subtotal = ?, discount_amount = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
-			array($newSubTotal, $newDiscountAmount, $newPreTaxTotal, $newTotal, $recordId)
+			"UPDATE vtiger_quotes SET subtotal = ?, discount_percent = ?, discount_amount = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
+			array($newSubTotal, $newDiscountPercent, $newDiscountAmount, $newPreTaxTotal, $newTotal, $recordId)
 		);
 
 		return $result;

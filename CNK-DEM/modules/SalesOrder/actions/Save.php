@@ -86,18 +86,22 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 			$productsSubTotal = floatval($adb->query_result($productsResult, 0, 'products_subtotal')) ?: 0;
 		}
 
-		// Récupérer la remise globale
-		$discountAmount = floatval($request->get('discount_amount')) ?: 0;
-		if ($discountAmount == 0) {
-			$discountResult = $adb->pquery("SELECT discount_amount FROM vtiger_salesorder WHERE salesorderid = ?", array($recordId));
-			if ($adb->num_rows($discountResult) > 0) {
-				$discountAmount = floatval($adb->query_result($discountResult, 0, 'discount_amount')) ?: 0;
-			}
-		}
+		// Récupérer la remise globale depuis le request (hdnDiscountPercent / hdnDiscountAmount)
+		$globalDiscountPercent = floatval($request->get('hdnDiscountPercent')) ?: 0;
+		$globalDiscountAmount = floatval($request->get('hdnDiscountAmount')) ?: 0;
 
 		// Calculer le total HT
 		$subtotalBeforeDiscount = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
-		$totalHT = $subtotalBeforeDiscount - $discountAmount;
+
+		// Calculer la remise HT
+		$globalDiscountHT = 0;
+		if ($globalDiscountPercent > 0) {
+			$globalDiscountHT = $subtotalBeforeDiscount * $globalDiscountPercent / 100;
+		} elseif ($globalDiscountAmount > 0) {
+			$globalDiscountHT = $globalDiscountAmount;
+		}
+		$totalHTAfterDiscount = $subtotalBeforeDiscount - $globalDiscountHT;
+		if ($totalHTAfterDiscount < 0) $totalHTAfterDiscount = 0;
 
 		// TVA 20%
 		$taxRate = 0.20;
@@ -118,10 +122,10 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 				$productId = $adb->query_result($lineItemsResult, $i, 'productid');
 				$quantity = floatval($adb->query_result($lineItemsResult, $i, 'quantity')) ?: 0;
 				$listPrice = floatval($adb->query_result($lineItemsResult, $i, 'listprice')) ?: 0;
-				$discountPercent = floatval($adb->query_result($lineItemsResult, $i, 'discount_percent')) ?: 0;
-				$discountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
+				$lineDiscountPercent = floatval($adb->query_result($lineItemsResult, $i, 'discount_percent')) ?: 0;
+				$lineDiscountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
 
-				$lineTotal = ($quantity * $listPrice * (1 - $discountPercent / 100)) - $discountAmount;
+				$lineTotal = ($quantity * $listPrice * (1 - $lineDiscountPercent / 100)) - $lineDiscountAmount;
 
 				if ($lineTotal > 0 && $productId) {
 					$pctResult = $adb->pquery(
@@ -168,9 +172,16 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 		$totalAcompteHT = $totalProduitsAcompteHT + $forfaitAcompteHT + $assuranceTarif;
 		$totalSoldeHT = $totalProduitsSoldeHT + $forfaitSoldeHT;
 
+		// Appliquer la remise uniquement sur le Solde (l'Acompte ne change pas)
+		if ($globalDiscountHT > 0) {
+			$totalSoldeHT = $totalSoldeHT - $globalDiscountHT;
+			if ($totalSoldeHT < 0) $totalSoldeHT = 0;
+		}
+
+		// Calculer les montants TTC (Acompte inchangé, Solde après remise)
 		$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
 		$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
-		$grandTotal = $totalAcompteTTC + $totalSoldeTTC;
+		$grandTotal = $totalHTAfterDiscount * (1 + $taxRate);
 
 		// Mettre à jour vtiger_salesordercf
 		$updateResult = $adb->pquery(
@@ -178,18 +189,16 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $recordId)
 		);
 
-		// Calculer le montant de la taxe
-		$taxAmount = $totalHT * $taxRate;
-
 		// Mettre à jour les totaux VTiger
 		$newSubTotal = $subtotalBeforeDiscount;
-		$newDiscountAmount = $discountAmount;
-		$newPreTaxTotal = $totalHT;
+		$newDiscountPercent = $globalDiscountPercent > 0 ? $globalDiscountPercent : null;
+		$newDiscountAmount = $globalDiscountHT;
+		$newPreTaxTotal = $totalHTAfterDiscount;
 		$newTotal = $grandTotal;
 
 		$updateResult2 = $adb->pquery(
-			"UPDATE vtiger_salesorder SET subtotal = ?, discount_amount = ?, pre_tax_total = ?, total = ? WHERE salesorderid = ?",
-			array($newSubTotal, $newDiscountAmount, $newPreTaxTotal, $newTotal, $recordId)
+			"UPDATE vtiger_salesorder SET subtotal = ?, discount_percent = ?, discount_amount = ?, pre_tax_total = ?, total = ? WHERE salesorderid = ?",
+			array($newSubTotal, $newDiscountPercent, $newDiscountAmount, $newPreTaxTotal, $newTotal, $recordId)
 		);
 
 		return $result;

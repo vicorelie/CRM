@@ -1320,7 +1320,9 @@ Vtiger.Class("Vtiger_List_Js", {
             var element = jQuery(e.currentTarget);
             var fieldName = element.attr('name');
             var searchValue = element.val();
-			if(element.hasClass('select2')){
+            // Skip DOM manipulation on mobile to prevent focus loss
+            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if(element.hasClass('select2') && !isMobile){
 				var currentElementContainer = element.closest('.select2_search_div').find('div.listSearchContributor').find('ul');
 				var desireHeight = 150;
 				if(currentElementContainer.height() > desireHeight){
@@ -1330,7 +1332,7 @@ Vtiger.Class("Vtiger_List_Js", {
 				}
 				currentElementContainer.mCustomScrollbar("update");
 			}
-			
+
             if(e.keyCode == 13 && thisInstance.prevSearchValues[fieldName] !== searchValue && !element.hasClass('select2')){
                 e.preventDefault();
                 var element = jQuery(e.currentTarget);
@@ -1339,7 +1341,9 @@ Vtiger.Class("Vtiger_List_Js", {
                 searchTriggerElement.trigger('click');
                 thisInstance.prevSearchValues[fieldName] = searchValue;
             }
-            if(e.keyCode !== 13) {
+            // Skip button manipulation on mobile to prevent keyboard close
+            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if(e.keyCode !== 13 && !isMobile) {
                 listViewPageDiv.find('[data-trigger="clearListSearch"]').addClass('hide');
                 setTimeout(function(){
                     listViewPageDiv.find('[data-trigger="listSearch"]').removeClass('hide');
@@ -1350,7 +1354,11 @@ Vtiger.Class("Vtiger_List_Js", {
            var currentSearchInput = jQuery(elem);
 			app.helper.showVerticalScroll(currentSearchInput.find('ul'),{'height': 150});
         });
-        listViewPageDiv.on('keyup','.listSearchContributor', listSearchContributorChangeHandler);
+        // On mobile, disable keyup to prevent keyboard issues - use only Enter key or search button
+        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) {
+            listViewPageDiv.on('keyup','.listSearchContributor', listSearchContributorChangeHandler);
+        }
         listViewPageDiv.on('change','select', listSearchContributorChangeHandler);
         listViewPageDiv.on('datepicker-change', '.dateField', function(e){
             var element = jQuery(e.currentTarget);

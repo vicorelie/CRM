@@ -22,14 +22,14 @@
         </button>
         <div class="toolbar-spacer"></div>
         <div class="toolbar-volume volume-purple">
-            <span class="volume-label">Volume inventaire</span>
+            <span class="volume-label">Vol inv</span>
             <div class="volume-input-group">
                 <input type="text" class="volume-input volume-readonly" id="unified-totalVolume" value="0" readonly>
                 <span class="volume-unit">m³</span>
             </div>
         </div>
         <div class="toolbar-volume volume-orange">
-            <span class="volume-label">Volume final</span>
+            <span class="volume-label">Vol fin</span>
             <div class="volume-input-group">
                 <input type="number" class="volume-input" id="unified-volumeFinal" value="{$SAVED_VOLUME_FINAL}" step="0.01" min="0">
                 <span class="volume-unit">m³</span>
@@ -398,11 +398,15 @@
     #unified-available-items, #unified-selected-items { max-height: 350px; }
 }
 @media (max-width: 600px) {
-    .inventory-toolbar { flex-direction: column; align-items: stretch; }
-    .toolbar-search { max-width: 100%; min-width: auto; }
-    .inventory-toolbar .btn { width: 100%; justify-content: center; }
-    .toolbar-volume { min-width: auto; width: 100%; }
-    .toolbar-volume.volume-purple { margin-left: 0; }
+    .inventory-toolbar { flex-direction: row; flex-wrap: wrap; align-items: stretch; gap: 6px; }
+    .toolbar-search { max-width: 100%; min-width: auto; width: 100%; order: 3; }
+    .toolbar-search input { font-size: 16px !important; }
+    .inventory-toolbar .btn { width: 100%; justify-content: center; order: 4; }
+    .toolbar-volume { min-width: auto; width: calc(50% - 3px); flex: 0 0 auto; }
+    .toolbar-volume.volume-purple { margin-left: 0; order: 1; }
+    .toolbar-volume.volume-orange { order: 2; }
+    .toolbar-volume .volume-label { font-size: 10px; }
+    .toolbar-volume .volume-input { width: 50px; font-size: 12px; }
 }
 
 /* Auto-save feedback */

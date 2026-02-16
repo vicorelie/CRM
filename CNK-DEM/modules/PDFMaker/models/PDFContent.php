@@ -866,16 +866,30 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
         // CNK-DEM: Pour les Devis, utiliser les totaux stockés en base (incluent forfait + assurance)
         // plutôt que les totaux recalculés uniquement à partir des lignes produits
         if ($module === 'Quotes' && $is_related === false) {
+            $storedSubTotal = floatval($focus->column_fields['hdnSubTotal']);
             $storedPreTax = floatval($focus->column_fields['pre_tax_total']);
             $storedTotal = floatval($focus->column_fields['hdnGrandTotal']);
+            $storedDiscountPercent = floatval($focus->column_fields['hdnDiscountPercent']);
+            $storedDiscountAmount = floatval($focus->column_fields['hdnDiscountAmount']);
             if ($storedPreTax > 0) {
                 $storedTax = $storedTotal - $storedPreTax;
+                // Calculer le montant de la remise HT
+                $discountValue = 0;
+                if ($storedDiscountPercent > 0) {
+                    $discountValue = $storedSubTotal * $storedDiscountPercent / 100;
+                } elseif ($storedDiscountAmount > 0) {
+                    $discountValue = $storedDiscountAmount;
+                }
+                self::$rep["$" . $prefix . "SUBTOTAL$"] = $this->formatCurrencyToPDF($storedSubTotal);
                 self::$rep["$" . $prefix . "TOTALWITHOUTVAT$"] = $this->formatCurrencyToPDF($storedPreTax);
                 self::$rep["$" . $prefix . "TOTALAFTERDISCOUNT$"] = $this->formatCurrencyToPDF($storedPreTax);
                 self::$rep["$" . $prefix . "NETTOTAL$"] = $this->formatCurrencyToPDF($storedPreTax);
                 self::$rep["$" . $prefix . "VAT$"] = $this->formatCurrencyToPDF($storedTax);
                 self::$rep["$" . $prefix . "TAXTOTAL$"] = $this->formatCurrencyToPDF($storedTax);
                 self::$rep["$" . $prefix . "TOTALWITHVAT$"] = $this->formatCurrencyToPDF($storedTotal);
+                self::$rep["$" . $prefix . "TOTAL$"] = $this->formatCurrencyToPDF($storedTotal);
+                self::$rep["$" . $prefix . "TOTALDISCOUNT$"] = $this->formatCurrencyToPDF($discountValue);
+                self::$rep["$" . $prefix . "FINALDISCOUNT$"] = $this->formatCurrencyToPDF($discountValue);
                 self::$rep["$" . $prefix . "VATPERCENT$"] = '20';
             }
         }

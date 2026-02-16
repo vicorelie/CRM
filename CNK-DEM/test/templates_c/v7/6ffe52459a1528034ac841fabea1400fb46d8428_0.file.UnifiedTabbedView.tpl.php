@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 23:22:50
+/* Smarty version 4.5.5, created on 2026-02-16 12:32:00
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698ba1aa986897_37763243',
+  'unifunc' => 'content_6992f2200a1d58_86932623',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6ffe52459a1528034ac841fabea1400fb46d8428' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl',
-      1 => 1770719007,
+      1 => 1771193065,
       2 => 'file',
     ),
   ),
@@ -20,14 +20,29 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698ba1aa986897_37763243 (Smarty_Internal_Template $_smarty_tpl) {
-?><div class="unified-view-wrapper"><div class="unified-container"><div class="unified-tabs-header"><div class="unified-header-left"><div class="header-info"><h1><i class="fa fa-user-circle"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_NAME']->value;?>
-</h1><?php if (!empty($_smarty_tpl->tpl_vars['CONTACT_PHONE']->value)) {?><p class="contact-detail"><i class="fa fa-phone"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_PHONE']->value;?>
-</p><?php }
-if (!empty($_smarty_tpl->tpl_vars['CONTACT_EMAIL']->value)) {?><p class="contact-detail"><i class="fa fa-envelope"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_EMAIL']->value;?>
-</p><?php }?></div></div><ul class="unified-tabs" role="tablist" id="unifiedTabNav"><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>"><a href="#unified-tab-details" data-tab="details" data-toggle="tab" role="tab" class="tab-link tab-blue"><i class="fa fa-info-circle"></i><span>Details</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>"><a href="#unified-tab-devis" data-tab="devis" data-toggle="tab" role="tab" class="tab-link tab-purple"><i class="fa fa-file-text-o"></i><span>Devis</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>"><a href="#unified-tab-map" data-tab="map" data-toggle="tab" role="tab" class="tab-link tab-green"><i class="fa fa-map-marker"></i><span>Google Map</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>"><a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange"><i class="fa fa-archive"></i><span>Inventaire</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'odm') {?>active<?php }?>"><a href="#unified-tab-odm" data-tab="odm" data-toggle="tab" role="tab" class="tab-link tab-teal"><i class="fa fa-clipboard"></i><span>ODM</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'mail') {?>active<?php }?>"><a href="#unified-tab-mail" data-tab="mail" data-toggle="tab" role="tab" class="tab-link tab-pink"><i class="fa fa-envelope"></i><span>Mail</span></a></li></ul><div class="unified-header-right"><a href="index.php?module=Potentials&view=Detail&record=<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
-" class="back-link"><i class="fa fa-arrow-left"></i> <span>Retour</span></a></div></div><div class="tab-content unified-tab-content" id="unifiedTabbedView" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
-"><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>" id="unified-tab-details"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des details...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>" id="unified-tab-devis"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des devis...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>" id="unified-tab-map"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de la carte...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>" id="unified-tab-inventaire"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'inventaire...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'odm') {?>active<?php }?>" id="unified-tab-odm"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des ODM...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'mail') {?>active<?php }?>" id="unified-tab-mail"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'historique mail...</p></div></div></div></div></div></div>
+function content_6992f2200a1d58_86932623 (Smarty_Internal_Template $_smarty_tpl) {
+$_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.date_format.php','function'=>'smarty_modifier_date_format',),));
+?>
+<div class="unified-view-wrapper"><div class="unified-container"><div class="unified-tabs-header"><div class="unified-header-left"><div class="header-info"><h1><i class="fa fa-user-circle"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_NAME']->value;?>
+</h1><p class="contact-detail" id="header-contact-phone" <?php if (empty($_smarty_tpl->tpl_vars['CONTACT_PHONE']->value)) {?>style="display:none"<?php }?>><i class="fa fa-phone"></i> <span><?php echo $_smarty_tpl->tpl_vars['CONTACT_PHONE']->value;?>
+</span></p><p class="contact-detail" id="header-contact-email" <?php if (empty($_smarty_tpl->tpl_vars['CONTACT_EMAIL']->value)) {?>style="display:none"<?php }?>><i class="fa fa-envelope"></i> <span><?php echo $_smarty_tpl->tpl_vars['CONTACT_EMAIL']->value;?>
+</span></p></div></div><ul class="unified-tabs" role="tablist" id="unifiedTabNav"><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>"><a href="#unified-tab-details" data-tab="details" data-toggle="tab" role="tab" class="tab-link tab-blue"><i class="fa fa-info-circle"></i><span>Details</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>"><a href="#unified-tab-inventaire" data-tab="inventaire" data-toggle="tab" role="tab" class="tab-link tab-orange"><i class="fa fa-archive"></i><span>Inventaire</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>"><a href="#unified-tab-map" data-tab="map" data-toggle="tab" role="tab" class="tab-link tab-green"><i class="fa fa-map-marker"></i><span>Google Map</span></a></li><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>"><a href="#unified-tab-devis" data-tab="devis" data-toggle="tab" role="tab" class="tab-link tab-purple"><i class="fa fa-file-text-o"></i><span>Devis</span></a></li><?php if ($_smarty_tpl->tpl_vars['IS_ADMIN']->value) {?><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'odm') {?>active<?php }?>"><a href="#unified-tab-odm" data-tab="odm" data-toggle="tab" role="tab" class="tab-link tab-teal"><i class="fa fa-clipboard"></i><span>ODM</span></a></li><?php }?><li role="presentation" class="<?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'mail') {?>active<?php }?>"><a href="#unified-tab-mail" data-tab="mail" data-toggle="tab" role="tab" class="tab-link tab-pink"><i class="fa fa-envelope"></i><span>Mail</span></a></li></ul><div class="unified-header-right"><a href="index.php?module=Potentials&view=Detail&record=<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
+" class="back-link"><i class="fa fa-arrow-left"></i> <span>Retour</span></a></div></div><div class="global-metrics-bar" id="globalMetricsBar" <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>style="display:none;"<?php }?>><div class="gm-section gm-dates"><span class="gm-icon"><i class="fa fa-calendar" style="color:#3498db"></i></span><span class="gm-label">Dates :</span><span class="gm-date-mode" id="gm_date_mode"><?php if ($_smarty_tpl->tpl_vars['METRIC_PERIODE_DEBUT']->value != '' || $_smarty_tpl->tpl_vars['METRIC_PERIODE_FIN']->value != '') {?>Période<?php } else { ?>Date fixe<?php }?></span><span class="gm-date-values" id="gm_date_values"><span class="gm-date-group gm-dates-period" <?php if ($_smarty_tpl->tpl_vars['METRIC_PERIODE_DEBUT']->value == '' && $_smarty_tpl->tpl_vars['METRIC_PERIODE_FIN']->value == '') {?>style="display:none;"<?php }?>><span class="gm-date-item"><i class="fa fa-calendar-plus-o" style="color:#3498db"></i> Du <strong id="gm_val_periode_debut"><?php if ($_smarty_tpl->tpl_vars['METRIC_PERIODE_DEBUT']->value) {
+echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['METRIC_PERIODE_DEBUT']->value,'%d/%m/%Y');
+} else { ?>--<?php }?></strong></span><span class="gm-date-item"><i class="fa fa-calendar-times-o" style="color:#9b59b6"></i> Au <strong id="gm_val_periode_fin"><?php if ($_smarty_tpl->tpl_vars['METRIC_PERIODE_FIN']->value) {
+echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['METRIC_PERIODE_FIN']->value,'%d/%m/%Y');
+} else { ?>--<?php }?></strong></span></span><span class="gm-date-group gm-dates-fixed" <?php if ($_smarty_tpl->tpl_vars['METRIC_PERIODE_DEBUT']->value != '' || $_smarty_tpl->tpl_vars['METRIC_PERIODE_FIN']->value != '') {?>style="display:none;"<?php }?>><span class="gm-date-item"><i class="fa fa-upload" style="color:#27ae60"></i> Charg. <strong id="gm_val_date_charg"><?php if ($_smarty_tpl->tpl_vars['METRIC_DATE_CHARGEMENT']->value) {
+echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['METRIC_DATE_CHARGEMENT']->value,'%d/%m/%Y');
+} else { ?>--<?php }?></strong></span><span class="gm-date-item"><i class="fa fa-download" style="color:#e74c3c"></i> Livr. <strong id="gm_val_date_livr"><?php if ($_smarty_tpl->tpl_vars['METRIC_DATE_LIVRAISON']->value) {
+echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['METRIC_DATE_LIVRAISON']->value,'%d/%m/%Y');
+} else { ?>--<?php }?></strong></span></span></span></div><div class="gm-separator"></div><div class="gm-section gm-metrics"><div class="gm-metric"><span class="gm-metric-label"><i class="fa fa-road" style="color:#3498db"></i> <span class="gm-label-text" data-full="Distance" data-short="Dist">Distance</span></span><strong class="gm-metric-value" id="gm_val_distance"><?php if ($_smarty_tpl->tpl_vars['METRIC_DISTANCE']->value) {
+echo $_smarty_tpl->tpl_vars['METRIC_DISTANCE']->value;
+} else { ?>--<?php }?></strong><span class="gm-metric-unit">km</span></div><div class="gm-metric"><span class="gm-metric-label"><i class="fa fa-cube" style="color:#9b59b6"></i> Vol. inventaire</span><strong class="gm-metric-value" id="gm_val_vol_inv"><?php if ($_smarty_tpl->tpl_vars['METRIC_VOL_INVENTAIRE']->value) {
+echo $_smarty_tpl->tpl_vars['METRIC_VOL_INVENTAIRE']->value;
+} else { ?>--<?php }?></strong><span class="gm-metric-unit">m&sup3;</span></div><div class="gm-metric"><span class="gm-metric-label"><i class="fa fa-cubes" style="color:#e67e22"></i> Vol. final</span><strong class="gm-metric-value" id="gm_val_vol_final"><?php if ($_smarty_tpl->tpl_vars['METRIC_VOL_FINAL']->value) {
+echo $_smarty_tpl->tpl_vars['METRIC_VOL_FINAL']->value;
+} else { ?>--<?php }?></strong><span class="gm-metric-unit">m&sup3;</span></div></div></div><div class="tab-content unified-tab-content" id="unifiedTabbedView" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
+"><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'details' || empty($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value)) {?>active<?php }?>" id="unified-tab-details"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des details...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'devis') {?>active<?php }?>" id="unified-tab-devis"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des devis...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'map') {?>active<?php }?>" id="unified-tab-map"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de la carte...</p></div></div></div><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'inventaire') {?>active<?php }?>" id="unified-tab-inventaire"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'inventaire...</p></div></div></div><?php if ($_smarty_tpl->tpl_vars['IS_ADMIN']->value) {?><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'odm') {?>active<?php }?>" id="unified-tab-odm"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement des ODM...</p></div></div></div><?php }?><div role="tabpanel" class="tab-pane <?php if ($_smarty_tpl->tpl_vars['ACTIVE_TAB']->value == 'mail') {?>active<?php }?>" id="unified-tab-mail"><div class="tab-loader" data-loaded="false"><div class="loading-indicator"><div class="spinner"></div><p>Chargement de l'historique mail...</p></div></div></div></div></div></div>
 
 <div class="modal fade" id="sendEmailModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -972,6 +987,114 @@ input[type="number"] { -moz-appearance: textfield; }
         font-size: 16px;
     }
 }
+
+/* ============================================
+   GLOBAL METRICS BAR
+   ============================================ */
+.global-metrics-bar {
+    position: fixed;
+    top: 140px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
+    border-bottom: 1px solid #ddd;
+    padding: 6px 26px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.global-metrics-bar .gm-section { display: flex; align-items: center; gap: 8px; }
+.global-metrics-bar .gm-icon { font-size: 13px; }
+.global-metrics-bar .gm-label { font-size: 12px; font-weight: 600; color: #555; }
+.global-metrics-bar .gm-date-mode {
+    font-size: 11px; font-weight: 600; color: #fff; background: #3498db;
+    padding: 2px 10px; border-radius: 12px;
+}
+.global-metrics-bar .gm-date-values { display: flex; gap: 12px; }
+.global-metrics-bar .gm-date-group { display: flex; gap: 12px; }
+.global-metrics-bar .gm-date-item { font-size: 12px; color: #555; white-space: nowrap; }
+.global-metrics-bar .gm-date-item strong { color: #333; margin-left: 2px; }
+.global-metrics-bar .gm-date-item i { margin-right: 2px; }
+
+.global-metrics-bar .gm-separator {
+    width: 1px; height: 28px;
+    background: linear-gradient(to bottom, transparent, #bbb, transparent);
+}
+
+.global-metrics-bar .gm-metrics { display: flex; gap: 12px; }
+.global-metrics-bar .gm-metric {
+    display: flex; align-items: center; gap: 5px;
+    background: #fff; padding: 4px 12px; border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.global-metrics-bar .gm-metric-label { font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; }
+.global-metrics-bar .gm-metric-label i { margin-right: 3px; }
+.global-metrics-bar .gm-metric-value { font-size: 13px; font-weight: 700; color: #333; }
+.global-metrics-bar .gm-metric-unit { font-size: 10px; color: #888; }
+
+/* When metrics bar is visible, push tab content down */
+.unified-tab-content.with-metrics-bar {
+    padding-top: 95px !important;
+}
+
+@media (max-width: 992px) {
+    .global-metrics-bar {
+        flex-wrap: wrap;
+        padding: 8px 15px;
+        gap: 6px;
+    }
+    .global-metrics-bar .gm-separator { display: none; }
+}
+
+@media (max-width: 768px) {
+    /* Prevent zoom on input focus on mobile */
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+
+    .global-metrics-bar {
+        top: 135px !important;
+        padding: 5px 10px !important;
+        gap: 4px !important;
+        font-size: 10px !important;
+    }
+    .global-metrics-bar .gm-label {
+        font-size: 11px !important;
+    }
+    .global-metrics-bar .gm-label-text {
+        font-size: 0 !important;
+    }
+    .global-metrics-bar .gm-label-text:before {
+        content: attr(data-short);
+        font-size: 10px;
+    }
+    .global-metrics-bar .gm-date-mode {
+        font-size: 10px !important;
+        padding: 2px 8px !important;
+    }
+    .global-metrics-bar .gm-date-item {
+        font-size: 10px !important;
+    }
+    .global-metrics-bar .gm-metric {
+        padding: 3px 8px !important;
+        gap: 3px !important;
+    }
+    .global-metrics-bar .gm-metric-label {
+        font-size: 10px !important;
+    }
+    .global-metrics-bar .gm-metric-value {
+        font-size: 11px !important;
+    }
+    .global-metrics-bar .gm-metric-unit {
+        font-size: 9px !important;
+    }
+    .unified-tab-content.with-metrics-bar {
+        padding-top: 100px !important;
+    }
+}
 </style>
 
 <?php echo '<script'; ?>
@@ -990,6 +1113,66 @@ input[type="number"] { -moz-appearance: textfield; }
         }
         UnifiedTabbedView.init(<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
 );
+
+        // Global metrics bar - show/hide based on active tab
+        var metricsBar = jQuery('#globalMetricsBar');
+        var tabContent = jQuery('#unifiedTabbedView');
+        function toggleMetricsBar(tabName) {
+            if (tabName === 'details') {
+                metricsBar.slideUp(200);
+                tabContent.removeClass('with-metrics-bar');
+            } else {
+                metricsBar.slideDown(200);
+                tabContent.addClass('with-metrics-bar');
+            }
+        }
+        // Init on page load
+        var activeTab = jQuery('#unifiedTabNav li.active a').data('tab') || 'details';
+        toggleMetricsBar(activeTab);
+
+        // On tab switch
+        jQuery('#unifiedTabNav').on('shown.bs.tab click', 'a[data-toggle="tab"]', function() {
+            toggleMetricsBar(jQuery(this).data('tab'));
+        });
+
+        // Global function to update metrics bar from any tab
+        window.updateGlobalMetrics = function(field, value) {
+            var formatDate = function(v) {
+                if (!v) return '--';
+                var parts = v.split('-');
+                if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+                return v;
+            };
+            var map = {
+                'cf_961':  { el: '#gm_val_distance', fmt: 'number' },
+                'cf_939':  { el: '#gm_val_vol_inv', fmt: 'number' },
+                'cf_1259': { el: '#gm_val_vol_final', fmt: 'number' },
+                'cf_1043': { el: '#gm_val_date_charg', fmt: 'date' },
+                'cf_1049': { el: '#gm_val_date_livr', fmt: 'date' },
+                'cf_1045': { el: '#gm_val_periode_debut', fmt: 'date' },
+                'cf_1047': { el: '#gm_val_periode_fin', fmt: 'date' }
+            };
+            var m = map[field];
+            if (m) {
+                var display = (value && value !== '' && value !== '0') ? (m.fmt === 'date' ? formatDate(value) : value) : '--';
+                jQuery(m.el).text(display);
+            }
+            // Handle date mode switch (show/hide groups, all elements always in DOM)
+            if (field === 'cf_1043' || field === 'cf_1049' || field === 'cf_1045' || field === 'cf_1047') {
+                var debut = jQuery('#gm_val_periode_debut').text().trim();
+                var fin = jQuery('#gm_val_periode_fin').text().trim();
+                var isPeriod = (debut && debut !== '--') || (fin && fin !== '--');
+                if (isPeriod) {
+                    jQuery('#gm_date_mode').text('Période');
+                    jQuery('.gm-dates-period').show();
+                    jQuery('.gm-dates-fixed').hide();
+                } else {
+                    jQuery('#gm_date_mode').text('Date fixe');
+                    jQuery('.gm-dates-fixed').show();
+                    jQuery('.gm-dates-period').hide();
+                }
+            }
+        };
 
         // Gestion du bouton Envoyer Email
         jQuery('#sendEmailBtn').on('click', function() {

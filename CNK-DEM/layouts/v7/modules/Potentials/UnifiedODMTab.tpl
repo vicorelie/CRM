@@ -116,8 +116,8 @@
         <input type="hidden" name="taxtype" value="individual">
         <input type="hidden" name="hdnSubTotal" id="odm_hdnSubTotal" value="0">
         <input type="hidden" name="hdnGrandTotal" id="odm_hdnGrandTotal" value="0">
-        <input type="hidden" name="hdnDiscountPercent" value="0">
-        <input type="hidden" name="hdnDiscountAmount" value="0">
+        <input type="hidden" name="hdnDiscountPercent" id="odm_hdnDiscountPercent" value="0">
+        <input type="hidden" name="hdnDiscountAmount" id="odm_hdnDiscountAmount" value="0">
         <input type="hidden" name="hdnS_H_Percent" value="0">
         <input type="hidden" name="hdnS_H_Amount" value="0">
         <input type="hidden" name="hdnAdjustment" value="0">
@@ -442,6 +442,31 @@
             </div>
         </div>
 
+        {* Section Remise *}
+        <div class="form-section section-remise">
+            <div class="remise-row">
+                <label class="remise-label"><i class="fa fa-tag"></i> Remise générale</label>
+                <div class="remise-controls">
+                    <label class="remise-option">
+                        <input type="radio" name="odm_remise_type" value="none" checked> Aucune
+                    </label>
+                    <label class="remise-option">
+                        <input type="radio" name="odm_remise_type" value="percent"> % du HT
+                        <input type="number" id="odm_remise_percent" value="0" step="0.01" min="0" max="100" class="remise-input" disabled>
+                        <span class="remise-unit">%</span>
+                    </label>
+                    <label class="remise-option">
+                        <input type="radio" name="odm_remise_type" value="amount"> Montant HT
+                        <input type="number" id="odm_remise_amount" value="0" step="0.01" min="0" class="remise-input" disabled>
+                        <span class="remise-unit">€</span>
+                    </label>
+                </div>
+                <div class="remise-result">
+                    <span>Remise : </span><strong id="odm_remise_display">0.00 € HT</strong>
+                </div>
+            </div>
+        </div>
+
         {* Section Tarification - Totaux après CHARGEMENT/LIVRAISON *}
         <div class="form-section section-tarification">
             <div class="totals-row">
@@ -516,7 +541,7 @@
                         <label>Assurance</label>
                         <select id="odm_cf_1170">
                             <option value="">-- Select --</option>
-                            {for $i=4000 to 26000 step 2000}
+                            {for $i=4000 to 26000 step 1000}
                             <option value="{$i}" {if $i == 4000}selected{/if}>{$i|number_format:0:',':' '} €</option>
                             {/for}
                         </select>
@@ -722,6 +747,68 @@
 
 .odm-tab-container .section-products {
     border-left: 3px solid #28a745;
+}
+
+.odm-tab-container .section-remise {
+    padding: 10px 15px;
+    background: #fef9e7;
+    border: 1px solid #f0e6c0;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+.odm-tab-container .remise-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.odm-tab-container .remise-label {
+    font-weight: 600;
+    color: #7d6608;
+    white-space: nowrap;
+}
+.odm-tab-container .remise-label i {
+    color: #d4ac0d;
+    margin-right: 4px;
+}
+.odm-tab-container .remise-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.odm-tab-container .remise-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.odm-tab-container .remise-input {
+    width: 80px;
+    padding: 4px 6px;
+    border: 1px solid #d5c87a;
+    border-radius: 6px;
+    font-size: 13px;
+    text-align: center;
+}
+.odm-tab-container .remise-input:disabled {
+    background: #f5f0d5;
+    opacity: 0.5;
+}
+.odm-tab-container .remise-unit {
+    font-size: 12px;
+    color: #7d6608;
+}
+.odm-tab-container .remise-result {
+    margin-left: auto;
+    font-size: 14px;
+    color: #e74c3c;
+    white-space: nowrap;
+}
+.odm-tab-container .remise-result strong {
+    font-size: 16px;
 }
 
 .odm-tab-container .section-tarification {
@@ -1324,6 +1411,58 @@
     .odm-tab-container .info-dates-volumes-bar {
         flex-direction: column;
         align-items: flex-start;
+        gap: 6px !important;
+        padding: 8px !important;
+    }
+
+    .odm-tab-container .quotes-bar,
+    .odm-tab-container .odm-bar {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .odm-tab-container .quotes-label,
+    .odm-tab-container .odm-label {
+        font-size: 12px !important;
+    }
+
+    .odm-tab-container .quote-chip,
+    .odm-tab-container .odm-chip {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
+
+    .odm-tab-container .no-quotes-bar,
+    .odm-tab-container .no-bdc-bar {
+        padding: 10px !important;
+        font-size: 12px !important;
+    }
+
+    .odm-tab-container .actions-bar {
+        padding: 10px !important;
+        margin-top: 10px !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .odm-tab-container .actions-bar .btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        flex: 1 1 auto !important;
+        min-width: 120px !important;
+    }
+
+    .odm-tab-container .inline-field label {
+        font-size: 11px !important;
+    }
+
+    .odm-tab-container .inline-field input,
+    .odm-tab-container .inline-field select {
+        font-size: 12px !important;
+        padding: 6px 8px !important;
     }
 }
 

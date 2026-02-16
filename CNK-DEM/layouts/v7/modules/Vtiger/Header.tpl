@@ -57,6 +57,16 @@
             @media print {
             .noprint { display:none; }
 		}
+		/* Prevent zoom on input focus on mobile */
+		@media (max-width: 768px) {
+			body input, body textarea, body select,
+			input[type="text"], input[type="email"], input[type="number"],
+			input[type="tel"], input[type="url"], input[type="search"],
+			input[type="date"], input[type="time"], input[type="datetime-local"],
+			.form-control, .inputElement {
+				font-size: 16px !important;
+			}
+		}
 		</style>
 		<script type="text/javascript">var __pageCreationTime = (new Date()).getTime();</script>
 		<script src="{vresource_url('layouts/v7/lib/jquery/jquery.min.js')}"></script>
@@ -75,6 +85,35 @@
                               'currency' : "{decode_html($USER_CURRENCY_SYMBOL)}", 'currencySymbolPlacement' : "{$CURRENT_USER_MODEL->get('currency_symbol_placement')}",
                           'currencyGroupingPattern' : "{$CURRENT_USER_MODEL->get('currency_grouping_pattern')}", 'truncateTrailingZeros' : "{$CURRENT_USER_MODEL->get('truncate_trailing_zeros')}",'userlabel':"{($CURRENT_USER_MODEL->get('userlabel'))|escape:html}",};
             {/if}
+		</script>
+		<script type="text/javascript">
+		/* Prevent keyboard closing on mobile for search inputs */
+		(function() {
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if (isMobile) {
+				document.addEventListener('DOMContentLoaded', function() {
+					var searchInputsFocused = false;
+					document.addEventListener('focusin', function(e) {
+						if (e.target && e.target.classList && e.target.classList.contains('listSearchContributor')) {
+							searchInputsFocused = true;
+							setTimeout(function() { searchInputsFocused = false; }, 100);
+						}
+					});
+					document.addEventListener('blur', function(e) {
+						if (searchInputsFocused && e.target && e.target.classList && e.target.classList.contains('listSearchContributor')) {
+							e.preventDefault();
+							e.stopPropagation();
+							setTimeout(function() {
+								if (document.activeElement !== e.target) {
+									e.target.focus();
+								}
+							}, 10);
+							return false;
+						}
+					}, true);
+				});
+			}
+		})();
 		</script>
 	</head>
 	 {assign var=CURRENT_USER_MODEL value=Users_Record_Model::getCurrentUserModel()}

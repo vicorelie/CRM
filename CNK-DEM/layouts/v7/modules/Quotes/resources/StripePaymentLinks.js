@@ -80,11 +80,63 @@
 function openStripePaymentsModal(recordId) {
     console.log('Ouverture du modal de gestion Stripe pour le devis', recordId);
 
+    // Injecter CSS responsive une seule fois
+    if (!jQuery('#stripeModalResponsiveCSS').length) {
+        var responsiveCss = `
+        <style id="stripeModalResponsiveCSS">
+            /* Styles communs */
+            #stripePaymentsModal .panel { border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; margin-bottom: 20px; }
+            #stripePaymentsModal .panel-heading { border-radius: 8px 8px 0 0; padding: 15px 20px; }
+            #stripePaymentsModal .panel-info .panel-heading { background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); border: none; }
+            #stripePaymentsModal .panel-default .panel-heading { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; border: none; }
+            #stripePaymentsModal .panel-success .panel-heading { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; }
+            #stripePaymentsModal .panel-title { color: white; font-weight: 600; font-size: 15px; }
+            #stripePaymentsModal .well { border-radius: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+            #stripePaymentsModal .table { margin: 0; }
+            #stripePaymentsModal .table thead { background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%); }
+            #stripePaymentsModal .table thead th { border: none; padding: 12px 15px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #2c3e50 !important; }
+            #stripePaymentsModal .table tbody td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
+            #stripePaymentsModal .table tbody tr:hover { background: #f8f9fa; }
+            #stripePaymentsModal .help-block { color: #6c757d; font-weight: 600; font-size: 13px; margin-top: 8px; white-space: nowrap; }
+            #stripePaymentsModal #newPaymentAmount { min-width: 300px; }
+            #stripePaymentsModal .label { padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 11px; }
+            #stripePaymentsModal .label-warning { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); }
+            #stripePaymentsModal .label-success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+            #stripePaymentsModal .label-danger { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); }
+            #stripePaymentsModal .label-default { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); }
+            #stripePaymentsModal .btn { border-radius: 6px; font-weight: 600; transition: all 0.3s ease; }
+            #stripePaymentsModal .btn-success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; box-shadow: 0 4px 12px rgba(40,167,69,0.3); }
+            #stripePaymentsModal .btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40,167,69,0.4); }
+            #stripePaymentsModal .btn-primary { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 12px rgba(0,123,255,0.3); }
+            #stripePaymentsModal .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,123,255,0.4); }
+            #stripePaymentsModal .form-control { border-radius: 6px; border: 2px solid #e9ecef; padding: 10px 15px; font-size: 14px; transition: all 0.3s ease; }
+            #stripePaymentsModal .form-control:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+            #stripePaymentsModal .form-group { margin-bottom: 20px; }
+            #stripePaymentsModal .form-horizontal .control-label { font-weight: 600; color: #495057; padding-top: 10px; }
+
+            @media (min-width: 768px) {
+                #stripePaymentsModal .modal-dialog { width: 900px !important; }
+            }
+            @media (max-width: 767px) {
+                #stripePaymentsModal .modal-dialog { margin: 0 !important; width: 100% !important; max-width: 100% !important; height: 100vh !important; }
+                #stripePaymentsModal .modal-content { height: 100vh !important; border-radius: 0 !important; border: none !important; display: flex !important; flex-direction: column !important; }
+                #stripePaymentsModal .modal-header { flex-shrink: 0 !important; }
+                #stripePaymentsModal .modal-body { max-height: none !important; flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 15px; }
+                #stripePaymentsModal .modal-footer { flex-shrink: 0 !important; }
+                #stripePaymentsModal .col-md-4, #stripePaymentsModal .col-md-6, #stripePaymentsModal .col-sm-3, #stripePaymentsModal .col-sm-4, #stripePaymentsModal .col-sm-6, #stripePaymentsModal .col-sm-9 { width: 100% !important; margin-bottom: 10px; }
+                #stripePaymentsModal .panel-body { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+                #stripePaymentsModal table { min-width: 800px !important; white-space: nowrap !important; }
+                #stripePaymentsModal .form-horizontal .control-label { text-align: left; }
+            }
+        </style>`;
+        jQuery('head').append(responsiveCss);
+    }
+
     // Créer le HTML du modal s'il n'existe pas
     if (jQuery('#stripePaymentsModal').length === 0) {
         var modalHtml = `
         <div class="modal fade" id="stripePaymentsModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg" role="document" style="width: 900px;">
+            <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header" style="background: #2c3e50; color: white;">
                         <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 1;">

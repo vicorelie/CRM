@@ -125,6 +125,25 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('MODULE_MODEL', $moduleModel);
 		$viewer->assign('VIEW', 'Detail');
 
+		// Get contact firstname/lastname
+		$contactFirstname = '';
+		$contactLastname = '';
+		$contactOtherphone = '';
+		$contactId = $recordModel->get('contact_id');
+		if (!empty($contactId)) {
+			try {
+				$contactModel = Vtiger_Record_Model::getInstanceById($contactId, 'Contacts');
+				if ($contactModel) {
+					$contactFirstname = decode_html($contactModel->get('firstname') ?: '');
+					$contactLastname = decode_html($contactModel->get('lastname') ?: '');
+					$contactOtherphone = decode_html($contactModel->get('otherphone') ?: '');
+				}
+			} catch (Exception $e) {}
+		}
+		$viewer->assign('CONTACT_FIRSTNAME', $contactFirstname);
+		$viewer->assign('CONTACT_LASTNAME', $contactLastname);
+		$viewer->assign('CONTACT_OTHERPHONE', $contactOtherphone);
+
 		// Use the new styled template matching Devis tab design
 		return $viewer->view('UnifiedDetailsTab.tpl', $moduleName, true);
 	}
@@ -552,6 +571,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				'cf_1162' => $quoteModel->get('cf_1162'), // Validé
 				// Prestataire
 				'prestataire' => $quoteModel->get('prestataire'), // Vendor/Prestataire
+				// Remise globale
+				'discount_percent' => $quoteModel->get('hdnDiscountPercent'),
+				'discount_amount' => $quoteModel->get('hdnDiscountAmount'),
 			];
 
 			// Get products from inventory with percentages
@@ -679,6 +701,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				'cf_1336' => $soModel->get('cf_1336'), // Monte meuble livraison
 				// Type de déménagement
 				'cf_1352' => $soModel->get('cf_1352'), // Type de déménagement
+				// Remise globale
+				'discount_percent' => $soModel->get('hdnDiscountPercent'),
+				'discount_amount' => $soModel->get('hdnDiscountAmount'),
 			];
 
 			// Get prestataire (vendor) email for PDF sending

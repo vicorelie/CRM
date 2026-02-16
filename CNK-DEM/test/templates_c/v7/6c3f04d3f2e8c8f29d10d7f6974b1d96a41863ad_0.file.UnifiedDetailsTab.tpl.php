@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-10 23:22:50
+/* Smarty version 4.5.5, created on 2026-02-16 12:32:00
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698ba1aae55b48_65348799',
+  'unifunc' => 'content_6992f2204d9641_50444933',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6c3f04d3f2e8c8f29d10d7f6974b1d96a41863ad' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl',
-      1 => 1770720358,
+      1 => 1771190448,
       2 => 'file',
     ),
   ),
@@ -20,11 +20,12 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698ba1aae55b48_65348799 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6992f2204d9641_50444933 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.date_format.php','function'=>'smarty_modifier_date_format',),1=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="details-tab-container" id="detailsTabContainer" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
 " data-module="<?php echo $_smarty_tpl->tpl_vars['MODULE_NAME']->value;?>
+" data-contact-id="<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->get('contact_id');?>
 "><?php $_smarty_tpl->_assignInScope('SIDE_BY_SIDE_BLOCKS', array('CHARGEMENT','DESTINATION'));
 $_smarty_tpl->_assignInScope('DATE_UNIQUE_CHARGEMENT', '');
 $_smarty_tpl->_assignInScope('DATE_UNIQUE_LIVRAISON', '');
@@ -62,6 +63,33 @@ $_smarty_tpl->_assignInScope('VOLUME_ESTIME_VALUE', $_smarty_tpl->tpl_vars['FM']
 if ($_smarty_tpl->tpl_vars['FN']->value == 'cf_1259') {
 $_smarty_tpl->_assignInScope('VOLUME_FINAL_VALUE', $_smarty_tpl->tpl_vars['FM']->value->get('fieldvalue'));
 }
+if ($_smarty_tpl->tpl_vars['FN']->value == 'cf_981') {
+$_smarty_tpl->_assignInScope('FM_MOBILE', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'cf_1123') {
+$_smarty_tpl->_assignInScope('FM_MAIL', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'cf_1259') {
+$_smarty_tpl->_assignInScope('FM_VOL_FINAL', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'cf_971') {
+$_smarty_tpl->_assignInScope('FM_STATUT', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'cf_1164') {
+$_smarty_tpl->_assignInScope('FM_VALIDATION', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'createdtime') {
+$_smarty_tpl->_assignInScope('FM_CREATEDTIME', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'potential_no') {
+$_smarty_tpl->_assignInScope('FM_POTENTIAL_NO', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'potentialname') {
+$_smarty_tpl->_assignInScope('FM_POTENTIALNAME', $_smarty_tpl->tpl_vars['FM']->value);
+}
+if ($_smarty_tpl->tpl_vars['FN']->value == 'assigned_user_id') {
+$_smarty_tpl->_assignInScope('FM_ASSIGNED', $_smarty_tpl->tpl_vars['FM']->value);
+}
 }
 $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);
 }
@@ -73,11 +101,11 @@ echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['DATE_UNIQUE_LIVRAISON']
 echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['PERIODE_DEBUT']->value,'%Y-%m-%d');
 }?>"></div><div class="date-field-item"><span class="date-field-label"><i class="fa fa-calendar-times-o" style="color:#9b59b6"></i> Au</span><input type="date" class="date-input-compact" id="date_periode_fin" value="<?php if ($_smarty_tpl->tpl_vars['PERIODE_FIN']->value) {
 echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['PERIODE_FIN']->value,'%Y-%m-%d');
-}?>"></div></div><div class="metrics-separator"></div><div class="key-metrics-compact"><div class="metric-item"><span class="metric-label"><i class="fa fa-road" style="color:#3498db"></i> Distance</span><span class="metric-value" id="metric_distance"><?php if ($_smarty_tpl->tpl_vars['DISTANCE_VALUE']->value) {
+}?>"></div></div><div class="metrics-separator"></div><div class="key-metrics-compact"><div class="metric-item"><span class="metric-label"><i class="fa fa-road" style="color:#3498db"></i> Dist</span><span class="metric-value" id="metric_distance"><?php if ($_smarty_tpl->tpl_vars['DISTANCE_VALUE']->value) {
 echo $_smarty_tpl->tpl_vars['DISTANCE_VALUE']->value;
-} else { ?>--<?php }?></span><span class="metric-unit">km</span></div><div class="metric-item"><span class="metric-label"><i class="fa fa-cube" style="color:#9b59b6"></i> Vol. inventaire</span><span class="metric-value" id="metric_volume_estime"><?php if ($_smarty_tpl->tpl_vars['VOLUME_ESTIME_VALUE']->value) {
+} else { ?>--<?php }?></span><span class="metric-unit">km</span></div><div class="metric-item"><span class="metric-label"><i class="fa fa-cube" style="color:#9b59b6"></i> Vol inv</span><span class="metric-value" id="metric_volume_estime"><?php if ($_smarty_tpl->tpl_vars['VOLUME_ESTIME_VALUE']->value) {
 echo $_smarty_tpl->tpl_vars['VOLUME_ESTIME_VALUE']->value;
-} else { ?>--<?php }?></span><span class="metric-unit">m³</span></div><div class="metric-item"><span class="metric-label"><i class="fa fa-cubes" style="color:#e67e22"></i> Vol. final</span><span class="metric-value" id="metric_volume_final"><?php if ($_smarty_tpl->tpl_vars['VOLUME_FINAL_VALUE']->value) {
+} else { ?>--<?php }?></span><span class="metric-unit">m³</span></div><div class="metric-item"><span class="metric-label"><i class="fa fa-cubes" style="color:#e67e22"></i> Vol fin</span><span class="metric-value" id="metric_volume_final"><?php if ($_smarty_tpl->tpl_vars['VOLUME_FINAL_VALUE']->value) {
 echo $_smarty_tpl->tpl_vars['VOLUME_FINAL_VALUE']->value;
 } else { ?>--<?php }?></span><span class="metric-unit">m³</span></div></div><input type="hidden" class="unified-field-input" name="cf_1043" id="hidden_cf_1043" data-fieldname="cf_1043" data-fieldtype="date" value="<?php if ($_smarty_tpl->tpl_vars['DATE_UNIQUE_CHARGEMENT']->value) {
 echo smarty_modifier_date_format($_smarty_tpl->tpl_vars['DATE_UNIQUE_CHARGEMENT']->value,'%Y-%m-%d');
@@ -209,7 +237,60 @@ $_smarty_tpl->_assignInScope('BLOCK', '');
 }
 if ($_smarty_tpl->tpl_vars['BLOCK']->value != null && smarty_modifier_count($_smarty_tpl->tpl_vars['FIELD_MODEL_LIST']->value) > 0) {?><div class="form-section section-info" data-block="<?php echo $_smarty_tpl->tpl_vars['BLOCK_LABEL_KEY']->value;?>
 "><div class="form-section-title title-purple"><i class="fa fa-briefcase"></i><?php echo vtranslate($_smarty_tpl->tpl_vars['BLOCK_LABEL_KEY']->value,$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
-</div><div class="form-fields-grid"><?php
+</div><div class="form-fields-grid"><div class="form-group"><label>Nom</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_lastname" data-contact-field="lastname" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_LASTNAME']->value, ENT_QUOTES, 'UTF-8', true);?>
+"></div><div class="form-group"><label>Prénom</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_firstname" data-contact-field="firstname" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_FIRSTNAME']->value, ENT_QUOTES, 'UTF-8', true);?>
+"></div><?php if ((isset($_smarty_tpl->tpl_vars['FM_MOBILE']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_MOBILE']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</label><input type="text" class="unified-field-input" name="cf_981" data-fieldname="cf_981" data-fieldtype="phone" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_MOBILE']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+"></div><?php }?><div class="form-group"><label>Mobile sup</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_otherphone" data-contact-field="otherphone" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_OTHERPHONE']->value, ENT_QUOTES, 'UTF-8', true);?>
+"></div><?php if ((isset($_smarty_tpl->tpl_vars['FM_MAIL']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_MAIL']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</label><input type="text" class="unified-field-input" name="cf_1123" data-fieldname="cf_1123" data-fieldtype="email" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_MAIL']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+"></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</label><input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+"></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_STATUT']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_STATUT']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</label><select class="unified-field-input" name="cf_971" data-fieldname="cf_971" data-fieldtype="picklist"><option value="">--</option><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['FM_STATUT']->value->getPicklistValues(), 'PV');
+$_smarty_tpl->tpl_vars['PV']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['PV']->value) {
+$_smarty_tpl->tpl_vars['PV']->do_else = false;
+?><option value="<?php echo $_smarty_tpl->tpl_vars['PV']->value;?>
+" <?php if ($_smarty_tpl->tpl_vars['FM_STATUT']->value->get('fieldvalue') == $_smarty_tpl->tpl_vars['PV']->value) {?>selected<?php }?>><?php echo vtranslate($_smarty_tpl->tpl_vars['PV']->value,$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</option><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></select></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_VALIDATION']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_VALIDATION']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</label><select class="unified-field-input" name="cf_1164" data-fieldname="cf_1164" data-fieldtype="boolean"><option value="1" <?php if ($_smarty_tpl->tpl_vars['FM_VALIDATION']->value->get('fieldvalue') == '1' || $_smarty_tpl->tpl_vars['FM_VALIDATION']->value->get('fieldvalue') == 'on') {?>selected<?php }?>>Oui</option><option value="0" <?php if ($_smarty_tpl->tpl_vars['FM_VALIDATION']->value->get('fieldvalue') == '0' || $_smarty_tpl->tpl_vars['FM_VALIDATION']->value->get('fieldvalue') == '' || $_smarty_tpl->tpl_vars['FM_VALIDATION']->value->get('fieldvalue') == 'off') {?>selected<?php }?>>Non</option></select></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_CREATEDTIME']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_CREATEDTIME']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
+</label><div class="field-value field-readonly"><?php echo $_smarty_tpl->tpl_vars['FM_CREATEDTIME']->value->get('fieldvalue');?>
+</div></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_POTENTIAL_NO']->value))) {?><div class="form-group"><label>Affaire N°</label><div class="field-value field-readonly"><?php echo $_smarty_tpl->tpl_vars['FM_POTENTIAL_NO']->value->get('fieldvalue');?>
+</div></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_POTENTIALNAME']->value))) {?><div class="form-group"><label>Nom de l'affaire</label><input type="text" class="unified-field-input" name="potentialname" data-fieldname="potentialname" data-fieldtype="string" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_POTENTIALNAME']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+"></div><?php }
+if ((isset($_smarty_tpl->tpl_vars['FM_ASSIGNED']->value))) {?><div class="form-group"><label>Assigné à</label><?php $_smarty_tpl->_assignInScope('ASSIGNED_INFO', $_smarty_tpl->tpl_vars['FM_ASSIGNED']->value->getFieldInfo());
+$_smarty_tpl->_assignInScope('ASSIGNED_USERS', $_smarty_tpl->tpl_vars['ASSIGNED_INFO']->value['picklistvalues'][vtranslate('LBL_USERS')]);
+$_smarty_tpl->_assignInScope('ASSIGNED_GROUPS', $_smarty_tpl->tpl_vars['ASSIGNED_INFO']->value['picklistvalues'][vtranslate('LBL_GROUPS')]);?><select class="unified-field-input" name="assigned_user_id" data-fieldname="assigned_user_id" data-fieldtype="owner"><optgroup label="<?php echo vtranslate('LBL_USERS');?>
+"><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['ASSIGNED_USERS']->value, 'ONAME', false, 'OID');
+$_smarty_tpl->tpl_vars['ONAME']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['OID']->value => $_smarty_tpl->tpl_vars['ONAME']->value) {
+$_smarty_tpl->tpl_vars['ONAME']->do_else = false;
+?><option value="<?php echo $_smarty_tpl->tpl_vars['OID']->value;?>
+" <?php if ($_smarty_tpl->tpl_vars['FM_ASSIGNED']->value->get('fieldvalue') == $_smarty_tpl->tpl_vars['OID']->value) {?>selected<?php }?>><?php echo $_smarty_tpl->tpl_vars['ONAME']->value;?>
+</option><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></optgroup><?php if (smarty_modifier_count($_smarty_tpl->tpl_vars['ASSIGNED_GROUPS']->value) > 0) {?><optgroup label="<?php echo vtranslate('LBL_GROUPS');?>
+"><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['ASSIGNED_GROUPS']->value, 'ONAME', false, 'OID');
+$_smarty_tpl->tpl_vars['ONAME']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['OID']->value => $_smarty_tpl->tpl_vars['ONAME']->value) {
+$_smarty_tpl->tpl_vars['ONAME']->do_else = false;
+?><option value="<?php echo $_smarty_tpl->tpl_vars['OID']->value;?>
+" <?php if ($_smarty_tpl->tpl_vars['FM_ASSIGNED']->value->get('fieldvalue') == $_smarty_tpl->tpl_vars['OID']->value) {?>selected<?php }?>><?php echo $_smarty_tpl->tpl_vars['ONAME']->value;?>
+</option><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></optgroup><?php }?></select></div><?php }
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['FIELD_MODEL_LIST']->value, 'FIELD_MODEL', false, 'FIELD_NAME');
 $_smarty_tpl->tpl_vars['FIELD_MODEL']->do_else = true;
 if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['FIELD_NAME']->value => $_smarty_tpl->tpl_vars['FIELD_MODEL']->value) {
@@ -217,7 +298,7 @@ $_smarty_tpl->tpl_vars['FIELD_MODEL']->do_else = false;
 if (!$_smarty_tpl->tpl_vars['FIELD_MODEL']->value->isViewableInDetailView()) {
 continue 1;
 }
-if ($_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1043' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1049' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1045' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1047' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_939' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_961') {
+if ($_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1043' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1049' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1045' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1047' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_939' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_961' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_981' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1123' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1259' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_971' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'cf_1164' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'createdtime' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'potential_no' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'potentialname' || $_smarty_tpl->tpl_vars['FIELD_NAME']->value == 'assigned_user_id') {
 continue 1;
 }
 $_smarty_tpl->_assignInScope('fieldDataType', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldDataType());
@@ -1013,25 +1094,93 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div>
     }
 
     .details-tab-container .date-selector-compact {
+        flex-direction: row;
+        align-items: center;
+        gap: 5px !important;
+        padding: 5px !important;
         flex-wrap: wrap;
+        margin-bottom: 8px !important;
     }
 
-    .details-tab-container .date-fields-compact {
-        width: 100%;
-        margin-top: 10px;
+    .details-tab-container .date-selector-label {
+        justify-content: flex-start;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+    .details-tab-container .date-mode-toggle-compact {
+        flex: 1;
+        justify-content: flex-end;
+        min-width: 200px;
+    }
+
+    .details-tab-container .date-mode-btn {
+        flex: 1;
+        text-align: center;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+    }
+
+    .details-tab-container .date-unique-container,
+    .details-tab-container .date-period-container {
+        width: 100% !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .details-tab-container .date-field-item {
+        width: calc(50% - 3px) !important;
+        justify-content: space-between;
+        flex-shrink: 0 !important;
+    }
+
+    .details-tab-container .date-field-label {
+        font-size: 12px;
+    }
+
+    .details-tab-container .date-input-compact {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+        font-size: 13px;
+        padding: 6px 8px;
     }
 
     .details-tab-container .key-metrics-compact {
-        width: 100%;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .details-tab-container .metrics-separator {
+        display: none !important;
     }
 
     .details-tab-container .metric-item {
-        flex: 1;
-        min-width: 90px;
-        justify-content: center;
+        width: calc(33.33% - 4px) !important;
+        justify-content: space-between;
+        padding: 3px 6px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .details-tab-container .metric-label {
+        font-size: 10px;
+    }
+
+    .details-tab-container .metric-value {
+        font-size: 14px;
+        min-width: 50px;
+    }
+
+    .details-tab-container .metric-unit {
+        font-size: 12px;
+    }
+
+    .details-tab-container .metrics-separator {
+        display: none;
     }
 }
 
@@ -1232,6 +1381,7 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div>
 var UnifiedDetails = {
     recordId: null,
     moduleName: null,
+    contactId: null,
 
     // Configuration for postal code / city pairs
     postalCityPairs: [
@@ -1259,7 +1409,8 @@ var UnifiedDetails = {
         var container = jQuery('#detailsTabContainer');
         this.recordId = container.data('record-id');
         this.moduleName = container.data('module');
-        console.log('[UnifiedDetails] Initialized for record', this.recordId);
+        this.contactId = container.data('contact-id');
+        console.log('[UnifiedDetails] Initialized for record', this.recordId, 'contact', this.contactId);
 
         // Initialize date selector
         this.initDateSelector();
@@ -1276,18 +1427,69 @@ var UnifiedDetails = {
         var self = this;
         var saveTimeout = {};
 
-        // Auto-save on change for select, checkbox, date inputs
-        jQuery('#detailsTabContainer').on('change', '.unified-field-input', function() {
+        // Auto-save on change for select, checkbox, date inputs (exclude contact-sync fields)
+        jQuery('#detailsTabContainer').on('change', '.unified-field-input:not(.contact-sync-field)', function() {
             var field = jQuery(this);
             var fieldName = field.data('fieldname') || field.attr('name');
             self.saveField(fieldName, field.val());
         });
 
-        // Auto-save on blur for text inputs and textareas (with debounce)
-        jQuery('#detailsTabContainer').on('blur', 'input.unified-field-input[type="text"], textarea.unified-field-input', function() {
+        // Auto-save on input for text inputs and textareas (debounced 500ms, exclude contact-sync fields)
+        jQuery('#detailsTabContainer').on('input', 'input.unified-field-input[type="text"]:not(.contact-sync-field), textarea.unified-field-input', function() {
             var field = jQuery(this);
             var fieldName = field.data('fieldname') || field.attr('name');
-            self.saveField(fieldName, field.val());
+            if (saveTimeout[fieldName]) clearTimeout(saveTimeout[fieldName]);
+            saveTimeout[fieldName] = setTimeout(function() {
+                self.saveField(fieldName, field.val());
+            }, 500);
+        });
+
+        // Auto-save contact sync fields (Nom/Prénom) on input (debounced 500ms)
+        jQuery('#detailsTabContainer').on('input', '.contact-sync-field', function() {
+            var field = jQuery(this);
+            var key = 'contact_' + field.data('contact-field');
+            if (saveTimeout[key]) clearTimeout(saveTimeout[key]);
+            saveTimeout[key] = setTimeout(function() {
+                field.trigger('_contactSave');
+            }, 500);
+        });
+
+        // Contact sync save handler
+        jQuery('#detailsTabContainer').on('_contactSave', '.contact-sync-field', function() {
+            var field = jQuery(this);
+            var contactField = field.data('contact-field');
+            var fieldValue = field.val();
+            if (!self.contactId || !contactField) return;
+
+            field.addClass('field-saving');
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Contacts',
+                    action: 'SaveAjax',
+                    record: self.contactId,
+                    field: contactField,
+                    value: fieldValue
+                },
+                success: function() {
+                    field.removeClass('field-saving').addClass('field-saved');
+                    setTimeout(function() { field.removeClass('field-saved'); }, 1500);
+                    // Update header name and potentialname
+                    var firstname = jQuery('.contact-sync-field[data-contact-field="firstname"]').val() || '';
+                    var lastname = jQuery('.contact-sync-field[data-contact-field="lastname"]').val() || '';
+                    var fullName = (firstname + ' ' + lastname).trim();
+                    jQuery('.unified-header-left h1').html('<i class="fa fa-user-circle"></i> ' + fullName);
+                    // Sync potentialname with contact name
+                    if (fullName) {
+                        self.saveField('potentialname', fullName);
+                    }
+                },
+                error: function() {
+                    field.removeClass('field-saving').addClass('field-error');
+                    setTimeout(function() { field.removeClass('field-error'); }, 3000);
+                }
+            });
         });
 
         console.log('[UnifiedDetails] Auto-save initialized');
@@ -1326,6 +1528,62 @@ var UnifiedDetails = {
                     field.removeClass('field-saved');
                 }, 1500);
                 console.log('[UnifiedDetails] Field saved successfully:', fieldName);
+
+                // Update global metrics bar + local metrics display
+                if (typeof window.updateGlobalMetrics === 'function') {
+                    window.updateGlobalMetrics(fieldName, fieldValue);
+                }
+                var localMetricMap = { 'cf_961': '#metric_distance', 'cf_939': '#metric_volume_estime', 'cf_1259': '#metric_volume_final' };
+                if (localMetricMap[fieldName]) {
+                    jQuery(localMetricMap[fieldName]).text(fieldValue || '--');
+                }
+
+                // Open rappel popup when status changes to "A Rappeler"
+                if (fieldName === 'cf_971' && fieldValue === 'A Rappeler') {
+                    setTimeout(function() {
+                        var recordName = jQuery('.unified-header-left h1').text().trim() || 'Cette affaire';
+                        var userId = 1;
+                        try { if (typeof app !== 'undefined' && app.getUserId) userId = app.getUserId(); } catch(e) { }
+                        var popupUrl = window.location.protocol + '//' + window.location.host + '/rappel_popup.php?module=Potentials&record_id=' + self.recordId + '&record_name=' + encodeURIComponent(recordName) + '&user_id=' + userId;
+                        var newTab = window.open(popupUrl, '_blank');
+                        if (newTab) newTab.focus();
+                    }, 500);
+                }
+
+                // Sync email/mobile to Contact record and update header
+                var contactFieldMap = { 'cf_1123': 'email', 'cf_981': 'mobile' };
+                if (contactFieldMap[fieldName]) {
+                    // Update header display
+                    if (fieldName === 'cf_1123') {
+                        var headerEmail = jQuery('#header-contact-email');
+                        headerEmail.find('span').text(fieldValue);
+                        headerEmail.toggle(!!fieldValue);
+                    } else if (fieldName === 'cf_981') {
+                        var headerPhone = jQuery('#header-contact-phone');
+                        headerPhone.find('span').text(fieldValue);
+                        headerPhone.toggle(!!fieldValue);
+                    }
+                    // Sync to Contact
+                    if (self.contactId) {
+                        jQuery.ajax({
+                            url: 'index.php',
+                            type: 'POST',
+                            data: {
+                                module: 'Contacts',
+                                action: 'SaveAjax',
+                                record: self.contactId,
+                                field: contactFieldMap[fieldName],
+                                value: fieldValue
+                            },
+                            success: function() {
+                                console.log('[UnifiedDetails] Contact field synced:', contactFieldMap[fieldName]);
+                            },
+                            error: function() {
+                                console.error('[UnifiedDetails] Error syncing contact field:', contactFieldMap[fieldName]);
+                            }
+                        });
+                    }
+                }
             },
             error: function(xhr, status, error) {
                 field.removeClass('field-saving').addClass('field-error');
@@ -1524,11 +1782,15 @@ var UnifiedDetails = {
             var cityInput = container.find('input[name="' + pair.city + '"], input[data-fieldname="' + pair.city + '"]');
 
             if (postalInput.length && cityInput.length) {
-                // Postal code change -> fetch city
-                postalInput.on('change blur', function() {
+                // Postal code -> fetch city (on input for instant feedback + blur as fallback)
+                var cityLookupTimeout;
+                postalInput.on('input change blur', function() {
                     var postalCode = jQuery(this).val().trim();
                     if (postalCode.length === 5) {
-                        self.fetchCityFromPostalCode(postalCode, cityInput, postalInput);
+                        clearTimeout(cityLookupTimeout);
+                        cityLookupTimeout = setTimeout(function() {
+                            self.fetchCityFromPostalCode(postalCode, cityInput, postalInput);
+                        }, 300);
                     }
                 });
 
@@ -1541,6 +1803,7 @@ var UnifiedDetails = {
     },
 
     fetchCityFromPostalCode: function(postalCode, cityInput, postalInput) {
+        var self = this;
         postalInput.css('background-color', '#fffde7');
 
         jQuery.ajax({
@@ -1555,6 +1818,11 @@ var UnifiedDetails = {
                 if (data.features && data.features.length > 0) {
                     var city = data.features[0].properties.city;
                     cityInput.val(city);
+                    // Save city field directly
+                    var cityFieldName = cityInput.data('fieldname') || cityInput.attr('name');
+                    if (cityFieldName) {
+                        self.saveField(cityFieldName, city);
+                    }
                     postalInput.css('background-color', '#e8f5e9');
                     setTimeout(function() {
                         postalInput.css('background-color', '');
@@ -1625,6 +1893,11 @@ var UnifiedDetails = {
                             cityInput.val(city);
                             postalInput.val(postcode);
                             jQuery('#' + dropdownId).remove();
+                            // Save both fields directly
+                            var cityName = cityInput.data('fieldname') || cityInput.attr('name');
+                            var postalName = postalInput.data('fieldname') || postalInput.attr('name');
+                            if (cityName) UnifiedDetails.saveField(cityName, city);
+                            if (postalName) UnifiedDetails.saveField(postalName, postcode);
                         });
                     dropdown.append(item);
                 });
@@ -1724,6 +1997,17 @@ var UnifiedDetails = {
                             if (postalInput.length) postalInput.val(postcode);
                             if (cityInput.length) cityInput.val(city);
                             jQuery('#' + dropdownId).remove();
+                            // Save all three fields directly
+                            var addrName = addressInput.data('fieldname') || addressInput.attr('name');
+                            if (addrName) UnifiedDetails.saveField(addrName, streetAddress);
+                            if (postalInput.length) {
+                                var postalName = postalInput.data('fieldname') || postalInput.attr('name');
+                                if (postalName) UnifiedDetails.saveField(postalName, postcode);
+                            }
+                            if (cityInput.length) {
+                                var cityName = cityInput.data('fieldname') || cityInput.attr('name');
+                                if (cityName) UnifiedDetails.saveField(cityName, city);
+                            }
                         });
                     dropdown.append(item);
                 });

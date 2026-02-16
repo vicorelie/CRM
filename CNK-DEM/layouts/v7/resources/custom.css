@@ -448,4 +448,33 @@ input[type="checkbox"]::after {
     display: none !important;
 }
 
-
+/* ========================================
+   MOBILE - Prevent zoom on input focus
+   ======================================== */
+@media (max-width: 768px) {
+    /* Override all input font-sizes to prevent mobile zoom */
+    body input,
+    body textarea,
+    body select,
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"],
+    input[type="datetime-local"],
+    input[type="password"],
+    .form-control,
+    .inputElement,
+    #EditView input[type="text"],
+    #EditView input[type="email"],
+    #EditView input[type="password"],
+    #EditView input[type="number"],
+    #EditView .form-control,
+    .listViewEntries input,
+    .listSearchContributor input {
+        font-size: 16px !important;
+    }
+}

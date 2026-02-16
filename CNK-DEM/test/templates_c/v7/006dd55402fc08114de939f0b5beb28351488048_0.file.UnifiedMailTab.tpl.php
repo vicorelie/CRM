@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-11 01:57:11
+/* Smarty version 4.5.5, created on 2026-02-16 12:32:02
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedMailTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698bc5d7ca14f9_05132399',
+  'unifunc' => 'content_6992f222b0ad91_08414708',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '006dd55402fc08114de939f0b5beb28351488048' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedMailTab.tpl',
-      1 => 1770767816,
+      1 => 1771193861,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698bc5d7ca14f9_05132399 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6992f222b0ad91_08414708 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="mail-tab-container" id="mailTabContainer" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD_ID']->value;?>
@@ -601,10 +601,72 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div></div><?ph
 .view-att-chip .fa { font-size: 12px; }
 
 @media (max-width: 768px) {
+    /* Mail Tab */
     .mail-toolbar { flex-direction: column; gap: 10px; align-items: stretch; }
     .btn-send-email-main { width: 100%; text-align: center; }
     .email-row .er-main { flex-direction: column; align-items: flex-start; gap: 2px; }
     .email-row .er-to { max-width: 100%; }
+
+    /* Mail Quotes Bar */
+    .mail-quotes-bar { flex-direction: column; gap: 8px; }
+    .mail-quotes-chips { overflow-x: auto; }
+
+    /* Send Email Modal */
+    #sendEmailModal.modal {
+        padding: 0 !important;
+    }
+    #sendEmailModal .modal-dialog {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        max-height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    #sendEmailModal .modal-content {
+        max-height: 100vh;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #sendEmailModal .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 15px;
+    }
+    #sendEmailModal .send-fields-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    #sendEmailModal .send-field label {
+        font-size: 13px;
+    }
+    #sendEmailModal .modal-footer {
+        padding: 10px 15px;
+        gap: 8px;
+    }
+    #sendEmailModal .btn-cancel-send,
+    #sendEmailModal .btn-confirm-send {
+        flex: 1;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    /* View Email Modal */
+    #viewEmailModal .modal-dialog {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        height: 100vh;
+    }
+    #viewEmailModal .modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+    #viewEmailModal .email-view-body iframe {
+        height: calc(100vh - 200px);
+    }
 }
 </style>
 

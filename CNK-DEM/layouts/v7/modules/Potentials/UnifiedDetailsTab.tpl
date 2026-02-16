@@ -3,7 +3,7 @@
 * Uses common design system from UnifiedTabbedView.tpl
 ************************************************************************************}
 {strip}
-<div class="details-tab-container" id="detailsTabContainer" data-record-id="{$RECORD->getId()}" data-module="{$MODULE_NAME}">
+<div class="details-tab-container" id="detailsTabContainer" data-record-id="{$RECORD->getId()}" data-module="{$MODULE_NAME}" data-contact-id="{$RECORD->get('contact_id')}">
 
     {* Define the side-by-side address blocks *}
     {assign var=SIDE_BY_SIDE_BLOCKS value=['CHARGEMENT', 'DESTINATION']}
@@ -28,6 +28,15 @@
             {if $FN eq 'cf_961'}{assign var=DISTANCE_VALUE value=$FM->get('fieldvalue')}{/if}
             {if $FN eq 'cf_939'}{assign var=VOLUME_ESTIME_VALUE value=$FM->get('fieldvalue')}{/if}
             {if $FN eq 'cf_1259'}{assign var=VOLUME_FINAL_VALUE value=$FM->get('fieldvalue')}{/if}
+            {if $FN eq 'cf_981'}{assign var=FM_MOBILE value=$FM}{/if}
+            {if $FN eq 'cf_1123'}{assign var=FM_MAIL value=$FM}{/if}
+            {if $FN eq 'cf_1259'}{assign var=FM_VOL_FINAL value=$FM}{/if}
+            {if $FN eq 'cf_971'}{assign var=FM_STATUT value=$FM}{/if}
+            {if $FN eq 'cf_1164'}{assign var=FM_VALIDATION value=$FM}{/if}
+            {if $FN eq 'createdtime'}{assign var=FM_CREATEDTIME value=$FM}{/if}
+            {if $FN eq 'potential_no'}{assign var=FM_POTENTIAL_NO value=$FM}{/if}
+            {if $FN eq 'potentialname'}{assign var=FM_POTENTIALNAME value=$FM}{/if}
+            {if $FN eq 'assigned_user_id'}{assign var=FM_ASSIGNED value=$FM}{/if}
         {/foreach}
     {/foreach}
 
@@ -69,17 +78,17 @@
         <div class="metrics-separator"></div>
         <div class="key-metrics-compact">
             <div class="metric-item">
-                <span class="metric-label"><i class="fa fa-road" style="color:#3498db"></i> Distance</span>
+                <span class="metric-label"><i class="fa fa-road" style="color:#3498db"></i> Dist</span>
                 <span class="metric-value" id="metric_distance">{if $DISTANCE_VALUE}{$DISTANCE_VALUE}{else}--{/if}</span>
                 <span class="metric-unit">km</span>
             </div>
             <div class="metric-item">
-                <span class="metric-label"><i class="fa fa-cube" style="color:#9b59b6"></i> Vol. inventaire</span>
+                <span class="metric-label"><i class="fa fa-cube" style="color:#9b59b6"></i> Vol inv</span>
                 <span class="metric-value" id="metric_volume_estime">{if $VOLUME_ESTIME_VALUE}{$VOLUME_ESTIME_VALUE}{else}--{/if}</span>
                 <span class="metric-unit">m³</span>
             </div>
             <div class="metric-item">
-                <span class="metric-label"><i class="fa fa-cubes" style="color:#e67e22"></i> Vol. final</span>
+                <span class="metric-label"><i class="fa fa-cubes" style="color:#e67e22"></i> Vol fin</span>
                 <span class="metric-value" id="metric_volume_final">{if $VOLUME_FINAL_VALUE}{$VOLUME_FINAL_VALUE}{else}--{/if}</span>
                 <span class="metric-unit">m³</span>
             </div>
@@ -259,6 +268,103 @@
                     </div>
 
                     <div class="form-fields-grid">
+                        {* Row 1: Nom, Prénom, Mobile, Mobile sup *}
+                        <div class="form-group">
+                            <label>Nom</label>
+                            <input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_lastname" data-contact-field="lastname" value="{$CONTACT_LASTNAME|escape:'html'}">
+                        </div>
+                        <div class="form-group">
+                            <label>Prénom</label>
+                            <input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_firstname" data-contact-field="firstname" value="{$CONTACT_FIRSTNAME|escape:'html'}">
+                        </div>
+                        {if isset($FM_MOBILE)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_MOBILE->get('label'), $MODULE_NAME)}</label>
+                            <input type="text" class="unified-field-input" name="cf_981" data-fieldname="cf_981" data-fieldtype="phone" value="{$FM_MOBILE->get('fieldvalue')|escape:'html'}">
+                        </div>
+                        {/if}
+                        <div class="form-group">
+                            <label>Mobile sup</label>
+                            <input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_otherphone" data-contact-field="otherphone" value="{$CONTACT_OTHERPHONE|escape:'html'}">
+                        </div>
+
+                        {* Row 2: Mail, Volume final, Statut, Validation *}
+                        {if isset($FM_MAIL)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_MAIL->get('label'), $MODULE_NAME)}</label>
+                            <input type="text" class="unified-field-input" name="cf_1123" data-fieldname="cf_1123" data-fieldtype="email" value="{$FM_MAIL->get('fieldvalue')|escape:'html'}">
+                        </div>
+                        {/if}
+                        {if isset($FM_VOL_FINAL)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_VOL_FINAL->get('label'), $MODULE_NAME)}</label>
+                            <input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="{$FM_VOL_FINAL->get('fieldvalue')|escape:'html'}">
+                        </div>
+                        {/if}
+                        {if isset($FM_STATUT)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_STATUT->get('label'), $MODULE_NAME)}</label>
+                            <select class="unified-field-input" name="cf_971" data-fieldname="cf_971" data-fieldtype="picklist">
+                                <option value="">--</option>
+                                {foreach item=PV from=$FM_STATUT->getPicklistValues()}
+                                    <option value="{$PV}" {if $FM_STATUT->get('fieldvalue') eq $PV}selected{/if}>{vtranslate($PV, $MODULE_NAME)}</option>
+                                {/foreach}
+                            </select>
+                        </div>
+                        {/if}
+                        {if isset($FM_VALIDATION)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_VALIDATION->get('label'), $MODULE_NAME)}</label>
+                            <select class="unified-field-input" name="cf_1164" data-fieldname="cf_1164" data-fieldtype="boolean">
+                                <option value="1" {if $FM_VALIDATION->get('fieldvalue') eq '1' || $FM_VALIDATION->get('fieldvalue') eq 'on'}selected{/if}>Oui</option>
+                                <option value="0" {if $FM_VALIDATION->get('fieldvalue') eq '0' || $FM_VALIDATION->get('fieldvalue') eq '' || $FM_VALIDATION->get('fieldvalue') eq 'off'}selected{/if}>Non</option>
+                            </select>
+                        </div>
+                        {/if}
+
+                        {* Row 3: Date de création, Affaire N°, Nom de l'affaire, Assigné à *}
+                        {if isset($FM_CREATEDTIME)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_CREATEDTIME->get('label'), $MODULE_NAME)}</label>
+                            <div class="field-value field-readonly">{$FM_CREATEDTIME->get('fieldvalue')}</div>
+                        </div>
+                        {/if}
+                        {if isset($FM_POTENTIAL_NO)}
+                        <div class="form-group">
+                            <label>Affaire N°</label>
+                            <div class="field-value field-readonly">{$FM_POTENTIAL_NO->get('fieldvalue')}</div>
+                        </div>
+                        {/if}
+                        {if isset($FM_POTENTIALNAME)}
+                        <div class="form-group">
+                            <label>Nom de l'affaire</label>
+                            <input type="text" class="unified-field-input" name="potentialname" data-fieldname="potentialname" data-fieldtype="string" value="{$FM_POTENTIALNAME->get('fieldvalue')|escape:'html'}">
+                        </div>
+                        {/if}
+                        {if isset($FM_ASSIGNED)}
+                        <div class="form-group">
+                            <label>Assigné à</label>
+                            {assign var="ASSIGNED_INFO" value=$FM_ASSIGNED->getFieldInfo()}
+                            {assign var="ASSIGNED_USERS" value=$ASSIGNED_INFO['picklistvalues'][vtranslate('LBL_USERS')]}
+                            {assign var="ASSIGNED_GROUPS" value=$ASSIGNED_INFO['picklistvalues'][vtranslate('LBL_GROUPS')]}
+                            <select class="unified-field-input" name="assigned_user_id" data-fieldname="assigned_user_id" data-fieldtype="owner">
+                                <optgroup label="{vtranslate('LBL_USERS')}">
+                                    {foreach key=OID item=ONAME from=$ASSIGNED_USERS}
+                                        <option value="{$OID}" {if $FM_ASSIGNED->get('fieldvalue') eq $OID}selected{/if}>{$ONAME}</option>
+                                    {/foreach}
+                                </optgroup>
+                                {if $ASSIGNED_GROUPS|@count > 0}
+                                <optgroup label="{vtranslate('LBL_GROUPS')}">
+                                    {foreach key=OID item=ONAME from=$ASSIGNED_GROUPS}
+                                        <option value="{$OID}" {if $FM_ASSIGNED->get('fieldvalue') eq $OID}selected{/if}>{$ONAME}</option>
+                                    {/foreach}
+                                </optgroup>
+                                {/if}
+                            </select>
+                        </div>
+                        {/if}
+
+                        {* Remaining fields from the block *}
                         {foreach item=FIELD_MODEL key=FIELD_NAME from=$FIELD_MODEL_LIST}
                             {if !$FIELD_MODEL->isViewableInDetailView()}
                                 {continue}
@@ -266,7 +372,10 @@
 
                             {* Skip date fields handled by unified date selector *}
                             {* Skip fields shown in top metrics bar *}
-                            {if $FIELD_NAME eq 'cf_1043' || $FIELD_NAME eq 'cf_1049' || $FIELD_NAME eq 'cf_1045' || $FIELD_NAME eq 'cf_1047' || $FIELD_NAME eq 'cf_939' || $FIELD_NAME eq 'cf_961'}
+                            {* Skip fields hardcoded above in specific order *}
+                            {if $FIELD_NAME eq 'cf_1043' || $FIELD_NAME eq 'cf_1049' || $FIELD_NAME eq 'cf_1045' || $FIELD_NAME eq 'cf_1047' || $FIELD_NAME eq 'cf_939' || $FIELD_NAME eq 'cf_961'
+                                || $FIELD_NAME eq 'cf_981' || $FIELD_NAME eq 'cf_1123' || $FIELD_NAME eq 'cf_1259' || $FIELD_NAME eq 'cf_971' || $FIELD_NAME eq 'cf_1164'
+                                || $FIELD_NAME eq 'createdtime' || $FIELD_NAME eq 'potential_no' || $FIELD_NAME eq 'potentialname' || $FIELD_NAME eq 'assigned_user_id'}
                                 {continue}
                             {/if}
 
@@ -1233,25 +1342,93 @@
     }
 
     .details-tab-container .date-selector-compact {
+        flex-direction: row;
+        align-items: center;
+        gap: 5px !important;
+        padding: 5px !important;
         flex-wrap: wrap;
+        margin-bottom: 8px !important;
     }
 
-    .details-tab-container .date-fields-compact {
-        width: 100%;
-        margin-top: 10px;
+    .details-tab-container .date-selector-label {
+        justify-content: flex-start;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+    .details-tab-container .date-mode-toggle-compact {
+        flex: 1;
+        justify-content: flex-end;
+        min-width: 200px;
+    }
+
+    .details-tab-container .date-mode-btn {
+        flex: 1;
+        text-align: center;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+    }
+
+    .details-tab-container .date-unique-container,
+    .details-tab-container .date-period-container {
+        width: 100% !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .details-tab-container .date-field-item {
+        width: calc(50% - 3px) !important;
+        justify-content: space-between;
+        flex-shrink: 0 !important;
+    }
+
+    .details-tab-container .date-field-label {
+        font-size: 12px;
+    }
+
+    .details-tab-container .date-input-compact {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+        font-size: 13px;
+        padding: 6px 8px;
     }
 
     .details-tab-container .key-metrics-compact {
-        width: 100%;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .details-tab-container .metrics-separator {
+        display: none !important;
     }
 
     .details-tab-container .metric-item {
-        flex: 1;
-        min-width: 90px;
-        justify-content: center;
+        width: calc(33.33% - 4px) !important;
+        justify-content: space-between;
+        padding: 3px 6px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .details-tab-container .metric-label {
+        font-size: 10px;
+    }
+
+    .details-tab-container .metric-value {
+        font-size: 14px;
+        min-width: 50px;
+    }
+
+    .details-tab-container .metric-unit {
+        font-size: 12px;
+    }
+
+    .details-tab-container .metrics-separator {
+        display: none;
     }
 }
 
@@ -1451,6 +1628,7 @@
 var UnifiedDetails = {
     recordId: null,
     moduleName: null,
+    contactId: null,
 
     // Configuration for postal code / city pairs
     postalCityPairs: [
@@ -1478,7 +1656,8 @@ var UnifiedDetails = {
         var container = jQuery('#detailsTabContainer');
         this.recordId = container.data('record-id');
         this.moduleName = container.data('module');
-        console.log('[UnifiedDetails] Initialized for record', this.recordId);
+        this.contactId = container.data('contact-id');
+        console.log('[UnifiedDetails] Initialized for record', this.recordId, 'contact', this.contactId);
 
         // Initialize date selector
         this.initDateSelector();
@@ -1495,18 +1674,69 @@ var UnifiedDetails = {
         var self = this;
         var saveTimeout = {};
 
-        // Auto-save on change for select, checkbox, date inputs
-        jQuery('#detailsTabContainer').on('change', '.unified-field-input', function() {
+        // Auto-save on change for select, checkbox, date inputs (exclude contact-sync fields)
+        jQuery('#detailsTabContainer').on('change', '.unified-field-input:not(.contact-sync-field)', function() {
             var field = jQuery(this);
             var fieldName = field.data('fieldname') || field.attr('name');
             self.saveField(fieldName, field.val());
         });
 
-        // Auto-save on blur for text inputs and textareas (with debounce)
-        jQuery('#detailsTabContainer').on('blur', 'input.unified-field-input[type="text"], textarea.unified-field-input', function() {
+        // Auto-save on input for text inputs and textareas (debounced 500ms, exclude contact-sync fields)
+        jQuery('#detailsTabContainer').on('input', 'input.unified-field-input[type="text"]:not(.contact-sync-field), textarea.unified-field-input', function() {
             var field = jQuery(this);
             var fieldName = field.data('fieldname') || field.attr('name');
-            self.saveField(fieldName, field.val());
+            if (saveTimeout[fieldName]) clearTimeout(saveTimeout[fieldName]);
+            saveTimeout[fieldName] = setTimeout(function() {
+                self.saveField(fieldName, field.val());
+            }, 500);
+        });
+
+        // Auto-save contact sync fields (Nom/Prénom) on input (debounced 500ms)
+        jQuery('#detailsTabContainer').on('input', '.contact-sync-field', function() {
+            var field = jQuery(this);
+            var key = 'contact_' + field.data('contact-field');
+            if (saveTimeout[key]) clearTimeout(saveTimeout[key]);
+            saveTimeout[key] = setTimeout(function() {
+                field.trigger('_contactSave');
+            }, 500);
+        });
+
+        // Contact sync save handler
+        jQuery('#detailsTabContainer').on('_contactSave', '.contact-sync-field', function() {
+            var field = jQuery(this);
+            var contactField = field.data('contact-field');
+            var fieldValue = field.val();
+            if (!self.contactId || !contactField) return;
+
+            field.addClass('field-saving');
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Contacts',
+                    action: 'SaveAjax',
+                    record: self.contactId,
+                    field: contactField,
+                    value: fieldValue
+                },
+                success: function() {
+                    field.removeClass('field-saving').addClass('field-saved');
+                    setTimeout(function() { field.removeClass('field-saved'); }, 1500);
+                    // Update header name and potentialname
+                    var firstname = jQuery('.contact-sync-field[data-contact-field="firstname"]').val() || '';
+                    var lastname = jQuery('.contact-sync-field[data-contact-field="lastname"]').val() || '';
+                    var fullName = (firstname + ' ' + lastname).trim();
+                    jQuery('.unified-header-left h1').html('<i class="fa fa-user-circle"></i> ' + fullName);
+                    // Sync potentialname with contact name
+                    if (fullName) {
+                        self.saveField('potentialname', fullName);
+                    }
+                },
+                error: function() {
+                    field.removeClass('field-saving').addClass('field-error');
+                    setTimeout(function() { field.removeClass('field-error'); }, 3000);
+                }
+            });
         });
 
         console.log('[UnifiedDetails] Auto-save initialized');
@@ -1545,6 +1775,62 @@ var UnifiedDetails = {
                     field.removeClass('field-saved');
                 }, 1500);
                 console.log('[UnifiedDetails] Field saved successfully:', fieldName);
+
+                // Update global metrics bar + local metrics display
+                if (typeof window.updateGlobalMetrics === 'function') {
+                    window.updateGlobalMetrics(fieldName, fieldValue);
+                }
+                var localMetricMap = { 'cf_961': '#metric_distance', 'cf_939': '#metric_volume_estime', 'cf_1259': '#metric_volume_final' };
+                if (localMetricMap[fieldName]) {
+                    jQuery(localMetricMap[fieldName]).text(fieldValue || '--');
+                }
+
+                // Open rappel popup when status changes to "A Rappeler"
+                if (fieldName === 'cf_971' && fieldValue === 'A Rappeler') {
+                    setTimeout(function() {
+                        var recordName = jQuery('.unified-header-left h1').text().trim() || 'Cette affaire';
+                        var userId = 1;
+                        try { if (typeof app !== 'undefined' && app.getUserId) userId = app.getUserId(); } catch(e) { }
+                        var popupUrl = window.location.protocol + '//' + window.location.host + '/rappel_popup.php?module=Potentials&record_id=' + self.recordId + '&record_name=' + encodeURIComponent(recordName) + '&user_id=' + userId;
+                        var newTab = window.open(popupUrl, '_blank');
+                        if (newTab) newTab.focus();
+                    }, 500);
+                }
+
+                // Sync email/mobile to Contact record and update header
+                var contactFieldMap = { 'cf_1123': 'email', 'cf_981': 'mobile' };
+                if (contactFieldMap[fieldName]) {
+                    // Update header display
+                    if (fieldName === 'cf_1123') {
+                        var headerEmail = jQuery('#header-contact-email');
+                        headerEmail.find('span').text(fieldValue);
+                        headerEmail.toggle(!!fieldValue);
+                    } else if (fieldName === 'cf_981') {
+                        var headerPhone = jQuery('#header-contact-phone');
+                        headerPhone.find('span').text(fieldValue);
+                        headerPhone.toggle(!!fieldValue);
+                    }
+                    // Sync to Contact
+                    if (self.contactId) {
+                        jQuery.ajax({
+                            url: 'index.php',
+                            type: 'POST',
+                            data: {
+                                module: 'Contacts',
+                                action: 'SaveAjax',
+                                record: self.contactId,
+                                field: contactFieldMap[fieldName],
+                                value: fieldValue
+                            },
+                            success: function() {
+                                console.log('[UnifiedDetails] Contact field synced:', contactFieldMap[fieldName]);
+                            },
+                            error: function() {
+                                console.error('[UnifiedDetails] Error syncing contact field:', contactFieldMap[fieldName]);
+                            }
+                        });
+                    }
+                }
             },
             error: function(xhr, status, error) {
                 field.removeClass('field-saving').addClass('field-error');
@@ -1743,11 +2029,15 @@ var UnifiedDetails = {
             var cityInput = container.find('input[name="' + pair.city + '"], input[data-fieldname="' + pair.city + '"]');
 
             if (postalInput.length && cityInput.length) {
-                // Postal code change -> fetch city
-                postalInput.on('change blur', function() {
+                // Postal code -> fetch city (on input for instant feedback + blur as fallback)
+                var cityLookupTimeout;
+                postalInput.on('input change blur', function() {
                     var postalCode = jQuery(this).val().trim();
                     if (postalCode.length === 5) {
-                        self.fetchCityFromPostalCode(postalCode, cityInput, postalInput);
+                        clearTimeout(cityLookupTimeout);
+                        cityLookupTimeout = setTimeout(function() {
+                            self.fetchCityFromPostalCode(postalCode, cityInput, postalInput);
+                        }, 300);
                     }
                 });
 
@@ -1760,6 +2050,7 @@ var UnifiedDetails = {
     },
 
     fetchCityFromPostalCode: function(postalCode, cityInput, postalInput) {
+        var self = this;
         postalInput.css('background-color', '#fffde7');
 
         jQuery.ajax({
@@ -1774,6 +2065,11 @@ var UnifiedDetails = {
                 if (data.features && data.features.length > 0) {
                     var city = data.features[0].properties.city;
                     cityInput.val(city);
+                    // Save city field directly
+                    var cityFieldName = cityInput.data('fieldname') || cityInput.attr('name');
+                    if (cityFieldName) {
+                        self.saveField(cityFieldName, city);
+                    }
                     postalInput.css('background-color', '#e8f5e9');
                     setTimeout(function() {
                         postalInput.css('background-color', '');
@@ -1844,6 +2140,11 @@ var UnifiedDetails = {
                             cityInput.val(city);
                             postalInput.val(postcode);
                             jQuery('#' + dropdownId).remove();
+                            // Save both fields directly
+                            var cityName = cityInput.data('fieldname') || cityInput.attr('name');
+                            var postalName = postalInput.data('fieldname') || postalInput.attr('name');
+                            if (cityName) UnifiedDetails.saveField(cityName, city);
+                            if (postalName) UnifiedDetails.saveField(postalName, postcode);
                         });
                     dropdown.append(item);
                 });
@@ -1943,6 +2244,17 @@ var UnifiedDetails = {
                             if (postalInput.length) postalInput.val(postcode);
                             if (cityInput.length) cityInput.val(city);
                             jQuery('#' + dropdownId).remove();
+                            // Save all three fields directly
+                            var addrName = addressInput.data('fieldname') || addressInput.attr('name');
+                            if (addrName) UnifiedDetails.saveField(addrName, streetAddress);
+                            if (postalInput.length) {
+                                var postalName = postalInput.data('fieldname') || postalInput.attr('name');
+                                if (postalName) UnifiedDetails.saveField(postalName, postcode);
+                            }
+                            if (cityInput.length) {
+                                var cityName = cityInput.data('fieldname') || cityInput.attr('name');
+                                if (cityName) UnifiedDetails.saveField(cityName, city);
+                            }
                         });
                     dropdown.append(item);
                 });

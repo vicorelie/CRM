@@ -188,7 +188,7 @@
                         <label>Assurance</label>
                         <select id="unified_cf_1139">
                             <option value="">-- Select --</option>
-                            {for $i=4000 to 26000 step 2000}
+                            {for $i=4000 to 26000 step 1000}
                             <option value="{$i}" {if $i == 4000}selected{/if}>{$i|number_format:0:',':' '} €</option>
                             {/for}
                         </select>
@@ -235,7 +235,7 @@
 
         {* Section PDF Templates *}
         {if $PDF_TEMPLATES|@count > 0}
-        <div class="form-section section-pdf">
+        <div class="form-section section-pdf" style="display:none;">
             <div class="form-section-title title-red">
                 <i class="fa fa-file-pdf-o"></i>
                 Documents PDF

@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-11 00:09:47
+/* Smarty version 4.5.5, created on 2026-02-16 13:51:01
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDevisTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_698bacab7a9a81_32473158',
+  'unifunc' => 'content_699304a56f0432_66746187',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'e8a51b2351cb5e007c61858dc1e9c25c76f81db8' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDevisTab.tpl',
-      1 => 1770760505,
+      1 => 1771242642,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_698bacab7a9a81_32473158 (Smarty_Internal_Template $_smarty_tpl) {
+function content_699304a56f0432_66746187 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="devis-tab-container" id="devisTabContainer" data-potential-id="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
@@ -58,15 +58,15 @@ $_smarty_tpl->tpl_vars['VENDOR']->do_else = false;
 "><?php echo $_smarty_tpl->tpl_vars['VENDOR']->value['name'];?>
 </option><?php
 }
-$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></select></div><div class="form-group"><label>Validation</label><div class="validation-toggle" id="unified_cf_1162_toggle" onclick="UnifiedDevis.toggleValidation()"><i class="fa fa-circle-o"></i><span>Non validé</span></div><input type="hidden" id="unified_cf_1162" value="0"></div><?php }?></div></div><div class="forfait-products-row"><div class="form-section section-forfait"><div class="form-section-title title-purple"><i class="fa fa-truck"></i>Formule</div><div class="form-row-2"><div class="form-group"><label>Type formule</label><select id="unified_cf_1125"><option value="">-- Select --</option><option value="ECO">ECO</option><option value="ECO PLUS">ECO PLUS</option><option value="CONFORT">CONFORT</option><option value="LUXE">LUXE</option></select></div><div class="form-group"><label>Type demenagement</label><select id="unified_cf_1269"><option value="">-- Select --</option><option value="Groupage">Groupage</option><option value="Spécial" selected>Spécial</option></select></div></div><div class="form-row-2" style="margin-top: 10px;"><div class="form-group"><label>Formule HT</label><input type="number" id="unified_cf_1127" value="" placeholder="0.00" step="0.01" min="0"></div><div class="form-group"><label>Formule TTC</label><input type="number" id="unified_cf_1127_ttc" value="" placeholder="0.00" step="0.01" min="0"></div></div><div class="form-row-2" style="margin-top: 10px;"><div class="form-group"><label>Supplement</label><input type="number" id="unified_cf_1129" value="" placeholder="0.00" step="0.01" min="0"></div><div class="form-group"><label>Formule + Suppl. TTC</label><input type="number" id="unified_forfait_total_ttc" value="0" step="0.01" readonly style="background: #f0f0f0;"></div></div></div><div class="form-section section-products"><div class="form-section-title title-green"><i class="fa fa-cubes"></i>Produits et services</div><div class="form-row-2"><div class="form-group" style="position: relative;"><label>Rechercher</label><input type="text" id="unified_productSearch" placeholder="🔍 Ajouter un produit..."><div id="unified_productResults" style="position:absolute;background:white;border:2px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:250px;overflow-y:auto;display:none;z-index:100;box-shadow:0 4px 15px rgba(0,0,0,0.1);left:0;right:0;"></div></div><div class="form-group"><label>Assurance</label><select id="unified_cf_1139"><option value="">-- Select --</option><?php
-$_smarty_tpl->tpl_vars['i'] = new Smarty_Variable(null, $_smarty_tpl->isRenderingCache);$_smarty_tpl->tpl_vars['i']->step = 2000;$_smarty_tpl->tpl_vars['i']->total = (int) ceil(($_smarty_tpl->tpl_vars['i']->step > 0 ? 26000+1 - (4000) : 4000-(26000)+1)/abs($_smarty_tpl->tpl_vars['i']->step));
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></select></div><div class="form-group"><label>Validation</label><div class="validation-toggle" id="unified_cf_1162_toggle" onclick="UnifiedDevis.toggleValidation()"><i class="fa fa-circle-o"></i><span>Non validé</span></div><input type="hidden" id="unified_cf_1162" value="0"></div><?php }?></div></div><div class="forfait-products-row"><div class="form-section section-forfait"><div class="form-section-title title-purple"><i class="fa fa-truck"></i>Formule</div><div class="form-row-2"><div class="form-group"><label>Type formule</label><select id="unified_cf_1125"><option value="">-- Select --</option><option value="ECO">ECO</option><option value="ECO PLUS">ECO PLUS</option><option value="CONFORT">CONFORT</option><option value="LUXE">LUXE</option></select></div><div class="form-group"><label>Type demenagement</label><select id="unified_cf_1269"><option value="">-- Select --</option><option value="Groupage">Groupage</option><option value="Spécial" selected>Spécial</option></select></div></div><div class="form-row-2" style="margin-top: 10px;"><div class="form-group"><label>Formule HT</label><input type="number" id="unified_cf_1127" value="" placeholder="0.00" step="0.01" min="0"></div><div class="form-group"><label>Formule TTC</label><input type="number" id="unified_cf_1127_ttc" value="" placeholder="0.00" step="0.01" min="0"></div></div><div class="form-row-2" style="margin-top: 10px;"><div class="form-group"><label>Supplement</label><input type="number" id="unified_cf_1129" value="" placeholder="0.00" step="0.01" min="0"></div><div class="form-group"><label>Formule + Suppl. TTC</label><input type="number" id="unified_forfait_total_ttc" value="0" step="0.01" readonly style="background: #f0f0f0;"></div></div></div><div class="form-section section-products"><div class="form-section-title title-green"><i class="fa fa-cubes"></i>Produits et services</div><div class="form-row-2"><div class="form-group" style="position: relative;"><label>Rechercher</label><div style="display:flex;gap:6px;"><input type="text" id="unified_productSearch" placeholder="Ajouter un produit..." style="flex:1;"><button type="button" class="btn btn-sm btn-success" onclick="UnifiedDevis.addManualProduct()" title="Ajouter manuellement" style="padding:6px 10px;border-radius:6px;white-space:nowrap;"><i class="fa fa-plus"></i></button></div><div id="unified_productResults" style="position:absolute;background:white;border:2px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:250px;overflow-y:auto;display:none;z-index:100;box-shadow:0 4px 15px rgba(0,0,0,0.1);left:0;right:0;"></div></div><div class="form-group"><label>Assurance</label><select id="unified_cf_1139"><option value="">-- Select --</option><?php
+$_smarty_tpl->tpl_vars['i'] = new Smarty_Variable(null, $_smarty_tpl->isRenderingCache);$_smarty_tpl->tpl_vars['i']->step = 1000;$_smarty_tpl->tpl_vars['i']->total = (int) ceil(($_smarty_tpl->tpl_vars['i']->step > 0 ? 26000+1 - (4000) : 4000-(26000)+1)/abs($_smarty_tpl->tpl_vars['i']->step));
 if ($_smarty_tpl->tpl_vars['i']->total > 0) {
 for ($_smarty_tpl->tpl_vars['i']->value = 4000, $_smarty_tpl->tpl_vars['i']->iteration = 1;$_smarty_tpl->tpl_vars['i']->iteration <= $_smarty_tpl->tpl_vars['i']->total;$_smarty_tpl->tpl_vars['i']->value += $_smarty_tpl->tpl_vars['i']->step, $_smarty_tpl->tpl_vars['i']->iteration++) {
 $_smarty_tpl->tpl_vars['i']->first = $_smarty_tpl->tpl_vars['i']->iteration === 1;$_smarty_tpl->tpl_vars['i']->last = $_smarty_tpl->tpl_vars['i']->iteration === $_smarty_tpl->tpl_vars['i']->total;?><option value="<?php echo $_smarty_tpl->tpl_vars['i']->value;?>
 " <?php if ($_smarty_tpl->tpl_vars['i']->value == 4000) {?>selected<?php }?>><?php echo call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'number_format' ][ 0 ], array( $_smarty_tpl->tpl_vars['i']->value,0,',',' ' ));?>
  €</option><?php }
 }
-?></select></div></div><table id="unified_productsTable" class="data-table" style="display:none"><thead><tr><th>Produit</th><th style="width:80px">Qte</th><th style="width:100px">PU</th><th style="width:90px">Total</th><th style="width:50px"></th></tr></thead><tbody id="unified_productsList"></tbody></table></div></div><div class="form-section section-tarification"><div class="totals-row"><div class="total-box total-ht"><div class="total-label">Total HT</div><div class="total-value" id="unified_montant_total_ht">0.00 €</div></div><div class="total-box total-ttc"><div class="total-label">Total TTC</div><div class="total-value" id="unified_montant_total_ttc">0.00 €</div></div><div class="total-box total-acompte"><div class="total-label">Acompte</div><div class="total-value" id="unified_acompte_ttc">0.00 €</div></div><div class="total-box total-solde"><div class="total-label">Solde</div><div class="total-value" id="unified_solde_ttc">0.00 €</div></div></div></div><?php if (smarty_modifier_count($_smarty_tpl->tpl_vars['PDF_TEMPLATES']->value) > 0) {?><div class="form-section section-pdf"><div class="form-section-title title-red"><i class="fa fa-file-pdf-o"></i>Documents PDF<button type="button" class="btn btn-sm" onclick="UnifiedDevis.toggleAllPdfTemplates()" style="margin-left: auto; padding: 4px 10px; font-size: 11px;background: #f8f9fa; color: #333; border: 2px solid #e0e0e0;"><i class="fa fa-check-square-o"></i> Tout</button></div><div class="pdf-templates-grid"><?php
+?></select></div></div><table id="unified_productsTable" class="data-table" style="display:none"><thead><tr><th>Produit</th><th style="width:80px">Qte</th><th style="width:100px">PU</th><th style="width:90px">Total</th><th style="width:50px"></th></tr></thead><tbody id="unified_productsList"></tbody></table></div></div><div class="form-section section-tarification"><div class="totals-row"><div class="total-box total-ht"><div class="total-label">Total HT</div><div class="total-value" id="unified_montant_total_ht">0.00 €</div></div><div class="total-box total-ttc"><div class="total-label">Total TTC</div><div class="total-value"><input type="number" id="unified_montant_total_ttc" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" /></div></div><div class="total-box total-acompte"><div class="total-label">Acompte</div><div class="total-value" id="unified_acompte_ttc">0.00 €</div></div><div class="total-box total-solde"><div class="total-label">Solde</div><div class="total-value" id="unified_solde_ttc">0.00 €</div></div></div></div><?php if (smarty_modifier_count($_smarty_tpl->tpl_vars['PDF_TEMPLATES']->value) > 0) {?><div class="form-section section-pdf" style="display:none;"><div class="form-section-title title-red"><i class="fa fa-file-pdf-o"></i>Documents PDF<button type="button" class="btn btn-sm" onclick="UnifiedDevis.toggleAllPdfTemplates()" style="margin-left: auto; padding: 4px 10px; font-size: 11px;background: #f8f9fa; color: #333; border: 2px solid #e0e0e0;"><i class="fa fa-check-square-o"></i> Tout</button></div><div class="pdf-templates-grid"><?php
 $_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['PDF_TEMPLATES']->value, 'TEMPLATE');
 $_smarty_tpl->tpl_vars['TEMPLATE']->do_else = true;
 if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['TEMPLATE']->value) {
@@ -275,6 +275,19 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div><div style
 .devis-tab-container .total-box.total-ttc {
     background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     color: white;
+}
+
+.devis-tab-container .total-box.total-ttc input::-webkit-outer-spin-button,
+.devis-tab-container .total-box.total-ttc input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.devis-tab-container .total-box.total-ttc input[type=number] {
+    -moz-appearance: textfield;
+}
+.devis-tab-container .total-box.total-ttc input:focus {
+    outline: none;
+    border-bottom-color: rgba(255,255,255,0.9);
 }
 
 .devis-tab-container .total-box.total-acompte {
