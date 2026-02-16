@@ -776,6 +776,7 @@
             console.log('[UnifiedDevis] unified_selectedQuoteId set to:', jQuery('#unified_selectedQuoteId').val());
             jQuery('#unified_btnPaiement').show();
             jQuery('#unified_btnViewPdf').show();
+            jQuery('#unified_btnDeleteQuote').show();
             this.updatePdfSendStatus();
 
             jQuery.get('get_quote_data.php?quoteid=' + quoteId, function(data) {
@@ -875,6 +876,54 @@
 
             // Trigger auto-save
             this.triggerDebouncedAutoSave();
+        },
+
+        deleteQuote: function() {
+            var self = this;
+            var quoteId = jQuery('#unified_selectedQuoteId').val();
+
+            if (!quoteId) {
+                app.helper.showErrorNotification({message: 'Veuillez sélectionner un devis'});
+                return;
+            }
+
+            // Confirmation
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ? Cette action est irréversible.')) {
+                return;
+            }
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Quotes',
+                    action: 'Delete',
+                    record: quoteId
+                },
+                success: function(response) {
+                    app.helper.showSuccessNotification({message: 'Devis supprimé avec succès'});
+
+                    // Remove the quote chip from the list
+                    jQuery('.quote-chip[data-quoteid="' + quoteId + '"]').fadeOut(300, function() {
+                        jQuery(this).remove();
+                    });
+
+                    // Clear the form
+                    jQuery('#unified_selectedQuoteId').val('');
+                    jQuery('#unified_btnPaiement, #unified_btnViewPdf, #unified_btnDeleteQuote').hide();
+                    jQuery('#unified_productsList').empty();
+                    jQuery('#unified_subject, #unified_cf_1005, #unified_cf_1127, #unified_cf_1129, #unified_cf_1139').val('');
+
+                    // Reload the page to refresh the quotes list
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                },
+                error: function(xhr, status, error) {
+                    app.helper.showErrorNotification({message: 'Erreur lors de la suppression du devis'});
+                    console.error('Delete error:', error);
+                }
+            });
         },
 
         togglePdfTemplate: function(element, templateId) {

@@ -35,6 +35,9 @@
 <button type="button" class="btn btn-sm" id="unified_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedDevis.openPDFPreviewModal()">
             <i class="fa fa-file-pdf-o"></i> PDF
         </button>
+        <button type="button" class="btn btn-sm" id="unified_btnDeleteQuote" style="display:none; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none;" onclick="UnifiedDevis.deleteQuote()">
+            <i class="fa fa-trash"></i>
+        </button>
     </div>
     {/if}
 

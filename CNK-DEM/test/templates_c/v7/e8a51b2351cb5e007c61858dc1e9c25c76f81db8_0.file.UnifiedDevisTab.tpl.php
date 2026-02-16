@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-16 13:51:01
+/* Smarty version 4.5.5, created on 2026-02-16 23:52:38
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDevisTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_699304a56f0432_66746187',
+  'unifunc' => 'content_699391a67ec823_88104422',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'e8a51b2351cb5e007c61858dc1e9c25c76f81db8' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDevisTab.tpl',
-      1 => 1771242642,
+      1 => 1771278736,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_699304a56f0432_66746187 (Smarty_Internal_Template $_smarty_tpl) {
+function content_699391a67ec823_88104422 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="devis-tab-container" id="devisTabContainer" data-potential-id="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
@@ -42,7 +42,7 @@ $_smarty_tpl->tpl_vars['QUOTE']->do_else = false;
 </span><span class="chip-sep">/</span><span class="chip-total"><?php echo call_user_func_array($_smarty_tpl->registered_plugins[ 'modifier' ][ 'number_format' ][ 0 ], array( $_smarty_tpl->tpl_vars['QUOTE']->value['total'],0,',',' ' ));?>
 €</span></div></div><?php
 }
-$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div><button type="button" class="btn btn-sm" id="unified_btnPaiement" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;" onclick="UnifiedDevis.openStripePayments()"><i class="fa fa-credit-card"></i> Paiement</button><button type="button" class="btn btn-sm" id="unified_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedDevis.openPDFPreviewModal()"><i class="fa fa-file-pdf-o"></i> PDF</button></div><?php }?><form id="unifiedQuoteForm" method="POST" action="index.php" style="display:none;"><input type="hidden" name="__vtrftk" value="<?php echo $_smarty_tpl->tpl_vars['CSRF_TOKEN']->value;?>
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div><button type="button" class="btn btn-sm" id="unified_btnPaiement" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;" onclick="UnifiedDevis.openStripePayments()"><i class="fa fa-credit-card"></i> Paiement</button><button type="button" class="btn btn-sm" id="unified_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedDevis.openPDFPreviewModal()"><i class="fa fa-file-pdf-o"></i> PDF</button><button type="button" class="btn btn-sm" id="unified_btnDeleteQuote" style="display:none; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none;" onclick="UnifiedDevis.deleteQuote()"><i class="fa fa-trash"></i></button></div><?php }?><form id="unifiedQuoteForm" method="POST" action="index.php" style="display:none;"><input type="hidden" name="__vtrftk" value="<?php echo $_smarty_tpl->tpl_vars['CSRF_TOKEN']->value;?>
 "><input type="hidden" name="module" value="Quotes"><input type="hidden" name="action" value="Save"><input type="hidden" name="record" id="unified_recordId" value=""><input type="hidden" name="potential_id" value="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
 "><input type="hidden" name="contact_id" value="<?php echo $_smarty_tpl->tpl_vars['CONTACT_ID']->value;?>
 "><input type="hidden" name="sourceRecord" value="<?php echo $_smarty_tpl->tpl_vars['POTENTIAL_ID']->value;?>
