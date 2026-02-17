@@ -73,8 +73,8 @@
         <input type="hidden" name="taxtype" value="individual">
         <input type="hidden" name="hdnSubTotal" id="unified_hdnSubTotal" value="0">
         <input type="hidden" name="hdnGrandTotal" id="unified_hdnGrandTotal" value="0">
-        <input type="hidden" name="hdnDiscountPercent" value="0">
-        <input type="hidden" name="hdnDiscountAmount" value="0">
+        <input type="hidden" name="hdnDiscountPercent" id="unified_hdnDiscountPercent" value="0">
+        <input type="hidden" name="hdnDiscountAmount" id="unified_hdnDiscountAmount" value="0">
         <input type="hidden" name="hdnS_H_Percent" value="0">
         <input type="hidden" name="hdnS_H_Amount" value="0">
         <input type="hidden" name="hdnAdjustment" value="0">
@@ -210,6 +210,23 @@
                     <tbody id="unified_productsList"></tbody>
                 </table>
             </div>
+        </div>
+
+        {* Section Remise - Compact *}
+        <div class="form-section section-remise-compact">
+            <span class="remise-label"><i class="fa fa-tag"></i> Remise:</span>
+            <label class="remise-option">
+                <input type="radio" name="unified_remise_type" value="none" checked> Aucune
+            </label>
+            <label class="remise-option">
+                <input type="radio" name="unified_remise_type" value="percent"> %
+                <input type="number" id="unified_remise_percent" value="0" step="0.01" min="0" max="15" class="remise-input" disabled style="width:60px;">
+            </label>
+            <label class="remise-option">
+                <input type="radio" name="unified_remise_type" value="amount"> €
+                <input type="number" id="unified_remise_amount" value="0" step="0.01" min="0" class="remise-input" disabled style="width:80px;">
+            </label>
+            <span class="remise-display">→ <strong id="unified_remise_display">0.00 €</strong></span>
         </div>
 
         {* Section Tarification - Full width below *}
@@ -824,6 +841,93 @@
     font-size: 13px;
     font-weight: 500;
 }
+
+/* Section Remise */
+.devis-tab-container .section-remise {
+    background: #fef9e7;
+    border: 1px solid #f0e6c0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.devis-tab-container .section-remise-compact {
+    background: #fef9e7;
+    border: 1px solid #f0e6c0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.devis-tab-container .section-remise-compact .remise-label {
+    font-weight: 600;
+    color: #7d6608;
+    white-space: nowrap;
+}
+
+.devis-tab-container .section-remise-compact .remise-label i {
+    color: #d4ac0d;
+    margin-right: 4px;
+}
+
+.devis-tab-container .section-remise-compact .remise-display {
+    margin-left: auto;
+    font-size: 14px;
+    color: #e74c3c;
+    white-space: nowrap;
+}
+
+.devis-tab-container .section-remise-compact .remise-display strong {
+    font-size: 16px;
+}
+
+.devis-tab-container .remise-options {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.devis-tab-container .remise-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.devis-tab-container .remise-input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid #d5c87a;
+    border-radius: 4px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.devis-tab-container .remise-input:disabled {
+    background: #f5f0d5;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.devis-tab-container .remise-display {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #f0e6c0;
+    font-size: 14px;
+    color: #7d6608;
+}
+
+.devis-tab-container .remise-display strong {
+    color: #e74c3c;
+    font-size: 16px;
+}
 </style>
 
 <script>
@@ -832,4 +936,41 @@ var unifiedPotentialId = {$POTENTIAL_ID};
 var unifiedContactId = {$CONTACT_ID|default:0};
 var unifiedCsrfToken = '{$CSRF_TOKEN}';
 var unifiedPdfTemplates = {$PDF_TEMPLATES_JSON};
+
+// Gérer la remise
+jQuery(document).ready(function() {
+    // Activer/désactiver les champs de remise selon le type sélectionné
+    jQuery('input[name="unified_remise_type"]').on('change', function() {
+        var type = jQuery(this).val();
+        jQuery('#unified_remise_percent, #unified_remise_amount').prop('disabled', true).val(0);
+
+        if (type === 'percent') {
+            jQuery('#unified_remise_percent').prop('disabled', false);
+        } else if (type === 'amount') {
+            jQuery('#unified_remise_amount').prop('disabled', false);
+        }
+
+        // Recalculer les totaux
+        if (window.UnifiedDevis && typeof UnifiedDevis.updateMontantTotal === 'function') {
+            UnifiedDevis.updateMontantTotal();
+        }
+
+        // Déclencher l'auto-save
+        if (window.UnifiedDevis && typeof UnifiedDevis.triggerDebouncedAutoSave === 'function') {
+            UnifiedDevis.triggerDebouncedAutoSave();
+        }
+    });
+
+    // Recalculer et sauvegarder en temps réel pendant la frappe
+    jQuery('#unified_remise_percent, #unified_remise_amount').on('input', function() {
+        if (window.UnifiedDevis && typeof UnifiedDevis.updateMontantTotal === 'function') {
+            UnifiedDevis.updateMontantTotal();
+        }
+
+        // Déclencher l'auto-save après 500ms
+        if (window.UnifiedDevis && typeof UnifiedDevis.triggerDebouncedAutoSave === 'function') {
+            UnifiedDevis.triggerDebouncedAutoSave();
+        }
+    });
+});
 </script>

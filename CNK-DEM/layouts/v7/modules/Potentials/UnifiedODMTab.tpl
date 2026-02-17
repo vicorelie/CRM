@@ -442,31 +442,6 @@
             </div>
         </div>
 
-        {* Section Remise *}
-        <div class="form-section section-remise">
-            <div class="remise-row">
-                <label class="remise-label"><i class="fa fa-tag"></i> Remise générale</label>
-                <div class="remise-controls">
-                    <label class="remise-option">
-                        <input type="radio" name="odm_remise_type" value="none" checked> Aucune
-                    </label>
-                    <label class="remise-option">
-                        <input type="radio" name="odm_remise_type" value="percent"> % du HT
-                        <input type="number" id="odm_remise_percent" value="0" step="0.01" min="0" max="100" class="remise-input" disabled>
-                        <span class="remise-unit">%</span>
-                    </label>
-                    <label class="remise-option">
-                        <input type="radio" name="odm_remise_type" value="amount"> Montant HT
-                        <input type="number" id="odm_remise_amount" value="0" step="0.01" min="0" class="remise-input" disabled>
-                        <span class="remise-unit">€</span>
-                    </label>
-                </div>
-                <div class="remise-result">
-                    <span>Remise : </span><strong id="odm_remise_display">0.00 € HT</strong>
-                </div>
-            </div>
-        </div>
-
         {* Section Tarification - Totaux après CHARGEMENT/LIVRAISON *}
         <div class="form-section section-tarification">
             <div class="totals-row">
@@ -487,6 +462,23 @@
                     <div class="total-value" id="odm_solde_ttc">0.00 €</div>
                 </div>
             </div>
+        </div>
+
+        {* Section Remise - Compact *}
+        <div class="form-section section-remise-compact">
+            <span class="remise-label"><i class="fa fa-tag"></i> Remise:</span>
+            <label class="remise-option">
+                <input type="radio" name="odm_remise_type" value="none" checked> Aucune
+            </label>
+            <label class="remise-option">
+                <input type="radio" name="odm_remise_type" value="percent"> %
+                <input type="number" id="odm_remise_percent" value="0" step="0.01" min="0" max="15" class="remise-input" disabled style="width:60px;">
+            </label>
+            <label class="remise-option">
+                <input type="radio" name="odm_remise_type" value="amount"> €
+                <input type="number" id="odm_remise_amount" value="0" step="0.01" min="0" class="remise-input" disabled style="width:80px;">
+            </label>
+            <span class="remise-display">→ <strong id="odm_remise_display">0.00 €</strong></span>
         </div>
 
         {* Section Forfait + Produits - En bas *}
@@ -756,6 +748,35 @@
     border-radius: 10px;
     margin-bottom: 15px;
 }
+.odm-tab-container .section-remise-compact {
+    background: #fef9e7;
+    border: 1px solid #f0e6c0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.odm-tab-container .section-remise-compact .remise-label {
+    font-weight: 600;
+    color: #7d6608;
+    white-space: nowrap;
+}
+.odm-tab-container .section-remise-compact .remise-label i {
+    color: #d4ac0d;
+    margin-right: 4px;
+}
+.odm-tab-container .section-remise-compact .remise-display {
+    margin-left: auto;
+    font-size: 14px;
+    color: #e74c3c;
+    white-space: nowrap;
+}
+.odm-tab-container .section-remise-compact .remise-display strong {
+    font-size: 16px;
+}
 .odm-tab-container .remise-row {
     display: flex;
     align-items: center;
@@ -809,6 +830,25 @@
 }
 .odm-tab-container .remise-result strong {
     font-size: 16px;
+}
+
+.odm-tab-container .remise-options {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.odm-tab-container .remise-display {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #e74c3c;
+}
+
+.odm-tab-container .remise-display strong {
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .odm-tab-container .section-tarification {
@@ -1788,6 +1828,27 @@ jQuery(document).ready(function() {
         var hiddenId = jQuery(this).data('hidden');
         if (hiddenId) {
             jQuery('#' + hiddenId).val(jQuery(this).val());
+        }
+    });
+
+    // === Remise Logic ===
+    // Activer/désactiver les champs de remise selon le type sélectionné
+    jQuery('input[name="odm_remise_type"]').on('change', function() {
+        var type = jQuery(this).val();
+        jQuery('#odm_remise_percent, #odm_remise_amount').prop('disabled', true).val(0);
+        if (type === 'percent') {
+            jQuery('#odm_remise_percent').prop('disabled', false);
+        } else if (type === 'amount') {
+            jQuery('#odm_remise_amount').prop('disabled', false);
+        }
+        if (window.UnifiedODM && typeof UnifiedODM.calculateTotals === 'function') {
+            UnifiedODM.calculateTotals();
+        }
+    });
+
+    jQuery('#odm_remise_percent, #odm_remise_amount').on('blur', function() {
+        if (window.UnifiedODM && typeof UnifiedODM.calculateTotals === 'function') {
+            UnifiedODM.calculateTotals();
         }
     });
 

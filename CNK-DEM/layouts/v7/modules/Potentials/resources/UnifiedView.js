@@ -228,7 +228,7 @@
             clearTimeout(this.autoSaveTimeout);
             this.autoSaveTimeout = setTimeout(function() {
                 self.autoSaveQuoteWithProducts();
-            }, 1000); // 1 second delay
+            }, 500); // 500ms delay
         },
 
         init: function() {
@@ -265,24 +265,25 @@
         registerAutoSave: function() {
             var self = this;
 
-            // Debounced auto-save - waits 1 second after last change
+            // Debounced auto-save - waits 500ms after last change
             var triggerAutoSave = function() {
                 clearTimeout(self.autoSaveTimeout);
                 self.autoSaveTimeout = setTimeout(function() {
                     self.autoSaveQuoteWithProducts();
-                }, 1000);
+                }, 500);
             };
 
-            // Auto-save on change for selects
-            jQuery('#unified_cf_1125, #unified_cf_1269, #unified_cf_1139, #unified_prestataire').on('change', function() {
+            // Delegate all events to container (like Details tab pattern)
+            // Auto-save on change for selects (immediate)
+            jQuery('#devisTabContainer').on('change', 'select', function() {
                 var quoteId = jQuery('#unified_selectedQuoteId').val();
                 if (quoteId) {
                     triggerAutoSave();
                 }
             });
 
-            // Auto-save on blur for text/number inputs
-            jQuery('#unified_subject, #unified_cf_1005, #unified_cf_1127, #unified_cf_1129').on('blur', function() {
+            // Auto-save on input for text/number/date inputs (debounced 500ms)
+            jQuery('#devisTabContainer').on('input', 'input[type="text"], input[type="number"], input[type="date"]', function() {
                 var quoteId = jQuery('#unified_selectedQuoteId').val();
                 if (quoteId) {
                     triggerAutoSave();
@@ -367,6 +368,19 @@
             jQuery('#unified_hidden_cf_1139').val(jQuery('#unified_cf_1139').val());
             jQuery('#unified_hidden_prestataire').val(jQuery('#unified_prestataire').val());
             jQuery('#unified_hidden_cf_1162').val(jQuery('#unified_cf_1162').val());
+
+            // Copy discount (remise) values
+            var remiseType = jQuery('input[name="unified_remise_type"]:checked').val() || 'none';
+            if (remiseType === 'percent') {
+                jQuery('#unified_hdnDiscountPercent').val(jQuery('#unified_remise_percent').val() || '0');
+                jQuery('#unified_hdnDiscountAmount').val('0');
+            } else if (remiseType === 'amount') {
+                jQuery('#unified_hdnDiscountPercent').val('0');
+                jQuery('#unified_hdnDiscountAmount').val(jQuery('#unified_remise_amount').val() || '0');
+            } else {
+                jQuery('#unified_hdnDiscountPercent').val('0');
+                jQuery('#unified_hdnDiscountAmount').val('0');
+            }
 
             // Prepare products
             var container = jQuery('#unifiedHiddenProductsContainer');
@@ -685,16 +699,54 @@
             var assuranceValue = parseFloat(jQuery('#unified_cf_1139').val()) || 0;
             var assuranceHT = assuranceValue > 0 ? ((assuranceValue - 4000) / 1000) * 14 : 0;
 
+            // Calculate TOTAL HT BEFORE discount
+            var totalHTBeforeDiscount = forfaitHT + supplementHT + produitsHT + assuranceHT;
+
+            // Calculate discount (remise) - apply on TOTAL HT
+            var remiseType = jQuery('input[name="unified_remise_type"]:checked').val() || 'none';
+            var remiseHT = 0;
+            var maxRemisePercent = 15;
+            var maxRemiseAmount = totalHTBeforeDiscount * maxRemisePercent / 100;
+
+            if (remiseType === 'percent') {
+                var remisePercent = parseFloat(jQuery('#unified_remise_percent').val()) || 0;
+                // Limit to 15%
+                if (remisePercent > maxRemisePercent) {
+                    remisePercent = maxRemisePercent;
+                    jQuery('#unified_remise_percent').val(maxRemisePercent);
+                }
+                remiseHT = totalHTBeforeDiscount * remisePercent / 100;
+            } else if (remiseType === 'amount') {
+                remiseHT = parseFloat(jQuery('#unified_remise_amount').val()) || 0;
+                // Limit to 15% of total HT
+                if (remiseHT > maxRemiseAmount) {
+                    remiseHT = maxRemiseAmount;
+                    jQuery('#unified_remise_amount').val(maxRemiseAmount.toFixed(2));
+                }
+            }
+
+            // Update discount display
+            jQuery('#unified_remise_display').text(remiseHT.toFixed(2) + ' €');
+
+            // Calculate acompte and solde BEFORE discount
+            // Acompte = forfait acompte % + supplement + produits acompte + assurance (NO DISCOUNT)
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
             var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
 
+            // Solde = forfait solde % + produits solde
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT;
+            var totalSoldeHTBeforeDiscount = forfaitSoldeHT + produitsSoldeHT;
+
+            // Apply discount ONLY to solde (acompte stays unchanged)
+            var totalSoldeHT = totalSoldeHTBeforeDiscount - remiseHT;
+            if (totalSoldeHT < 0) totalSoldeHT = 0;
+
+            // Total HT = acompte (no discount) + solde (with discount)
+            var totalHT = totalAcompteHT + totalSoldeHT;
 
             var acompteTTC = totalAcompteHT * this.TVA_RATE;
             var soldeTTC = totalSoldeHT * this.TVA_RATE;
 
-            var totalHT = forfaitHT + supplementHT + produitsHT + assuranceHT;
             var totalTTC = totalHT * this.TVA_RATE;
 
             jQuery('#unified_acompte_ttc').text(acompteTTC.toFixed(2) + ' €');
@@ -812,6 +864,22 @@
                     toggle.find('i').removeClass('fa-check-circle').addClass('fa-circle-o');
                     toggle.find('span').text('Non validé');
                     chip.removeClass('validated');
+                }
+
+                // Load discount (remise) values
+                var discountPercent = parseFloat(quote.discount_percent) || 0;
+                var discountAmount = parseFloat(quote.discount_amount) || 0;
+                if (discountPercent > 0) {
+                    jQuery('input[name="unified_remise_type"][value="percent"]').prop('checked', true);
+                    jQuery('#unified_remise_percent').val(discountPercent).prop('disabled', false);
+                    jQuery('#unified_remise_amount').val(0).prop('disabled', true);
+                } else if (discountAmount > 0) {
+                    jQuery('input[name="unified_remise_type"][value="amount"]').prop('checked', true);
+                    jQuery('#unified_remise_amount').val(discountAmount).prop('disabled', false);
+                    jQuery('#unified_remise_percent').val(0).prop('disabled', true);
+                } else {
+                    jQuery('input[name="unified_remise_type"][value="none"]').prop('checked', true);
+                    jQuery('#unified_remise_percent, #unified_remise_amount').val(0).prop('disabled', true);
                 }
 
                 self.updateFromHT();
@@ -1573,6 +1641,19 @@
             jQuery('#unified_hidden_cf_1139').val(jQuery('#unified_cf_1139').val());
             jQuery('#unified_hidden_prestataire').val(jQuery('#unified_prestataire').val());
             jQuery('#unified_hidden_cf_1162').val(jQuery('#unified_cf_1162').val());
+
+            // Copy discount (remise) values
+            var remiseType = jQuery('input[name="unified_remise_type"]:checked').val() || 'none';
+            if (remiseType === 'percent') {
+                jQuery('#unified_hdnDiscountPercent').val(jQuery('#unified_remise_percent').val() || '0');
+                jQuery('#unified_hdnDiscountAmount').val('0');
+            } else if (remiseType === 'amount') {
+                jQuery('#unified_hdnDiscountPercent').val('0');
+                jQuery('#unified_hdnDiscountAmount').val(jQuery('#unified_remise_amount').val() || '0');
+            } else {
+                jQuery('#unified_hdnDiscountPercent').val('0');
+                jQuery('#unified_hdnDiscountAmount').val('0');
+            }
 
             // Prepare products
             var container = jQuery('#unifiedHiddenProductsContainer');
@@ -2572,20 +2653,56 @@
                 assuranceHT = ((assuranceValue / 1000) - 4) * tarifPour1000;
             }
 
-            // Forfait acompte: (forfait * PCT_ACOMPTE%) + supplement (supplement = 100% acompte)
+            // Calculate TOTAL HT BEFORE discount
+            var totalHTBeforeDiscount = forfaitHT + supplementHT + produitsHT + assuranceHT;
+
+            // Calculate discount (remise) - apply on TOTAL HT
+            var remiseType = jQuery('input[name="odm_remise_type"]:checked').val() || 'none';
+            var remiseHT = 0;
+            var maxRemisePercent = 15;
+            var maxRemiseAmount = totalHTBeforeDiscount * maxRemisePercent / 100;
+
+            if (remiseType === 'percent') {
+                var remisePercent = parseFloat(jQuery('#odm_remise_percent').val()) || 0;
+                // Limit to 15%
+                if (remisePercent > maxRemisePercent) {
+                    remisePercent = maxRemisePercent;
+                    jQuery('#odm_remise_percent').val(maxRemisePercent);
+                }
+                remiseHT = totalHTBeforeDiscount * remisePercent / 100;
+            } else if (remiseType === 'amount') {
+                remiseHT = parseFloat(jQuery('#odm_remise_amount').val()) || 0;
+                // Limit to 15% of total HT
+                if (remiseHT > maxRemiseAmount) {
+                    remiseHT = maxRemiseAmount;
+                    jQuery('#odm_remise_amount').val(maxRemiseAmount.toFixed(2));
+                }
+            }
+
+            // Update discount display
+            jQuery('#odm_remise_display').text(remiseHT.toFixed(2) + ' €');
+
+            // Calculate acompte and solde BEFORE discount
+            // Acompte = forfait acompte % + supplement + produits acompte + assurance (NO DISCOUNT)
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
             var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
 
-            // Forfait solde: forfait * PCT_SOLDE%
+            // Solde = forfait solde % + produits solde
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT;
+            var totalSoldeHTBeforeDiscount = forfaitSoldeHT + produitsSoldeHT;
+
+            // Apply discount ONLY to solde (acompte stays unchanged)
+            var totalSoldeHT = totalSoldeHTBeforeDiscount - remiseHT;
+            if (totalSoldeHT < 0) totalSoldeHT = 0;
+
+            // Total HT = acompte (no discount) + solde (with discount)
+            var totalHT = totalAcompteHT + totalSoldeHT;
 
             // TTC
             var acompteTTC = totalAcompteHT * this.TVA_RATE;
             var soldeTTC = totalSoldeHT * this.TVA_RATE;
 
             // Grand totals
-            var totalHT = forfaitHT + supplementHT + produitsHT + assuranceHT;
             var totalTTC = totalHT * this.TVA_RATE;
 
             // Total forfait TTC
@@ -2698,6 +2815,22 @@
             // Type de déménagement (cf_1269 in Quote -> cf_1352 in SalesOrder)
             jQuery('#odm_cf_1352').val(data.cf_1269 || '');
 
+            // Copy discount (remise) values from quote
+            var discountPercent = parseFloat(data.discount_percent) || 0;
+            var discountAmount = parseFloat(data.discount_amount) || 0;
+            if (discountPercent > 0) {
+                jQuery('input[name="odm_remise_type"][value="percent"]').prop('checked', true);
+                jQuery('#odm_remise_percent').val(discountPercent).prop('disabled', false);
+                jQuery('#odm_remise_amount').val(0).prop('disabled', true);
+            } else if (discountAmount > 0) {
+                jQuery('input[name="odm_remise_type"][value="amount"]').prop('checked', true);
+                jQuery('#odm_remise_amount').val(discountAmount).prop('disabled', false);
+                jQuery('#odm_remise_percent').val(0).prop('disabled', true);
+            } else {
+                jQuery('input[name="odm_remise_type"][value="none"]').prop('checked', true);
+                jQuery('#odm_remise_percent, #odm_remise_amount').val(0).prop('disabled', true);
+            }
+
             // Products (with percentages from quote)
             if (data.products && data.products.length > 0) {
                 data.products.forEach(function(p) {
@@ -2793,6 +2926,22 @@
             jQuery('#odm_hidden_cf_1178').val(data.cf_1178 || 57); // % Solde
             jQuery('#odm_hidden_cf_1188').val(data.cf_1188 || ''); // Description forfait
             jQuery('#odm_hidden_cf_1190').val(data.cf_1190 || ''); // Description assurance
+
+            // Load discount (remise) values
+            var discountPercent = parseFloat(data.discount_percent) || 0;
+            var discountAmount = parseFloat(data.discount_amount) || 0;
+            if (discountPercent > 0) {
+                jQuery('input[name="odm_remise_type"][value="percent"]').prop('checked', true);
+                jQuery('#odm_remise_percent').val(discountPercent).prop('disabled', false);
+                jQuery('#odm_remise_amount').val(0).prop('disabled', true);
+            } else if (discountAmount > 0) {
+                jQuery('input[name="odm_remise_type"][value="amount"]').prop('checked', true);
+                jQuery('#odm_remise_amount').val(discountAmount).prop('disabled', false);
+                jQuery('#odm_remise_percent').val(0).prop('disabled', true);
+            } else {
+                jQuery('input[name="odm_remise_type"][value="none"]').prop('checked', true);
+                jQuery('#odm_remise_percent, #odm_remise_amount').val(0).prop('disabled', true);
+            }
 
             // Prestataire
             if (data.prestataire) {
@@ -2994,6 +3143,19 @@
                 jQuery('#odm_hidden_cf_1190').val(this.quoteData.cf_1145 || '');  // Description assurance
             }
 
+            // Copy discount (remise) values
+            var remiseType = jQuery('input[name="odm_remise_type"]:checked').val() || 'none';
+            if (remiseType === 'percent') {
+                jQuery('#odm_hdnDiscountPercent').val(jQuery('#odm_remise_percent').val() || '0');
+                jQuery('#odm_hdnDiscountAmount').val('0');
+            } else if (remiseType === 'amount') {
+                jQuery('#odm_hdnDiscountPercent').val('0');
+                jQuery('#odm_hdnDiscountAmount').val(jQuery('#odm_remise_amount').val() || '0');
+            } else {
+                jQuery('#odm_hdnDiscountPercent').val('0');
+                jQuery('#odm_hdnDiscountAmount').val('0');
+            }
+
             // Calculate totals for hidden fields (same logic as calculateTotals)
             var forfaitHT = parseFloat(jQuery('#odm_cf_1180').val()) || 0;
             var supplement = parseFloat(jQuery('#odm_cf_1182').val()) || 0;
@@ -3011,27 +3173,60 @@
                 assuranceHT = ((assuranceValue / 1000) - 4) * tarifPour1000;
             }
 
-            // Include assurance in total
-            var totalHT = forfaitHT + supplement + productsHT + assuranceHT;
-            var totalTTC = totalHT * this.TVA_RATE;
-
-            jQuery('#odm_hdnSubTotal').val(totalHT.toFixed(2));
-            jQuery('#odm_hdnGrandTotal').val(totalTTC.toFixed(2));
-            jQuery('#odm_pre_tax_total').val(totalHT.toFixed(2));
-
             // Update assurance tarif field
             jQuery('#odm_hidden_cf_1174').val(assuranceHT.toFixed(2));
 
             // Acompte/Solde - use percentages from hidden fields
-            var PCT_ACOMPTE = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 43;
-            var PCT_SOLDE = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 57;
+            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 43;
+            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 57;
 
-            // Calculate acompte/solde like calculateTotals does
-            var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE / 100) + supplement + assuranceHT;
-            var forfaitSoldeHT = forfaitHT * PCT_SOLDE / 100;
-            var acompteTTC = forfaitAcompteHT * this.TVA_RATE;
-            var soldeTTC = forfaitSoldeHT * this.TVA_RATE;
+            // Calculate products with individual percentages
+            var produitsAcompteHT = 0;
+            var produitsSoldeHT = 0;
+            jQuery('#odm_productsList tr').each(function() {
+                var row = jQuery(this);
+                var totalCell = row.find('.product-total');
+                if (totalCell.length) {
+                    var lineTotal = parseFloat(totalCell.text()) || 0;
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 43;
+                    var pctSolde = 100 - pctAcompte;
+                    produitsAcompteHT += lineTotal * pctAcompte / 100;
+                    produitsSoldeHT += lineTotal * pctSolde / 100;
+                }
+            });
 
+            // Calculate acompte WITHOUT discount (normal)
+            var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplement;
+            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
+
+            // Calculate solde WITHOUT discount first
+            var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
+            var totalSoldeHTBeforeDiscount = forfaitSoldeHT + produitsSoldeHT;
+
+            // Get discount (remise) - apply ONLY to solde
+            var remiseHT = 0;
+            if (remiseType === 'percent') {
+                var remisePercent = parseFloat(jQuery('#odm_remise_percent').val()) || 0;
+                remiseHT = totalSoldeHTBeforeDiscount * remisePercent / 100;
+            } else if (remiseType === 'amount') {
+                remiseHT = parseFloat(jQuery('#odm_remise_amount').val()) || 0;
+            }
+
+            // Apply discount ONLY to solde
+            var totalSoldeHT = totalSoldeHTBeforeDiscount - remiseHT;
+            if (totalSoldeHT < 0) totalSoldeHT = 0;
+
+            // Total HT = acompte (no discount) + solde (with discount)
+            var totalHT = totalAcompteHT + totalSoldeHT;
+            var totalTTC = totalHT * this.TVA_RATE;
+
+            // TTC
+            var acompteTTC = totalAcompteHT * this.TVA_RATE;
+            var soldeTTC = totalSoldeHT * this.TVA_RATE;
+
+            jQuery('#odm_hdnSubTotal').val(totalHT.toFixed(2));
+            jQuery('#odm_hdnGrandTotal').val(totalTTC.toFixed(2));
+            jQuery('#odm_pre_tax_total').val(totalHT.toFixed(2));
             jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2));
             jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
 
