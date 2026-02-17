@@ -280,7 +280,7 @@
                         {if isset($FM_MOBILE)}
                         <div class="form-group">
                             <label>{vtranslate($FM_MOBILE->get('label'), $MODULE_NAME)}</label>
-                            <input type="text" class="unified-field-input" name="cf_981" data-fieldname="cf_981" data-fieldtype="phone" value="{$FM_MOBILE->get('fieldvalue')|escape:'html'}">
+                            <input type="text" class="unified-field-input" name="cf_981" data-fieldname="cf_981" data-fieldtype="phone" value="{$FM_MOBILE->get('fieldvalue')}">
                         </div>
                         {/if}
                         <div class="form-group">
@@ -292,13 +292,13 @@
                         {if isset($FM_MAIL)}
                         <div class="form-group">
                             <label>{vtranslate($FM_MAIL->get('label'), $MODULE_NAME)}</label>
-                            <input type="text" class="unified-field-input" name="cf_1123" data-fieldname="cf_1123" data-fieldtype="email" value="{$FM_MAIL->get('fieldvalue')|escape:'html'}">
+                            <input type="text" class="unified-field-input" name="cf_1123" data-fieldname="cf_1123" data-fieldtype="email" value="{$FM_MAIL->get('fieldvalue')}">
                         </div>
                         {/if}
                         {if isset($FM_VOL_FINAL)}
                         <div class="form-group">
                             <label>{vtranslate($FM_VOL_FINAL->get('label'), $MODULE_NAME)}</label>
-                            <input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="{$FM_VOL_FINAL->get('fieldvalue')|escape:'html'}">
+                            <input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="{$FM_VOL_FINAL->get('fieldvalue')}">
                         </div>
                         {/if}
                         {if isset($FM_STATUT)}
@@ -338,7 +338,7 @@
                         {if isset($FM_POTENTIALNAME)}
                         <div class="form-group">
                             <label>Nom de l'affaire</label>
-                            <input type="text" class="unified-field-input" name="potentialname" data-fieldname="potentialname" data-fieldtype="string" value="{$FM_POTENTIALNAME->get('fieldvalue')|escape:'html'}">
+                            <input type="text" class="unified-field-input" name="potentialname" data-fieldname="potentialname" data-fieldtype="string" value="{$FM_POTENTIALNAME->get('fieldvalue')}">
                         </div>
                         {/if}
                         {if isset($FM_ASSIGNED)}
