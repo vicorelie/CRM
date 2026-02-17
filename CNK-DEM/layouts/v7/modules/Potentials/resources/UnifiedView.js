@@ -25,10 +25,21 @@
                 self.loadTabContent(tabName);
             });
 
-            // Load the initially active tab
-            var activeTab = jQuery('#unifiedTabNav li.active a').data('tab');
-            if (activeTab) {
-                this.loadTabContent(activeTab);
+            // Check if we should restore a specific tab after reload
+            var savedTab = sessionStorage.getItem('activeTab_' + recordId);
+            if (savedTab) {
+                console.log('[UnifiedView] Restoring saved tab:', savedTab);
+                sessionStorage.removeItem('activeTab_' + recordId);
+                // Activate the saved tab
+                jQuery('#unifiedTabNav a[data-tab="' + savedTab + '"]').tab('show');
+                // Explicitly load the content
+                this.loadTabContent(savedTab);
+            } else {
+                // Load the initially active tab
+                var activeTab = jQuery('#unifiedTabNav li.active a').data('tab');
+                if (activeTab) {
+                    this.loadTabContent(activeTab);
+                }
             }
         },
 
@@ -982,6 +993,11 @@
                     jQuery('#unified_productsList').empty();
                     jQuery('#unified_subject, #unified_cf_1005, #unified_cf_1127, #unified_cf_1129, #unified_cf_1139').val('');
 
+                    // Save current tab before reload to stay in the same tab
+                    var currentTab = jQuery('#unifiedTabNav li.active a').data('tab') || 'devis';
+                    var potentialId = jQuery('#devisTabContainer').data('potential-id');
+                    sessionStorage.setItem('activeTab_' + potentialId, currentTab);
+
                     // Reload the page to refresh the quotes list
                     setTimeout(function() {
                         location.reload();
@@ -1720,6 +1736,11 @@
             .then(function(response) {
                 app.helper.hideProgress();
                 app.helper.showSuccessNotification({message: recordId ? 'Devis sauvegarde!' : 'Devis cree avec succes!'});
+
+                // Save current tab before reload to stay in the same tab
+                var currentTab = jQuery('#unifiedTabNav li.active a').data('tab') || 'devis';
+                var potentialId = jQuery('#devisTabContainer').data('potential-id');
+                sessionStorage.setItem('activeTab_' + potentialId, currentTab);
 
                 // Reload the page to show updated quotes
                 setTimeout(function() {
