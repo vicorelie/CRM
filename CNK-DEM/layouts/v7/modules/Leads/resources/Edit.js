@@ -15,6 +15,7 @@ Vtiger_Edit_Js("Leads_Edit_Js", {}, {
         this.checkPendingRappel();
 
         this.registerRappelDetection();
+        this.registerAddressAutocomplete();
     },
 
     /**
@@ -144,7 +145,6 @@ Vtiger_Edit_Js("Leads_Edit_Js", {}, {
     getRecordId: function() {
         var recordId = jQuery('[name="record"]').val();
         if (!recordId) {
-            // Si on est en mode Quick Create ou autre
             var url = window.location.href;
             var match = url.match(/record=(\d+)/);
             if (match) {
@@ -152,5 +152,172 @@ Vtiger_Edit_Js("Leads_Edit_Js", {}, {
             }
         }
         return recordId;
+    },
+
+    // =====================================================
+    // ADDRESS AUTOCOMPLETE (api-adresse.data.gouv.fr)
+    // =====================================================
+
+    addressFieldGroups: [
+        { address: 'lane', postal: 'code', city: 'city', label: 'Départ' },
+        { address: 'cf_975', postal: 'cf_979', city: 'cf_973', label: 'Arrivée' }
+    ],
+
+    registerAddressAutocomplete: function() {
+        var self = this;
+
+        // Inject CSS
+        if (!jQuery('#address-autocomplete-css').length) {
+            jQuery('head').append(
+                '<style id="address-autocomplete-css">' +
+                '.address-autocomplete-dropdown { background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,.15); max-height:300px; overflow-y:auto; position:absolute; z-index:99999; }' +
+                '.address-autocomplete-dropdown .autocomplete-item { padding:10px 12px; cursor:pointer; border-bottom:1px solid #f0f0f0; transition:background .15s; }' +
+                '.address-autocomplete-dropdown .autocomplete-item:last-child { border-bottom:none; }' +
+                '.address-autocomplete-dropdown .autocomplete-item:hover { background:#f5f5f5; }' +
+                '.address-autocomplete-dropdown .autocomplete-item strong { color:#333; }' +
+                '</style>'
+            );
+        }
+
+        this.addressFieldGroups.forEach(function(group) {
+            var cityInput = jQuery('[name="' + group.city + '"]');
+            var postalInput = jQuery('[name="' + group.postal + '"]');
+            var addressInput = jQuery('[name="' + group.address + '"]');
+
+            if (postalInput.length) {
+                self.initPostalAutofill(postalInput, cityInput, group);
+            }
+            if (cityInput.length) {
+                self.initCityAutocomplete(cityInput, postalInput, group);
+            }
+            if (addressInput.length) {
+                self.initAddressAutocomplete(addressInput, postalInput, cityInput, group);
+            }
+        });
+
+        console.log('[Leads Edit] Address autocomplete registered');
+    },
+
+    initPostalAutofill: function(postalInput, cityInput, group) {
+        var timeout;
+        postalInput.on('input change blur', function() {
+            var val = jQuery(this).val().trim();
+            if (val.length === 5) {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    jQuery.ajax({
+                        url: 'https://api-adresse.data.gouv.fr/search/',
+                        data: { q: val, type: 'municipality', postcode: val, limit: 1 },
+                        success: function(data) {
+                            if (data.features && data.features.length > 0 && cityInput.length) {
+                                cityInput.val(data.features[0].properties.city);
+                                postalInput.css('background-color', '#e8f5e9');
+                                setTimeout(function() { postalInput.css('background-color', ''); }, 1000);
+                            }
+                        }
+                    });
+                }, 300);
+            }
+        });
+    },
+
+    initCityAutocomplete: function(cityInput, postalInput, group) {
+        var acTimeout;
+        var dropdownId = 'ac-edit-city-' + group.city;
+
+        cityInput.attr('autocomplete', 'off');
+        cityInput.on('input', function() {
+            clearTimeout(acTimeout);
+            var query = jQuery(this).val().trim();
+            if (query.length < 2) { jQuery('#' + dropdownId).remove(); return; }
+
+            acTimeout = setTimeout(function() {
+                jQuery.ajax({
+                    url: 'https://api-adresse.data.gouv.fr/search/',
+                    data: { q: query, type: 'municipality', limit: 8 },
+                    success: function(data) {
+                        jQuery('#' + dropdownId).remove();
+                        if (!data.features || data.features.length === 0) return;
+
+                        var dropdown = jQuery('<div id="' + dropdownId + '" class="address-autocomplete-dropdown"></div>');
+                        data.features.forEach(function(f) {
+                            var city = f.properties.city;
+                            var postcode = f.properties.postcode;
+                            jQuery('<div class="autocomplete-item"></div>')
+                                .html('<strong>' + city + '</strong> <span style="color:#666">(' + postcode + ')</span>')
+                                .on('mousedown', function(e) {
+                                    e.preventDefault();
+                                    cityInput.val(city);
+                                    if (postalInput.length) postalInput.val(postcode);
+                                    jQuery('#' + dropdownId).remove();
+                                })
+                                .appendTo(dropdown);
+                        });
+
+                        var offset = cityInput.offset();
+                        dropdown.css({ top: offset.top + cityInput.outerHeight(), left: offset.left, width: cityInput.outerWidth() });
+                        jQuery('body').append(dropdown);
+                    }
+                });
+            }, 300);
+        });
+
+        cityInput.on('blur', function() {
+            setTimeout(function() { jQuery('#' + dropdownId).remove(); }, 200);
+        });
+    },
+
+    initAddressAutocomplete: function(addressInput, postalInput, cityInput, group) {
+        var acTimeout;
+        var dropdownId = 'ac-edit-addr-' + group.address;
+
+        addressInput.attr('autocomplete', 'off');
+        addressInput.on('input', function() {
+            clearTimeout(acTimeout);
+            var query = jQuery(this).val().trim();
+            if (query.length < 3) { jQuery('#' + dropdownId).remove(); return; }
+
+            acTimeout = setTimeout(function() {
+                var reqData = { q: query, type: 'housenumber', limit: 8 };
+                if (postalInput.length) {
+                    var pc = postalInput.val().trim();
+                    if (pc.length === 5) reqData.postcode = pc;
+                }
+
+                jQuery.ajax({
+                    url: 'https://api-adresse.data.gouv.fr/search/',
+                    data: reqData,
+                    success: function(data) {
+                        jQuery('#' + dropdownId).remove();
+                        if (!data.features || data.features.length === 0) return;
+
+                        var dropdown = jQuery('<div id="' + dropdownId + '" class="address-autocomplete-dropdown"></div>');
+                        data.features.forEach(function(f) {
+                            var street = f.properties.name;
+                            var postcode = f.properties.postcode;
+                            var city = f.properties.city;
+                            jQuery('<div class="autocomplete-item"></div>')
+                                .html('<strong>' + street + '</strong><br><span style="color:#666;font-size:11px">' + postcode + ' ' + city + '</span>')
+                                .on('mousedown', function(e) {
+                                    e.preventDefault();
+                                    addressInput.val(street);
+                                    if (postalInput.length) postalInput.val(postcode);
+                                    if (cityInput.length) cityInput.val(city);
+                                    jQuery('#' + dropdownId).remove();
+                                })
+                                .appendTo(dropdown);
+                        });
+
+                        var offset = addressInput.offset();
+                        dropdown.css({ top: offset.top + addressInput.outerHeight(), left: offset.left, width: Math.max(addressInput.outerWidth(), 300) });
+                        jQuery('body').append(dropdown);
+                    }
+                });
+            }, 300);
+        });
+
+        addressInput.on('blur', function() {
+            setTimeout(function() { jQuery('#' + dropdownId).remove(); }, 200);
+        });
     }
 });
