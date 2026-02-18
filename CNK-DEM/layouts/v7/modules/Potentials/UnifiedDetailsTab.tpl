@@ -268,7 +268,16 @@
                     </div>
 
                     <div class="form-fields-grid">
-                        {* Row 1: Nom, Prénom, Mobile, Mobile sup *}
+                        {* Row 1: Salutation, Nom, Prénom, Mobile, Mobile sup *}
+                        <div class="form-group">
+                            <label>Salutation</label>
+                            <select class="unified-field-input contact-sync-field" data-fieldname="contact_salutation" data-contact-field="salutation">
+                                <option value=""></option>
+                                {foreach item=SALUT from=$SALUTATION_VALUES}
+                                    <option value="{$SALUT}" {if $SALUT eq $CONTACT_SALUTATION}selected{/if}>{$SALUT}</option>
+                                {/foreach}
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Nom</label>
                             <input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_lastname" data-contact-field="lastname" value="{$CONTACT_LASTNAME|escape:'html'}">
@@ -1699,6 +1708,11 @@ var UnifiedDetails = {
             saveTimeout[key] = setTimeout(function() {
                 field.trigger('_contactSave');
             }, 500);
+        });
+
+        // Auto-save contact sync fields (selects like Salutation) on change
+        jQuery('#detailsTabContainer').on('change', 'select.contact-sync-field', function() {
+            jQuery(this).trigger('_contactSave');
         });
 
         // Contact sync save handler

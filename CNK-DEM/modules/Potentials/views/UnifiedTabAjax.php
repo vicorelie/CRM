@@ -125,10 +125,11 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('MODULE_MODEL', $moduleModel);
 		$viewer->assign('VIEW', 'Detail');
 
-		// Get contact firstname/lastname
+		// Get contact firstname/lastname/salutation
 		$contactFirstname = '';
 		$contactLastname = '';
 		$contactOtherphone = '';
+		$contactSalutation = '';
 		$contactId = $recordModel->get('contact_id');
 		if (!empty($contactId)) {
 			try {
@@ -137,12 +138,22 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					$contactFirstname = decode_html($contactModel->get('firstname') ?: '');
 					$contactLastname = decode_html($contactModel->get('lastname') ?: '');
 					$contactOtherphone = decode_html($contactModel->get('otherphone') ?: '');
+					$contactSalutation = decode_html($contactModel->get('salutation') ?: '');
 				}
 			} catch (Exception $e) {}
+		}
+		// Get salutation picklist values
+		$salutationValues = array();
+		$adb = PearDatabase::getInstance();
+		$result = $adb->pquery("SELECT salutationtype FROM vtiger_salutationtype WHERE presence=1 ORDER BY sortorderid", array());
+		while ($row = $adb->fetch_array($result)) {
+			$salutationValues[] = $row['salutationtype'];
 		}
 		$viewer->assign('CONTACT_FIRSTNAME', $contactFirstname);
 		$viewer->assign('CONTACT_LASTNAME', $contactLastname);
 		$viewer->assign('CONTACT_OTHERPHONE', $contactOtherphone);
+		$viewer->assign('CONTACT_SALUTATION', $contactSalutation);
+		$viewer->assign('SALUTATION_VALUES', $salutationValues);
 
 		// Use the new styled template matching Devis tab design
 		return $viewer->view('UnifiedDetailsTab.tpl', $moduleName, true);
