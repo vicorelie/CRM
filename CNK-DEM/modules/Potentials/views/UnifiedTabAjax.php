@@ -138,7 +138,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					$contactFirstname = decode_html($contactModel->get('firstname') ?: '');
 					$contactLastname = decode_html($contactModel->get('lastname') ?: '');
 					$contactOtherphone = decode_html($contactModel->get('otherphone') ?: '');
-					$contactSalutation = decode_html($contactModel->get('salutation') ?: '');
+					$contactSalutation = decode_html($contactModel->get('salutationtype') ?: '');
 				}
 			} catch (Exception $e) {}
 		}

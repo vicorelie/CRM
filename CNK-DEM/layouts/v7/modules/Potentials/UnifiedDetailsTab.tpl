@@ -271,7 +271,7 @@
                         {* Row 1: Salutation, Nom, Prénom, Mobile, Mobile sup *}
                         <div class="form-group">
                             <label>Salutation</label>
-                            <select class="unified-field-input contact-sync-field" data-fieldname="contact_salutation" data-contact-field="salutation">
+                            <select class="unified-field-input contact-sync-field" data-fieldname="contact_salutationtype" data-contact-field="salutationtype">
                                 <option value=""></option>
                                 {foreach item=SALUT from=$SALUTATION_VALUES}
                                     <option value="{$SALUT}" {if $SALUT eq $CONTACT_SALUTATION}selected{/if}>{$SALUT}</option>
