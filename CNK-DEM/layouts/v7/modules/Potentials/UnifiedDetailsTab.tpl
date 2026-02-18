@@ -590,163 +590,107 @@
         </div>
 
         <div class="accordion-content" style="display: none;">
-            <div class="suppl-address-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px;">
-                {* CHARGEMENT supplementary block *}
-                {if $SUPPL_CHARGEMENT_FIELDS neq null}
-                <div class="suppl-block suppl-chargement" data-block="{$SUPPL_CHARGEMENT_KEY}">
-                    <div class="suppl-block-header header-green-light" style="padding: 10px 15px; border-radius: 8px 8px 0 0; color: white; font-weight: 600;">
-                        <i class="fa fa-upload"></i> Chargement
-                    </div>
-                    <div class="form-fields-grid form-fields-address" style="padding: 15px; background: #f8f9fa; border-radius: 0 0 8px 8px;">
-                    {foreach item=FIELD_MODEL key=FIELD_NAME from=$SUPPL_CHARGEMENT_FIELDS}
-                        {if !$FIELD_MODEL->isViewableInDetailView()}
-                            {continue}
-                        {/if}
-                        {if $FIELD_NAME eq 'cf_1043' || $FIELD_NAME eq 'cf_1049' || $FIELD_NAME eq 'cf_1045' || $FIELD_NAME eq 'cf_1047'}
-                            {continue}
-                        {/if}
-                        {assign var=fieldDataType value=$FIELD_MODEL->getFieldDataType()}
-                        {assign var=FIELD_VALUE value=$FIELD_MODEL->get('fieldvalue')}
-                        {assign var=IS_EDITABLE value=$FIELD_MODEL->isEditable()}
-                        {if $FIELD_MODEL->get('uitype') eq '19' || $FIELD_MODEL->get('uitype') eq '20'}
-                            <div class="form-group form-group-full">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <textarea class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" rows="2">{$FIELD_VALUE}</textarea>
-                                {else}
-                                    <div class="field-value field-value-text field-readonly">{if $FIELD_VALUE}{$FIELD_VALUE}{else}--{/if}</div>
-                                {/if}
-                            </div>
-                        {elseif $fieldDataType eq 'picklist'}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <select class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}">
-                                        <option value="">--</option>
-                                        {foreach item=PICKLIST_VALUE from=$FIELD_MODEL->getPicklistValues()}
-                                            <option value="{$PICKLIST_VALUE}" {if $FIELD_VALUE eq $PICKLIST_VALUE}selected{/if}>{vtranslate($PICKLIST_VALUE, $MODULE_NAME)}</option>
-                                        {/foreach}
-                                    </select>
-                                {else}
-                                    <div class="field-value field-readonly">{vtranslate($FIELD_VALUE, $MODULE_NAME)}</div>
-                                {/if}
-                            </div>
-                        {elseif $fieldDataType eq 'boolean'}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <select class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}">
-                                        <option value="1" {if $FIELD_VALUE eq '1' || $FIELD_VALUE eq 'on'}selected{/if}>Oui</option>
-                                        <option value="0" {if $FIELD_VALUE eq '0' || $FIELD_VALUE eq '' || $FIELD_VALUE eq 'off'}selected{/if}>Non</option>
-                                    </select>
-                                {else}
-                                    <div class="field-value field-readonly">{if $FIELD_VALUE eq '1' || $FIELD_VALUE eq 'on'}Oui{else}Non{/if}</div>
-                                {/if}
-                            </div>
-                        {elseif $fieldDataType eq 'date'}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    {assign var=DATE_VALUE value=''}
-                                    {if $FIELD_VALUE}{assign var=DATE_VALUE value=$FIELD_VALUE|date_format:'%Y-%m-%d'}{/if}
-                                    <input type="date" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$DATE_VALUE}">
-                                {else}
-                                    <div class="field-value field-readonly">{$FIELD_MODEL->getDisplayValue($FIELD_VALUE)}</div>
-                                {/if}
-                            </div>
-                        {else}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
-                                {else}
-                                    <div class="field-value field-readonly">{if $FIELD_VALUE}{$FIELD_VALUE}{else}--{/if}</div>
-                                {/if}
-                            </div>
-                        {/if}
-                    {/foreach}
-                    </div>
-                </div>
-                {/if}
+            {* ---- CHARGEMENT SUPPLÉMENTAIRE ---- *}
+            {if $SUPPL_CHARGEMENT_FIELDS neq null}
+            {assign var=SC value=$SUPPL_CHARGEMENT_FIELDS}
+            <div style="padding: 15px;" data-block="{$SUPPL_CHARGEMENT_KEY}">
 
-                {* LIVRAISON supplementary block *}
-                {if $SUPPL_LIVRAISON_FIELDS neq null}
-                <div class="suppl-block suppl-livraison" data-block="{$SUPPL_LIVRAISON_KEY}">
-                    <div class="suppl-block-header header-red-light" style="padding: 10px 15px; border-radius: 8px 8px 0 0; color: white; font-weight: 600;">
-                        <i class="fa fa-download"></i> Livraison
-                    </div>
-                    <div class="form-fields-grid form-fields-address" style="padding: 15px; background: #f8f9fa; border-radius: 0 0 8px 8px;">
-                    {foreach item=FIELD_MODEL key=FIELD_NAME from=$SUPPL_LIVRAISON_FIELDS}
-                        {if !$FIELD_MODEL->isViewableInDetailView()}
-                            {continue}
-                        {/if}
-                        {if $FIELD_NAME eq 'cf_1043' || $FIELD_NAME eq 'cf_1049' || $FIELD_NAME eq 'cf_1045' || $FIELD_NAME eq 'cf_1047'}
-                            {continue}
-                        {/if}
-                        {assign var=fieldDataType value=$FIELD_MODEL->getFieldDataType()}
-                        {assign var=FIELD_VALUE value=$FIELD_MODEL->get('fieldvalue')}
-                        {assign var=IS_EDITABLE value=$FIELD_MODEL->isEditable()}
-                        {if $FIELD_MODEL->get('uitype') eq '19' || $FIELD_MODEL->get('uitype') eq '20'}
-                            <div class="form-group form-group-full">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <textarea class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" rows="2">{$FIELD_VALUE}</textarea>
-                                {else}
-                                    <div class="field-value field-value-text field-readonly">{if $FIELD_VALUE}{$FIELD_VALUE}{else}--{/if}</div>
-                                {/if}
-                            </div>
-                        {elseif $fieldDataType eq 'picklist'}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <select class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}">
-                                        <option value="">--</option>
-                                        {foreach item=PICKLIST_VALUE from=$FIELD_MODEL->getPicklistValues()}
-                                            <option value="{$PICKLIST_VALUE}" {if $FIELD_VALUE eq $PICKLIST_VALUE}selected{/if}>{vtranslate($PICKLIST_VALUE, $MODULE_NAME)}</option>
-                                        {/foreach}
-                                    </select>
-                                {else}
-                                    <div class="field-value field-readonly">{vtranslate($FIELD_VALUE, $MODULE_NAME)}</div>
-                                {/if}
-                            </div>
-                        {elseif $fieldDataType eq 'boolean'}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <select class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}">
-                                        <option value="1" {if $FIELD_VALUE eq '1' || $FIELD_VALUE eq 'on'}selected{/if}>Oui</option>
-                                        <option value="0" {if $FIELD_VALUE eq '0' || $FIELD_VALUE eq '' || $FIELD_VALUE eq 'off'}selected{/if}>Non</option>
-                                    </select>
-                                {else}
-                                    <div class="field-value field-readonly">{if $FIELD_VALUE eq '1' || $FIELD_VALUE eq 'on'}Oui{else}Non{/if}</div>
-                                {/if}
-                            </div>
-                        {elseif $fieldDataType eq 'date'}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    {assign var=DATE_VALUE value=''}
-                                    {if $FIELD_VALUE}{assign var=DATE_VALUE value=$FIELD_VALUE|date_format:'%Y-%m-%d'}{/if}
-                                    <input type="date" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{$DATE_VALUE}">
-                                {else}
-                                    <div class="field-value field-readonly">{$FIELD_MODEL->getDisplayValue($FIELD_VALUE)}</div>
-                                {/if}
-                            </div>
-                        {else}
-                            <div class="form-group">
-                                <label>{vtranslate($FIELD_MODEL->get('label'), $MODULE_NAME)}</label>
-                                {if $IS_EDITABLE}
-                                    <input type="text" class="unified-field-input" name="{$FIELD_NAME}" data-fieldname="{$FIELD_NAME}" data-fieldtype="{$fieldDataType}" value="{decode_html($FIELD_VALUE)|escape:'html'}">
-                                {else}
-                                    <div class="field-value field-readonly">{if $FIELD_VALUE}{$FIELD_VALUE}{else}--{/if}</div>
-                                {/if}
-                            </div>
-                        {/if}
-                    {/foreach}
-                    </div>
+                {* === CHARGEMENT 2 === *}
+                <div class="suppl-block-header header-green-light" style="padding: 8px 15px; border-radius: 8px 8px 0 0; color: white; font-weight: 600; margin-bottom: 0;">
+                    <i class="fa fa-upload"></i> Chargement 2
                 </div>
-                {/if}
+                <div class="form-fields-grid form-fields-address" style="padding: 12px 15px; background: #f8f9fa; border-radius: 0 0 8px 8px; margin-bottom: 15px;">
+                    {if isset($SC.cf_1107)}<div class="form-group"><label>Adresse</label><input type="text" class="unified-field-input" name="cf_1107" data-fieldname="cf_1107" data-fieldtype="string" value="{$SC.cf_1107->get('fieldvalue')}"></div>{/if}
+                    {if isset($SC.cf_1103)}<div class="form-group"><label>Ville</label><input type="text" class="unified-field-input" name="cf_1103" data-fieldname="cf_1103" data-fieldtype="string" value="{$SC.cf_1103->get('fieldvalue')}"></div>{/if}
+                    {if isset($SC.cf_1099)}<div class="form-group"><label>Code postal</label><input type="text" class="unified-field-input" name="cf_1099" data-fieldname="cf_1099" data-fieldtype="string" value="{$SC.cf_1099->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SC.cf_1361)}<div class="form-group"><label>Type de logement</label><select class="unified-field-input" name="cf_1361" data-fieldname="cf_1361" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SC.cf_1361->getPicklistValues()}<option value="{$PV}" {if $SC.cf_1361->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                    {if isset($SC.cf_1362)}<div class="form-group"><label>Etage</label><input type="text" class="unified-field-input" name="cf_1362" data-fieldname="cf_1362" data-fieldtype="string" value="{$SC.cf_1362->get('fieldvalue')}"></div>{/if}
+                    {if isset($SC.cf_1363)}<div class="form-group"><label>Ascenseur</label><select class="unified-field-input" name="cf_1363" data-fieldname="cf_1363" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SC.cf_1363->getPicklistValues()}<option value="{$PV}" {if $SC.cf_1363->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+
+                    {if isset($SC.cf_1364)}<div class="form-group"><label>Escaliers</label><select class="unified-field-input" name="cf_1364" data-fieldname="cf_1364" data-fieldtype="boolean"><option value="0" {if $SC.cf_1364->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1364->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1365)}<div class="form-group"><label>Transbordement</label><select class="unified-field-input" name="cf_1365" data-fieldname="cf_1365" data-fieldtype="boolean"><option value="0" {if $SC.cf_1365->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1365->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1366)}<div class="form-group"><label>Distance portage</label><input type="text" class="unified-field-input" name="cf_1366" data-fieldname="cf_1366" data-fieldtype="string" value="{$SC.cf_1366->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SC.cf_1367)}<div class="form-group"><label>Demande stationnement</label><select class="unified-field-input" name="cf_1367" data-fieldname="cf_1367" data-fieldtype="boolean"><option value="0" {if $SC.cf_1367->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1367->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1368)}<div class="form-group"><label>Passage fenêtre</label><select class="unified-field-input" name="cf_1368" data-fieldname="cf_1368" data-fieldtype="boolean"><option value="0" {if $SC.cf_1368->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1368->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1369)}<div class="form-group"><label>Besoin monte meuble</label><select class="unified-field-input" name="cf_1369" data-fieldname="cf_1369" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SC.cf_1369->getPicklistValues()}<option value="{$PV}" {if $SC.cf_1369->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                </div>
+
+                {* === CHARGEMENT 3 === *}
+                <div class="suppl-block-header header-green-light" style="padding: 8px 15px; border-radius: 8px 8px 0 0; color: white; font-weight: 600; margin-bottom: 0;">
+                    <i class="fa fa-upload"></i> Chargement 3
+                </div>
+                <div class="form-fields-grid form-fields-address" style="padding: 12px 15px; background: #f8f9fa; border-radius: 0 0 8px 8px;">
+                    {if isset($SC.cf_1109)}<div class="form-group"><label>Adresse</label><input type="text" class="unified-field-input" name="cf_1109" data-fieldname="cf_1109" data-fieldtype="string" value="{$SC.cf_1109->get('fieldvalue')}"></div>{/if}
+                    {if isset($SC.cf_1105)}<div class="form-group"><label>Ville</label><input type="text" class="unified-field-input" name="cf_1105" data-fieldname="cf_1105" data-fieldtype="string" value="{$SC.cf_1105->get('fieldvalue')}"></div>{/if}
+                    {if isset($SC.cf_1101)}<div class="form-group"><label>Code postal</label><input type="text" class="unified-field-input" name="cf_1101" data-fieldname="cf_1101" data-fieldtype="string" value="{$SC.cf_1101->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SC.cf_1370)}<div class="form-group"><label>Type de logement</label><select class="unified-field-input" name="cf_1370" data-fieldname="cf_1370" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SC.cf_1370->getPicklistValues()}<option value="{$PV}" {if $SC.cf_1370->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                    {if isset($SC.cf_1371)}<div class="form-group"><label>Etage</label><input type="text" class="unified-field-input" name="cf_1371" data-fieldname="cf_1371" data-fieldtype="string" value="{$SC.cf_1371->get('fieldvalue')}"></div>{/if}
+                    {if isset($SC.cf_1372)}<div class="form-group"><label>Ascenseur</label><select class="unified-field-input" name="cf_1372" data-fieldname="cf_1372" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SC.cf_1372->getPicklistValues()}<option value="{$PV}" {if $SC.cf_1372->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+
+                    {if isset($SC.cf_1373)}<div class="form-group"><label>Escaliers</label><select class="unified-field-input" name="cf_1373" data-fieldname="cf_1373" data-fieldtype="boolean"><option value="0" {if $SC.cf_1373->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1373->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1374)}<div class="form-group"><label>Transbordement</label><select class="unified-field-input" name="cf_1374" data-fieldname="cf_1374" data-fieldtype="boolean"><option value="0" {if $SC.cf_1374->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1374->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1375)}<div class="form-group"><label>Distance portage</label><input type="text" class="unified-field-input" name="cf_1375" data-fieldname="cf_1375" data-fieldtype="string" value="{$SC.cf_1375->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SC.cf_1376)}<div class="form-group"><label>Demande stationnement</label><select class="unified-field-input" name="cf_1376" data-fieldname="cf_1376" data-fieldtype="boolean"><option value="0" {if $SC.cf_1376->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1376->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1377)}<div class="form-group"><label>Passage fenêtre</label><select class="unified-field-input" name="cf_1377" data-fieldname="cf_1377" data-fieldtype="boolean"><option value="0" {if $SC.cf_1377->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SC.cf_1377->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SC.cf_1378)}<div class="form-group"><label>Besoin monte meuble</label><select class="unified-field-input" name="cf_1378" data-fieldname="cf_1378" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SC.cf_1378->getPicklistValues()}<option value="{$PV}" {if $SC.cf_1378->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                </div>
             </div>
+            {/if}
+
+            {* ---- LIVRAISON SUPPLÉMENTAIRE ---- *}
+            {if $SUPPL_LIVRAISON_FIELDS neq null}
+            {assign var=SL value=$SUPPL_LIVRAISON_FIELDS}
+            <div style="padding: 15px;" data-block="{$SUPPL_LIVRAISON_KEY}">
+
+                {* === LIVRAISON 2 === *}
+                <div class="suppl-block-header header-red-light" style="padding: 8px 15px; border-radius: 8px 8px 0 0; color: white; font-weight: 600; margin-bottom: 0;">
+                    <i class="fa fa-download"></i> Livraison 2
+                </div>
+                <div class="form-fields-grid form-fields-address" style="padding: 12px 15px; background: #f8f9fa; border-radius: 0 0 8px 8px; margin-bottom: 15px;">
+                    {if isset($SL.cf_1119)}<div class="form-group"><label>Adresse</label><input type="text" class="unified-field-input" name="cf_1119" data-fieldname="cf_1119" data-fieldtype="string" value="{$SL.cf_1119->get('fieldvalue')}"></div>{/if}
+                    {if isset($SL.cf_1115)}<div class="form-group"><label>Ville</label><input type="text" class="unified-field-input" name="cf_1115" data-fieldname="cf_1115" data-fieldtype="string" value="{$SL.cf_1115->get('fieldvalue')}"></div>{/if}
+                    {if isset($SL.cf_1111)}<div class="form-group"><label>Code postal</label><input type="text" class="unified-field-input" name="cf_1111" data-fieldname="cf_1111" data-fieldtype="string" value="{$SL.cf_1111->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SL.cf_1379)}<div class="form-group"><label>Type de logement</label><select class="unified-field-input" name="cf_1379" data-fieldname="cf_1379" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SL.cf_1379->getPicklistValues()}<option value="{$PV}" {if $SL.cf_1379->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                    {if isset($SL.cf_1380)}<div class="form-group"><label>Etage</label><input type="text" class="unified-field-input" name="cf_1380" data-fieldname="cf_1380" data-fieldtype="string" value="{$SL.cf_1380->get('fieldvalue')}"></div>{/if}
+                    {if isset($SL.cf_1381)}<div class="form-group"><label>Ascenseur</label><select class="unified-field-input" name="cf_1381" data-fieldname="cf_1381" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SL.cf_1381->getPicklistValues()}<option value="{$PV}" {if $SL.cf_1381->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+
+                    {if isset($SL.cf_1382)}<div class="form-group"><label>Escaliers</label><select class="unified-field-input" name="cf_1382" data-fieldname="cf_1382" data-fieldtype="boolean"><option value="0" {if $SL.cf_1382->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1382->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1383)}<div class="form-group"><label>Transbordement</label><select class="unified-field-input" name="cf_1383" data-fieldname="cf_1383" data-fieldtype="boolean"><option value="0" {if $SL.cf_1383->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1383->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1384)}<div class="form-group"><label>Distance portage</label><input type="text" class="unified-field-input" name="cf_1384" data-fieldname="cf_1384" data-fieldtype="string" value="{$SL.cf_1384->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SL.cf_1385)}<div class="form-group"><label>Demande stationnement</label><select class="unified-field-input" name="cf_1385" data-fieldname="cf_1385" data-fieldtype="boolean"><option value="0" {if $SL.cf_1385->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1385->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1386)}<div class="form-group"><label>Passage fenêtre</label><select class="unified-field-input" name="cf_1386" data-fieldname="cf_1386" data-fieldtype="boolean"><option value="0" {if $SL.cf_1386->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1386->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1387)}<div class="form-group"><label>Besoin monte meuble</label><select class="unified-field-input" name="cf_1387" data-fieldname="cf_1387" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SL.cf_1387->getPicklistValues()}<option value="{$PV}" {if $SL.cf_1387->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                </div>
+
+                {* === LIVRAISON 3 === *}
+                <div class="suppl-block-header header-red-light" style="padding: 8px 15px; border-radius: 8px 8px 0 0; color: white; font-weight: 600; margin-bottom: 0;">
+                    <i class="fa fa-download"></i> Livraison 3
+                </div>
+                <div class="form-fields-grid form-fields-address" style="padding: 12px 15px; background: #f8f9fa; border-radius: 0 0 8px 8px;">
+                    {if isset($SL.cf_1121)}<div class="form-group"><label>Adresse</label><input type="text" class="unified-field-input" name="cf_1121" data-fieldname="cf_1121" data-fieldtype="string" value="{$SL.cf_1121->get('fieldvalue')}"></div>{/if}
+                    {if isset($SL.cf_1117)}<div class="form-group"><label>Ville</label><input type="text" class="unified-field-input" name="cf_1117" data-fieldname="cf_1117" data-fieldtype="string" value="{$SL.cf_1117->get('fieldvalue')}"></div>{/if}
+                    {if isset($SL.cf_1113)}<div class="form-group"><label>Code postal</label><input type="text" class="unified-field-input" name="cf_1113" data-fieldname="cf_1113" data-fieldtype="string" value="{$SL.cf_1113->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SL.cf_1388)}<div class="form-group"><label>Type de logement</label><select class="unified-field-input" name="cf_1388" data-fieldname="cf_1388" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SL.cf_1388->getPicklistValues()}<option value="{$PV}" {if $SL.cf_1388->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                    {if isset($SL.cf_1389)}<div class="form-group"><label>Etage</label><input type="text" class="unified-field-input" name="cf_1389" data-fieldname="cf_1389" data-fieldtype="string" value="{$SL.cf_1389->get('fieldvalue')}"></div>{/if}
+                    {if isset($SL.cf_1390)}<div class="form-group"><label>Ascenseur</label><select class="unified-field-input" name="cf_1390" data-fieldname="cf_1390" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SL.cf_1390->getPicklistValues()}<option value="{$PV}" {if $SL.cf_1390->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+
+                    {if isset($SL.cf_1391)}<div class="form-group"><label>Escaliers</label><select class="unified-field-input" name="cf_1391" data-fieldname="cf_1391" data-fieldtype="boolean"><option value="0" {if $SL.cf_1391->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1391->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1392)}<div class="form-group"><label>Transbordement</label><select class="unified-field-input" name="cf_1392" data-fieldname="cf_1392" data-fieldtype="boolean"><option value="0" {if $SL.cf_1392->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1392->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1393)}<div class="form-group"><label>Distance portage</label><input type="text" class="unified-field-input" name="cf_1393" data-fieldname="cf_1393" data-fieldtype="string" value="{$SL.cf_1393->get('fieldvalue')}"></div>{/if}
+
+                    {if isset($SL.cf_1394)}<div class="form-group"><label>Demande stationnement</label><select class="unified-field-input" name="cf_1394" data-fieldname="cf_1394" data-fieldtype="boolean"><option value="0" {if $SL.cf_1394->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1394->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1395)}<div class="form-group"><label>Passage fenêtre</label><select class="unified-field-input" name="cf_1395" data-fieldname="cf_1395" data-fieldtype="boolean"><option value="0" {if $SL.cf_1395->get('fieldvalue') neq '1'}selected{/if}>Non</option><option value="1" {if $SL.cf_1395->get('fieldvalue') eq '1'}selected{/if}>Oui</option></select></div>{/if}
+                    {if isset($SL.cf_1396)}<div class="form-group"><label>Besoin monte meuble</label><select class="unified-field-input" name="cf_1396" data-fieldname="cf_1396" data-fieldtype="picklist"><option value="">--</option>{foreach item=PV from=$SL.cf_1396->getPicklistValues()}<option value="{$PV}" {if $SL.cf_1396->get('fieldvalue') eq $PV}selected{/if}>{$PV}</option>{/foreach}</select></div>{/if}
+                </div>
+            </div>
+            {/if}
         </div>
     </div>
     {/if}
