@@ -1071,9 +1071,9 @@
     gap: 12px;
 }
 
-/* 4 columns grid for Détail/Info block */
+/* 5 columns grid for Détail/Info block */
 .details-tab-container .section-info .form-fields-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
 }
 
 .details-tab-container .form-group-full {
@@ -1309,7 +1309,7 @@
 /* Responsive */
 @media (max-width: 1200px) {
     .details-tab-container .section-info .form-fields-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
