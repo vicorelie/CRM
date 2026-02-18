@@ -147,11 +147,14 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             // Configurer le serveur SMTP
             setMailServerProperties($mail);
 
-            // Forcer le port Gmail si non défini
+            // Forcer le port et TLS si non défini
             if (empty($mail->Port) || $mail->Port == 25) {
                 $mail->Port = 587;
                 $mail->SMTPSecure = 'tls';
             }
+
+            // Forcer LOGIN auth (CRAM-MD5 échoue avec Brevo)
+            $mail->AuthType = 'LOGIN';
 
             if (empty($mail->Host)) {
                 throw new Exception('Serveur email sortant non configuré dans VTiger');

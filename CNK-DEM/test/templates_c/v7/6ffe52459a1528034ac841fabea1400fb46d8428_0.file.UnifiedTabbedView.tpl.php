@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-16 12:32:00
+/* Smarty version 4.5.5, created on 2026-02-18 15:49:32
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6992f2200a1d58_86932623',
+  'unifunc' => 'content_6995c36caa6181_11329820',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6ffe52459a1528034ac841fabea1400fb46d8428' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedTabbedView.tpl',
-      1 => 1771193065,
+      1 => 1771238650,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6992f2200a1d58_86932623 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6995c36caa6181_11329820 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.date_format.php','function'=>'smarty_modifier_date_format',),));
 ?>
 <div class="unified-view-wrapper"><div class="unified-container"><div class="unified-tabs-header"><div class="unified-header-left"><div class="header-info"><h1><i class="fa fa-user-circle"></i> <?php echo $_smarty_tpl->tpl_vars['CONTACT_NAME']->value;?>

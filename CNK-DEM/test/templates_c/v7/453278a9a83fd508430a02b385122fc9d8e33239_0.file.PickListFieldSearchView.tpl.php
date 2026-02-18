@@ -1,11 +1,11 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-16 12:33:00
+/* Smarty version 4.5.5, created on 2026-02-18 15:49:14
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/uitypes/PickListFieldSearchView.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6992f25c7eecf6_13045780',
+  'unifunc' => 'content_6995c35ae2d0d2_08348055',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6992f25c7eecf6_13045780 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6995c35ae2d0d2_08348055 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('FIELD_INFO', $_smarty_tpl->tpl_vars['FIELD_MODEL']->value->getFieldInfo());
 $_smarty_tpl->_assignInScope('PICKLIST_VALUES', $_smarty_tpl->tpl_vars['FIELD_INFO']->value['picklistvalues']);
 $_smarty_tpl->_assignInScope('FIELD_INFO', Vtiger_Util_Helper::toSafeHTML(Zend_Json::encode($_smarty_tpl->tpl_vars['FIELD_INFO']->value)));

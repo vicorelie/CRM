@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-16 12:32:00
+/* Smarty version 4.5.5, created on 2026-02-18 15:49:33
   from '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6992f2204d9641_50444933',
+  'unifunc' => 'content_6995c36d279212_49461967',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '6c3f04d3f2e8c8f29d10d7f6974b1d96a41863ad' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Potentials/UnifiedDetailsTab.tpl',
-      1 => 1771190448,
+      1 => 1771398789,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6992f2204d9641_50444933 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6995c36d279212_49461967 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.date_format.php','function'=>'smarty_modifier_date_format',),1=>array('file'=>'/var/www/CNK-DEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div class="details-tab-container" id="detailsTabContainer" data-record-id="<?php echo $_smarty_tpl->tpl_vars['RECORD']->value->getId();?>
@@ -237,16 +237,25 @@ $_smarty_tpl->_assignInScope('BLOCK', '');
 }
 if ($_smarty_tpl->tpl_vars['BLOCK']->value != null && smarty_modifier_count($_smarty_tpl->tpl_vars['FIELD_MODEL_LIST']->value) > 0) {?><div class="form-section section-info" data-block="<?php echo $_smarty_tpl->tpl_vars['BLOCK_LABEL_KEY']->value;?>
 "><div class="form-section-title title-purple"><i class="fa fa-briefcase"></i><?php echo vtranslate($_smarty_tpl->tpl_vars['BLOCK_LABEL_KEY']->value,$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
-</div><div class="form-fields-grid"><div class="form-group"><label>Nom</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_lastname" data-contact-field="lastname" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_LASTNAME']->value, ENT_QUOTES, 'UTF-8', true);?>
+</div><div class="form-fields-grid"><div class="form-group"><label>Salutation</label><select class="unified-field-input contact-sync-field" data-fieldname="contact_salutationtype" data-contact-field="salutationtype"><option value=""></option><?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['SALUTATION_VALUES']->value, 'SALUT');
+$_smarty_tpl->tpl_vars['SALUT']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['SALUT']->value) {
+$_smarty_tpl->tpl_vars['SALUT']->do_else = false;
+?><option value="<?php echo $_smarty_tpl->tpl_vars['SALUT']->value;?>
+" <?php if ($_smarty_tpl->tpl_vars['SALUT']->value == $_smarty_tpl->tpl_vars['CONTACT_SALUTATION']->value) {?>selected<?php }?>><?php echo $_smarty_tpl->tpl_vars['SALUT']->value;?>
+</option><?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></select></div><div class="form-group"><label>Nom</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_lastname" data-contact-field="lastname" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_LASTNAME']->value, ENT_QUOTES, 'UTF-8', true);?>
 "></div><div class="form-group"><label>Prénom</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_firstname" data-contact-field="firstname" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_FIRSTNAME']->value, ENT_QUOTES, 'UTF-8', true);?>
 "></div><?php if ((isset($_smarty_tpl->tpl_vars['FM_MOBILE']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_MOBILE']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
-</label><input type="text" class="unified-field-input" name="cf_981" data-fieldname="cf_981" data-fieldtype="phone" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_MOBILE']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+</label><input type="text" class="unified-field-input" name="cf_981" data-fieldname="cf_981" data-fieldtype="phone" value="<?php echo $_smarty_tpl->tpl_vars['FM_MOBILE']->value->get('fieldvalue');?>
 "></div><?php }?><div class="form-group"><label>Mobile sup</label><input type="text" class="unified-field-input contact-sync-field" data-fieldname="contact_otherphone" data-contact-field="otherphone" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['CONTACT_OTHERPHONE']->value, ENT_QUOTES, 'UTF-8', true);?>
 "></div><?php if ((isset($_smarty_tpl->tpl_vars['FM_MAIL']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_MAIL']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
-</label><input type="text" class="unified-field-input" name="cf_1123" data-fieldname="cf_1123" data-fieldtype="email" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_MAIL']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+</label><input type="text" class="unified-field-input" name="cf_1123" data-fieldname="cf_1123" data-fieldtype="email" value="<?php echo $_smarty_tpl->tpl_vars['FM_MAIL']->value->get('fieldvalue');?>
 "></div><?php }
 if ((isset($_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
-</label><input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+</label><input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="<?php echo $_smarty_tpl->tpl_vars['FM_VOL_FINAL']->value->get('fieldvalue');?>
 "></div><?php }
 if ((isset($_smarty_tpl->tpl_vars['FM_STATUT']->value))) {?><div class="form-group"><label><?php echo vtranslate($_smarty_tpl->tpl_vars['FM_STATUT']->value->get('label'),$_smarty_tpl->tpl_vars['MODULE_NAME']->value);?>
 </label><select class="unified-field-input" name="cf_971" data-fieldname="cf_971" data-fieldtype="picklist"><option value="">--</option><?php
@@ -266,7 +275,7 @@ if ((isset($_smarty_tpl->tpl_vars['FM_CREATEDTIME']->value))) {?><div class="for
 </div></div><?php }
 if ((isset($_smarty_tpl->tpl_vars['FM_POTENTIAL_NO']->value))) {?><div class="form-group"><label>Affaire N°</label><div class="field-value field-readonly"><?php echo $_smarty_tpl->tpl_vars['FM_POTENTIAL_NO']->value->get('fieldvalue');?>
 </div></div><?php }
-if ((isset($_smarty_tpl->tpl_vars['FM_POTENTIALNAME']->value))) {?><div class="form-group"><label>Nom de l'affaire</label><input type="text" class="unified-field-input" name="potentialname" data-fieldname="potentialname" data-fieldtype="string" value="<?php echo htmlspecialchars((string)$_smarty_tpl->tpl_vars['FM_POTENTIALNAME']->value->get('fieldvalue'), ENT_QUOTES, 'UTF-8', true);?>
+if ((isset($_smarty_tpl->tpl_vars['FM_POTENTIALNAME']->value))) {?><div class="form-group"><label>Nom de l'affaire</label><input type="text" class="unified-field-input" name="potentialname" data-fieldname="potentialname" data-fieldtype="string" value="<?php echo $_smarty_tpl->tpl_vars['FM_POTENTIALNAME']->value->get('fieldvalue');?>
 "></div><?php }
 if ((isset($_smarty_tpl->tpl_vars['FM_ASSIGNED']->value))) {?><div class="form-group"><label>Assigné à</label><?php $_smarty_tpl->_assignInScope('ASSIGNED_INFO', $_smarty_tpl->tpl_vars['FM_ASSIGNED']->value->getFieldInfo());
 $_smarty_tpl->_assignInScope('ASSIGNED_USERS', $_smarty_tpl->tpl_vars['ASSIGNED_INFO']->value['picklistvalues'][vtranslate('LBL_USERS')]);
@@ -814,9 +823,9 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div>
     gap: 12px;
 }
 
-/* 4 columns grid for Détail/Info block */
+/* 5 columns grid for Détail/Info block */
 .details-tab-container .section-info .form-fields-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
 }
 
 .details-tab-container .form-group-full {
@@ -1052,7 +1061,7 @@ $_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?></div>
 /* Responsive */
 @media (max-width: 1200px) {
     .details-tab-container .section-info .form-fields-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
@@ -1452,6 +1461,11 @@ var UnifiedDetails = {
             saveTimeout[key] = setTimeout(function() {
                 field.trigger('_contactSave');
             }, 500);
+        });
+
+        // Auto-save contact sync fields (selects like Salutation) on change
+        jQuery('#detailsTabContainer').on('change', 'select.contact-sync-field', function() {
+            jQuery(this).trigger('_contactSave');
         });
 
         // Contact sync save handler

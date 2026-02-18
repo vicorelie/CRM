@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2026-02-16 12:32:00
+/* Smarty version 4.5.5, created on 2026-02-18 15:49:14
   from '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Header.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6992f220064bb6_72242911',
+  'unifunc' => 'content_6995c35ad555e9_27400802',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '4b101a13a4c19c3cf25fc0be24bc0bdd71fe7a55' => 
     array (
       0 => '/var/www/CNK-DEM/layouts/v7/modules/Vtiger/Header.tpl',
-      1 => 1771232765,
+      1 => 1771238650,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6992f220064bb6_72242911 (Smarty_Internal_Template $_smarty_tpl) {
+function content_6995c35ad555e9_27400802 (Smarty_Internal_Template $_smarty_tpl) {
 ?><!DOCTYPE html><html><head><title><?php echo vtranslate($_smarty_tpl->tpl_vars['PAGETITLE']->value,$_smarty_tpl->tpl_vars['QUALIFIED_MODULE']->value);?>
 </title><link rel="SHORTCUT ICON" href="layouts/v7/skins/images/favicon.ico"><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet"><link type='text/css' rel='stylesheet' href='<?php echo vresource_url("libraries/bootstrap-legacy/css/bootstrap-responsive.min.css");?>
 '> <link type='text/css' rel='stylesheet' href='<?php echo vresource_url("layouts/v7/lib/todc/css/bootstrap.min.css");?>

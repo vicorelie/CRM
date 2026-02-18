@@ -325,6 +325,7 @@ function setMailServerProperties($mail)
 	$adb->println("Mail server name,username & password => '".$server."','".$username."','".$password."'");
 	if($smtp_auth){
 		$mail->SMTPAuth = true;	// turn on SMTP authentication
+		$mail->AuthType = 'LOGIN'; // Force LOGIN auth (CRAM-MD5 fails with Brevo)
 	}
     $mail->Host = $server;		// specify main and backup server
 	$mail->Username = $username ;	// SMTP username
