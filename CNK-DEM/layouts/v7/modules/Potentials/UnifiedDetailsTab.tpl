@@ -25,7 +25,7 @@
             {if $FN eq 'cf_1049'}{assign var=DATE_UNIQUE_LIVRAISON value=$FM->get('fieldvalue')}{/if}
             {if $FN eq 'cf_1045'}{assign var=PERIODE_DEBUT value=$FM->get('fieldvalue')}{/if}
             {if $FN eq 'cf_1047'}{assign var=PERIODE_FIN value=$FM->get('fieldvalue')}{/if}
-            {if $FN eq 'cf_961'}{assign var=DISTANCE_VALUE value=$FM->get('fieldvalue')}{/if}
+            {if $FN eq 'cf_961'}{assign var=DISTANCE_VALUE value=$FM->get('fieldvalue')}{assign var=FM_DISTANCE value=$FM}{/if}
             {if $FN eq 'cf_939'}{assign var=VOLUME_ESTIME_VALUE value=$FM->get('fieldvalue')}{/if}
             {if $FN eq 'cf_1259'}{assign var=VOLUME_FINAL_VALUE value=$FM->get('fieldvalue')}{/if}
             {if $FN eq 'cf_981'}{assign var=FM_MOBILE value=$FM}{/if}
@@ -308,6 +308,12 @@
                         <div class="form-group">
                             <label>{vtranslate($FM_VOL_FINAL->get('label'), $MODULE_NAME)}</label>
                             <input type="text" class="unified-field-input" name="cf_1259" data-fieldname="cf_1259" data-fieldtype="string" value="{$FM_VOL_FINAL->get('fieldvalue')}">
+                        </div>
+                        {/if}
+                        {if isset($FM_DISTANCE)}
+                        <div class="form-group">
+                            <label>{vtranslate($FM_DISTANCE->get('label'), $MODULE_NAME)}</label>
+                            <input type="text" class="unified-field-input" name="cf_961" data-fieldname="cf_961" data-fieldtype="string" value="{$FM_DISTANCE->get('fieldvalue')}">
                         </div>
                         {/if}
                         {if isset($FM_STATUT)}
