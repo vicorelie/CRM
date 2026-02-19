@@ -33,5 +33,30 @@ class Potentials_ListView_Model extends Vtiger_ListView_Model {
 
 		return $massActionLinks;
 	}
+
+	/**
+	 * Override getQuery to strip spaces when searching on cf_981 (Mobile)
+	 * so that "0612345678" matches "06 12 34 56 78" in the database.
+	 */
+	/**
+	 * Override getQuery to strip spaces when searching on cf_981 (Mobile)
+	 * so that "0612345678" matches "06 12 34 56 78" in the database.
+	 */
+	function getQuery() {
+		// Strip spaces from the search value if searching on cf_981
+		if ($this->get('search_key') === 'cf_981') {
+			$searchValue = str_replace(' ', '', $this->get('search_value') ?? '');
+			$this->set('search_value', $searchValue);
+		}
+		$query = parent::getQuery();
+		// Replace: vtiger_potentialscf.cf_981 LIKE '%xxx%'
+		// With:    REPLACE(vtiger_potentialscf.cf_981, ' ', '') LIKE '%xxx%'
+		$query = preg_replace(
+			'/\bvtiger_potentialscf\.cf_981\s+LIKE\s+/i',
+			"REPLACE(vtiger_potentialscf.cf_981, ' ', '') LIKE ",
+			$query
+		);
+		return $query;
+	}
 }
 ?>

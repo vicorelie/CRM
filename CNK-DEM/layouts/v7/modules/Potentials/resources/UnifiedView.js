@@ -175,6 +175,15 @@
                         console.error('[UnifiedView] UnifiedODM not defined!');
                     }
                     break;
+
+                case 'facture':
+                    console.log('[UnifiedView] Initializing Facture tab');
+                    if (window.UnifiedFacture) {
+                        UnifiedFacture.init();
+                    } else {
+                        console.error('[UnifiedView] UnifiedFacture not defined!');
+                    }
+                    break;
             }
         },
 
@@ -427,7 +436,7 @@
                 });
             });
 
-            // Calculate totals for VTiger
+            // Calculate totals for VTiger (must match server-side Quotes_Save_Action logic)
             var productsTotal = 0;
             jQuery('#unified_productsList tr').each(function() {
                 var qty = parseFloat(jQuery(this).find('input[name^="qty"]').val()) || 0;
@@ -437,12 +446,26 @@
 
             var forfaitHT = parseFloat(jQuery('#unified_cf_1127').val()) || 0;
             var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
-            var subTotal = productsTotal + forfaitHT + supplementHT;
-            var grandTotal = subTotal * 1.20; // TVA 20%
+            var assuranceValue = parseFloat(jQuery('#unified_cf_1139').val()) || 0;
+            var assuranceHT = assuranceValue > 0 ? ((assuranceValue - 4000) / 1000) * 14 : 0;
+            if (assuranceHT < 0) assuranceHT = 0;
+
+            var subTotal = productsTotal + forfaitHT + supplementHT + assuranceHT;
+
+            var remiseType = jQuery('input[name="unified_remise_type"]:checked').val() || 'none';
+            var discountHT = 0;
+            if (remiseType === 'percent') {
+                discountHT = subTotal * (parseFloat(jQuery('#unified_remise_percent').val()) || 0) / 100;
+            } else if (remiseType === 'amount') {
+                discountHT = parseFloat(jQuery('#unified_remise_amount').val()) || 0;
+            }
+            var preTaxTotal = subTotal - discountHT;
+            if (preTaxTotal < 0) preTaxTotal = 0;
+            var grandTotal = preTaxTotal * 1.20; // TVA 20%
 
             jQuery('#unified_hdnSubTotal').val(subTotal.toFixed(2));
             jQuery('#unified_hdnGrandTotal').val(grandTotal.toFixed(2));
-            jQuery('#unified_pre_tax_total').val(subTotal.toFixed(2));
+            jQuery('#unified_pre_tax_total').val(preTaxTotal.toFixed(2));
 
             // Show subtle saving indicator
             jQuery('#devisTabContainer').addClass('saving');
@@ -1705,7 +1728,7 @@
                 });
             });
 
-            // Calculate totals for VTiger
+            // Calculate totals for VTiger (must match server-side Quotes_Save_Action logic)
             var productsTotal = 0;
             jQuery('#unified_productsList tr').each(function() {
                 var qty = parseFloat(jQuery(this).find('input[name^="qty"]').val()) || 0;
@@ -1715,12 +1738,26 @@
 
             var forfaitHT = parseFloat(jQuery('#unified_cf_1127').val()) || 0;
             var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
-            var subTotal = productsTotal + forfaitHT + supplementHT;
-            var grandTotal = subTotal * 1.20; // TVA 20%
+            var assuranceValue = parseFloat(jQuery('#unified_cf_1139').val()) || 0;
+            var assuranceHT = assuranceValue > 0 ? ((assuranceValue - 4000) / 1000) * 14 : 0;
+            if (assuranceHT < 0) assuranceHT = 0;
+
+            var subTotal = productsTotal + forfaitHT + supplementHT + assuranceHT;
+
+            var remiseType = jQuery('input[name="unified_remise_type"]:checked').val() || 'none';
+            var discountHT = 0;
+            if (remiseType === 'percent') {
+                discountHT = subTotal * (parseFloat(jQuery('#unified_remise_percent').val()) || 0) / 100;
+            } else if (remiseType === 'amount') {
+                discountHT = parseFloat(jQuery('#unified_remise_amount').val()) || 0;
+            }
+            var preTaxTotal = subTotal - discountHT;
+            if (preTaxTotal < 0) preTaxTotal = 0;
+            var grandTotal = preTaxTotal * 1.20; // TVA 20%
 
             jQuery('#unified_hdnSubTotal').val(subTotal.toFixed(2));
             jQuery('#unified_hdnGrandTotal').val(grandTotal.toFixed(2));
-            jQuery('#unified_pre_tax_total').val(subTotal.toFixed(2));
+            jQuery('#unified_pre_tax_total').val(preTaxTotal.toFixed(2));
 
             // Show loading
             app.helper.showProgress();
@@ -3507,6 +3544,415 @@
                     app.helper.showErrorNotification({message: 'Erreur de chargement des données email'});
                 }
             });
+        }
+    };
+
+    // =====================================================
+    // UNIFIED FACTURE CONTROLLER
+    // =====================================================
+
+    window.UnifiedFacture = {
+        potentialId: null,
+        contactId: null,
+        selectedQuoteId: null,
+        selectedSOId: null,
+
+        init: function() {
+            var container = jQuery('#factureTabContainer');
+            if (!container.length) return;
+
+            this.potentialId = container.data('potential-id');
+            this.contactId = container.data('contact-id');
+            console.log('[UnifiedFacture] Initialized for potential', this.potentialId);
+        },
+
+        /**
+         * Find invoices linked to a quote or sales order
+         */
+        _getLinkedInvoices: function(recordId, type) {
+            var invoices = window.factureInvoices || [];
+            var linked = [];
+            for (var i = 0; i < invoices.length; i++) {
+                if (type === 'quote' && invoices[i].quote_id == recordId) {
+                    linked.push(invoices[i]);
+                } else if (type === 'salesorder' && invoices[i].salesorderid == recordId) {
+                    linked.push(invoices[i]);
+                }
+            }
+            return linked;
+        },
+
+        /**
+         * Select a quote chip - show appropriate actions
+         */
+        selectQuote: function(quoteId) {
+            this.selectedQuoteId = quoteId;
+
+            // Update chip active state
+            jQuery('#factureTabContainer .facture-section').first().find('.facture-chip').removeClass('active');
+            var chip = jQuery('#factureTabContainer .facture-chip[data-id="' + quoteId + '"][data-type="quote"]');
+            chip.addClass('active');
+
+            var quoteNo = chip.find('.chip-no').text();
+            jQuery('#factureQuoteLabel').text('Devis : ' + quoteNo);
+
+            // Build action buttons based on whether invoice exists
+            var hasInvoice = chip.data('has-invoice') == '1';
+            var linkedInvoices = this._getLinkedInvoices(quoteId, 'quote');
+            var btns = '';
+
+            if (hasInvoice && linkedInvoices.length > 0) {
+                // Already has invoice - show view button
+                var invId = linkedInvoices[0].invoiceid;
+                btns += '<button class="btn-facture btn-view-invoice" onclick="UnifiedFacture.openInvoicePDFPreview(' + invId + ')"><i class="fa fa-eye"></i> Voir la facture</button> ';
+                btns += '<button class="btn-facture btn-stripe" onclick="UnifiedFacture.openStripePayments()"><i class="fa fa-credit-card"></i> Paiements Stripe</button>';
+            } else {
+                // No invoice yet - show proforma preview + generate
+                btns += '<button class="btn-facture btn-proforma" onclick="UnifiedFacture.openProformaPreview(\'Quotes\')"><i class="fa fa-eye"></i> Aper\u00e7u Proforma</button> ';
+                btns += '<button class="btn-facture btn-generate" onclick="UnifiedFacture.generateInvoice(\'quote\')"><i class="fa fa-plus-circle"></i> G\u00e9n\u00e9rer la facture</button> ';
+                btns += '<button class="btn-facture btn-stripe" onclick="UnifiedFacture.openStripePayments()"><i class="fa fa-credit-card"></i> Paiements Stripe</button>';
+            }
+
+            jQuery('#factureQuoteButtons').html(btns);
+            jQuery('#factureQuoteActions').slideDown(200);
+        },
+
+        /**
+         * Select a sales order chip - show appropriate actions
+         */
+        selectSalesOrder: function(soId) {
+            this.selectedSOId = soId;
+
+            // Update chip active state
+            jQuery('#factureTabContainer .facture-section').eq(1).find('.facture-chip').removeClass('active');
+            var chip = jQuery('#factureTabContainer .facture-chip[data-id="' + soId + '"][data-type="salesorder"]');
+            chip.addClass('active');
+
+            var soNo = chip.find('.chip-no').text();
+            jQuery('#factureSOLabel').text('ODM : ' + soNo);
+
+            // Build action buttons based on whether invoice exists
+            var hasInvoice = chip.data('has-invoice') == '1';
+            var linkedInvoices = this._getLinkedInvoices(soId, 'salesorder');
+            var btns = '';
+
+            if (hasInvoice && linkedInvoices.length > 0) {
+                var invId = linkedInvoices[0].invoiceid;
+                btns += '<button class="btn-facture btn-view-invoice" onclick="UnifiedFacture.openInvoicePDFPreview(' + invId + ')"><i class="fa fa-eye"></i> Voir la facture</button>';
+            } else {
+                btns += '<button class="btn-facture btn-proforma" onclick="UnifiedFacture.openProformaPreview(\'SalesOrder\')"><i class="fa fa-eye"></i> Aper\u00e7u Proforma</button> ';
+                btns += '<button class="btn-facture btn-generate" onclick="UnifiedFacture.generateInvoice(\'salesorder\')"><i class="fa fa-plus-circle"></i> G\u00e9n\u00e9rer la facture</button>';
+            }
+
+            jQuery('#factureSOButtons').html(btns);
+            jQuery('#factureSOActions').slideDown(200);
+        },
+
+        /**
+         * Open proforma PDF preview (without creating an invoice)
+         */
+        openProformaPreview: function(sourceModule) {
+            var recordId = (sourceModule === 'Quotes') ? this.selectedQuoteId : this.selectedSOId;
+            if (!recordId) return;
+
+            var templates = window.factureInvoicePdfTemplates || [];
+            if (templates.length === 0) {
+                alert('Aucun template PDF Invoice disponible');
+                return;
+            }
+
+            var self = this;
+            var type = (sourceModule === 'Quotes') ? 'quote' : 'salesorder';
+
+            // First create the invoice, then preview it with source_module=Invoice
+            var btn = jQuery('#facture' + (type === 'quote' ? 'Quote' : 'SO') + 'Buttons .btn-proforma');
+            var origHtml = btn.html();
+            btn.html('<i class="fa fa-spinner fa-spin"></i> Chargement...').prop('disabled', true);
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Potentials',
+                    view: 'UnifiedTabAjax',
+                    mode: 'createInvoiceFromSource',
+                    source_id: recordId,
+                    source_module: sourceModule,
+                    potential_id: self.potentialId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.invoice) {
+                        // Add the new invoice to the JS data
+                        window.factureInvoices.push(response.invoice);
+
+                        // Gray out the chip
+                        var chip = jQuery('#factureTabContainer .facture-chip[data-id="' + recordId + '"][data-type="' + type + '"]');
+                        chip.addClass('has-invoice').attr('data-has-invoice', '1');
+
+                        // Update action buttons to show "Voir la facture"
+                        var invId = response.invoice.invoiceid;
+                        var newBtns = '<button class="btn-facture btn-view-invoice" onclick="UnifiedFacture.openInvoicePDFPreview(' + invId + ')"><i class="fa fa-eye"></i> Voir la facture</button>';
+                        if (type === 'quote') {
+                            newBtns += ' <button class="btn-facture btn-stripe" onclick="UnifiedFacture.openStripePayments()"><i class="fa fa-credit-card"></i> Paiements Stripe</button>';
+                        }
+                        jQuery('#facture' + (type === 'quote' ? 'Quote' : 'SO') + 'Buttons').html(newBtns);
+
+                        // Add row to the invoices table
+                        self._addInvoiceRow(response.invoice);
+                        jQuery('#factureInvoiceCount').text(window.factureInvoices.length);
+
+                        // Now open PDF preview with the INVOICE record
+                        self._showPDFModal(invId, templates, 'Invoice');
+                    } else {
+                        alert('Erreur: ' + (response.error || 'Impossible de cr\u00e9er la facture'));
+                        btn.html(origHtml).prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    alert('Erreur de connexion');
+                    btn.html(origHtml).prop('disabled', false);
+                }
+            });
+        },
+
+        /**
+         * Generate invoice from a quote or sales order via AJAX
+         */
+        generateInvoice: function(type) {
+            var recordId = (type === 'quote') ? this.selectedQuoteId : this.selectedSOId;
+            if (!recordId) return;
+
+            var self = this;
+            var sourceModule = (type === 'quote') ? 'Quotes' : 'SalesOrder';
+
+            if (!confirm('G\u00e9n\u00e9rer une facture \u00e0 partir de ce ' + (type === 'quote' ? 'devis' : 'ODM') + ' ?')) {
+                return;
+            }
+
+            // Show loading on the button
+            var btn = jQuery('#facture' + (type === 'quote' ? 'Quote' : 'SO') + 'Buttons .btn-generate');
+            var origHtml = btn.html();
+            btn.html('<i class="fa fa-spinner fa-spin"></i> G\u00e9n\u00e9ration...').prop('disabled', true);
+
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'Potentials',
+                    view: 'UnifiedTabAjax',
+                    mode: 'createInvoiceFromSource',
+                    source_id: recordId,
+                    source_module: sourceModule,
+                    potential_id: self.potentialId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.invoice) {
+                        // Add the new invoice to the JS data
+                        window.factureInvoices.push(response.invoice);
+
+                        // Gray out the chip
+                        var chip = jQuery('#factureTabContainer .facture-chip[data-id="' + recordId + '"][data-type="' + type + '"]');
+                        chip.addClass('has-invoice').attr('data-has-invoice', '1');
+
+                        // Update action buttons to show "Voir la facture"
+                        var invId = response.invoice.invoiceid;
+                        var newBtns = '<button class="btn-facture btn-view-invoice" onclick="UnifiedFacture.openInvoicePDFPreview(' + invId + ')"><i class="fa fa-eye"></i> Voir la facture</button>';
+                        if (type === 'quote') {
+                            newBtns += ' <button class="btn-facture btn-stripe" onclick="UnifiedFacture.openStripePayments()"><i class="fa fa-credit-card"></i> Paiements Stripe</button>';
+                        }
+                        jQuery('#facture' + (type === 'quote' ? 'Quote' : 'SO') + 'Buttons').html(newBtns);
+
+                        // Add row to the invoices table
+                        self._addInvoiceRow(response.invoice);
+
+                        // Update invoice count
+                        jQuery('#factureInvoiceCount').text(window.factureInvoices.length);
+                    } else {
+                        alert('Erreur: ' + (response.error || 'Impossible de g\u00e9n\u00e9rer la facture'));
+                        btn.html(origHtml).prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    alert('Erreur de connexion');
+                    btn.html(origHtml).prop('disabled', false);
+                }
+            });
+        },
+
+        /**
+         * Add a new invoice row to the table dynamically
+         */
+        _addInvoiceRow: function(inv) {
+            var templates = window.factureInvoicePdfTemplates || [];
+            var tbody = jQuery('#factureInvoicesTable tbody');
+
+            // If table doesn't exist yet (was "Aucune facture"), create it
+            if (!jQuery('#factureInvoicesTable').length) {
+                var tableHtml = '<table class="facture-table" id="factureInvoicesTable">' +
+                    '<thead><tr><th>N\u00b0</th><th>Sujet</th><th>Date</th><th>Total</th><th>Statut</th><th>Source</th><th>Actions</th></tr></thead>' +
+                    '<tbody></tbody></table>';
+                jQuery('#factureInvoicesBody').html(tableHtml);
+                tbody = jQuery('#factureInvoicesTable tbody');
+            }
+
+            var statusClass = 'status-created';
+            var statusLabel = 'Cr\u00e9\u00e9';
+            if (inv.invoicestatus === 'Paid') { statusClass = 'status-paid'; statusLabel = 'Pay\u00e9'; }
+            else if (inv.invoicestatus === 'Approved') { statusClass = 'status-approved'; statusLabel = 'Approuv\u00e9'; }
+
+            var pdfBtns = '';
+            for (var k = 0; k < templates.length; k++) {
+                pdfBtns += '<a href="index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF&source_module=Invoice&formodule=Invoice&record=' + inv.invoiceid + '&pdftemplateid=' + templates[k].id + '" target="_blank" class="btn-pdf-small" title="' + templates[k].name + '"><i class="fa fa-file-pdf-o"></i></a> ';
+            }
+            pdfBtns += '<button class="btn-pdf-small btn-preview" onclick="UnifiedFacture.openInvoicePDFPreview(' + inv.invoiceid + ')" title="Aper\u00e7u"><i class="fa fa-eye"></i></button>';
+
+            var source = '';
+            if (inv.quote_id) source = 'Devis';
+            if (inv.salesorderid) source = 'ODM';
+
+            var row = '<tr data-invoice-id="' + inv.invoiceid + '" style="background: #e8f5e9;">' +
+                '<td><strong>' + (inv.invoice_no || '--') + '</strong></td>' +
+                '<td>' + (inv.subject || '--') + '</td>' +
+                '<td>' + (inv.created_date || '--') + '</td>' +
+                '<td class="text-right"><strong>' + parseFloat(inv.total || 0).toFixed(2) + ' EUR</strong></td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+                '<td>' + source + '</td>' +
+                '<td><div class="facture-pdf-btns">' + pdfBtns + '</div></td>' +
+                '</tr>';
+
+            tbody.prepend(row);
+
+            // Flash effect
+            setTimeout(function() {
+                jQuery('#factureInvoicesTable tr[data-invoice-id="' + inv.invoiceid + '"]').css('background', '');
+            }, 3000);
+        },
+
+        /**
+         * Open PDF preview modal for an existing invoice
+         */
+        openInvoicePDFPreview: function(invoiceId) {
+            var templates = window.factureInvoicePdfTemplates || [];
+            if (templates.length === 0) {
+                alert('Aucun template PDF disponible');
+                return;
+            }
+            this._showPDFModal(invoiceId, templates, 'Invoice');
+        },
+
+        /**
+         * Show PDF preview modal with template sidebar
+         */
+        _showPDFModal: function(recordId, templates, sourceModule) {
+            var modalId = 'factureProformaModal';
+
+            // Sort templates: PROFORMA first
+            var sorted = templates.slice().sort(function(a, b) {
+                var aProf = (a.name && a.name.indexOf('PROFORMA') !== -1) ? 0 : 1;
+                var bProf = (b.name && b.name.indexOf('PROFORMA') !== -1) ? 0 : 1;
+                return aProf - bProf;
+            });
+
+            var firstTpl = sorted[0];
+            var previewUrl = 'index.php?module=PDFMaker&action=IndexAjax&mode=getPreviewContent&source_module=' + sourceModule + '&pdftemplateid=' + firstTpl.id + '&record=' + recordId + '&generate_type=inline';
+
+            // Build sidebar
+            var sidebarHtml = '';
+            for (var i = 0; i < sorted.length; i++) {
+                var activeClass = (i === 0) ? ' active' : '';
+                sidebarHtml += '<div class="proforma-tpl-item' + activeClass + '" data-tplid="' + sorted[i].id + '">';
+                sidebarHtml += '<i class="fa fa-file-pdf-o"></i> ' + sorted[i].name;
+                sidebarHtml += '</div>';
+            }
+
+            jQuery('#' + modalId).remove();
+
+            var modalHtml = '<div class="modal fade" id="' + modalId + '" tabindex="-1">' +
+                '<div class="modal-dialog" style="width: 90%; max-width: 1200px; margin: 30px auto;">' +
+                '<div class="modal-content" style="border-radius: 12px; overflow: hidden;">' +
+                '<div class="modal-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; padding: 12px 20px;">' +
+                '<button type="button" class="close" data-dismiss="modal" style="color: #fff; opacity: 0.8;"><span>&times;</span></button>' +
+                '<h4 class="modal-title"><i class="fa fa-file-pdf-o"></i> Aper\u00e7u ' + (sourceModule === 'Invoice' ? 'Facture' : 'Proforma') + '</h4>' +
+                '</div>' +
+                '<div class="modal-body" style="padding: 0; display: flex; height: 75vh;">' +
+                '<div class="proforma-sidebar" style="width: 230px; min-width: 230px; background: #f8f9fa; border-right: 1px solid #dee2e6; overflow-y: auto; padding: 10px 0;">' +
+                sidebarHtml +
+                '</div>' +
+                '<div style="flex: 1; position: relative;">' +
+                '<div class="proforma-loading" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 10;">' +
+                '<div style="text-align: center;"><div class="spinner" style="width: 40px; height: 40px; border: 3px solid #eee; border-top-color: #e74c3c; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div><p style="margin-top: 10px; color: #666;">Chargement...</p></div>' +
+                '</div>' +
+                '<iframe id="proformaPreviewIframe" src="' + previewUrl + '" style="width: 100%; height: 100%; border: none;" onload="jQuery(\'.proforma-loading\').hide()"></iframe>' +
+                '</div>' +
+                '</div>' +
+                '<div class="modal-footer" style="padding: 10px 20px;">' +
+                '<button type="button" class="btn btn-success" id="proformaDownloadBtn"><i class="fa fa-download"></i> T\u00e9l\u00e9charger</button> ' +
+                '<button type="button" class="btn btn-info" id="proformaPrintBtn"><i class="fa fa-print"></i> Imprimer</button> ' +
+                '<button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>' +
+                '</div>' +
+                '</div></div></div>';
+
+            jQuery('body').append(modalHtml);
+
+            var currentTplId = firstTpl.id;
+
+            // Sidebar click
+            jQuery('#' + modalId + ' .proforma-tpl-item').on('click', function() {
+                jQuery('#' + modalId + ' .proforma-tpl-item').removeClass('active');
+                jQuery(this).addClass('active');
+                currentTplId = jQuery(this).data('tplid');
+                jQuery('.proforma-loading').show();
+                jQuery('#proformaPreviewIframe').attr('src',
+                    'index.php?module=PDFMaker&action=IndexAjax&mode=getPreviewContent&source_module=' + sourceModule + '&pdftemplateid=' + currentTplId + '&record=' + recordId + '&generate_type=inline');
+            });
+
+            // Download
+            jQuery('#proformaDownloadBtn').on('click', function() {
+                window.open('index.php?module=PDFMaker&action=CreatePDFFromTemplate&mode=CreatePDF&source_module=' + sourceModule + '&formodule=' + sourceModule + '&record=' + recordId + '&pdftemplateid=' + currentTplId, '_blank');
+            });
+
+            // Print
+            jQuery('#proformaPrintBtn').on('click', function() {
+                var iframe = document.getElementById('proformaPreviewIframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.print();
+                }
+            });
+
+            jQuery('#' + modalId).modal('show');
+
+            // Add CSS for sidebar items
+            if (!jQuery('#proforma-modal-css').length) {
+                jQuery('head').append(
+                    '<style id="proforma-modal-css">' +
+                    '.proforma-tpl-item { padding: 10px 15px; cursor: pointer; border-left: 3px solid transparent; font-size: 13px; transition: all 0.15s; }' +
+                    '.proforma-tpl-item:hover { background: #e9ecef; }' +
+                    '.proforma-tpl-item.active { background: #fde8e8; border-left-color: #e74c3c; color: #c0392b; font-weight: 600; }' +
+                    '.proforma-tpl-item .fa { margin-right: 8px; color: #e74c3c; }' +
+                    '@keyframes spin { to { transform: rotate(360deg); } }' +
+                    '</style>'
+                );
+            }
+        },
+
+        /**
+         * Open Stripe payments modal
+         */
+        openStripePayments: function() {
+            if (!this.selectedQuoteId) return;
+            var quoteId = this.selectedQuoteId;
+
+            if (typeof openStripePaymentsModal === 'function') {
+                openStripePaymentsModal(quoteId);
+            } else {
+                jQuery.getScript('layouts/v7/modules/Quotes/resources/StripePaymentLinks.js', function() {
+                    if (typeof openStripePaymentsModal === 'function') {
+                        openStripePaymentsModal(quoteId);
+                    }
+                });
+            }
         }
     };
 

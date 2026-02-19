@@ -46,6 +46,12 @@
                         <span>ODM</span>
                     </a>
                 </li>
+                <li role="presentation" class="{if $ACTIVE_TAB eq 'facture'}active{/if}">
+                    <a href="#unified-tab-facture" data-tab="facture" data-toggle="tab" role="tab" class="tab-link tab-red">
+                        <i class="fa fa-file-text"></i>
+                        <span>Facture</span>
+                    </a>
+                </li>
                 {/if}
                 <li role="presentation" class="{if $ACTIVE_TAB eq 'mail'}active{/if}">
                     <a href="#unified-tab-mail" data-tab="mail" data-toggle="tab" role="tab" class="tab-link tab-pink">
@@ -140,6 +146,14 @@
                     <div class="loading-indicator">
                         <div class="spinner"></div>
                         <p>Chargement des ODM...</p>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane {if $ACTIVE_TAB eq 'facture'}active{/if}" id="unified-tab-facture">
+                <div class="tab-loader" data-loaded="false">
+                    <div class="loading-indicator">
+                        <div class="spinner"></div>
+                        <p>Chargement des factures...</p>
                     </div>
                 </div>
             </div>
@@ -383,6 +397,8 @@
 .unified-tabs > li.active .tab-link.tab-teal::after { background: #17a2b8; }
 .unified-tabs > li.active .tab-link.tab-pink { color: #e91e63; }
 .unified-tabs > li.active .tab-link.tab-pink::after { background: #e91e63; }
+.unified-tabs > li.active .tab-link.tab-red { color: #e74c3c; }
+.unified-tabs > li.active .tab-link.tab-red::after { background: #e74c3c; }
 
 /* Tab Content */
 .unified-tab-content {

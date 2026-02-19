@@ -307,6 +307,22 @@
                     </div>
                 </td>
             </tr>
+        {else}
+            {* Individual tax mode: show total TVA row *}
+            {assign var=_GT value=$FINAL_DETAILS['grandTotal']}
+            {assign var=_PT value=$FINAL_DETAILS['preTaxTotal']}
+            <tr>
+                <td width="83%">
+                    <div align="right">
+                        (+)&nbsp;<strong>{vtranslate('LBL_TAX',$MODULE_NAME)} (TVA 20%)</strong>
+                    </div>
+                </td>
+                <td>
+                    <div align="right">
+                        <span id="tax_final">{math equation="x - y" x=$_GT y=$_PT format="%.2f"}</span>
+                    </div>
+                </td>
+            </tr>
         {/if}
         {if $SH_PERCENT_VIEWABLE}
             <tr>

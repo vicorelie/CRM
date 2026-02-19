@@ -46,9 +46,35 @@ class SalesOrder_Record_Model extends Inventory_Record_Model {
 
 		$count = $adb->query_result($productsCount, 0, 'count');
 
-		// If we have products, use parent method normally
+		// If we have products, use parent method then fix preTaxTotal
+		// (parent sums only product lines, missing forfait/assurance)
 		if ($count > 0) {
-			return parent::getProducts();
+			$relatedProducts = parent::getProducts();
+
+			// Override preTaxTotal with the stored DB value (includes forfait + assurance - discount)
+			$soRow = $adb->pquery(
+				"SELECT so.subtotal, so.discount_amount, so.pre_tax_total, so.total FROM vtiger_salesorder so WHERE so.salesorderid = ?",
+				array($recordId)
+			);
+			if ($adb->num_rows($soRow) > 0) {
+				$storedPreTax = floatval($adb->query_result($soRow, 0, 'pre_tax_total'));
+				$storedSubtotal = floatval($adb->query_result($soRow, 0, 'subtotal'));
+				$storedDiscount = floatval($adb->query_result($soRow, 0, 'discount_amount'));
+				$storedTotal = floatval($adb->query_result($soRow, 0, 'total'));
+				$numDecimals = getCurrencyDecimalPlaces();
+
+				if ($storedPreTax > 0 && isset($relatedProducts[1]['final_details'])) {
+					$relatedProducts[1]['final_details']['preTaxTotal'] = number_format($storedPreTax, $numDecimals, '.', '');
+					$relatedProducts[1]['final_details']['hdnSubTotal'] = number_format($storedSubtotal, $numDecimals, '.', '');
+					$relatedProducts[1]['final_details']['discountTotal_final'] = number_format($storedDiscount, $numDecimals, '.', '');
+					$relatedProducts[1]['final_details']['totalAfterDiscount'] = number_format($storedPreTax, $numDecimals, '.', '');
+					$relatedProducts[1]['final_details']['grandTotal'] = number_format($storedTotal, $numDecimals, '.', '');
+					$taxAmount = $storedTotal - $storedPreTax;
+					$relatedProducts[1]['final_details']['tax_totalamount'] = number_format($taxAmount, $numDecimals, '.', '');
+				}
+			}
+
+			return $relatedProducts;
 		}
 
 		// If no products, construct final_details from database

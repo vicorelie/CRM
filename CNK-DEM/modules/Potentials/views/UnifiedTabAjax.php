@@ -13,6 +13,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$this->exposeMethod('getQuoteData');
 		$this->exposeMethod('getSalesOrderData');
 		$this->exposeMethod('getVendorAddress');
+		$this->exposeMethod('createInvoiceFromSource');
 	}
 
 	/**
@@ -88,6 +89,15 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 						break;
 					}
 					echo $this->renderODMTab($viewer, $recordModel);
+					break;
+
+				case 'facture':
+					$currentUser = Users_Record_Model::getCurrentUserModel();
+					if ($currentUser->get('is_admin') !== 'on') {
+						echo '<div class="alert alert-danger">Accès réservé aux administrateurs</div>';
+						break;
+					}
+					echo $this->renderFactureTab($viewer, $recordModel);
 					break;
 
 				case 'mail':
@@ -997,6 +1007,519 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		} catch (Exception $e) {
 			error_log('[UnifiedTabAjax] createBDCFromQuote error: ' . $e->getMessage());
 			echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Render the Facture tab content (admin only)
+	 */
+	private function renderFactureTab($viewer, $recordModel) {
+		$db = PearDatabase::getInstance();
+		$recordId = $recordModel->getId();
+		$contactId = $recordModel->get('contact_id');
+
+		// Load all quotes for this Potential
+		$quotes = [];
+		$quoteIds = [];
+		$quotesQuery = "SELECT q.quoteid, q.quote_no, q.subject, q.total,
+						qcf.cf_1125, qcf.cf_1162, qcf.cf_1055, qcf.cf_1057,
+						DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+						FROM vtiger_quotes q
+						LEFT JOIN vtiger_quotescf qcf ON qcf.quoteid = q.quoteid
+						INNER JOIN vtiger_crmentity c ON c.crmid = q.quoteid
+						WHERE q.potentialid = ? AND c.deleted = 0
+						ORDER BY c.createdtime DESC";
+		$result = $db->pquery($quotesQuery, [$recordId]);
+		while ($row = $db->fetchByAssoc($result)) {
+			$quotes[] = $row;
+			$quoteIds[] = $row['quoteid'];
+		}
+
+		// Load sales orders for this Potential
+		$salesOrders = [];
+		$soIds = [];
+		$soQuery = "SELECT so.salesorderid, so.salesorder_no, so.subject, so.total, so.sostatus,
+					socf.cf_1186,
+					DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+					FROM vtiger_salesorder so
+					LEFT JOIN vtiger_salesordercf socf ON socf.salesorderid = so.salesorderid
+					INNER JOIN vtiger_crmentity c ON c.crmid = so.salesorderid
+					WHERE so.potentialid = ? AND c.deleted = 0
+					ORDER BY c.createdtime DESC";
+		$result = $db->pquery($soQuery, [$recordId]);
+		while ($row = $db->fetchByAssoc($result)) {
+			$salesOrders[] = $row;
+			$soIds[] = $row['salesorderid'];
+		}
+
+		// Load invoices linked to this Potential (via potential_id OR quote_id OR salesorderid)
+		$invoices = [];
+		$whereConditions = ["i.potential_id = ?"];
+		$params = [$recordId];
+		if (!empty($quoteIds)) {
+			$placeholders = implode(',', array_fill(0, count($quoteIds), '?'));
+			$whereConditions[] = "i.quote_id IN ($placeholders)";
+			$params = array_merge($params, $quoteIds);
+		}
+		if (!empty($soIds)) {
+			$placeholders = implode(',', array_fill(0, count($soIds), '?'));
+			$whereConditions[] = "i.salesorderid IN ($placeholders)";
+			$params = array_merge($params, $soIds);
+		}
+		$whereClause = implode(' OR ', $whereConditions);
+		$invoicesQuery = "SELECT i.invoiceid, i.invoice_no, i.subject, i.total, i.invoicestatus,
+						  i.quote_id, i.salesorderid, i.potential_id,
+						  DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+						  FROM vtiger_invoice i
+						  INNER JOIN vtiger_crmentity c ON c.crmid = i.invoiceid
+						  WHERE ($whereClause) AND c.deleted = 0
+						  ORDER BY c.createdtime DESC";
+		$result = $db->pquery($invoicesQuery, $params);
+		while ($row = $db->fetchByAssoc($result)) {
+			$invoices[] = $row;
+		}
+
+		// Load Stripe payments for quotes
+		$stripePayments = [];
+		if (!empty($quoteIds)) {
+			$placeholders = implode(',', array_fill(0, count($quoteIds), '?'));
+			$paymentsQuery = "SELECT sp.id, sp.quote_id, sp.payment_type, sp.amount, sp.description,
+							  sp.status, sp.invoice_id, sp.created_date, sp.paid_date
+							  FROM vtiger_stripe_payments sp
+							  WHERE sp.quote_id IN ($placeholders)
+							  ORDER BY sp.created_date DESC";
+			$result = $db->pquery($paymentsQuery, $quoteIds);
+			while ($row = $db->fetchByAssoc($result)) {
+				$stripePayments[] = $row;
+			}
+		}
+
+		// Load PDF templates for Invoice module
+		$invoicePdfTemplates = [];
+		$pdfQuery = "SELECT templateid, filename FROM vtiger_pdfmaker
+					 WHERE module = 'Invoice' AND deleted = 0
+					 ORDER BY filename ASC";
+		$result = $db->pquery($pdfQuery, []);
+		while ($row = $db->fetchByAssoc($result)) {
+			$invoicePdfTemplates[] = [
+				'id' => $row['templateid'],
+				'name' => $row['filename']
+			];
+		}
+
+		$viewer->assign('POTENTIAL_ID', $recordId);
+		$viewer->assign('CONTACT_ID', $contactId);
+		$viewer->assign('QUOTES', $quotes);
+		$viewer->assign('SALES_ORDERS', $salesOrders);
+		$viewer->assign('INVOICES', $invoices);
+		$viewer->assign('INVOICES_JSON', json_encode($invoices));
+		$viewer->assign('STRIPE_PAYMENTS', $stripePayments);
+		$viewer->assign('STRIPE_PAYMENTS_JSON', json_encode($stripePayments));
+		$viewer->assign('INVOICE_PDF_TEMPLATES', $invoicePdfTemplates);
+		$viewer->assign('INVOICE_PDF_TEMPLATES_JSON', json_encode($invoicePdfTemplates));
+
+		return $viewer->view('UnifiedFactureTab.tpl', 'Potentials', true);
+	}
+
+	/**
+	 * Create an Invoice from a Quote or SalesOrder (AJAX)
+	 */
+	public function createInvoiceFromSource(Vtiger_Request $request) {
+		$db = PearDatabase::getInstance();
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+
+		// Admin check
+		if ($currentUser->get('is_admin') !== 'on') {
+			echo json_encode(['success' => false, 'error' => 'Accès réservé aux administrateurs']);
+			return;
+		}
+
+		$sourceId = intval($request->get('source_id'));
+		$sourceModule = $request->get('source_module'); // 'Quotes' or 'SalesOrder'
+		$potentialId = intval($request->get('potential_id'));
+
+		if (!$sourceId || !in_array($sourceModule, ['Quotes', 'SalesOrder'])) {
+			echo json_encode(['success' => false, 'error' => 'Paramètres invalides']);
+			return;
+		}
+
+		try {
+			$userId = $currentUser->getId();
+
+			if ($sourceModule === 'Quotes') {
+				$invoiceId = $this->_createInvoiceFromQuote($db, $sourceId, $potentialId, $userId);
+			} else {
+				$invoiceId = $this->_createInvoiceFromSalesOrder($db, $sourceId, $potentialId, $userId);
+			}
+
+			if (!$invoiceId) {
+				echo json_encode(['success' => false, 'error' => 'Erreur lors de la création de la facture']);
+				return;
+			}
+
+			// Fetch the created invoice data to return to JS
+			$invResult = $db->pquery(
+				"SELECT i.invoiceid, i.invoice_no, i.subject, i.total, i.invoicestatus,
+				 i.quote_id, i.salesorderid, i.potential_id,
+				 DATE_FORMAT(c.createdtime, '%d/%m/%Y') as created_date
+				 FROM vtiger_invoice i
+				 INNER JOIN vtiger_crmentity c ON c.crmid = i.invoiceid
+				 WHERE i.invoiceid = ?", [$invoiceId]
+			);
+			$invoice = $db->fetchByAssoc($invResult);
+
+			echo json_encode(['success' => true, 'invoice' => $invoice]);
+
+		} catch (Exception $e) {
+			echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Create an Invoice from a Quote
+	 */
+	private function _createInvoiceFromQuote($db, $quoteId, $potentialId, $userId) {
+		// Fetch quote data (including discount/tax fields)
+		$quoteResult = $db->pquery(
+			"SELECT q.quoteid, q.quote_no, q.subject, q.contactid, q.accountid,
+			 q.total, q.subtotal, q.discount_percent, q.discount_amount,
+			 q.s_h_amount, q.adjustment, q.taxtype, q.pre_tax_total,
+			 q.currency_id, q.potentialid,
+			 ce.smownerid as assigned_user_id,
+			 qcf.cf_1055 as acompte_ttc, qcf.cf_1057 as solde_ttc,
+			 qcf.cf_1125 as type_forfait, qcf.cf_1127 as tarif_forfait,
+			 qcf.cf_1129 as supplement_forfait, qcf.cf_1137 as total_forfait,
+			 qcf.cf_1139 as montant_assurance, qcf.cf_1143 as tarif_assurance,
+			 qcf.cf_1269 as type_demenagement
+			 FROM vtiger_quotes q
+			 LEFT JOIN vtiger_crmentity ce ON ce.crmid = q.quoteid
+			 LEFT JOIN vtiger_quotescf qcf ON q.quoteid = qcf.quoteid
+			 WHERE q.quoteid = ?", [$quoteId]
+		);
+
+		if ($db->num_rows($quoteResult) == 0) {
+			throw new Exception('Devis non trouvé');
+		}
+
+		$quote = $db->fetch_array($quoteResult);
+		$assignedUserId = $quote['assigned_user_id'] ?: $userId;
+		$potId = $potentialId ?: ($quote['potentialid'] ?: null);
+
+		// Generate invoice number
+		$invoiceNo = $this->_generateInvoiceNumber($db);
+
+		// Get next CRM ID
+		$invoiceId = $this->_getNextCrmId($db);
+
+		// Calculate amounts
+		$total = floatval($quote['total'] ?? 0);
+		$subtotal = floatval($quote['subtotal'] ?? 0);
+		$acompteTTC = floatval($quote['acompte_ttc'] ?? 0);
+		$soldeTTC = floatval($quote['solde_ttc'] ?? 0);
+
+		$now = date('Y-m-d H:i:s');
+		$invoiceDate = date('Y-m-d');
+		$dueDate = date('Y-m-d', strtotime('+30 days'));
+		$invoiceLabel = $quote['subject'] ?: ('Facture ' . $quote['quote_no']);
+		// Replace Dev- prefix with Fac-
+		if (strpos($invoiceLabel, 'Dev-') === 0) {
+			$invoiceLabel = 'Fac-' . substr($invoiceLabel, 4);
+		}
+
+		// Create vtiger_crmentity
+		$db->pquery(
+			"INSERT INTO vtiger_crmentity (crmid, smcreatorid, smownerid, modifiedby, setype, description, createdtime, modifiedtime, presence, deleted, label)
+			 VALUES (?, ?, ?, ?, 'Invoice', ?, ?, ?, 1, 0, ?)",
+			[$invoiceId, $userId, $assignedUserId, $userId, 'Facture générée depuis devis ' . $quote['quote_no'], $now, $now, $invoiceLabel]
+		);
+
+		// Create vtiger_invoice (including discount, tax, shipping, adjustment)
+		$db->pquery(
+			"INSERT INTO vtiger_invoice (invoiceid, invoice_no, subject, contactid, invoicedate, duedate,
+			 invoicestatus, accountid, subtotal, total, received, balance, potential_id, quote_id,
+			 taxtype, discount_percent, discount_amount, s_h_amount, adjustment, pre_tax_total, currency_id)
+			 VALUES (?, ?, ?, ?, ?, ?, 'Created', ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			[$invoiceId, $invoiceNo, $invoiceLabel, $quote['contactid'],
+			 $invoiceDate, $dueDate, $quote['accountid'] ?: null,
+			 $subtotal, $total, $total, $potId, $quoteId,
+			 $quote['taxtype'] ?: 'individual',
+			 $quote['discount_percent'] ?: null,
+			 $quote['discount_amount'] ?: null,
+			 $quote['s_h_amount'] ?: 0,
+			 $quote['adjustment'] ?: 0,
+			 $quote['pre_tax_total'] ?: $subtotal,
+			 $quote['currency_id'] ?: 1]
+		);
+
+		// Calculate TVA amount
+		$preTaxTotal = floatval($quote['pre_tax_total'] ?? $subtotal);
+		$tvaAmount = $total - $preTaxTotal;
+
+		// Create vtiger_invoicecf with custom fields
+		$db->pquery(
+			"INSERT INTO vtiger_invoicecf (invoiceid, cf_1277, cf_1279, cf_1281, cf_1283, cf_1285, cf_1287,
+			 cf_1289, cf_1291, cf_1301, cf_1304, cf_1305, cf_1396)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			[$invoiceId,
+			 $quote['type_forfait'] ?? '', $quote['tarif_forfait'] ?? 0,
+			 $quote['supplement_forfait'] ?? 0, $quote['total_forfait'] ?? 0,
+			 $quote['montant_assurance'] ?? 0, $quote['tarif_assurance'] ?? 0,
+			 $acompteTTC, $soldeTTC, $total,
+			 $quote['quote_no'] ?? '', $quote['type_demenagement'] ?? '',
+			 $tvaAmount]
+		);
+
+		// Copy billing address
+		$this->_copyBillingAddress($db, $quoteId, $invoiceId, 'vtiger_quotesbillads', 'quotebilladdressid');
+
+		// Copy shipping address
+		$this->_copyShippingAddress($db, $quoteId, $invoiceId, 'vtiger_quotesshipads', 'quoteshipaddressid');
+
+		// Create relationships
+		$db->pquery("INSERT INTO vtiger_crmentityrel (crmid, module, relcrmid, relmodule) VALUES (?, 'Invoice', ?, 'Quotes')", [$invoiceId, $quoteId]);
+		if ($potId) {
+			$db->pquery("INSERT INTO vtiger_crmentityrel (crmid, module, relcrmid, relmodule) VALUES (?, 'Potentials', ?, 'Invoice')", [$potId, $invoiceId]);
+		}
+
+		// Copy products from quote
+		$this->_copyProductLines($db, $quoteId, $invoiceId);
+
+		return $invoiceId;
+	}
+
+	/**
+	 * Create an Invoice from a Sales Order
+	 */
+	private function _createInvoiceFromSalesOrder($db, $soId, $potentialId, $userId) {
+		// Fetch SO data (including discount/tax fields and custom fields)
+		$soResult = $db->pquery(
+			"SELECT so.salesorderid, so.salesorder_no, so.subject, so.contactid, so.accountid,
+			 so.total, so.subtotal, so.discount_percent, so.discount_amount,
+			 so.s_h_amount, so.adjustment, so.taxtype, so.pre_tax_total,
+			 so.currency_id, so.potentialid, so.quoteid as quote_id,
+			 ce.smownerid as assigned_user_id,
+			 socf.cf_1166 as acompte_ttc, socf.cf_1168 as solde_ttc,
+			 socf.cf_1186 as type_forfait, socf.cf_1180 as tarif_forfait,
+			 socf.cf_1182 as supplement_forfait, socf.cf_1184 as total_forfait,
+			 socf.cf_1170 as montant_assurance, socf.cf_1174 as tarif_assurance,
+			 socf.cf_1352 as type_demenagement
+			 FROM vtiger_salesorder so
+			 LEFT JOIN vtiger_crmentity ce ON ce.crmid = so.salesorderid
+			 LEFT JOIN vtiger_salesordercf socf ON so.salesorderid = socf.salesorderid
+			 WHERE so.salesorderid = ?", [$soId]
+		);
+
+		if ($db->num_rows($soResult) == 0) {
+			throw new Exception('ODM non trouvé');
+		}
+
+		$so = $db->fetch_array($soResult);
+		$assignedUserId = $so['assigned_user_id'] ?: $userId;
+		$potId = $potentialId ?: ($so['potentialid'] ?: null);
+
+		$invoiceNo = $this->_generateInvoiceNumber($db);
+		$invoiceId = $this->_getNextCrmId($db);
+
+		$total = floatval($so['total'] ?? 0);
+		$subtotal = floatval($so['subtotal'] ?? 0);
+		$acompteTTC = floatval($so['acompte_ttc'] ?? 0);
+		$soldeTTC = floatval($so['solde_ttc'] ?? 0);
+
+		// Get linked quote_no if SO has a quote_id
+		$quoteNo = '';
+		$quoteId = $so['quote_id'] ?? null;
+		if ($quoteId) {
+			$qnResult = $db->pquery("SELECT quote_no FROM vtiger_quotes WHERE quoteid = ?", [$quoteId]);
+			if ($db->num_rows($qnResult) > 0) {
+				$quoteNo = $db->query_result($qnResult, 0, 'quote_no');
+			}
+		}
+
+		$now = date('Y-m-d H:i:s');
+		$invoiceDate = date('Y-m-d');
+		$dueDate = date('Y-m-d', strtotime('+30 days'));
+		$invoiceLabel = $so['subject'] ?: ('Facture ' . $so['salesorder_no']);
+		// Replace Ord- prefix with Fac-
+		if (strpos($invoiceLabel, 'Ord-') === 0) {
+			$invoiceLabel = 'Fac-' . substr($invoiceLabel, 4);
+		}
+
+		// Create vtiger_crmentity
+		$db->pquery(
+			"INSERT INTO vtiger_crmentity (crmid, smcreatorid, smownerid, modifiedby, setype, description, createdtime, modifiedtime, presence, deleted, label)
+			 VALUES (?, ?, ?, ?, 'Invoice', ?, ?, ?, 1, 0, ?)",
+			[$invoiceId, $userId, $assignedUserId, $userId, 'Facture générée depuis ODM ' . $so['salesorder_no'], $now, $now, $invoiceLabel]
+		);
+
+		// Create vtiger_invoice (including discount, tax, shipping, adjustment, quote_id)
+		$db->pquery(
+			"INSERT INTO vtiger_invoice (invoiceid, invoice_no, subject, contactid, invoicedate, duedate,
+			 invoicestatus, accountid, subtotal, total, received, balance, potential_id, salesorderid, quote_id,
+			 taxtype, discount_percent, discount_amount, s_h_amount, adjustment, pre_tax_total, currency_id)
+			 VALUES (?, ?, ?, ?, ?, ?, 'Created', ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			[$invoiceId, $invoiceNo, $invoiceLabel, $so['contactid'],
+			 $invoiceDate, $dueDate, $so['accountid'] ?: null,
+			 $subtotal, $total, $total, $potId, $soId, $quoteId ?: null,
+			 $so['taxtype'] ?: 'individual',
+			 $so['discount_percent'] ?: null,
+			 $so['discount_amount'] ?: null,
+			 $so['s_h_amount'] ?: 0,
+			 $so['adjustment'] ?: 0,
+			 $so['pre_tax_total'] ?: $subtotal,
+			 $so['currency_id'] ?: 1]
+		);
+
+		// Calculate TVA amount
+		$preTaxTotal = floatval($so['pre_tax_total'] ?? $subtotal);
+		$tvaAmount = $total - $preTaxTotal;
+
+		// Create vtiger_invoicecf with all custom fields (same mapping as quote->invoice)
+		$db->pquery(
+			"INSERT INTO vtiger_invoicecf (invoiceid, cf_1277, cf_1279, cf_1281, cf_1283, cf_1285, cf_1287,
+			 cf_1289, cf_1291, cf_1301, cf_1304, cf_1305, cf_1396)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			[$invoiceId,
+			 $so['type_forfait'] ?? '', $so['tarif_forfait'] ?? 0,
+			 $so['supplement_forfait'] ?? 0, $so['total_forfait'] ?? 0,
+			 $so['montant_assurance'] ?? 0, $so['tarif_assurance'] ?? 0,
+			 $acompteTTC, $soldeTTC, $total,
+			 $quoteNo, $so['type_demenagement'] ?? '',
+			 $tvaAmount]
+		);
+
+		// Copy billing address from SO
+		$this->_copyBillingAddress($db, $soId, $invoiceId, 'vtiger_sobillads', 'sobilladdressid');
+
+		// Copy shipping address from SO
+		$this->_copyShippingAddress($db, $soId, $invoiceId, 'vtiger_soshipads', 'soshipaddressid');
+
+		// Create relationships
+		$db->pquery("INSERT INTO vtiger_crmentityrel (crmid, module, relcrmid, relmodule) VALUES (?, 'Invoice', ?, 'SalesOrder')", [$invoiceId, $soId]);
+		if ($potId) {
+			$db->pquery("INSERT INTO vtiger_crmentityrel (crmid, module, relcrmid, relmodule) VALUES (?, 'Potentials', ?, 'Invoice')", [$potId, $invoiceId]);
+		}
+
+		// Copy products from SO
+		$this->_copyProductLines($db, $soId, $invoiceId);
+
+		return $invoiceId;
+	}
+
+	/**
+	 * Generate the next invoice number using VTiger's numbering system
+	 */
+	private function _generateInvoiceNumber($db) {
+		$numResult = $db->pquery(
+			"SELECT prefix, cur_id FROM vtiger_modentity_num WHERE semodule = 'Invoice' AND active = 1", []
+		);
+
+		if ($db->num_rows($numResult) > 0) {
+			$prefix = $db->query_result($numResult, 0, 'prefix');
+			$curId = intval($db->query_result($numResult, 0, 'cur_id'));
+			$newId = $curId + 1;
+			$invoiceNo = $prefix . $newId;
+			$db->pquery("UPDATE vtiger_modentity_num SET cur_id = ? WHERE semodule = 'Invoice' AND active = 1", [$newId]);
+		} else {
+			$maxNoResult = $db->pquery("SELECT MAX(invoiceid) as max_id FROM vtiger_invoice", []);
+			$maxNo = $db->query_result($maxNoResult, 0, 'max_id') ?: 0;
+			$invoiceNo = 'FACTURE' . ($maxNo + 1);
+		}
+
+		return $invoiceNo;
+	}
+
+	/**
+	 * Get next available CRM ID
+	 */
+	private function _getNextCrmId($db) {
+		$seqResult = $db->pquery("SELECT MAX(id) as current_id FROM vtiger_crmentity_seq", []);
+		$currentSeq = intval($db->query_result($seqResult, 0, 'current_id')) ?: 0;
+
+		$maxIdResult = $db->pquery("SELECT MAX(crmid) as max_id FROM vtiger_crmentity", []);
+		$maxCrmId = intval($db->query_result($maxIdResult, 0, 'max_id')) ?: 0;
+
+		$newId = max($currentSeq, $maxCrmId) + 1;
+		$db->pquery("INSERT INTO vtiger_crmentity_seq (id) VALUES (?)", [$newId]);
+
+		return $newId;
+	}
+
+	/**
+	 * Copy billing address from source to invoice
+	 */
+	private function _copyBillingAddress($db, $sourceId, $invoiceId, $sourceTable, $sourceKey) {
+		$result = $db->pquery(
+			"SELECT bill_street, bill_city, bill_state, bill_code, bill_country, bill_pobox
+			 FROM $sourceTable WHERE $sourceKey = ?", [$sourceId]
+		);
+
+		if ($db->num_rows($result) > 0) {
+			$row = $db->fetch_array($result);
+			$db->pquery(
+				"INSERT INTO vtiger_invoicebillads (invoicebilladdressid, bill_street, bill_city, bill_state, bill_code, bill_country, bill_pobox)
+				 VALUES (?, ?, ?, ?, ?, ?, ?)",
+				[$invoiceId, $row['bill_street'] ?? '', $row['bill_city'] ?? '', $row['bill_state'] ?? '',
+				 $row['bill_code'] ?? '', $row['bill_country'] ?? '', $row['bill_pobox'] ?? '']
+			);
+		} else {
+			$db->pquery("INSERT INTO vtiger_invoicebillads (invoicebilladdressid) VALUES (?)", [$invoiceId]);
+		}
+	}
+
+	/**
+	 * Copy shipping address from source to invoice
+	 */
+	private function _copyShippingAddress($db, $sourceId, $invoiceId, $sourceTable, $sourceKey) {
+		$result = $db->pquery(
+			"SELECT ship_street, ship_city, ship_state, ship_code, ship_country, ship_pobox
+			 FROM $sourceTable WHERE $sourceKey = ?", [$sourceId]
+		);
+
+		if ($db->num_rows($result) > 0) {
+			$row = $db->fetch_array($result);
+			$db->pquery(
+				"INSERT INTO vtiger_invoiceshipads (invoiceshipaddressid, ship_street, ship_city, ship_state, ship_code, ship_country, ship_pobox)
+				 VALUES (?, ?, ?, ?, ?, ?, ?)",
+				[$invoiceId, $row['ship_street'] ?? '', $row['ship_city'] ?? '', $row['ship_state'] ?? '',
+				 $row['ship_code'] ?? '', $row['ship_country'] ?? '', $row['ship_pobox'] ?? '']
+			);
+		} else {
+			$db->pquery("INSERT INTO vtiger_invoiceshipads (invoiceshipaddressid) VALUES (?)", [$invoiceId]);
+		}
+	}
+
+	/**
+	 * Copy product lines from source (quote or SO) to invoice
+	 */
+	private function _copyProductLines($db, $sourceId, $invoiceId) {
+		$prodResult = $db->pquery(
+			"SELECT productid, sequence_no, quantity, listprice, discount_percent, discount_amount,
+			 comment, description, tax1, tax2, tax3, incrementondel
+			 FROM vtiger_inventoryproductrel WHERE id = ?", [$sourceId]
+		);
+
+		while ($row = $db->fetch_array($prodResult)) {
+			$db->pquery(
+				"INSERT INTO vtiger_inventoryproductrel (id, productid, sequence_no, quantity, listprice,
+				 discount_percent, discount_amount, comment, description, tax1, tax2, tax3, incrementondel)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				[$invoiceId, $row['productid'], $row['sequence_no'], $row['quantity'], $row['listprice'],
+				 $row['discount_percent'] ?? 0, $row['discount_amount'] ?? 0,
+				 $row['comment'] ?? '', $row['description'] ?? '',
+				 $row['tax1'] ?? 0, $row['tax2'] ?? 0, $row['tax3'] ?? 0,
+				 $row['incrementondel'] ?? 1]
+			);
+		}
+
+		// Copy product taxes
+		$taxResult = $db->pquery(
+			"SELECT productid, taxname, taxpercentage FROM vtiger_inventoryproductrel_tax WHERE id = ?", [$sourceId]
+		);
+		while ($row = $db->fetch_array($taxResult)) {
+			$db->pquery(
+				"INSERT INTO vtiger_inventoryproductrel_tax (id, productid, taxname, taxpercentage) VALUES (?, ?, ?, ?)",
+				[$invoiceId, $row['productid'], $row['taxname'], $row['taxpercentage']]
+			);
 		}
 	}
 
