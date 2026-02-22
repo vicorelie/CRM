@@ -3302,6 +3302,7 @@
 
                 container.append('<input type="hidden" name="hdnProductId' + lineNum + '" value="' + p.id + '">');
                 container.append('<input type="hidden" name="productName' + lineNum + '" value="' + p.name + '">');
+                container.append('<input type="hidden" name="productDescription' + lineNum + '" value="' + p.name + '">');
                 container.append('<input type="hidden" name="qty' + lineNum + '" value="' + p.qty + '">');
                 container.append('<input type="hidden" name="listPrice' + lineNum + '" value="' + p.price.toFixed(2) + '">');
                 container.append('<input type="hidden" name="lineItemType' + lineNum + '" value="Products">');

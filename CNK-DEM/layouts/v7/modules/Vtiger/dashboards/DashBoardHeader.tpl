@@ -12,6 +12,9 @@
 
 <div class='dashboardHeading container-fluid'>
 	<div class="buttonGroups pull-right">
+		<button class='btn btn-success' id="openDashboardCalendar" style="margin-right:10px;">
+			<i class="fa fa-calendar"></i> {vtranslate('LBL_CALENDAR', $MODULE_NAME)}
+		</button>
 		<div class="btn-group">
 			{if $SELECTABLE_WIDGETS|count gt 0}
 				<button class='btn btn-default addButton dropdown-toggle' data-toggle='dropdown'>

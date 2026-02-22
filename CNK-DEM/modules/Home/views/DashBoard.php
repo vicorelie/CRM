@@ -9,4 +9,30 @@
  *************************************************************************************/
 
 class Home_DashBoard_View extends Vtiger_DashBoard_View {
+
+	public function getHeaderScripts(Vtiger_Request $request) {
+		$headerScriptInstances = parent::getHeaderScripts($request);
+
+		$jsFileNames = array(
+			'~/layouts/v7/lib/jquery/fullcalendar/lib/moment.min.js',
+			'~/layouts/v7/lib/jquery/fullcalendar/fullcalendar.min.js',
+			'modules.Vtiger.resources.DashboardCalendar'
+		);
+
+		$jsScriptInstances = $this->checkAndConvertJsScripts($jsFileNames);
+		$headerScriptInstances = array_merge($headerScriptInstances, $jsScriptInstances);
+		return $headerScriptInstances;
+	}
+
+	public function getHeaderCss(Vtiger_Request $request) {
+		$headerCssInstances = parent::getHeaderCss($request);
+
+		$cssFileNames = array(
+			'~/layouts/v7/lib/jquery/fullcalendar/fullcalendar.min.css'
+		);
+
+		$cssInstances = $this->checkAndConvertCssStyles($cssFileNames);
+		$headerCssInstances = array_merge($headerCssInstances, $cssInstances);
+		return $headerCssInstances;
+	}
 }
