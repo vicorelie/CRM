@@ -76,7 +76,7 @@
 						<div class="row clearfix">
 							<div class='textAlignCenter col-lg-12 col-md-12 col-sm-12 '>
 								<button type='submit' class='btn btn-success saveButton' >{vtranslate('LBL_SAVE', $MODULE)}</button>&nbsp;&nbsp;
-								<a class='cancelLink' href="javascript:history.{if $DUPLICATE_RECORDS}go(-2){else}back(){/if}" type="reset">{vtranslate('LBL_CANCEL', $MODULE)}</a>
+								{if $RECORD_ID neq ''}<a class='cancelLink' href="index.php?module={$MODULE}&view=Detail&record={$RECORD_ID}" type="reset">{vtranslate('LBL_CANCEL', $MODULE)}</a>{else}<a class='cancelLink' href="index.php?module={$MODULE}&view=List" type="reset">{vtranslate('LBL_CANCEL', $MODULE)}</a>{/if}
 							</div>
 						</div>
 					</div>

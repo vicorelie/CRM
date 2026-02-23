@@ -12,6 +12,15 @@
 
 <div class='dashboardHeading container-fluid'>
 	<div class="buttonGroups pull-right">
+		<div class="btn-group" style="margin-right:10px;" id="smtpSwitcher">
+			<button class='btn btn-default dropdown-toggle' data-toggle='dropdown' title="Basculer SMTP">
+				<i class="fa fa-envelope"></i> SMTP: <span id="currentSMTP">Brevo</span> <i class="caret"></i>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a href="javascript:void(0)" onclick="switchSMTPProfile('Brevo')"><i class="fa fa-check" style="color:#27ae60;visibility:hidden;" id="smtp-check-brevo"></i> Brevo</a></li>
+				<li><a href="javascript:void(0)" onclick="switchSMTPProfile('Gmail')"><i class="fa fa-check" style="color:#27ae60;visibility:hidden;" id="smtp-check-gmail"></i> Gmail</a></li>
+			</ul>
+		</div>
 		<button class='btn btn-success' id="openDashboardCalendar" style="margin-right:10px;">
 			<i class="fa fa-calendar"></i> {vtranslate('LBL_CALENDAR', $MODULE_NAME)}
 		</button>
@@ -61,3 +70,54 @@
 		</div>
 	</div>
 </div>
+
+<script>
+// SMTP Switcher
+function switchSMTPProfile(profile) {
+	if (!confirm('Basculer vers ' + profile + ' ?')) return;
+
+	jQuery.ajax({
+		url: 'index.php',
+		type: 'POST',
+		data: {
+			module: 'Vtiger',
+			action: 'SwitchSMTP',
+			profile: profile
+		},
+		dataType: 'json',
+		success: function(response) {
+			if (response.success) {
+				jQuery('#currentSMTP').text(profile);
+				// Update checkmarks
+				jQuery('#smtp-check-brevo').css('visibility', profile === 'Brevo' ? 'visible' : 'hidden');
+				jQuery('#smtp-check-gmail').css('visibility', profile === 'Gmail' ? 'visible' : 'hidden');
+				alert('SMTP changé vers ' + profile);
+			} else {
+				alert('Erreur: ' + (response.error || 'Unknown error'));
+			}
+		},
+		error: function() {
+			alert('Erreur lors du changement de SMTP');
+		}
+	});
+}
+
+// Init: check active profile
+jQuery(document).ready(function() {
+	jQuery.ajax({
+		url: 'index.php',
+		type: 'GET',
+		data: {
+			module: 'Vtiger',
+			action: 'GetActiveSMTP'
+		},
+		dataType: 'json',
+		success: function(response) {
+			if (response.success && response.profile) {
+				jQuery('#currentSMTP').text(response.profile);
+				jQuery('#smtp-check-' + response.profile.toLowerCase()).css('visibility', 'visible');
+			}
+		}
+	});
+});
+</script>

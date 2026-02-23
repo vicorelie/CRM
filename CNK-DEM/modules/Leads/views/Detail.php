@@ -290,7 +290,7 @@ class Leads_Detail_View extends Accounts_Detail_View {
 					</div>
 
 					<div class="button-container">
-						<button type="button" class="btn btn-secondary" onclick="history.back()">
+						<button type="button" class="btn btn-secondary" onclick="window.location.href='index.php?module=Leads&view=List&app=MARKETING'">
 							<i class="fas fa-times"></i>
 							Annuler
 						</button>

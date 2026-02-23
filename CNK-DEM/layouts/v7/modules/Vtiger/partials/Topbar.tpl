@@ -81,6 +81,9 @@
 							<button type="button" class="button{if $MODULE=='Potentials'} active{/if}" onclick="window.location.href='/index.php?module=Potentials&view=List&app=SALES';">
 							AFFAIRES
 							</button>
+							<button type="button" class="button{if $VIEW=='Statistiques'} active{/if}" onclick="window.location.href='/index.php?module=Potentials&view=Statistiques';">
+							<i class="fa fa-bar-chart"></i> STATS
+							</button>
 						</div>
 						</li>
 							<div class="dropdown pull-left">

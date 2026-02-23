@@ -67,6 +67,7 @@ class Vtiger_Mailer extends \PHPMailer\PHPMailer\PHPMailer {
 		$result = $adb->pquery("SELECT * FROM vtiger_systems WHERE server_type=?", Array('email'));
 		if($adb->num_rows($result)) {
 			$this->Host = $adb->query_result($result, 0, 'server');
+			$this->Port = $adb->query_result($result, 0, 'server_port');
 			$this->Username = decode_html($adb->query_result($result, 0, 'server_username'));
 			$this->Password = Vtiger_Functions::fromProtectedText(decode_html($adb->query_result($result, 0, 'server_password')));
 			$this->SMTPAuth = $adb->query_result($result, 0, 'smtp_auth');

@@ -5,6 +5,8 @@
 var DashboardCalendar = {
 	calendarModal: null,
 	calendarInitialized: false,
+	allEvents: [],
+	activeFilters: ['devis_chargement', 'devis_livraison', 'odm_chargement', 'odm_livraison'],
 
 	init: function() {
 		jQuery('#openDashboardCalendar').on('click', function(e) {
@@ -26,6 +28,29 @@ var DashboardCalendar = {
 				'</h4>' +
 				'</div>' +
 				'<div class="modal-body" style="min-height:600px; padding:20px;">' +
+				'<div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:4px;">' +
+				'<strong style="margin-right:15px;">Filtres:</strong>' +
+				'<label style="margin-right:15px; font-weight:normal; cursor:pointer;">' +
+				'<input type="checkbox" class="calendar-filter" data-type="devis_chargement" checked style="margin-right:5px;">' +
+				'<span style="display:inline-block; width:12px; height:12px; background:#9b59b6; margin-right:3px; vertical-align:middle;"></span>' +
+				'Devis Chargement' +
+				'</label>' +
+				'<label style="margin-right:15px; font-weight:normal; cursor:pointer;">' +
+				'<input type="checkbox" class="calendar-filter" data-type="devis_livraison" checked style="margin-right:5px;">' +
+				'<span style="display:inline-block; width:12px; height:12px; background:#3498db; margin-right:3px; vertical-align:middle;"></span>' +
+				'Devis Livraison' +
+				'</label>' +
+				'<label style="margin-right:15px; font-weight:normal; cursor:pointer;">' +
+				'<input type="checkbox" class="calendar-filter" data-type="odm_chargement" checked style="margin-right:5px;">' +
+				'<span style="display:inline-block; width:12px; height:12px; background:#16a085; margin-right:3px; vertical-align:middle;"></span>' +
+				'ODM Chargement' +
+				'</label>' +
+				'<label style="margin-right:15px; font-weight:normal; cursor:pointer;">' +
+				'<input type="checkbox" class="calendar-filter" data-type="odm_livraison" checked style="margin-right:5px;">' +
+				'<span style="display:inline-block; width:12px; height:12px; background:#e67e22; margin-right:3px; vertical-align:middle;"></span>' +
+				'ODM Livraison' +
+				'</label>' +
+				'</div>' +
 				'<div id="dashboardCalendar"></div>' +
 				'</div>' +
 				'</div>' +
@@ -42,6 +67,7 @@ var DashboardCalendar = {
 		if (!DashboardCalendar.calendarInitialized) {
 			DashboardCalendar.calendarModal.on('shown.bs.modal', function() {
 				DashboardCalendar.initFullCalendar();
+				DashboardCalendar.registerFilterEvents();
 				DashboardCalendar.calendarInitialized = true;
 			});
 		} else {
@@ -78,7 +104,9 @@ var DashboardCalendar = {
 					},
 					dataType: 'json',
 					success: function(events) {
-						callback(events);
+						DashboardCalendar.allEvents = events;
+						var filteredEvents = DashboardCalendar.filterEvents(events);
+						callback(filteredEvents);
 					},
 					error: function() {
 						callback([]);
@@ -102,6 +130,42 @@ var DashboardCalendar = {
 				element.attr('title', tip);
 			}
 		});
+	},
+
+	registerFilterEvents: function() {
+		jQuery('.calendar-filter').on('change', function() {
+			var filterType = jQuery(this).data('type');
+			var isChecked = jQuery(this).is(':checked');
+
+			if (isChecked) {
+				// Ajouter le filtre s'il n'existe pas
+				if (DashboardCalendar.activeFilters.indexOf(filterType) === -1) {
+					DashboardCalendar.activeFilters.push(filterType);
+				}
+			} else {
+				// Retirer le filtre
+				var index = DashboardCalendar.activeFilters.indexOf(filterType);
+				if (index > -1) {
+					DashboardCalendar.activeFilters.splice(index, 1);
+				}
+			}
+
+			// Rafraîchir le calendrier avec les nouveaux filtres
+			DashboardCalendar.refreshCalendar();
+		});
+	},
+
+	filterEvents: function(events) {
+		return events.filter(function(event) {
+			return DashboardCalendar.activeFilters.indexOf(event.type) !== -1;
+		});
+	},
+
+	refreshCalendar: function() {
+		var filteredEvents = DashboardCalendar.filterEvents(DashboardCalendar.allEvents);
+		jQuery('#dashboardCalendar').fullCalendar('removeEvents');
+		jQuery('#dashboardCalendar').fullCalendar('addEventSource', filteredEvents);
+		jQuery('#dashboardCalendar').fullCalendar('rerenderEvents');
 	}
 };
 
