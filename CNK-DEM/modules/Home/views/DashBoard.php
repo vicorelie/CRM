@@ -16,7 +16,8 @@ class Home_DashBoard_View extends Vtiger_DashBoard_View {
 		$jsFileNames = array(
 			'~/layouts/v7/lib/jquery/fullcalendar/lib/moment.min.js',
 			'~/layouts/v7/lib/jquery/fullcalendar/fullcalendar.min.js',
-			'modules.Vtiger.resources.DashboardCalendar'
+			'modules.Vtiger.resources.DashboardCalendar',
+			'modules.Vtiger.resources.DashboardStationnement'
 		);
 
 		$jsScriptInstances = $this->checkAndConvertJsScripts($jsFileNames);

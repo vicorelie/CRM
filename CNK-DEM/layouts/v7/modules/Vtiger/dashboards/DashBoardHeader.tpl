@@ -24,6 +24,9 @@
 		<button class='btn btn-success' id="openDashboardCalendar" style="margin-right:10px;">
 			<i class="fa fa-calendar"></i> {vtranslate('LBL_CALENDAR', $MODULE_NAME)}
 		</button>
+		<button class='btn btn-warning' id="openDashboardStationnement" style="margin-right:10px;">
+			<i class="fa fa-car"></i> Stationnement
+		</button>
 		<div class="btn-group">
 			{if $SELECTABLE_WIDGETS|count gt 0}
 				<button class='btn btn-default addButton dropdown-toggle' data-toggle='dropdown'>
