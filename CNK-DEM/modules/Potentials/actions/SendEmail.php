@@ -276,7 +276,8 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             if ($mailResult != 1) {
                 throw new Exception('Erreur envoi email: ' . $mailResult);
             }
-            $this->log("MailSend OK");
+            $messageId = $mail->getLastMessageID();
+            $this->log("MailSend OK, Message-ID: $messageId");
 
             // Collecter les noms de toutes les pièces jointes pour l'historique
             $attachmentNames = [];
@@ -301,7 +302,7 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
 
             // Enregistrer l'email dans l'historique VTiger
             $ccString = !empty($ccAddresses) ? implode(',', $ccAddresses) : '';
-            $this->saveEmailToHistory($recordId, $toEmail, $ccString, $subject, $body, $emailTemplateId, $attachmentNames);
+            $this->saveEmailToHistory($recordId, $toEmail, $ccString, $subject, $body, $emailTemplateId, $attachmentNames, $messageId);
             $this->log("Email enregistré dans l'historique");
 
             // Nettoyer les fichiers temporaires PDF
@@ -364,7 +365,7 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
     /**
      * Enregistrer l'email envoyé dans l'historique VTiger
      */
-    private function saveEmailToHistory($potentialId, $toEmail, $ccEmail, $subject, $body, $templateId, $attachments = []) {
+    private function saveEmailToHistory($potentialId, $toEmail, $ccEmail, $subject, $body, $templateId, $attachments = [], $messageId = '') {
         try {
             $db = PearDatabase::getInstance();
             $currentUser = Users_Record_Model::getCurrentUserModel();
@@ -417,6 +418,12 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 $attachmentJson
             ]);
             $this->log("INSERT its4you_emails result: " . ($result2 ? 'OK' : 'FAILED'));
+
+            // Stocker le Message-ID pour le suivi Brevo
+            if (!empty($messageId)) {
+                $db->pquery("UPDATE its4you_emails SET message_id = ? WHERE its4you_emails_id = ?", [$messageId, $crmId]);
+                $this->log("Message-ID stored: $messageId for email $crmId");
+            }
 
             // Vérification: confirmer que le record existe
             $checkResult = $db->pquery("SELECT its4you_emails_id FROM its4you_emails WHERE its4you_emails_id = ?", [$crmId]);

@@ -256,6 +256,45 @@
 .er-badge.error { background: #ffebee; color: #c62828; }
 .er-badge.draft { background: #fff3e0; color: #e65100; }
 
+/* Brevo status progression */
+.er-brevo-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+}
+.er-brevo-step {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+}
+.er-brevo-step i {
+    font-size: 11px;
+}
+.er-brevo-step .step-label {
+    margin-left: 3px;
+}
+.er-brevo-sep {
+    margin: 0 3px;
+    color: #bbb;
+    font-size: 8px;
+}
+/* Couleurs par étape */
+.er-brevo-step.step-sent { color: #558b2f; }
+.er-brevo-step.step-delivered { color: #2e7d32; }
+.er-brevo-step.step-proxy_open { color: #00695c; }
+.er-brevo-step.step-opened { color: #1565c0; }
+.er-brevo-step.step-clicked { color: #6a1b9a; }
+.er-brevo-step.step-deferred { color: #f57f17; }
+.er-brevo-step.step-soft_bounce { color: #e65100; }
+.er-brevo-step.step-hard_bounce { color: #c62828; }
+.er-brevo-step.step-blocked { color: #ad1457; }
+.er-brevo-step.step-error { color: #c62828; }
+.er-brevo-step.step-complaint { color: #b71c1c; }
+.er-brevo-step.step-unsubscribed { color: #4e342e; }
+.er-brevo-step.step-invalid_email { color: #880e4f; }
+
 .email-row .er-meta {
     display: flex;
     align-items: center;
@@ -680,8 +719,22 @@
 jQuery(document).ready(function() {
     var recordId = jQuery('#mailTabContainer').data('record-id');
     var selectedQuoteId = '';
+    var emailRefreshInterval = null;
 
     loadEmailHistory();
+
+    // Auto-refresh statut Brevo toutes les 30 secondes
+    emailRefreshInterval = setInterval(function() {
+        loadEmailHistory(true);
+    }, 30000);
+
+    // Arrêter le refresh si on quitte l'onglet Mail
+    jQuery(document).on('shown.bs.tab', function() {
+        if (!jQuery('#mailTabContainer').is(':visible') && emailRefreshInterval) {
+            clearInterval(emailRefreshInterval);
+            emailRefreshInterval = null;
+        }
+    });
 
     // File attachments management
     var uploadedFiles = [];
@@ -971,7 +1024,7 @@ jQuery(document).ready(function() {
         });
     });
 
-    function loadEmailHistory() {
+    function loadEmailHistory(silent) {
         var $list = jQuery('#emailHistoryList');
 
         jQuery.ajax({
@@ -986,12 +1039,83 @@ jQuery(document).ready(function() {
                     jQuery('#emailCount').text(data.emails.length);
                     $list.empty();
 
+                    var brevoLabels = {
+                        'sent': 'Envoy\u00e9',
+                        'delivered': 'D\u00e9livr\u00e9',
+                        'opened': 'Ouvert',
+                        'clicked': 'Cliqu\u00e9',
+                        'hard_bounce': 'Hard bounce',
+                        'soft_bounce': 'Soft bounce',
+                        'blocked': 'Bloqu\u00e9',
+                        'deferred': 'Diff\u00e9r\u00e9',
+                        'complaint': 'Plainte',
+                        'unsubscribed': 'D\u00e9sinscrit',
+                        'invalid_email': 'Email invalide',
+                        'error': 'Erreur',
+                        'proxy_open': 'Charg\u00e9 par proxy'
+                    };
+
+                    var brevoIcons = {
+                        'sent': 'fa-paper-plane',
+                        'delivered': 'fa-check',
+                        'opened': 'fa-envelope-open-o',
+                        'clicked': 'fa-mouse-pointer',
+                        'hard_bounce': 'fa-exclamation-triangle',
+                        'soft_bounce': 'fa-exclamation-circle',
+                        'blocked': 'fa-ban',
+                        'deferred': 'fa-clock-o',
+                        'complaint': 'fa-flag',
+                        'unsubscribed': 'fa-user-times',
+                        'invalid_email': 'fa-times-circle',
+                        'error': 'fa-times',
+                        'proxy_open': 'fa-eye'
+                    };
+
                     data.emails.forEach(function(email) {
                         var statusClass = email.status || 'sent';
                         var statusLabel = '';
-                        if (statusClass === 'sent') statusLabel = 'Envoyé';
+                        if (statusClass === 'sent') statusLabel = 'Envoy\u00e9';
                         else if (statusClass === 'error') statusLabel = 'Erreur';
                         else if (statusClass === 'draft') statusLabel = 'Brouillon';
+
+                        // Brevo status progression
+                        var brevoBadge = '';
+                        if (email.brevo_status && email.brevo_events) {
+                            // Ordre normal du cycle de vie
+                            var progressionOrder = ['sent', 'delivered', 'proxy_open', 'opened', 'clicked'];
+                            // \u00c9v\u00e9nements d'erreur (terminaux)
+                            var errorEvents = ['deferred', 'soft_bounce', 'hard_bounce', 'blocked', 'error', 'complaint', 'unsubscribed', 'invalid_email'];
+
+                            var eventsSet = { };
+                            (email.brevo_events || []).forEach(function(e) { eventsSet[e] = true; });
+
+                            // Construire la cha\u00eene de progression
+                            var steps = [];
+                            progressionOrder.forEach(function(step) {
+                                if (eventsSet[step]) {
+                                    steps.push(step);
+                                }
+                            });
+                            // Ajouter l'\u00e9v\u00e9nement d'erreur s'il y en a un
+                            errorEvents.forEach(function(evt) {
+                                if (eventsSet[evt]) {
+                                    steps.push(evt);
+                                }
+                            });
+
+                            if (steps.length > 0) {
+                                var parts = [];
+                                for (var si = 0; si < steps.length; si++) {
+                                    var step = steps[si];
+                                    var icon = brevoIcons[step] || 'fa-info-circle';
+                                    var isLast = (si === steps.length - 1);
+                                    var label = isLast ? (' <span class="step-label">' + (brevoLabels[step] || step) + '</span>') : '';
+                                    var title = brevoLabels[step] || step;
+                                    parts.push('<span class="er-brevo-step step-' + step + '" title="' + title + '"><i class="fa ' + icon + '"></i>' + label + '</span>');
+                                }
+                                brevoBadge = '<span class="er-brevo-progress">' + parts.join('<span class="er-brevo-sep">\u203a</span>') + '</span>';
+                            }
+                        }
 
                         var html = '<div class="email-row" data-email-id="' + email.id + '" data-subject="' + (email.subject || '').replace(/"/g, '&quot;') + '">' +
                             '<span class="er-status ' + statusClass + '"></span>' +
@@ -1000,8 +1124,8 @@ jQuery(document).ready(function() {
                                 '<span class="er-to">' + (email.to || '') + '</span>' +
                             '</div>' +
                             '<div class="er-badges">' +
-                                '<span class="er-badge ' + statusClass + '">' + statusLabel + '</span>' +
-                                (email.has_attachments ? '<i class="fa fa-paperclip er-attach" title="Pièces jointes"></i>' : '') +
+                                (brevoBadge || '<span class="er-badge ' + statusClass + '">' + statusLabel + '</span>') +
+                                (email.has_attachments ? '<i class="fa fa-paperclip er-attach" title="Pi\u00e8ces jointes"></i>' : '') +
                             '</div>' +
                             '<div class="er-meta">' +
                                 '<span class="er-from">' + (email.from || '') + '</span>' +

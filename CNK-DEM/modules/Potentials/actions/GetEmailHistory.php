@@ -130,6 +130,7 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
                     e.to_email,
                     e.email_flag,
                     e.attachment_ids,
+                    e.message_id,
                     ce.createdtime,
                     u.first_name,
                     u.last_name
@@ -143,7 +144,59 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
 
         $result = $adb->pquery($sql, [$recordId, $contactId ?: 0]);
 
+        // Collect email IDs to batch-fetch Brevo events
+        $emailRows = [];
         while ($row = $adb->fetch_array($result)) {
+            $emailRows[] = $row;
+        }
+
+        // Batch fetch Brevo events for all emails that have a message_id
+        $brevoStatuses = [];
+        $brevoAllEvents = [];
+        $emailIdsWithMsg = [];
+        foreach ($emailRows as $row) {
+            if (!empty($row['message_id'])) {
+                $emailIdsWithMsg[] = intval($row['emailid']);
+            }
+        }
+        if (!empty($emailIdsWithMsg)) {
+            // Priorité des événements (plus élevé = plus avancé dans le cycle)
+            $eventPriority = [
+                'sent' => 1,
+                'delivered' => 2,
+                'deferred' => 3,
+                'proxy_open' => 4,
+                'opened' => 5,
+                'clicked' => 6,
+                'soft_bounce' => 7,
+                'hard_bounce' => 8,
+                'blocked' => 8,
+                'error' => 8,
+                'complaint' => 9,
+                'unsubscribed' => 9,
+                'invalid_email' => 8,
+            ];
+            $placeholders = implode(',', array_fill(0, count($emailIdsWithMsg), '?'));
+            $evtSql = "SELECT email_id, event_type FROM vtiger_email_events WHERE email_id IN ($placeholders)";
+            $evtResult = $adb->pquery($evtSql, $emailIdsWithMsg);
+            while ($evtRow = $adb->fetch_array($evtResult)) {
+                $eid = intval($evtRow['email_id']);
+                $etype = $evtRow['event_type'];
+                // Collecter tous les événements uniques
+                if (!isset($brevoAllEvents[$eid])) {
+                    $brevoAllEvents[$eid] = [];
+                }
+                $brevoAllEvents[$eid][$etype] = true;
+                // Garder le statut le plus avancé
+                $newPrio = $eventPriority[$etype] ?? 0;
+                $curPrio = isset($brevoStatuses[$eid]) ? ($eventPriority[$brevoStatuses[$eid]] ?? 0) : -1;
+                if ($newPrio > $curPrio) {
+                    $brevoStatuses[$eid] = $etype;
+                }
+            }
+        }
+
+        foreach ($emailRows as $row) {
             $toEmail = $row['to_email'];
             if (!empty($toEmail)) {
                 $toEmail = html_entity_decode($toEmail, ENT_QUOTES, 'UTF-8');
@@ -164,6 +217,15 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
                 $status = 'error';
             }
 
+            // Override with Brevo status if available
+            $brevoStatus = '';
+            $brevoEvents = [];
+            $eid = intval($row['emailid']);
+            if (isset($brevoStatuses[$eid])) {
+                $brevoStatus = $brevoStatuses[$eid];
+                $brevoEvents = array_keys($brevoAllEvents[$eid] ?? []);
+            }
+
             $subject = html_entity_decode($row['subject'] ?: 'Sans objet', ENT_QUOTES, 'UTF-8');
 
             $emails[] = [
@@ -174,7 +236,9 @@ class Potentials_GetEmailHistory_Action extends Vtiger_Action_Controller {
                 'raw_date' => $row['createdtime'],
                 'from' => trim($row['first_name'] . ' ' . $row['last_name']),
                 'has_attachments' => !empty($row['attachment_ids']),
-                'status' => $status
+                'status' => $status,
+                'brevo_status' => $brevoStatus,
+                'brevo_events' => $brevoEvents
             ];
         }
 
