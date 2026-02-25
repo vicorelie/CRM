@@ -66,6 +66,26 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 throw new Exception('Template email manquant');
             }
 
+            // Vérifier si l'email est bloqué (hard/soft bounce, invalid, complaint, unsubscribed)
+            global $adb;
+            $bounceCheck = $adb->pquery(
+                "SELECT event_type FROM vtiger_email_events WHERE to_email = ? AND event_type IN ('hard_bounce', 'soft_bounce', 'blocked', 'invalid_email', 'complaint', 'unsubscribed') LIMIT 1",
+                [$toEmail]
+            );
+            $bounceRow = $adb->fetch_array($bounceCheck);
+            if ($bounceRow) {
+                $reasonMap = [
+                    'hard_bounce'   => 'hard bounce',
+                    'soft_bounce'   => 'soft bounce',
+                    'blocked'       => 'adresse bloquée par Brevo',
+                    'invalid_email' => 'adresse email invalide',
+                    'complaint'     => 'signalement spam',
+                    'unsubscribed'  => 'désabonnement',
+                ];
+                $reason = $reasonMap[$bounceRow['event_type']] ?? $bounceRow['event_type'];
+                throw new Exception("L'envoi vers $toEmail a été annulé : $reason.");
+            }
+
             // Langue courante
             $language = Vtiger_Language_Handler::getLanguage();
 
