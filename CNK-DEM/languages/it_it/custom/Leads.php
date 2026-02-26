@@ -6,4 +6,5 @@ $languageStrings = array(
 'INDISPONIBLE'	=>	'INDISPONIBLE',
 'NRP2'	=>	'NRP2',
 'PAS INTERESSE'	=>	'PAS INTERESSE',
+'MORT'	=>	'MORT',
 );
