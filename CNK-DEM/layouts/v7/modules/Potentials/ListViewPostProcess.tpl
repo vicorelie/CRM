@@ -391,3 +391,13 @@ body .main-container-Potentials tr.emptyRecordsDiv a {
     font-weight: 600 !important;
 }
 </style>
+
+<script>
+/* Fix Android Chrome : le clavier virtuel se ferme immédiatement sur les inputs de recherche.
+   navigator.virtualKeyboard.overlaysContent = true (Chrome 94+) empêche le clavier
+   de déclencher tout resize/scroll — différent de interactive-widget=resizes-visual
+   qui peut encore déclencher des events sur le visual viewport. */
+if ('virtualKeyboard' in navigator) {
+    navigator.virtualKeyboard.overlaysContent = true;
+}
+</script>
