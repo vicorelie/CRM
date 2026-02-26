@@ -2521,7 +2521,16 @@ Vtiger.Class("Vtiger_List_Js", {
 	 */
 	registerEventToHandleStickyHeadOnWindowScroll: function () {
 		var thisInstance = this;
+		var lastViewportHeight = window.innerHeight;
 		jQuery(window).scroll(function () {
+			// Sur Android, l'ouverture du clavier virtuel réduit le viewport et
+			// déclenche un scroll. On ignore ce cas pour éviter de perdre le focus
+			// sur le champ de recherche (fermeture clavier immédiate).
+			var currentHeight = window.innerHeight;
+			if (currentHeight !== lastViewportHeight) {
+				lastViewportHeight = currentHeight;
+				return;
+			}
 			var container = thisInstance.getListViewContainer();
 			var stickyHeader = container.find('.sticky-thead');
 			if (stickyHeader.css('display') == "block") {
