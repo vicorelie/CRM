@@ -62,7 +62,8 @@ function send_mail($module,$to_email,$from_name,$from_email,$subject,$contents,$
 		$replyToEmail = $from_email_field;
 	}
 	if(isset($from_email_field) && $from_email_field!='' && !$useGivenFromEmailAddress){
-		//setting from _email to the defined email address in the outgoing server configuration
+		//setting from_email to the global address for better deliverability
+		//the user's email is preserved in $replyToEmail (set above)
 		$from_email = $from_email_field;
 	}
 

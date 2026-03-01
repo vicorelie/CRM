@@ -180,20 +180,23 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 throw new Exception('Serveur email sortant non configuré dans VTiger');
             }
 
-            // Récupérer l'email expéditeur depuis la config
+            // From = adresse globale (meilleure délivrabilité)
+            // Reply-To = email du user connecté (les réponses arrivent au bon commercial)
             $db = PearDatabase::getInstance();
             $sysResult = $db->pquery("SELECT from_email_field FROM vtiger_systems WHERE server_type = ?", ['email']);
             $fromEmail = '';
             if ($db->num_rows($sysResult) > 0) {
                 $fromEmail = $db->query_result($sysResult, 0, 'from_email_field');
             }
+            $currentUser = Users_Record_Model::getCurrentUserModel();
+            $userEmail = $currentUser->get('email1');
             if (empty($fromEmail)) {
-                $currentUser = Users_Record_Model::getCurrentUserModel();
-                $fromEmail = $currentUser->get('email1');
+                $fromEmail = $userEmail;
             }
             $mail->From = $fromEmail;
             $mail->FromName = 'CNK DEM';
-            $mail->AddReplyTo($fromEmail, 'CNK DEM'); // Permet aux clients de répondre
+            $replyTo = !empty($userEmail) ? $userEmail : $fromEmail;
+            $mail->AddReplyTo($replyTo, 'CNK DEM');
             $mail->Subject = $subject;
 
             $mail->Body = $body;

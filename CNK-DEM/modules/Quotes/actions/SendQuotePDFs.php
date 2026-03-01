@@ -298,8 +298,7 @@ class Quotes_SendQuotePDFs_Action extends Vtiger_Action_Controller {
                         $mail->SMTPAuth = true;
                     }
 
-                    $fromEmail = $row['from_email_field'];
-                    $this->log("SMTP Host: $server, Port: " . $mail->Port . ", From: $fromEmail");
+                    $this->log("SMTP Host: $server, Port: " . $mail->Port);
                 } else {
                     $this->log("ERREUR: Pas de configuration email trouvée!");
                     throw new Exception('Configuration email non trouvée');
@@ -309,10 +308,17 @@ class Quotes_SendQuotePDFs_Action extends Vtiger_Action_Controller {
                 $mail->CharSet = 'UTF-8';
                 $mail->Encoding = 'base64';
 
-                // Expéditeur
+                // From = adresse globale (meilleure délivrabilité)
+                // Reply-To = email du user connecté (les réponses arrivent au bon commercial)
+                $fromEmail = $row['from_email_field'];
+                if (empty($fromEmail)) {
+                    $fromEmail = $userEmail;
+                }
                 $fromName = 'CNK DEM';
                 $mail->setFrom($fromEmail, $fromName);
-                $this->log("Expéditeur: $fromEmail ($fromName)");
+                $replyTo = !empty($userEmail) ? $userEmail : $fromEmail;
+                $mail->addReplyTo($replyTo, $fromName);
+                $this->log("Expéditeur: $fromEmail, Reply-To: $replyTo");
 
                 // Destinataire
                 $recipientName = !empty($contactName) ? $contactName : $toEmail;

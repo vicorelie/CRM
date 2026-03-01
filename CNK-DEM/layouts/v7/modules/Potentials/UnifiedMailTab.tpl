@@ -649,12 +649,52 @@
     /* Mail Tab */
     .mail-toolbar { flex-direction: column; gap: 10px; align-items: stretch; }
     .btn-send-email-main { width: 100%; text-align: center; }
-    .email-row .er-main { flex-direction: column; align-items: flex-start; gap: 2px; }
-    .email-row .er-to { max-width: 100%; }
 
     /* Mail Quotes Bar */
     .mail-quotes-bar { flex-direction: column; gap: 8px; }
     .mail-quotes-chips { overflow-x: auto; }
+
+    /* Email rows - layout 2 lignes */
+    .email-row {
+        flex-wrap: wrap;
+        padding: 8px 12px;
+        gap: 0;
+        align-items: flex-start;
+    }
+    .email-row .er-status {
+        margin-top: 5px;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    /* Ligne 1 : sujet (flex 1) + date + flèche */
+    .email-row .er-main {
+        flex: 1;
+        min-width: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+    }
+    .email-row .er-subject {
+        max-width: 100%;
+        font-size: 13px;
+    }
+    .email-row .er-to { display: none; }
+    /* Badges passent sous le sujet, dans er-main */
+    .email-row .er-badges {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    /* Meta : date à droite ligne 1, user caché */
+    .email-row .er-meta {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
+        padding-left: 6px;
+    }
+    .email-row .er-from { display: none; }
+    .email-row .er-date { min-width: auto; font-size: 11px; }
+    .email-row .er-attach { font-size: 11px; }
 
     /* Send Email Modal */
     #sendEmailModal.modal {
