@@ -12,6 +12,8 @@
 
 <div class='dashboardHeading container-fluid'>
 	<div class="buttonGroups pull-right">
+		{assign var=CURRENT_USER value=Users_Record_Model::getCurrentUserModel()}
+		{if $CURRENT_USER->get('is_admin') eq 'on'}
 		<div class="btn-group" style="margin-right:10px;" id="smtpSwitcher">
 			<button class='btn btn-default dropdown-toggle' data-toggle='dropdown' title="Basculer SMTP">
 				<i class="fa fa-envelope"></i> SMTP: <span id="currentSMTP">Brevo</span> <i class="caret"></i>
@@ -21,6 +23,7 @@
 				<li><a href="javascript:void(0)" onclick="switchSMTPProfile('Gmail')"><i class="fa fa-check" style="color:#27ae60;visibility:hidden;" id="smtp-check-gmail"></i> Gmail</a></li>
 			</ul>
 		</div>
+		{/if}
 		<button class='btn btn-success' id="openDashboardCalendar" style="margin-right:10px;">
 			<i class="fa fa-calendar"></i> {vtranslate('LBL_CALENDAR', $MODULE_NAME)}
 		</button>
@@ -75,6 +78,7 @@
 </div>
 
 <script>
+{if $CURRENT_USER->get('is_admin') eq 'on'}
 // SMTP Switcher
 function switchSMTPProfile(profile) {
 	if (!confirm('Basculer vers ' + profile + ' ?')) return;
@@ -123,4 +127,5 @@ jQuery(document).ready(function() {
 		}
 	});
 });
+{/if}
 </script>

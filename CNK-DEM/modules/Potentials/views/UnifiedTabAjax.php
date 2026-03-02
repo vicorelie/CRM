@@ -477,6 +477,11 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			'cf_1037' => $recordModel->get('cf_1037'), // Monte meuble livraison
 		];
 
+		// Decode HTML entities to avoid double-encoding in Smarty (VTiger encodes values via get())
+		foreach ($potentialData as $key => $value) {
+			$potentialData[$key] = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+		}
+
 		$viewer->assign('POTENTIAL_ID', $recordId);
 		$viewer->assign('CONTACT_ID', $contactId);
 		$viewer->assign('CURRENT_USER_ID', $currentUserId);
@@ -631,6 +636,13 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$quoteData['hdnSubTotal'] = floatval($quoteData['subtotal']);
 			$quoteData['hdnGrandTotal'] = floatval($quoteData['total']);
 
+			// Decode HTML entities from VTiger get() to preserve accents
+			foreach ($quoteData as $key => $value) {
+				if (is_string($value)) {
+					$quoteData[$key] = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+				}
+			}
+
 			echo json_encode(['success' => true, 'data' => $quoteData]);
 
 		} catch (Exception $e) {
@@ -773,6 +785,13 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$soData['products'] = $products;
 			$soData['hdnSubTotal'] = floatval($soData['subtotal']);
 			$soData['hdnGrandTotal'] = floatval($soData['total']);
+
+			// Decode HTML entities from VTiger get() to preserve accents
+			foreach ($soData as $key => $value) {
+				if (is_string($value)) {
+					$soData[$key] = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+				}
+			}
 
 			echo json_encode(['success' => true, 'data' => $soData]);
 
