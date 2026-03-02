@@ -57,13 +57,18 @@ class Potentials_Unified_View extends Vtiger_Index_View {
 
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$isAdmin = ($currentUser->get('is_admin') === 'on');
+		$userRole = $currentUser->get('roleid');
+		if (empty($userRole)) {
+			$userRole = fetchUserRole($currentUser->getId());
+		}
+		$canSeeOdmFacture = ($isAdmin || $userRole === 'H6');
 
 		$viewer = $this->getViewer($request);
 		$viewer->assign('RECORD', $recordModel);
 		$viewer->assign('RECORD_ID', $recordId);
 		$viewer->assign('MODULE_NAME', $moduleName);
 		$viewer->assign('ACTIVE_TAB', $request->get('tab', 'details'));
-		$viewer->assign('IS_ADMIN', $isAdmin);
+		$viewer->assign('IS_ADMIN', $canSeeOdmFacture);
 		$viewer->assign('CONTACT_NAME', $contactName);
 		$viewer->assign('CONTACT_PHONE', $contactPhone);
 		$viewer->assign('CONTACT_EMAIL', $contactEmail);
