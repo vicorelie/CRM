@@ -84,6 +84,9 @@ class StripeHelper {
                         'limit' => 1,
                     ],
                 ],
+                'payment_intent_data' => [
+                    'description' => $productName,
+                ],
                 'metadata' => [
                     'quote_id' => $quoteId,
                     'quote_no' => $quoteData['quote_no'],
@@ -162,6 +165,9 @@ class StripeHelper {
                     'completed_sessions' => [
                         'limit' => 1,
                     ],
+                ],
+                'payment_intent_data' => [
+                    'description' => $productName,
                 ],
                 'metadata' => [
                     'quote_id' => $quoteId,
