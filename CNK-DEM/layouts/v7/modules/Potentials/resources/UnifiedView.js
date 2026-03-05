@@ -271,7 +271,7 @@
             jQuery('#unified_cf_1127_ttc').on('input change', function() { self.updateFromTTC(); });
             jQuery('#unified_cf_1129').on('input change', function() { self.updateTotalTTC(); });
             jQuery('#unified_cf_1139').on('change', function() { self.updateMontantTotal(); });
-            jQuery('#unified_montant_total_ttc').on('change', function() { self.updateFromTotalTTC(); });
+            jQuery('#unified_montant_total_ttc').on('input change', function() { self.updateFromTotalTTC(); });
 
             // Disable scroll on number inputs
             jQuery('#devisTabContainer').on('wheel', 'input[type="number"]', function(e) {
@@ -792,36 +792,9 @@
         updateFromTotalTTC: function() {
             var totalTTC = parseFloat(jQuery('#unified_montant_total_ttc').val()) || 0;
             var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
+            var totalHT = totalTTC / this.TVA_RATE;
 
             var produitsHT = 0;
-            jQuery('#unified_productsList tr').each(function() {
-                var totalCell = jQuery(this).find('.product-total');
-                if (totalCell.length) {
-                    produitsHT += parseFloat(totalCell.text()) || 0;
-                }
-            });
-
-            var assuranceValue = parseFloat(jQuery('#unified_cf_1139').val()) || 0;
-            var assuranceHT = assuranceValue > 0 ? ((assuranceValue - 4000) / 1000) * 14 : 0;
-
-            var forfaitTTC = totalTTC - (produitsHT * this.TVA_RATE) - (assuranceHT * this.TVA_RATE) - (supplementHT * this.TVA_RATE);
-            if (forfaitTTC < 0) forfaitTTC = 0;
-
-            var forfaitHT = forfaitTTC / this.TVA_RATE;
-
-            jQuery('#unified_cf_1127').val(forfaitHT.toFixed(2));
-            jQuery('#unified_cf_1127_ttc').val(forfaitTTC.toFixed(2));
-
-            var totalForfaitTTC = (forfaitHT + supplementHT) * this.TVA_RATE;
-            jQuery('#unified_forfait_total_ttc').val(totalForfaitTTC.toFixed(2));
-
-            var totalHT = totalTTC / this.TVA_RATE;
-            jQuery('#unified_montant_total_ht').text(totalHT.toFixed(2) + ' €');
-
-            // Recalculate acompte/solde
-            var PCT_ACOMPTE_FORFAIT = 43;
-            var PCT_SOLDE_FORFAIT = 57;
-
             var produitsAcompteHT = 0;
             var produitsSoldeHT = 0;
             jQuery('#unified_productsList tr').each(function() {
@@ -829,16 +802,65 @@
                 var totalCell = row.find('.product-total');
                 if (totalCell.length) {
                     var lineTotal = parseFloat(totalCell.text()) || 0;
+                    produitsHT += lineTotal;
                     var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 43;
                     produitsAcompteHT += lineTotal * pctAcompte / 100;
                     produitsSoldeHT += lineTotal * (100 - pctAcompte) / 100;
                 }
             });
 
+            var assuranceValue = parseFloat(jQuery('#unified_cf_1139').val()) || 0;
+            var assuranceHT = assuranceValue > 0 ? ((assuranceValue - 4000) / 1000) * 14 : 0;
+
+            // Calculate remise to add back when finding forfaitHT
+            var remiseType = jQuery('input[name="unified_remise_type"]:checked').val() || 'none';
+            var maxRemisePercent = 15;
+            var forfaitHT = 0;
+            var remiseHT = 0;
+
+            if (remiseType === 'percent') {
+                var remisePercent = Math.min(parseFloat(jQuery('#unified_remise_percent').val()) || 0, maxRemisePercent);
+                // totalHT = totalHTBeforeDiscount * (1 - percent/100)
+                var totalHTBeforeDiscount = totalHT / (1 - remisePercent / 100);
+                forfaitHT = totalHTBeforeDiscount - supplementHT - produitsHT - assuranceHT;
+                remiseHT = totalHTBeforeDiscount * remisePercent / 100;
+            } else if (remiseType === 'amount') {
+                remiseHT = parseFloat(jQuery('#unified_remise_amount').val()) || 0;
+                // totalHT = totalHTBeforeDiscount - remiseHT, so add remise back
+                forfaitHT = totalHT + remiseHT - supplementHT - produitsHT - assuranceHT;
+                // Cap remise at 15% of totalHTBeforeDiscount
+                var totalHTBeforeDiscount = forfaitHT + supplementHT + produitsHT + assuranceHT;
+                var maxRemise = totalHTBeforeDiscount * maxRemisePercent / 100;
+                if (remiseHT > maxRemise) {
+                    remiseHT = maxRemise;
+                    jQuery('#unified_remise_amount').val(maxRemise.toFixed(2));
+                    forfaitHT = totalHT + remiseHT - supplementHT - produitsHT - assuranceHT;
+                }
+            } else {
+                forfaitHT = totalHT - supplementHT - produitsHT - assuranceHT;
+            }
+
+            if (forfaitHT < 0) forfaitHT = 0;
+            var forfaitTTC = forfaitHT * this.TVA_RATE;
+
+            jQuery('#unified_cf_1127').val(forfaitHT.toFixed(2));
+            jQuery('#unified_cf_1127_ttc').val(forfaitTTC.toFixed(2));
+
+            var totalForfaitTTC = (forfaitHT + supplementHT) * this.TVA_RATE;
+            jQuery('#unified_forfait_total_ttc').val(totalForfaitTTC.toFixed(2));
+
+            jQuery('#unified_montant_total_ht').text(totalHT.toFixed(2) + ' €');
+            jQuery('#unified_remise_display').text(remiseHT.toFixed(2) + ' €');
+
+            // Recalculate acompte/solde with discount applied to solde only
+            var PCT_ACOMPTE_FORFAIT = 43;
+            var PCT_SOLDE_FORFAIT = 57;
+
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
             var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT;
+            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT - remiseHT;
+            if (totalSoldeHT < 0) totalSoldeHT = 0;
 
             jQuery('#unified_acompte_ttc').text((totalAcompteHT * this.TVA_RATE).toFixed(2) + ' €');
             jQuery('#unified_solde_ttc').text((totalSoldeHT * this.TVA_RATE).toFixed(2) + ' €');

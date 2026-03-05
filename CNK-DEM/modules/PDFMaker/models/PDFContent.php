@@ -1123,7 +1123,7 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
             file_put_contents($logFile, "Module is Quotes/Invoice: " . (($module === 'Quotes' || $module === 'Invoice') ? 'YES' : 'NO') . "\n", FILE_APPEND);
             file_put_contents($logFile, "finalDetails is NOT empty: " . (!empty($finalDetails) ? 'YES' : 'NO') . "\n", FILE_APPEND);
 
-            if (!$hasProducts && ($module === 'Quotes' || $module === 'Invoice') && !empty($finalDetails)) {
+            if (!$hasProducts && in_array($module, ['Quotes', 'Invoice', 'SalesOrder']) && !empty($finalDetails)) {
                 // No products - populate Details from finalDetails directly
                 $totalVatPercentage = $finalDetails['group_total_tax_percent'];
 
@@ -1681,8 +1681,8 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
         $result = self::$db->pquery("select * from vtiger_inventoryproductrel where id=?", array(self::$focus->id));
         $num_rows = self::$db->num_rows($result);
 
-        // CNK-DEM: Allow processing even without products for Quotes and Invoice modules
-        $forceProcessing = ($num_rows == 0 && (self::$module === 'Quotes' || self::$module === 'Invoice'));
+        // CNK-DEM: Allow processing even without products for inventory modules
+        $forceProcessing = ($num_rows == 0 && in_array(self::$module, ['Quotes', 'Invoice', 'SalesOrder']));
 
         if ($num_rows > 0 || $forceProcessing) {
             $products = $this->replaceInventoryDetailsBlock(self::$module, self::$focus);
