@@ -46,11 +46,11 @@ class StripeHelper {
             // Construire le nom du client
             $clientName = trim(($quoteData['firstname'] ?? '') . ' ' . ($quoteData['lastname'] ?? ''));
 
-            // Créer un produit Stripe avec le nom du client
-            $productName = $type . ' - ' . ($clientName ?: $quoteData['quote_no']);
+            // Nom du produit = "Acompte - Devis DEV-XXXXX"
+            $productName = $type . ' - Devis ' . $quoteData['quote_no'];
             $product = \Stripe\Product::create([
                 'name' => $productName,
-                'description' => $quoteData['subject'],
+                'description' => $clientName ?: $quoteData['subject'],
                 'metadata' => [
                     'quote_id' => $quoteId,
                     'quote_no' => $quoteData['quote_no'],
@@ -85,7 +85,7 @@ class StripeHelper {
                     ],
                 ],
                 'payment_intent_data' => [
-                    'description' => $productName,
+                    'description' => $clientName ?: $quoteData['quote_no'],
                 ],
                 'metadata' => [
                     'quote_id' => $quoteId,
@@ -128,11 +128,11 @@ class StripeHelper {
             // Construire le nom du client
             $clientName = trim(($quoteData['firstname'] ?? '') . ' ' . ($quoteData['lastname'] ?? ''));
 
-            // Créer un produit Stripe avec le nom du client
-            $productName = $description . ' - ' . ($clientName ?: ($quoteData['quote_no'] ?? $quoteId));
+            // Nom du produit = "Description - Devis DEV-XXXXX"
+            $productName = $description . ' - Devis ' . ($quoteData['quote_no'] ?? $quoteId);
             $product = \Stripe\Product::create([
                 'name' => $productName,
-                'description' => $quoteData['subject'] ?? $description,
+                'description' => $clientName ?: ($quoteData['subject'] ?? $description),
                 'metadata' => [
                     'quote_id' => $quoteId,
                     'quote_no' => $quoteData['quote_no'] ?? '',
@@ -167,7 +167,7 @@ class StripeHelper {
                     ],
                 ],
                 'payment_intent_data' => [
-                    'description' => $productName,
+                    'description' => $clientName ?: ($quoteData['quote_no'] ?? $quoteId),
                 ],
                 'metadata' => [
                     'quote_id' => $quoteId,
