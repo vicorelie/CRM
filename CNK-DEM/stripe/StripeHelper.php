@@ -43,9 +43,13 @@ class StripeHelper {
         self::init();
 
         try {
-            // Créer un produit Stripe
+            // Construire le nom du client
+            $clientName = trim(($quoteData['firstname'] ?? '') . ' ' . ($quoteData['lastname'] ?? ''));
+
+            // Créer un produit Stripe avec le nom du client
+            $productName = $type . ' - ' . ($clientName ?: $quoteData['quote_no']);
             $product = \Stripe\Product::create([
-                'name' => $type . ' - Devis ' . $quoteData['quote_no'],
+                'name' => $productName,
                 'description' => $quoteData['subject'],
                 'metadata' => [
                     'quote_id' => $quoteId,
@@ -61,7 +65,7 @@ class StripeHelper {
                 'currency' => self::$config['payment_options']['currency'],
             ]);
 
-            // Créer le lien de paiement
+            // Créer le lien de paiement (usage unique via restrictions)
             $paymentLink = \Stripe\PaymentLink::create([
                 'line_items' => [
                     [
@@ -75,11 +79,16 @@ class StripeHelper {
                         'custom_message' => 'Merci pour votre paiement ! Votre devis a été mis à jour dans notre système.',
                     ],
                 ],
+                'restrictions' => [
+                    'completed_sessions' => [
+                        'limit' => 1,
+                    ],
+                ],
                 'metadata' => [
                     'quote_id' => $quoteId,
                     'quote_no' => $quoteData['quote_no'],
                     'payment_type' => $type,
-                    'customer_name' => ($quoteData['firstname'] ?? '') . ' ' . ($quoteData['lastname'] ?? ''),
+                    'customer_name' => $clientName,
                     'customer_email' => $quoteData['email'] ?? '',
                 ],
             ]);
@@ -113,9 +122,13 @@ class StripeHelper {
         self::init();
 
         try {
-            // Créer un produit Stripe
+            // Construire le nom du client
+            $clientName = trim(($quoteData['firstname'] ?? '') . ' ' . ($quoteData['lastname'] ?? ''));
+
+            // Créer un produit Stripe avec le nom du client
+            $productName = $description . ' - ' . ($clientName ?: ($quoteData['quote_no'] ?? $quoteId));
             $product = \Stripe\Product::create([
-                'name' => $description . ' - Devis ' . ($quoteData['quote_no'] ?? $quoteId),
+                'name' => $productName,
                 'description' => $quoteData['subject'] ?? $description,
                 'metadata' => [
                     'quote_id' => $quoteId,
@@ -131,7 +144,7 @@ class StripeHelper {
                 'currency' => self::$config['payment_options']['currency'],
             ]);
 
-            // Créer le lien de paiement
+            // Créer le lien de paiement (usage unique via restrictions)
             $paymentLink = \Stripe\PaymentLink::create([
                 'line_items' => [
                     [
@@ -145,12 +158,17 @@ class StripeHelper {
                         'custom_message' => 'Merci pour votre paiement ! Votre devis a été mis à jour dans notre système.',
                     ],
                 ],
+                'restrictions' => [
+                    'completed_sessions' => [
+                        'limit' => 1,
+                    ],
+                ],
                 'metadata' => [
                     'quote_id' => $quoteId,
                     'quote_no' => $quoteData['quote_no'] ?? '',
                     'payment_type' => 'custom',
                     'description' => $description,
-                    'customer_name' => ($quoteData['firstname'] ?? '') . ' ' . ($quoteData['lastname'] ?? ''),
+                    'customer_name' => $clientName,
                     'customer_email' => $quoteData['email'] ?? '',
                 ],
             ]);
