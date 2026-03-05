@@ -20,6 +20,9 @@
         <button class="btn btn-purple btn-sm" onclick="UnifiedInventaire.toggleNewArticleForm()">
             <i class="fa fa-plus"></i> Nouvel article
         </button>
+        <button class="btn btn-info btn-sm" onclick="UnifiedInventaire.generateClientLink({$RECORD_ID})">
+            <i class="fa fa-link"></i> Lien client
+        </button>
         <div class="toolbar-spacer"></div>
         <div class="toolbar-volume volume-purple">
             <span class="volume-label">Vol inv</span>

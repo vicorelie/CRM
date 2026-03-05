@@ -2397,6 +2397,70 @@
             });
         },
 
+        generateClientLink: function(recordId) {
+            var self = this;
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'GenerateInventoryToken',
+                    record: recordId
+                },
+                success: function(response) {
+                    if (response && response.success) {
+                        var url = response.url;
+                        var modal = jQuery('<div>').css({
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        });
+                        var box = jQuery('<div>').css({
+                            background: '#fff', borderRadius: '12px', padding: '28px 24px',
+                            maxWidth: '540px', width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                        });
+                        box.html(
+                            '<h3 style="margin:0 0 12px;color:#1F314D;font-size:16px;"><i class="fa fa-link" style="margin-right:8px;color:#667eea;"></i>Lien inventaire client</h3>' +
+                            '<p style="font-size:13px;color:#666;margin:0 0 12px;">Envoyez ce lien au client pour qu\'il remplisse son inventaire. Valable 30 jours.</p>' +
+                            '<div style="display:flex;gap:8px;">' +
+                            '<input type="text" id="clientInventoryUrl" value="' + url + '" readonly style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:12px;background:#f8f9fa;">' +
+                            '<button id="btnCopyInventoryUrl" style="padding:8px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;">Copier</button>' +
+                            '</div>' +
+                            '<div style="text-align:right;margin-top:16px;">' +
+                            '<button id="btnCloseInventoryModal" style="padding:7px 16px;background:#f0f0f0;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Fermer</button>' +
+                            '</div>'
+                        );
+                        modal.append(box);
+                        jQuery('body').append(modal);
+
+                        jQuery('#btnCopyInventoryUrl').on('click', function() {
+                            var input = document.getElementById('clientInventoryUrl');
+                            input.select();
+                            try {
+                                navigator.clipboard.writeText(url).then(function() {
+                                    jQuery('#btnCopyInventoryUrl').text('Copié !');
+                                    setTimeout(function() { jQuery('#btnCopyInventoryUrl').text('Copier'); }, 2000);
+                                });
+                            } catch(e) {
+                                document.execCommand('copy');
+                                jQuery('#btnCopyInventoryUrl').text('Copié !');
+                                setTimeout(function() { jQuery('#btnCopyInventoryUrl').text('Copier'); }, 2000);
+                            }
+                        });
+
+                        jQuery('#btnCloseInventoryModal').on('click', function() { modal.remove(); });
+                        modal.on('click', function(e) { if (e.target === modal[0]) modal.remove(); });
+                    } else {
+                        app.helper.showErrorNotification({message: 'Erreur : ' + (response ? response.message : 'Réponse invalide')});
+                    }
+                },
+                error: function() {
+                    app.helper.showErrorNotification({message: 'Erreur lors de la génération du lien'});
+                }
+            });
+        },
+
         autoSave: function() {
             var self = this;
 
