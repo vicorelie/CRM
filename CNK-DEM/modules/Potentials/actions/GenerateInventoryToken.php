@@ -45,6 +45,12 @@ class Potentials_GenerateInventoryToken_Action extends Vtiger_BasicAjax_Action {
             $baseUrl = rtrim($site_URL, '/');
             $url = $baseUrl . '/client-inventory.php?token=' . $token;
 
+            // Mettre à jour cf_1401 (Lien inventaire)
+            $db->pquery(
+                "UPDATE vtiger_potentialscf SET cf_1401 = ? WHERE potentialid = ?",
+                [$url, $potentialId]
+            );
+
             $response->setResult([
                 'success' => true,
                 'url' => $url,

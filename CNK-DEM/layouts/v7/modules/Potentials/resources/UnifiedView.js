@@ -2409,8 +2409,9 @@
                     record: recordId
                 },
                 success: function(response) {
-                    if (response && response.success) {
-                        var url = response.url;
+                    var result = response && response.result ? response.result : response;
+                    if (result && result.success) {
+                        var url = result.url;
                         var modal = jQuery('<div>').css({
                             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                             background: 'rgba(0,0,0,0.5)', zIndex: 9999,
@@ -2452,7 +2453,7 @@
                         jQuery('#btnCloseInventoryModal').on('click', function() { modal.remove(); });
                         modal.on('click', function(e) { if (e.target === modal[0]) modal.remove(); });
                     } else {
-                        app.helper.showErrorNotification({message: 'Erreur : ' + (response ? response.message : 'Réponse invalide')});
+                        app.helper.showErrorNotification({message: 'Erreur : ' + (result ? result.message : 'Réponse invalide')});
                     }
                 },
                 error: function() {
