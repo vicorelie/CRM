@@ -553,39 +553,40 @@ class StripeHelper {
         try {
             $db = PearDatabase::getInstance();
 
-            // Récupérer les produits du devis
-            $query = "SELECT * FROM vtiger_inventoryproductrel WHERE id = ? AND module = 'Quotes'";
-            $result = $db->pquery($query, array($quoteId));
+            // Récupérer les produits du devis (même approche que _copyProductLines dans UnifiedTabAjax)
+            $result = $db->pquery(
+                "SELECT productid, sequence_no, quantity, listprice, discount_percent, discount_amount,
+                 comment, description, tax1, tax2, tax3, incrementondel
+                 FROM vtiger_inventoryproductrel WHERE id = ?",
+                [$quoteId]
+            );
 
             $rowCount = $db->num_rows($result);
             self::log("Copie de $rowCount lignes de produits du devis vers la facture");
 
-            for ($i = 0; $i < $rowCount; $i++) {
-                $row = $db->fetch_array($result);
+            while ($row = $db->fetch_array($result)) {
+                $db->pquery(
+                    "INSERT INTO vtiger_inventoryproductrel (id, productid, sequence_no, quantity, listprice,
+                     discount_percent, discount_amount, comment, description, tax1, tax2, tax3, incrementondel)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$invoiceId, $row['productid'], $row['sequence_no'], $row['quantity'], $row['listprice'],
+                     $row['discount_percent'] ?? 0, $row['discount_amount'] ?? 0,
+                     $row['comment'] ?? '', $row['description'] ?? '',
+                     $row['tax1'] ?? 0, $row['tax2'] ?? 0, $row['tax3'] ?? 0,
+                     $row['incrementondel'] ?? 1]
+                );
+            }
 
-                // Insérer dans la facture
-                $insertQuery = "INSERT INTO vtiger_inventoryproductrel
-                               (id, productid, sequence_no, quantity, listprice, discount_percent,
-                                discount_amount, comment, description, incrementondel, lineitem_id,
-                                tax1, tax2, tax3, module)
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Invoice')";
-
-                $db->pquery($insertQuery, array(
-                    $invoiceId,
-                    $row['productid'],
-                    $row['sequence_no'],
-                    $row['quantity'],
-                    $row['listprice'],
-                    $row['discount_percent'],
-                    $row['discount_amount'],
-                    $row['comment'],
-                    $row['description'],
-                    $row['incrementondel'],
-                    $db->getUniqueID('vtiger_inventoryproductrel'),
-                    $row['tax1'] ?? 0,
-                    $row['tax2'] ?? 0,
-                    $row['tax3'] ?? 0
-                ));
+            // Copier les taxes par produit
+            $taxResult = $db->pquery(
+                "SELECT productid, taxname, taxpercentage FROM vtiger_inventoryproductrel_tax WHERE id = ?",
+                [$quoteId]
+            );
+            while ($row = $db->fetch_array($taxResult)) {
+                $db->pquery(
+                    "INSERT INTO vtiger_inventoryproductrel_tax (id, productid, taxname, taxpercentage) VALUES (?, ?, ?, ?)",
+                    [$invoiceId, $row['productid'], $row['taxname'], $row['taxpercentage']]
+                );
             }
 
             self::log("✓ Produits copiés avec succès");

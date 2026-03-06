@@ -158,6 +158,10 @@
                                                 onclick="UnifiedFacture.openInvoicePDFPreview({$INV.invoiceid})">
                                             <i class="fa fa-eye"></i>
                                         </button>
+                                        <button class="btn-pdf-small btn-mail-inv" title="Envoyer par email"
+                                                onclick="UnifiedFacture.openInvoiceEmailModal({$INV.invoiceid}, '{$INV.invoice_no|escape}')">
+                                            <i class="fa fa-envelope"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -167,6 +171,40 @@
             {else}
                 <p class="text-muted" style="padding: 15px; text-align: center;">Aucune facture pour cette affaire</p>
             {/if}
+        </div>
+    </div>
+</div>
+
+{* Modal email facture *}
+<div id="invoiceEmailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:28px 24px;max-width:560px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <h4 style="margin:0;color:#1F314D;font-size:16px;"><i class="fa fa-envelope" style="color:#667eea;margin-right:8px;"></i>Envoyer la facture <span id="invEmailModalTitle"></span></h4>
+            <button onclick="UnifiedFacture.closeInvoiceEmailModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;">&times;</button>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;"><i class="fa fa-user-o"></i> Destinataire</label>
+            <input type="email" id="invEmailTo" class="form-control" placeholder="adresse@email.com" style="font-size:13px;">
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;"><i class="fa fa-users"></i> Cc <span style="font-weight:400;color:#999;">(optionnel)</span></label>
+            <input type="text" id="invEmailCc" class="form-control" placeholder="email1@exemple.com, email2@exemple.com" style="font-size:13px;">
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;"><i class="fa fa-pencil"></i> Objet</label>
+            <input type="text" id="invEmailSubject" class="form-control" style="font-size:13px;">
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;"><i class="fa fa-align-left"></i> Message</label>
+            <div id="invEmailBody" contenteditable="true" style="border:1.5px solid #e0e0e0;border-radius:6px;padding:10px 12px;font-size:13px;min-height:120px;max-height:220px;overflow-y:auto;outline:none;background:#fff;line-height:1.6;"></div>
+        </div>
+        <div style="margin-bottom:18px;">
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px;"><i class="fa fa-paperclip"></i> Pi&#232;ces jointes PDF</label>
+            <div id="invEmailPdfList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="UnifiedFacture.closeInvoiceEmailModal()" style="padding:8px 18px;background:#f0f0f0;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Annuler</button>
+            <button id="invEmailSendBtn" onclick="UnifiedFacture.sendInvoiceEmail()" style="padding:8px 18px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;"><i class="fa fa-paper-plane"></i> Envoyer</button>
         </div>
     </div>
 </div>
@@ -261,6 +299,8 @@
 .btn-pdf-small:hover { background: #fee; border-color: #e74c3c; }
 .btn-pdf-small.btn-preview { color: #1976d2; }
 .btn-pdf-small.btn-preview:hover { background: #e3f2fd; border-color: #1976d2; }
+.btn-pdf-small.btn-mail-inv { color: #27ae60; }
+.btn-pdf-small.btn-mail-inv:hover { background: #eafaf1; border-color: #27ae60; }
 
 @media (max-width: 768px) {
     .facture-chips { flex-direction: column; }

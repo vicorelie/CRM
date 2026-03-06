@@ -3930,6 +3930,127 @@
             this._showPDFModal(invoiceId, templates, 'Invoice');
         },
 
+        _currentInvoiceId: null,
+
+        _invoiceEmailTemplateId: 30,
+
+        openInvoiceEmailModal: function(invoiceId, invoiceNo) {
+            var self = this;
+            this._currentInvoiceId = invoiceId;
+
+            jQuery('#invEmailModalTitle').text(invoiceNo || '');
+            jQuery('#invEmailTo').val('');
+            jQuery('#invEmailCc').val('');
+            jQuery('#invEmailSubject').val('');
+            jQuery('#invEmailBody').html('<div style="padding:20px;text-align:center;color:#999;"><i class="fa fa-spinner fa-spin"></i> Chargement...</div>');
+
+            // Checkboxes PDF
+            var pdfs = window.factureInvoicePdfTemplates || [];
+            var pdfHtml = '';
+            for (var i = 0; i < pdfs.length; i++) {
+                pdfHtml += '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:#f8f9fa;border:1px solid #e0e0e0;border-radius:6px;padding:5px 10px;">' +
+                    '<input type="checkbox" name="inv_pdf_tpl[]" value="' + pdfs[i].id + '" checked> ' +
+                    '<i class="fa fa-file-pdf-o" style="color:#e74c3c;"></i> ' + pdfs[i].name + '</label>';
+            }
+            jQuery('#invEmailPdfList').html(pdfHtml || '<span style="font-size:12px;color:#999;">Aucun template PDF</span>');
+
+            // Charger email contact + template en parallèle
+            jQuery.ajax({
+                url: 'index.php', type: 'POST', dataType: 'json',
+                data: { module: 'Potentials', action: 'GetEmailData', record: self.potentialId, invoice_id: invoiceId },
+                success: function(resp) {
+                    var d = resp.result || resp;
+                    if (d.contact_email) jQuery('#invEmailTo').val(d.contact_email);
+                }
+            });
+
+            jQuery.ajax({
+                url: 'index.php', type: 'GET', dataType: 'json',
+                data: {
+                    module: 'Potentials',
+                    action: 'PreviewEmailTemplate',
+                    record: self.potentialId,
+                    invoice_id: invoiceId,
+                    email_template: self._invoiceEmailTemplateId
+                },
+                success: function(resp) {
+                    var d = resp.result || resp;
+                    if (d.success) {
+                        if (d.subject) jQuery('#invEmailSubject').val(d.subject);
+                        jQuery('#invEmailBody').html(d.body || '');
+                    } else {
+                        jQuery('#invEmailBody').html('<p style="color:#e74c3c;font-size:12px;">Erreur chargement template</p>');
+                    }
+                },
+                error: function() {
+                    jQuery('#invEmailBody').html('<p style="color:#e74c3c;font-size:12px;">Erreur chargement template</p>');
+                }
+            });
+
+            var modal = jQuery('#invoiceEmailModal');
+            modal.css('display', 'flex');
+            modal.off('click').on('click', function(e) {
+                if (e.target === modal[0]) self.closeInvoiceEmailModal();
+            });
+        },
+
+        closeInvoiceEmailModal: function() {
+            jQuery('#invoiceEmailModal').css('display', 'none');
+            this._currentInvoiceId = null;
+        },
+
+        sendInvoiceEmail: function() {
+            var self = this;
+            var to = jQuery('#invEmailTo').val().trim();
+            var cc = jQuery('#invEmailCc').val().trim();
+            var subject = jQuery('#invEmailSubject').val().trim();
+            var body = jQuery('#invEmailBody').html();
+
+            if (!to) { alert('Veuillez saisir un destinataire'); return; }
+
+            var pdfTpls = [];
+            jQuery('input[name="inv_pdf_tpl[]"]:checked').each(function() {
+                pdfTpls.push(jQuery(this).val());
+            });
+
+            var btn = jQuery('#invEmailSendBtn');
+            btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Envoi...');
+
+            var formData = new FormData();
+            formData.append('module', 'Potentials');
+            formData.append('action', 'SendEmail');
+            formData.append('record', self.potentialId);
+            formData.append('invoice_id', self._currentInvoiceId);
+            formData.append('email', to);
+            formData.append('cc', cc);
+            formData.append('email_template', '0');
+            formData.append('custom_subject', subject);
+            formData.append('custom_body', body);
+            for (var i = 0; i < pdfTpls.length; i++) {
+                formData.append('pdf_templates[]', pdfTpls[i]);
+            }
+
+            jQuery.ajax({
+                url: 'index.php', type: 'POST', data: formData,
+                processData: false, contentType: false,
+                success: function(resp) {
+                    btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Envoyer');
+                    var d = typeof resp === 'string' ? JSON.parse(resp) : resp;
+                    var result = d.result || d;
+                    if (result.success) {
+                        self.closeInvoiceEmailModal();
+                        app.helper.showSuccessNotification({ message: 'Email envoy\u00e9 avec succ\u00e8s !' });
+                    } else {
+                        alert('Erreur : ' + (result.error || result.message || 'Erreur inconnue'));
+                    }
+                },
+                error: function() {
+                    btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Envoyer');
+                    alert('Erreur lors de l\'envoi');
+                }
+            });
+        },
+
         /**
          * Show PDF preview modal with template sidebar
          */

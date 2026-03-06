@@ -41,9 +41,14 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $this->log("Record: $recordId, Email: $toEmail, CC: $ccEmail, EmailTemplate: $emailTemplateId, PDFs: " . json_encode($pdfTemplateIds) . ", Docs: " . json_encode($docAttachmentIds) . ", QuoteId: $quoteId, SOId: $salesOrderId");
 
             // Déterminer le module et record cible
+            $invoiceId = $request->get('invoice_id');
             $targetModule = 'Potentials';
             $targetRecordId = $recordId;
-            if (!empty($salesOrderId)) {
+            if (!empty($invoiceId)) {
+                $targetModule = 'Invoice';
+                $targetRecordId = $invoiceId;
+                $this->log("Mode Facture: module=$targetModule, targetRecord=$targetRecordId");
+            } elseif (!empty($salesOrderId)) {
                 $targetModule = 'SalesOrder';
                 $targetRecordId = $salesOrderId;
                 $this->log("Mode BDC: module=$targetModule, targetRecord=$targetRecordId");
@@ -62,7 +67,8 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             if (!filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
                 throw new Exception('Adresse email invalide');
             }
-            if (empty($emailTemplateId)) {
+            $hasCustomContent = !empty($customSubject) && !empty($customBody);
+            if (empty($emailTemplateId) && !$hasCustomContent) {
                 throw new Exception('Template email manquant');
             }
 
@@ -94,24 +100,27 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $contactId = $potentialModel->get('contact_id');
             $this->log("Contact ID lié: $contactId");
 
-            // 1. Générer le contenu email avec EMAILMaker
-            $this->log("Génération du contenu email avec EMAILMaker template $emailTemplateId");
-
+            // 1. Générer le contenu email avec EMAILMaker (ou utiliser contenu custom direct)
             $recipientId = !empty($contactId) ? $contactId : '';
             $recipientModule = !empty($contactId) ? 'Contacts' : '';
 
-            $emailContentModel = EMAILMaker_EMAILContent_Model::getInstanceById(
-                $emailTemplateId,
-                $language,
-                $targetModule,
-                $targetRecordId,
-                $recipientId,
-                $recipientModule
-            );
-            $emailContentModel->getContent(true, true, true);
-
-            $subject = $emailContentModel->getSubject();
-            $body = $emailContentModel->getBody();
+            if (!empty($emailTemplateId)) {
+                $this->log("Génération du contenu email avec EMAILMaker template $emailTemplateId");
+                $emailContentModel = EMAILMaker_EMAILContent_Model::getInstanceById(
+                    $emailTemplateId,
+                    $language,
+                    $targetModule,
+                    $targetRecordId,
+                    $recipientId,
+                    $recipientModule
+                );
+                $emailContentModel->getContent(true, true, true);
+                $subject = $emailContentModel->getSubject();
+                $body = $emailContentModel->getBody();
+            } else {
+                $subject = '';
+                $body = '';
+            }
 
             // Utiliser le contenu personnalisé si l'utilisateur a modifié l'aperçu
             if (!empty($customSubject)) {
@@ -269,7 +278,7 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             }
 
             // Ajouter les documents attachés au template EMAILMaker
-            $documentIds = $emailContentModel->getAttachments();
+            $documentIds = isset($emailContentModel) ? $emailContentModel->getAttachments() : [];
             if (!empty($documentIds)) {
                 if (!isset($rootDir)) {
                     $rootDir = vglobal('root_directory') ?: dirname(__FILE__) . '/../../../';

@@ -38,8 +38,11 @@ class Potentials_GetEmailData_Action extends Vtiger_Action_Controller {
             $result['contact_id'] = $contactId;
 
             // Déterminer le module cible selon le contexte
+            $invoiceId = $request->get('invoice_id');
             $salesOrderId = $request->get('salesorder_id');
-            if (!empty($salesOrderId)) {
+            if (!empty($invoiceId)) {
+                $targetModule = 'Invoice';
+            } elseif (!empty($salesOrderId)) {
                 $targetModule = 'SalesOrder';
             } elseif (!empty($quoteId)) {
                 $targetModule = 'Quotes';

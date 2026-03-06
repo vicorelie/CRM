@@ -25,9 +25,13 @@ class Potentials_PreviewEmailTemplate_Action extends Vtiger_Action_Controller {
                 throw new Exception('Paramètres manquants');
             }
 
+            $invoiceId = $request->get('invoice_id');
             $targetModule = 'Potentials';
             $targetRecordId = $recordId;
-            if (!empty($salesOrderId)) {
+            if (!empty($invoiceId)) {
+                $targetModule = 'Invoice';
+                $targetRecordId = $invoiceId;
+            } elseif (!empty($salesOrderId)) {
                 $targetModule = 'SalesOrder';
                 $targetRecordId = $salesOrderId;
             } elseif (!empty($quoteId)) {
