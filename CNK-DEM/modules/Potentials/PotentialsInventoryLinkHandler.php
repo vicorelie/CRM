@@ -11,7 +11,7 @@ class PotentialsInventoryLinkHandler extends VTEventHandler {
         }
 
         // Uniquement sur la création (include duplicate)
-        if (empty($entityData->is_new)) {
+        if (!$entityData->isNew()) {
             return;
         }
 
