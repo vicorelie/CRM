@@ -334,8 +334,8 @@ function recalculatePaymentStatus($quoteId) {
         }
 
         // Mettre à jour les champs
-        $stmt = $pdo->prepare("UPDATE vtiger_quotescf SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ? WHERE quoteid = ?");
-        $stmt->execute([$resteAPayer, $statutAcompte, $statutSolde, $quoteId]);
+        $stmt = $pdo->prepare("UPDATE vtiger_quotescf SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ?, cf_1403 = ? WHERE quoteid = ?");
+        $stmt->execute([$resteAPayer, $statutAcompte, $statutSolde, $totalPaid, $quoteId]);
 
         logStripe("Statuts mis à jour - Reste: $resteAPayer EUR, Acompte: $statutAcompte, Solde: $statutSolde");
 
@@ -778,10 +778,10 @@ function generateInvoiceForPayment($quoteId, $paymentId, $amount, $description) 
             // Mettre à jour le devis
             $stmt = $pdo->prepare("
                 UPDATE vtiger_quotescf
-                SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ?
+                SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ?, cf_1403 = ?
                 WHERE quoteid = ?
             ");
-            $stmt->execute([$resteAPayer, $statutAcompte, $statutSolde, $quoteId]);
+            $stmt->execute([$resteAPayer, $statutAcompte, $statutSolde, $totalReceived, $quoteId]);
 
             logStripe("✓ Devis mis à jour - Reste à payer: {$resteAPayer} EUR, Acompte: {$statutAcompte}, Solde: {$statutSolde}");
 

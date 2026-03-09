@@ -240,8 +240,8 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 
 		// Mettre à jour vtiger_quotescf (la ligne devrait déjà exister après parent::process())
 		$updateResult = $adb->pquery(
-			"UPDATE vtiger_quotescf SET cf_1137 = ?, cf_1055 = ?, cf_1057 = ?, cf_1275 = ?, cf_1083 = ?, cf_1085 = ? WHERE quoteid = ?",
-			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $resteAPayer, $statutAcompte, $statutSolde, $recordId)
+			"UPDATE vtiger_quotescf SET cf_1137 = ?, cf_1055 = ?, cf_1057 = ?, cf_1275 = ?, cf_1083 = ?, cf_1085 = ?, cf_1403 = ? WHERE quoteid = ?",
+			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $resteAPayer, $statutAcompte, $statutSolde, $totalPaid, $recordId)
 		);
 
 		// Mettre à jour les totaux VTiger
@@ -258,10 +258,25 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 
 		// Note: Il n'y a PAS de colonne tax_totalamount dans vtiger_quotes
 		// La taxe est calculée à la volée comme: total - pre_tax_total
+		// Inclut prestataire car presence=2 empêche VTiger de le sauvegarder via son mécanisme standard
+		$prestataireId = intval($request->get('prestataire')) ?: null;
 		$updateResult2 = $adb->pquery(
-			"UPDATE vtiger_quotes SET subtotal = ?, discount_percent = ?, discount_amount = ?, pre_tax_total = ?, total = ? WHERE quoteid = ?",
-			array($newSubTotal, $newDiscountPercent, $newDiscountAmount, $newPreTaxTotal, $newTotal, $recordId)
+			"UPDATE vtiger_quotes SET subtotal = ?, discount_percent = ?, discount_amount = ?, pre_tax_total = ?, total = ?, prestataire = ? WHERE quoteid = ?",
+			array($newSubTotal, $newDiscountPercent, $newDiscountAmount, $newPreTaxTotal, $newTotal, $prestataireId, $recordId)
 		);
+
+		// Décoder les entités HTML dans les descriptions de produits (VTiger encode < en &lt; via HTMLPurifier)
+		$prodRows = $adb->pquery(
+			"SELECT lineitem_id, description FROM vtiger_inventoryproductrel WHERE id = ? AND (description LIKE '%&lt;%' OR description LIKE '%&gt;%' OR description LIKE '%&amp;%' OR description LIKE '%&quot;%')",
+			array($recordId)
+		);
+		while ($prodRow = $adb->fetch_array($prodRows)) {
+			$decoded = html_entity_decode($prodRow['description'], ENT_QUOTES, 'UTF-8');
+			$adb->pquery(
+				"UPDATE vtiger_inventoryproductrel SET description = ? WHERE lineitem_id = ?",
+				array($decoded, $prodRow['lineitem_id'])
+			);
+		}
 
 		return $result;
 	}

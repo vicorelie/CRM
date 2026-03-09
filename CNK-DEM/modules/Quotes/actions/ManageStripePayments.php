@@ -668,9 +668,9 @@ class Quotes_ManageStripePayments_Action extends Vtiger_BasicAjax_Action {
 
         // Mettre à jour le devis
         $updateQuery = "UPDATE vtiger_quotescf
-                        SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ?
+                        SET cf_1275 = ?, cf_1083 = ?, cf_1085 = ?, cf_1403 = ?
                         WHERE quoteid = ?";
-        $db->pquery($updateQuery, array($resteAPayer, $statutAcompte, $statutSolde, $quoteId));
+        $db->pquery($updateQuery, array($resteAPayer, $statutAcompte, $statutSolde, $totalPaid, $quoteId));
 
         // Mettre à jour le statut de l'affaire si l'acompte est payé
         if ($statutAcompte === 'Payé') {

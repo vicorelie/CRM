@@ -201,6 +201,19 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 			array($newSubTotal, $newDiscountPercent, $newDiscountAmount, $newPreTaxTotal, $newTotal, $recordId)
 		);
 
+		// Décoder les entités HTML dans les descriptions de produits (VTiger encode < en &lt; via HTMLPurifier)
+		$prodRows = $adb->pquery(
+			"SELECT lineitem_id, description FROM vtiger_inventoryproductrel WHERE id = ? AND (description LIKE '%&lt;%' OR description LIKE '%&gt;%' OR description LIKE '%&amp;%' OR description LIKE '%&quot;%')",
+			array($recordId)
+		);
+		while ($prodRow = $adb->fetch_array($prodRows)) {
+			$decoded = html_entity_decode($prodRow['description'], ENT_QUOTES, 'UTF-8');
+			$adb->pquery(
+				"UPDATE vtiger_inventoryproductrel SET description = ? WHERE lineitem_id = ?",
+				array($decoded, $prodRow['lineitem_id'])
+			);
+		}
+
 		return $result;
 	}
 }

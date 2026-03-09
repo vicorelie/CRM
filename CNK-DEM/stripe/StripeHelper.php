@@ -571,7 +571,7 @@ class StripeHelper {
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [$invoiceId, $row['productid'], $row['sequence_no'], $row['quantity'], $row['listprice'],
                      $row['discount_percent'] ?? 0, $row['discount_amount'] ?? 0,
-                     $row['comment'] ?? '', $row['description'] ?? '',
+                     $row['comment'] ?? '', html_entity_decode($row['description'] ?? '', ENT_QUOTES, 'UTF-8'),
                      $row['tax1'] ?? 0, $row['tax2'] ?? 0, $row['tax3'] ?? 0,
                      $row['incrementondel'] ?? 1]
                 );
