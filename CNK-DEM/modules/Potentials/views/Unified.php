@@ -55,6 +55,34 @@ class Potentials_Unified_View extends Vtiger_Index_View {
 			$contactPhone = $recordModel->get('cf_981'); // Phone field in Potentials
 		}
 
+		// Check for duplicate contacts (same email or mobile in the whole CRM)
+		$duplicateContacts = [];
+		if (!empty($contactId)) {
+			$mobile = $contactModel ? ($contactModel->get('mobile') ?: '') : '';
+			$conditions = [];
+			$params = [$contactId];
+			if (!empty($contactEmail)) {
+				$conditions[] = 'cd.email = ?';
+				$params[] = $contactEmail;
+			}
+			if (!empty($mobile)) {
+				$conditions[] = 'cd.mobile = ?';
+				$params[] = $mobile;
+			}
+			if (!empty($conditions)) {
+				$db = PearDatabase::getInstance();
+				$sql = 'SELECT cd.contactid, cd.firstname, cd.lastname, cd.email, cd.mobile
+						FROM vtiger_contactdetails cd
+						INNER JOIN vtiger_crmentity ce ON ce.crmid = cd.contactid AND ce.deleted = 0
+						WHERE cd.contactid != ? AND (' . implode(' OR ', $conditions) . ')
+						LIMIT 5';
+				$result = $db->pquery($sql, $params);
+				while ($row = $db->fetch_array($result)) {
+					$duplicateContacts[] = $row;
+				}
+			}
+		}
+
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$isAdmin = ($currentUser->get('is_admin') === 'on');
 		$userRole = $currentUser->get('roleid');
@@ -72,6 +100,7 @@ class Potentials_Unified_View extends Vtiger_Index_View {
 		$viewer->assign('CONTACT_NAME', $contactName);
 		$viewer->assign('CONTACT_PHONE', $contactPhone);
 		$viewer->assign('CONTACT_EMAIL', $contactEmail);
+		$viewer->assign('DUPLICATE_CONTACTS', $duplicateContacts);
 
 		// Metrics data for global bar
 		$viewer->assign('METRIC_DISTANCE', $recordModel->get('cf_961') ?: '');

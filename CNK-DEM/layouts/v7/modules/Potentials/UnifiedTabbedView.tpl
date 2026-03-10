@@ -67,6 +67,24 @@
             </div>
         </div>
 
+        {* Duplicate contact alert *}
+        {if !empty($DUPLICATE_CONTACTS)}
+        <div class="duplicate-contact-alert" id="duplicateContactAlert">
+            <i class="fa fa-exclamation-triangle"></i>
+            <strong>Doublon de contact détecté :</strong>
+            {foreach $DUPLICATE_CONTACTS as $dup}
+                <a href="index.php?module=Contacts&view=Detail&record={$dup.contactid}" target="_blank">{$dup.firstname} {$dup.lastname}</a>{if !$dup@last}, {/if}
+            {/foreach}
+            &nbsp;a le même {if !empty($CONTACT_EMAIL)}email{/if}{if !empty($CONTACT_EMAIL) && !empty($CONTACT_PHONE)} / {/if}{if !empty($CONTACT_PHONE)}mobile{/if} dans la base.
+            <button class="dup-close" onclick="document.getElementById('duplicateContactAlert').style.display='none'">&times;</button>
+        </div>
+        <style>
+        .duplicate-contact-alert { display:flex; align-items:center; gap:8px; background:#fff3cd; border-left:4px solid #f39c12; color:#856404; padding:10px 16px; font-size:13px; flex-wrap:wrap; }
+        .duplicate-contact-alert a { color:#856404; font-weight:600; text-decoration:underline; }
+        .duplicate-contact-alert .dup-close { margin-left:auto; background:none; border:none; font-size:18px; cursor:pointer; color:#856404; line-height:1; padding:0 4px; }
+        </style>
+        {/if}
+
         {* Global Metrics Bar - Read only, visible on all tabs except Details *}
         <div class="global-metrics-bar" id="globalMetricsBar" {if $ACTIVE_TAB eq 'details' || empty($ACTIVE_TAB)}style="display:none;"{/if}>
             <div class="gm-section gm-dates">
