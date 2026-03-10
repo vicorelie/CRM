@@ -194,13 +194,17 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		$totalHTAfterDiscount = $subtotalBeforeDiscount - $globalDiscountHT;
 		if ($totalHTAfterDiscount < 0) $totalHTAfterDiscount = 0;
 
-		// Appliquer la remise uniquement sur le Solde (l'Acompte ne change pas)
-		if ($globalDiscountHT > 0) {
-			$totalSoldeHT = $totalSoldeHT - $globalDiscountHT;
+		// Répartir la remise proportionnellement sur acompte et solde
+		$totalHTBrut = $totalAcompteHT + $totalSoldeHT;
+		if ($globalDiscountHT > 0 && $totalHTBrut > 0) {
+			$ratio = ($totalHTBrut - $globalDiscountHT) / $totalHTBrut;
+			$totalAcompteHT = $totalAcompteHT * $ratio;
+			$totalSoldeHT = $totalSoldeHT * $ratio;
+			if ($totalAcompteHT < 0) $totalAcompteHT = 0;
 			if ($totalSoldeHT < 0) $totalSoldeHT = 0;
 		}
 
-		// Calculer les montants TTC (Acompte inchangé, Solde après remise)
+		// Calculer les montants TTC
 		$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
 		$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
 		$grandTotal = $totalHTAfterDiscount * (1 + $taxRate);

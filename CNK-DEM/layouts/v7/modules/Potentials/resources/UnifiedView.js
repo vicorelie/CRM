@@ -939,15 +939,6 @@
                     jQuery('#unified_remise_percent, #unified_remise_amount').val(0).prop('disabled', true);
                 }
 
-                self.updateFromHT();
-
-                if (quote.cf_1055) {
-                    jQuery('#unified_acompte_ttc').text(parseFloat(quote.cf_1055).toFixed(2) + ' €');
-                }
-                if (quote.cf_1057) {
-                    jQuery('#unified_solde_ttc').text(parseFloat(quote.cf_1057).toFixed(2) + ' €');
-                }
-
                 // Load products
                 jQuery('#unified_productsList').empty();
                 self.productCounter = 0;
@@ -964,6 +955,9 @@
                         }, product.quantity);
                     }
                 });
+
+                // Recalcul final après chargement de tous les produits (avec remise)
+                self.updateMontantTotal();
 
                 // Loading complete - re-enable auto-save
                 self.isLoading = false;
