@@ -67,22 +67,37 @@
             </div>
         </div>
 
-        {* Duplicate contact alert *}
+        {* Duplicate contact modal *}
         {if !empty($DUPLICATE_CONTACTS)}
-        <div class="duplicate-contact-alert" id="duplicateContactAlert">
-            <i class="fa fa-exclamation-triangle"></i>
-            <strong>Doublon de contact détecté :</strong>
-            {foreach $DUPLICATE_CONTACTS as $dup}
-                <a href="index.php?module=Contacts&view=Detail&record={$dup.contactid}" target="_blank">{$dup.firstname} {$dup.lastname}</a>{if !$dup@last}, {/if}
-            {/foreach}
-            &nbsp;a le même {if !empty($CONTACT_EMAIL)}email{/if}{if !empty($CONTACT_EMAIL) && !empty($CONTACT_PHONE)} / {/if}{if !empty($CONTACT_PHONE)}mobile{/if} dans la base.
-            <button class="dup-close" onclick="document.getElementById('duplicateContactAlert').style.display='none'">&times;</button>
+        <div id="dupContactModalOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+            <div style="background:#fff;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.25);max-width:460px;width:90%;overflow:hidden;">
+                <div style="background:#f39c12;padding:16px 20px;display:flex;align-items:center;gap:10px;">
+                    <i class="fa fa-exclamation-triangle" style="color:#fff;font-size:20px;"></i>
+                    <strong style="color:#fff;font-size:15px;">Doublon de contact détecté</strong>
+                    <button onclick="document.getElementById('dupContactModalOverlay').style.display='none'" style="margin-left:auto;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;padding:0;">&times;</button>
+                </div>
+                <div style="padding:20px 24px;">
+                    <p style="margin:0 0 12px;color:#333;font-size:13px;">
+                        Le contact <strong>{$CONTACT_NAME}</strong> semble exister en double dans la base avec le même
+                        {if !empty($CONTACT_EMAIL) && !empty($CONTACT_PHONE)}email / mobile{elseif !empty($CONTACT_EMAIL)}email{else}mobile{/if} :
+                    </p>
+                    <ul style="margin:0 0 16px;padding-left:20px;">
+                    {foreach $DUPLICATE_CONTACTS as $dup}
+                        <li style="margin-bottom:6px;">
+                            <a href="index.php?module=Contacts&view=Detail&record={$dup.contactid}" target="_blank" style="color:#e67e22;font-weight:600;">
+                                {$dup.firstname} {$dup.lastname}
+                            </a>
+                            {if !empty($dup.email)}<span style="color:#888;font-size:12px;"> — {$dup.email}</span>{/if}
+                            {if !empty($dup.mobile)}<span style="color:#888;font-size:12px;"> — {$dup.mobile}</span>{/if}
+                        </li>
+                    {/foreach}
+                    </ul>
+                    <div style="text-align:right;">
+                        <button onclick="document.getElementById('dupContactModalOverlay').style.display='none'" style="background:#f39c12;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Fermer</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <style>
-        .duplicate-contact-alert { display:flex; align-items:center; gap:8px; background:#fff3cd; border-left:4px solid #f39c12; color:#856404; padding:10px 16px; font-size:13px; flex-wrap:wrap; }
-        .duplicate-contact-alert a { color:#856404; font-weight:600; text-decoration:underline; }
-        .duplicate-contact-alert .dup-close { margin-left:auto; background:none; border:none; font-size:18px; cursor:pointer; color:#856404; line-height:1; padding:0 4px; }
-        </style>
         {/if}
 
         {* Global Metrics Bar - Read only, visible on all tabs except Details *}
