@@ -763,20 +763,18 @@
             jQuery('#unified_remise_display').text(remiseHT.toFixed(2) + ' €');
 
             // Calculate acompte and solde BEFORE discount
-            // Acompte = forfait acompte % + supplement + produits acompte + assurance (NO DISCOUNT)
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
-            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
-
-            // Solde = forfait solde % + produits solde
+            var acompteHTBrut = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHTBeforeDiscount = forfaitSoldeHT + produitsSoldeHT;
+            var soldeHTBrut = forfaitSoldeHT + produitsSoldeHT;
+            var totalHTBrut = acompteHTBrut + soldeHTBrut;
 
-            // Apply discount ONLY to solde (acompte stays unchanged)
-            var totalSoldeHT = totalSoldeHTBeforeDiscount - remiseHT;
-            if (totalSoldeHT < 0) totalSoldeHT = 0;
-
-            // Total HT = acompte (no discount) + solde (with discount)
-            var totalHT = totalAcompteHT + totalSoldeHT;
+            // Répartir la remise proportionnellement sur acompte et solde
+            var ratio = totalHTBrut > 0 ? (totalHTBrut - remiseHT) / totalHTBrut : 1;
+            var totalAcompteHT = acompteHTBrut * ratio;
+            var totalSoldeHT = soldeHTBrut * ratio;
+            var totalHT = totalHTBrut - remiseHT;
+            if (totalHT < 0) totalHT = 0;
 
             var acompteTTC = totalAcompteHT * this.TVA_RATE;
             var soldeTTC = totalSoldeHT * this.TVA_RATE;
@@ -852,15 +850,18 @@
             jQuery('#unified_montant_total_ht').text(totalHT.toFixed(2) + ' €');
             jQuery('#unified_remise_display').text(remiseHT.toFixed(2) + ' €');
 
-            // Recalculate acompte/solde with discount applied to solde only
+            // Recalculate acompte/solde avec remise proportionnelle
             var PCT_ACOMPTE_FORFAIT = 43;
             var PCT_SOLDE_FORFAIT = 57;
 
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
-            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
+            var acompteHTBrut2 = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHT = forfaitSoldeHT + produitsSoldeHT - remiseHT;
-            if (totalSoldeHT < 0) totalSoldeHT = 0;
+            var soldeHTBrut2 = forfaitSoldeHT + produitsSoldeHT;
+            var totalHTBrut2 = acompteHTBrut2 + soldeHTBrut2;
+            var ratio2 = totalHTBrut2 > 0 ? (totalHTBrut2 - remiseHT) / totalHTBrut2 : 1;
+            var totalAcompteHT = acompteHTBrut2 * ratio2;
+            var totalSoldeHT = soldeHTBrut2 * ratio2;
 
             jQuery('#unified_acompte_ttc').text((totalAcompteHT * this.TVA_RATE).toFixed(2) + ' €');
             jQuery('#unified_solde_ttc').text((totalSoldeHT * this.TVA_RATE).toFixed(2) + ' €');
@@ -2828,20 +2829,18 @@
             jQuery('#odm_remise_display').text(remiseHT.toFixed(2) + ' €');
 
             // Calculate acompte and solde BEFORE discount
-            // Acompte = forfait acompte % + supplement + produits acompte + assurance (NO DISCOUNT)
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
-            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
-
-            // Solde = forfait solde % + produits solde
+            var acompteHTBrut = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHTBeforeDiscount = forfaitSoldeHT + produitsSoldeHT;
+            var soldeHTBrut = forfaitSoldeHT + produitsSoldeHT;
+            var totalHTBrut = acompteHTBrut + soldeHTBrut;
 
-            // Apply discount ONLY to solde (acompte stays unchanged)
-            var totalSoldeHT = totalSoldeHTBeforeDiscount - remiseHT;
-            if (totalSoldeHT < 0) totalSoldeHT = 0;
-
-            // Total HT = acompte (no discount) + solde (with discount)
-            var totalHT = totalAcompteHT + totalSoldeHT;
+            // Répartir la remise proportionnellement sur acompte et solde
+            var ratio = totalHTBrut > 0 ? (totalHTBrut - remiseHT) / totalHTBrut : 1;
+            var totalAcompteHT = acompteHTBrut * ratio;
+            var totalSoldeHT = soldeHTBrut * ratio;
+            var totalHT = totalHTBrut - remiseHT;
+            if (totalHT < 0) totalHT = 0;
 
             // TTC
             var acompteTTC = totalAcompteHT * this.TVA_RATE;
@@ -3340,29 +3339,28 @@
                 }
             });
 
-            // Calculate acompte WITHOUT discount (normal)
+            // Calculate acompte and solde BEFORE discount
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplement;
-            var totalAcompteHT = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
-
-            // Calculate solde WITHOUT discount first
+            var acompteHTBrut = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
             var forfaitSoldeHT = forfaitHT * PCT_SOLDE_FORFAIT / 100;
-            var totalSoldeHTBeforeDiscount = forfaitSoldeHT + produitsSoldeHT;
+            var soldeHTBrut = forfaitSoldeHT + produitsSoldeHT;
+            var totalHTBrut = acompteHTBrut + soldeHTBrut;
 
-            // Get discount (remise) - apply ONLY to solde
+            // Get discount (remise) - applied to total HT
             var remiseHT = 0;
             if (remiseType === 'percent') {
                 var remisePercent = parseFloat(jQuery('#odm_remise_percent').val()) || 0;
-                remiseHT = totalSoldeHTBeforeDiscount * remisePercent / 100;
+                remiseHT = totalHTBrut * remisePercent / 100;
             } else if (remiseType === 'amount') {
                 remiseHT = parseFloat(jQuery('#odm_remise_amount').val()) || 0;
             }
 
-            // Apply discount ONLY to solde
-            var totalSoldeHT = totalSoldeHTBeforeDiscount - remiseHT;
-            if (totalSoldeHT < 0) totalSoldeHT = 0;
-
-            // Total HT = acompte (no discount) + solde (with discount)
-            var totalHT = totalAcompteHT + totalSoldeHT;
+            // Répartir la remise proportionnellement sur acompte et solde
+            var ratio = totalHTBrut > 0 ? (totalHTBrut - remiseHT) / totalHTBrut : 1;
+            var totalAcompteHT = acompteHTBrut * ratio;
+            var totalSoldeHT = soldeHTBrut * ratio;
+            var totalHT = totalHTBrut - remiseHT;
+            if (totalHT < 0) totalHT = 0;
             var totalTTC = totalHT * this.TVA_RATE;
 
             // TTC
