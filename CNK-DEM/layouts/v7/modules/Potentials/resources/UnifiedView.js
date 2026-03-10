@@ -2726,6 +2726,20 @@
             jQuery('#odm_cf_1170').on('change', function() {
                 self.calculateTotals();
             });
+
+            // Acompte input (saisie manuelle)
+            jQuery('#odm_acompte_ttc').on('input', function() {
+                var totalTTC = parseFloat(jQuery('#odm_montant_total_ttc').text()) || 0;
+                var acompteTTC = parseFloat(jQuery(this).val()) || 0;
+                if (acompteTTC < 0) { acompteTTC = 0; jQuery(this).val('0'); }
+                if (acompteTTC > totalTTC) { acompteTTC = totalTTC; jQuery(this).val(totalTTC.toFixed(2)); }
+                var soldeTTC = Math.max(0, totalTTC - acompteTTC);
+                jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
+                jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2));
+                jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+                jQuery('#odm_hidden_manual_acompte').val(acompteTTC.toFixed(2));
+                jQuery('#odm_acompte_reset').show();
+            });
         },
 
         /**
@@ -2891,7 +2905,9 @@
             jQuery('#odm_cf_1184').val(forfaitTotalTTC.toFixed(2));
             jQuery('#odm_montant_total_ht').text(totalHT.toFixed(2) + ' €');
             jQuery('#odm_montant_total_ttc').text(totalTTC.toFixed(2) + ' €');
-            jQuery('#odm_acompte_ttc').text(acompteTTC.toFixed(2) + ' €');
+            jQuery('#odm_acompte_ttc').val(acompteTTC.toFixed(2));
+            jQuery('#odm_hidden_manual_acompte').val('');
+            jQuery('#odm_acompte_reset').hide();
             jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
 
             // Update hidden fields for saving
@@ -3183,6 +3199,22 @@
             }
 
             this.calculateTotals();
+
+            // Restaurer l'acompte saisi manuellement si différent du calculé
+            if (parseFloat(data.cf_1166) > 0) {
+                var savedAcompte = parseFloat(data.cf_1166);
+                var calculatedAcompte = parseFloat(jQuery('#odm_acompte_ttc').val()) || 0;
+                if (Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
+                    var totalTTC = parseFloat(jQuery('#odm_montant_total_ttc').text()) || 0;
+                    jQuery('#odm_acompte_ttc').val(savedAcompte.toFixed(2));
+                    jQuery('#odm_hidden_manual_acompte').val(savedAcompte.toFixed(2));
+                    jQuery('#odm_hidden_cf_1166').val(savedAcompte.toFixed(2));
+                    var soldeTTC = Math.max(0, totalTTC - savedAcompte);
+                    jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
+                    jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+                    jQuery('#odm_acompte_reset').show();
+                }
+            }
         },
 
         /**
@@ -3215,8 +3247,19 @@
             // Reset totals
             jQuery('#odm_montant_total_ht').text('0.00 €');
             jQuery('#odm_montant_total_ttc').text('0.00 €');
-            jQuery('#odm_acompte_ttc').text('0.00 €');
+            jQuery('#odm_acompte_ttc').val('0');
+            jQuery('#odm_hidden_manual_acompte').val('');
+            jQuery('#odm_acompte_reset').hide();
             jQuery('#odm_solde_ttc').text('0.00 €');
+        },
+
+        /**
+         * Reset manual acompte override and recalculate
+         */
+        resetAcompte: function() {
+            jQuery('#odm_hidden_manual_acompte').val('');
+            jQuery('#odm_acompte_reset').hide();
+            this.calculateTotals();
         },
 
         /**
@@ -3405,6 +3448,14 @@
             jQuery('#odm_hdnSubTotal').val(totalHT.toFixed(2));
             jQuery('#odm_hdnGrandTotal').val(totalTTC.toFixed(2));
             jQuery('#odm_pre_tax_total').val(totalHT.toFixed(2));
+
+            // Utiliser l'acompte saisi manuellement si présent
+            var manualAcompteVal = jQuery('#odm_hidden_manual_acompte').val();
+            if (manualAcompteVal !== '' && manualAcompteVal !== null) {
+                var manualAcompte = parseFloat(manualAcompteVal);
+                acompteTTC = Math.min(Math.max(0, manualAcompte), totalTTC);
+                soldeTTC = Math.max(0, totalTTC - acompteTTC);
+            }
             jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2));
             jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
 

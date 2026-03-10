@@ -103,6 +103,7 @@
         <input type="hidden" name="cf_1170" id="odm_hidden_cf_1170" value="">
         <input type="hidden" name="cf_1166" id="odm_hidden_cf_1166" value="0">
         <input type="hidden" name="cf_1168" id="odm_hidden_cf_1168" value="0">
+        <input type="hidden" name="odm_manual_acompte_ttc" id="odm_hidden_manual_acompte" value="">
         {* Champs supplémentaires copiés du devis *}
         <input type="hidden" name="cf_1172" id="odm_hidden_cf_1172" value="">
         <input type="hidden" name="cf_1174" id="odm_hidden_cf_1174" value="">
@@ -454,8 +455,13 @@
                     <div class="total-value" id="odm_montant_total_ttc">0.00 €</div>
                 </div>
                 <div class="total-box total-acompte">
-                    <div class="total-label">Acompte</div>
-                    <div class="total-value" id="odm_acompte_ttc">0.00 €</div>
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Acompte <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                        <i id="odm_acompte_reset" class="fa fa-undo" title="Remettre le montant calculé" style="display:none;cursor:pointer;opacity:0.8;font-size:0.85em;" onclick="UnifiedODM.resetAcompte()"></i>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="odm_acompte_ttc" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
                 </div>
                 <div class="total-box total-solde">
                     <div class="total-label">Solde</div>
@@ -901,6 +907,11 @@
     background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
     color: white;
 }
+
+#odm_acompte_ttc::-webkit-inner-spin-button,
+#odm_acompte_ttc::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#odm_acompte_ttc[type=number] { -moz-appearance: textfield; }
+#odm_acompte_ttc:focus { outline: none; border-bottom-color: rgba(255,255,255,0.9) !important; }
 
 .odm-tab-container .total-box.total-solde {
     background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
