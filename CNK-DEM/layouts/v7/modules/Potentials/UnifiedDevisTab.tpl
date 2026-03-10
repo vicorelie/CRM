@@ -79,6 +79,7 @@
         <input type="hidden" name="hdnS_H_Amount" value="0">
         <input type="hidden" name="hdnAdjustment" value="0">
         <input type="hidden" name="pre_tax_total" id="unified_pre_tax_total" value="0">
+        <input type="hidden" name="manual_acompte_ttc" id="unified_hidden_manual_acompte" value="">
 
         <div id="unifiedHiddenProductsContainer"></div>
     </form>
@@ -243,8 +244,13 @@
                     </div>
                 </div>
                 <div class="total-box total-acompte">
-                    <div class="total-label">Acompte</div>
-                    <div class="total-value" id="unified_acompte_ttc">0.00 €</div>
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Acompte <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                        <i id="unified_acompte_reset" class="fa fa-undo" title="Remettre le montant calculé" style="display:none;cursor:pointer;opacity:0.8;font-size:0.85em;" onclick="UnifiedDevis.resetAcompte()"></i>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="unified_acompte_ttc" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
                 </div>
                 <div class="total-box total-solde">
                     <div class="total-label">Solde</div>
@@ -503,6 +509,18 @@
 .devis-tab-container .total-box.total-acompte {
     background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
     color: white;
+}
+.devis-tab-container .total-box.total-acompte input::-webkit-outer-spin-button,
+.devis-tab-container .total-box.total-acompte input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.devis-tab-container .total-box.total-acompte input[type=number] {
+    -moz-appearance: textfield;
+}
+.devis-tab-container .total-box.total-acompte input:focus {
+    outline: none;
+    border-bottom-color: rgba(255,255,255,0.9);
 }
 
 .devis-tab-container .total-box.total-solde {

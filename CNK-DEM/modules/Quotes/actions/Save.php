@@ -205,9 +205,17 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		}
 
 		// Calculer les montants TTC
-		$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
-		$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
 		$grandTotal = $totalHTAfterDiscount * (1 + $taxRate);
+
+		// Si l'acompte a été saisi manuellement, utiliser cette valeur
+		$manualAcompteTTC = $request->get('manual_acompte_ttc');
+		if ($manualAcompteTTC !== null && $manualAcompteTTC !== '' && floatval($manualAcompteTTC) >= 0) {
+			$totalAcompteTTC = floatval($manualAcompteTTC);
+			$totalSoldeTTC = max(0, $grandTotal - $totalAcompteTTC);
+		} else {
+			$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
+			$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
+		}
 
 		// Calculer le montant déjà payé depuis vtiger_stripe_payments
 		$paidResult = $adb->pquery(

@@ -273,6 +273,20 @@
             jQuery('#unified_cf_1139').on('change', function() { self.updateMontantTotal(); });
             jQuery('#unified_montant_total_ttc').on('input change', function() { self.updateFromTotalTTC(); });
 
+            // Acompte manuel : mise à jour du solde en temps réel
+            jQuery('#unified_acompte_ttc').on('input', function() {
+                var totalTTC = parseFloat(jQuery('#unified_montant_total_ttc').val()) || 0;
+                var acompteTTC = parseFloat(jQuery(this).val()) || 0;
+                // Clamp entre 0 et Total TTC
+                if (acompteTTC < 0) { acompteTTC = 0; jQuery(this).val('0'); }
+                if (acompteTTC > totalTTC) { acompteTTC = totalTTC; jQuery(this).val(totalTTC.toFixed(2)); }
+                var soldeTTC = Math.max(0, totalTTC - acompteTTC);
+                jQuery('#unified_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
+                jQuery('#unified_hidden_manual_acompte').val(acompteTTC.toFixed(2));
+                jQuery('#unified_acompte_reset').show();
+                self.triggerDebouncedAutoSave();
+            });
+
             // Disable scroll on number inputs
             jQuery('#devisTabContainer').on('wheel', 'input[type="number"]', function(e) {
                 jQuery(this).blur();
@@ -682,6 +696,13 @@
             this.triggerDebouncedAutoSave();
         },
 
+        resetAcompte: function() {
+            jQuery('#unified_hidden_manual_acompte').val('');
+            jQuery('#unified_acompte_reset').hide();
+            this.updateMontantTotal();
+            this.triggerDebouncedAutoSave();
+        },
+
         updateFromHT: function() {
             var ht = parseFloat(jQuery('#unified_cf_1127').val()) || 0;
             var ttc = ht * this.TVA_RATE;
@@ -781,7 +802,9 @@
 
             var totalTTC = totalHT * this.TVA_RATE;
 
-            jQuery('#unified_acompte_ttc').text(acompteTTC.toFixed(2) + ' €');
+            jQuery('#unified_acompte_ttc').val(acompteTTC.toFixed(2));
+            jQuery('#unified_hidden_manual_acompte').val('');
+            jQuery('#unified_acompte_reset').hide();
             jQuery('#unified_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
             jQuery('#unified_montant_total_ht').text(totalHT.toFixed(2) + ' €');
             jQuery('#unified_montant_total_ttc').val(totalTTC.toFixed(2));
@@ -863,7 +886,9 @@
             var totalAcompteHT = acompteHTBrut2 * ratio2;
             var totalSoldeHT = soldeHTBrut2 * ratio2;
 
-            jQuery('#unified_acompte_ttc').text((totalAcompteHT * this.TVA_RATE).toFixed(2) + ' €');
+            jQuery('#unified_acompte_ttc').val((totalAcompteHT * this.TVA_RATE).toFixed(2));
+            jQuery('#unified_hidden_manual_acompte').val('');
+            jQuery('#unified_acompte_reset').hide();
             jQuery('#unified_solde_ttc').text((totalSoldeHT * this.TVA_RATE).toFixed(2) + ' €');
 
             this.triggerDebouncedAutoSave();
@@ -939,6 +964,9 @@
                     jQuery('#unified_remise_percent, #unified_remise_amount').val(0).prop('disabled', true);
                 }
 
+                // Calculer cf_1127_ttc et forfait_total_ttc
+                self.updateFromHT();
+
                 // Load products
                 jQuery('#unified_productsList').empty();
                 self.productCounter = 0;
@@ -958,6 +986,19 @@
 
                 // Recalcul final après chargement de tous les produits (avec remise)
                 self.updateMontantTotal();
+
+                // Restaurer l'acompte saisi manuellement si différent du calculé (cf_1055 en DB)
+                if (parseFloat(quote.cf_1055) > 0) {
+                    var savedAcompte = parseFloat(quote.cf_1055);
+                    var calculatedAcompte = parseFloat(jQuery('#unified_acompte_ttc').val()) || 0;
+                    if (Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
+                        var totalTTC = parseFloat(jQuery('#unified_montant_total_ttc').val()) || 0;
+                        jQuery('#unified_acompte_ttc').val(savedAcompte.toFixed(2));
+                        jQuery('#unified_hidden_manual_acompte').val(savedAcompte.toFixed(2));
+                        jQuery('#unified_solde_ttc').text(Math.max(0, totalTTC - savedAcompte).toFixed(2) + ' €');
+                        jQuery('#unified_acompte_reset').show();
+                    }
+                }
 
                 // Loading complete - re-enable auto-save
                 self.isLoading = false;
