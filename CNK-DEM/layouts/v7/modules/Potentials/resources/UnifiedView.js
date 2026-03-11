@@ -3036,18 +3036,19 @@
             // Calculate totals
             this.calculateTotals();
 
-            // Restaurer l'acompte saisi manuellement sur le devis (cf_1055) si différent du calculé
+            // Appliquer l'acompte du Devis (cf_1055) — toujours prioritaire sur le calcul proportionnel
             if (parseFloat(data.cf_1055) > 0) {
                 var savedAcompte = parseFloat(data.cf_1055);
                 var calculatedAcompte = parseFloat(jQuery('#odm_acompte_ttc').val()) || 0;
+                var totalTTC = parseFloat(jQuery('#odm_montant_total_ttc').text()) || 0;
+                jQuery('#odm_acompte_ttc').val(savedAcompte.toFixed(2));
+                jQuery('#odm_hidden_cf_1166').val(savedAcompte.toFixed(2));
+                var soldeTTC = Math.max(0, totalTTC - savedAcompte);
+                jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
+                jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+                // Afficher reset seulement si l'acompte diffère du calcul proportionnel
                 if (Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
-                    var totalTTC = parseFloat(jQuery('#odm_montant_total_ttc').text()) || 0;
-                    jQuery('#odm_acompte_ttc').val(savedAcompte.toFixed(2));
                     jQuery('#odm_hidden_manual_acompte').val(savedAcompte.toFixed(2));
-                    jQuery('#odm_hidden_cf_1166').val(savedAcompte.toFixed(2));
-                    var soldeTTC = Math.max(0, totalTTC - savedAcompte);
-                    jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
-                    jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
                     jQuery('#odm_acompte_reset').show();
                 }
             }
