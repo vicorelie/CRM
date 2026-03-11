@@ -14,6 +14,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$this->exposeMethod('getSalesOrderData');
 		$this->exposeMethod('getVendorAddress');
 		$this->exposeMethod('createInvoiceFromSource');
+		$this->exposeMethod('updateQuoteAcompte');
 	}
 
 	/**
@@ -1578,5 +1579,27 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('CONTACT_EMAIL', $contactEmail);
 		$viewer->assign('QUOTES', $quotes);
 		return $viewer->view('UnifiedMailTab.tpl', 'Potentials', true);
+	}
+
+	/**
+	 * Sync ODM acompte/solde back to the linked Quote (cf_1055/cf_1057)
+	 */
+	public function updateQuoteAcompte(Vtiger_Request $request) {
+		$quoteId = intval($request->get('quote_id'));
+		$acompte = floatval($request->get('acompte'));
+		$solde   = floatval($request->get('solde'));
+
+		if (empty($quoteId)) {
+			echo json_encode(['success' => false, 'message' => 'quote_id manquant']);
+			return;
+		}
+
+		$db = PearDatabase::getInstance();
+		$db->pquery(
+			'UPDATE vtiger_quotescf SET cf_1055 = ?, cf_1057 = ? WHERE quoteid = ?',
+			[$acompte, $solde, $quoteId]
+		);
+
+		echo json_encode(['success' => true]);
 	}
 }

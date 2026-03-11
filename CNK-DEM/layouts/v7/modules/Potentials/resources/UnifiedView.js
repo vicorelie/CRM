@@ -3441,23 +3441,11 @@
             if (totalHT < 0) totalHT = 0;
             var totalTTC = totalHT * this.TVA_RATE;
 
-            // TTC
-            var acompteTTC = totalAcompteHT * this.TVA_RATE;
-            var soldeTTC = totalSoldeHT * this.TVA_RATE;
-
             jQuery('#odm_hdnSubTotal').val(totalHT.toFixed(2));
             jQuery('#odm_hdnGrandTotal').val(totalTTC.toFixed(2));
             jQuery('#odm_pre_tax_total').val(totalHT.toFixed(2));
-
-            // Utiliser l'acompte saisi manuellement si présent
-            var manualAcompteVal = jQuery('#odm_hidden_manual_acompte').val();
-            if (manualAcompteVal !== '' && manualAcompteVal !== null) {
-                var manualAcompte = parseFloat(manualAcompteVal);
-                acompteTTC = Math.min(Math.max(0, manualAcompte), totalTTC);
-                soldeTTC = Math.max(0, totalTTC - acompteTTC);
-            }
-            jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2));
-            jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+            // cf_1166 (acompte) et cf_1168 (solde) sont déjà à jour dans les hidden fields
+            // via calculateTotals() ou l'input handler — ne pas écraser ici
 
             // Build products
             var container = jQuery('#odmHiddenProductsContainer');
@@ -3510,6 +3498,25 @@
 
                     if (!hasError) {
                         app.helper.showSuccessNotification({message: 'BDC enregistré avec succès!'});
+
+                        // Sync acompte/solde vers le devis lié
+                        var linkedQuoteId = jQuery('#odm_hidden_quote_id').val();
+                        if (linkedQuoteId) {
+                            jQuery.ajax({
+                                url: 'index.php',
+                                type: 'POST',
+                                data: {
+                                    module: 'Potentials',
+                                    view: 'UnifiedTabAjax',
+                                    mode: 'updateQuoteAcompte',
+                                    quote_id: linkedQuoteId,
+                                    acompte: jQuery('#odm_hidden_cf_1166').val(),
+                                    solde: jQuery('#odm_hidden_cf_1168').val()
+                                },
+                                dataType: 'json'
+                            });
+                        }
+
                         self.cancelEdit();
 
                         // Reset state to allow creating new BDC
