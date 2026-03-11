@@ -183,6 +183,13 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 		$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
 		$grandTotal = $totalHTAfterDiscount * (1 + $taxRate);
 
+		// Si l'acompte a été saisi manuellement, utiliser cette valeur
+		$manualAcompteTTC = $request->get('odm_manual_acompte_ttc');
+		if ($manualAcompteTTC !== null && $manualAcompteTTC !== '' && floatval($manualAcompteTTC) >= 0) {
+			$totalAcompteTTC = floatval($manualAcompteTTC);
+			$totalSoldeTTC = max(0, $grandTotal - $totalAcompteTTC);
+		}
+
 		// Mettre à jour vtiger_salesordercf
 		$updateResult = $adb->pquery(
 			"UPDATE vtiger_salesordercf SET cf_1184 = ?, cf_1166 = ?, cf_1168 = ? WHERE salesorderid = ?",
