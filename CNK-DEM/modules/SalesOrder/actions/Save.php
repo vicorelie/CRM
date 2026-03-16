@@ -111,7 +111,7 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 		$totalProduitsSoldeHT = 0;
 
 		$lineItemsResult = $adb->pquery(
-			"SELECT productid, quantity, listprice, discount_percent, discount_amount
+			"SELECT productid, quantity, listprice, discount_percent, discount_amount, pct_acompte, pct_solde
 			 FROM vtiger_inventoryproductrel
 			 WHERE id = ?",
 			array($recordId)
@@ -128,38 +128,36 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 				$lineTotal = ($quantity * $listPrice * (1 - $lineDiscountPercent / 100)) - $lineDiscountAmount;
 
 				if ($lineTotal > 0 && $productId) {
-					$pctResult = $adb->pquery(
-						"SELECT cf_1051, cf_1053 FROM vtiger_productcf WHERE productid = ?",
-						array($productId)
-					);
+					// Priorité : pct_acompte sauvegardé sur la ligne, puis catalogue, puis % forfait
+					$savedPctAcompte = $adb->query_result($lineItemsResult, $i, 'pct_acompte');
+					$savedPctSolde   = $adb->query_result($lineItemsResult, $i, 'pct_solde');
 
-					if ($adb->num_rows($pctResult) == 0) {
+					if ($savedPctAcompte !== null && $savedPctAcompte !== '') {
+						$pctAcompte = floatval($savedPctAcompte);
+						$pctSolde   = floatval($savedPctSolde);
+					} else {
 						$pctResult = $adb->pquery(
-							"SELECT cf_1051, cf_1053 FROM vtiger_servicecf WHERE serviceid = ?",
+							"SELECT cf_1051, cf_1053 FROM vtiger_productcf WHERE productid = ?",
 							array($productId)
 						);
+						if ($adb->num_rows($pctResult) == 0) {
+							$pctResult = $adb->pquery(
+								"SELECT cf_1051, cf_1053 FROM vtiger_servicecf WHERE serviceid = ?",
+								array($productId)
+							);
+						}
+						$pctAcompte = $forfaitPctAcompte;
+						$pctSolde   = $forfaitPctSolde;
+						if ($adb->num_rows($pctResult) > 0) {
+							$dbAcompte = $adb->query_result($pctResult, 0, 'cf_1051');
+							$dbSolde   = $adb->query_result($pctResult, 0, 'cf_1053');
+							if ($dbAcompte !== null && $dbAcompte !== '') $pctAcompte = floatval($dbAcompte);
+							if ($dbSolde   !== null && $dbSolde   !== '') $pctSolde   = floatval($dbSolde);
+						}
 					}
 
-					$pctAcompte = $forfaitPctAcompte;
-					$pctSolde = $forfaitPctSolde;
-
-					if ($adb->num_rows($pctResult) > 0) {
-						$dbAcompte = $adb->query_result($pctResult, 0, 'cf_1051');
-						$dbSolde = $adb->query_result($pctResult, 0, 'cf_1053');
-
-						if ($dbAcompte !== null && $dbAcompte !== '') {
-							$pctAcompte = floatval($dbAcompte);
-						}
-						if ($dbSolde !== null && $dbSolde !== '') {
-							$pctSolde = floatval($dbSolde);
-						}
-					}
-
-					$lineAcompte = ($lineTotal * $pctAcompte) / 100;
-					$lineSolde = ($lineTotal * $pctSolde) / 100;
-
-					$totalProduitsAcompteHT += $lineAcompte;
-					$totalProduitsSoldeHT += $lineSolde;
+					$totalProduitsAcompteHT += ($lineTotal * $pctAcompte) / 100;
+					$totalProduitsSoldeHT   += ($lineTotal * $pctSolde)   / 100;
 				}
 			}
 		}
@@ -172,10 +170,14 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 		$totalAcompteHT = $totalProduitsAcompteHT + $forfaitAcompteHT + $assuranceTarif;
 		$totalSoldeHT = $totalProduitsSoldeHT + $forfaitSoldeHT;
 
-		// Appliquer la remise uniquement sur le Solde (l'Acompte ne change pas)
-		if ($globalDiscountHT > 0) {
-			$totalSoldeHT = $totalSoldeHT - $globalDiscountHT;
-			if ($totalSoldeHT < 0) $totalSoldeHT = 0;
+		// Répartir la remise proportionnellement sur acompte et solde (identique à Quotes/Save.php)
+		$totalHTBrut = $totalAcompteHT + $totalSoldeHT;
+		if ($globalDiscountHT > 0 && $totalHTBrut > 0) {
+			$ratio = ($totalHTBrut - $globalDiscountHT) / $totalHTBrut;
+			$totalAcompteHT = $totalAcompteHT * $ratio;
+			$totalSoldeHT   = $totalSoldeHT   * $ratio;
+			if ($totalAcompteHT < 0) $totalAcompteHT = 0;
+			if ($totalSoldeHT   < 0) $totalSoldeHT   = 0;
 		}
 
 		// Calculer les montants TTC (Acompte inchangé, Solde après remise)
