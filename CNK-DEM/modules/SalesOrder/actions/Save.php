@@ -47,10 +47,10 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 
 		// Gérer les pourcentages - accepter 0 comme valeur valide
 		$forfaitPctAcompteValue = $request->get('cf_1176');
-		$forfaitPctAcompte = ($forfaitPctAcompteValue !== null && $forfaitPctAcompteValue !== '') ? floatval($forfaitPctAcompteValue) : 43;
+		$forfaitPctAcompte = ($forfaitPctAcompteValue !== null && $forfaitPctAcompteValue !== '') ? floatval($forfaitPctAcompteValue) : 47;
 
 		$forfaitPctSoldeValue = $request->get('cf_1178');
-		$forfaitPctSolde = ($forfaitPctSoldeValue !== null && $forfaitPctSoldeValue !== '') ? floatval($forfaitPctSoldeValue) : 57;
+		$forfaitPctSolde = ($forfaitPctSoldeValue !== null && $forfaitPctSoldeValue !== '') ? floatval($forfaitPctSoldeValue) : 53;
 
 		// CUSTOM: Lire cf_1170 (MONTANT ASSURANCE) et cf_1172 (TARIF POUR 1000) depuis la DB
 		$assuranceResult = $adb->pquery("SELECT cf_1170, cf_1172 FROM vtiger_salesordercf WHERE salesorderid = ?", array($recordId));

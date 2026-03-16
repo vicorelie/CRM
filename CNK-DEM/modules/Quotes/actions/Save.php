@@ -52,10 +52,10 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 
 		// Gérer les pourcentages - accepter 0 comme valeur valide
 		$forfaitPctAcompteValue = $request->get('cf_1133');
-		$forfaitPctAcompte = ($forfaitPctAcompteValue !== null && $forfaitPctAcompteValue !== '') ? floatval($forfaitPctAcompteValue) : 43;
+		$forfaitPctAcompte = ($forfaitPctAcompteValue !== null && $forfaitPctAcompteValue !== '') ? floatval($forfaitPctAcompteValue) : 47;
 
 		$forfaitPctSoldeValue = $request->get('cf_1135');
-		$forfaitPctSolde = ($forfaitPctSoldeValue !== null && $forfaitPctSoldeValue !== '') ? floatval($forfaitPctSoldeValue) : 57;
+		$forfaitPctSolde = ($forfaitPctSoldeValue !== null && $forfaitPctSoldeValue !== '') ? floatval($forfaitPctSoldeValue) : 53;
 
 		// CUSTOM: Lire cf_1139 (Montant assurance) et cf_1141 (Tarif pour 1000) depuis la DB
 		$assuranceResult = $adb->pquery("SELECT cf_1139, cf_1141 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));

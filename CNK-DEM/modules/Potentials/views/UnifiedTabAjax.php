@@ -207,8 +207,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		// Load products
 		$products = [];
 		$productsQuery = "SELECT p.productid as id, p.productname, p.unit_price,
-						 COALESCE(pcf.cf_1051, 43) as pct_acompte,
-						 COALESCE(pcf.cf_1053, 57) as pct_solde
+						 COALESCE(pcf.cf_1051, 47) as pct_acompte,
+						 COALESCE(pcf.cf_1053, 53) as pct_solde
 						 FROM vtiger_products p
 						 INNER JOIN vtiger_crmentity c ON c.crmid = p.productid
 						 LEFT JOIN vtiger_productcf pcf ON pcf.productid = p.productid
@@ -219,8 +219,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				'id' => $row['id'],
 				'productname' => $row['productname'],
 				'unit_price' => $row['unit_price'],
-				'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
-				'pct_solde' => floatval($row['pct_solde']) ?: 57
+				'pct_acompte' => floatval($row['pct_acompte']) ?: 47,
+				'pct_solde' => floatval($row['pct_solde']) ?: 53
 			];
 		}
 
@@ -389,8 +389,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		// Load products for product search
 		$products = [];
 		$productsQuery = "SELECT p.productid as id, p.productname, p.unit_price,
-						 COALESCE(pcf.cf_1051, 43) as pct_acompte,
-						 COALESCE(pcf.cf_1053, 57) as pct_solde
+						 COALESCE(pcf.cf_1051, 47) as pct_acompte,
+						 COALESCE(pcf.cf_1053, 53) as pct_solde
 						 FROM vtiger_products p
 						 INNER JOIN vtiger_crmentity c ON c.crmid = p.productid
 						 LEFT JOIN vtiger_productcf pcf ON pcf.productid = p.productid
@@ -401,8 +401,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				'id' => $row['id'],
 				'productname' => $row['productname'],
 				'unit_price' => $row['unit_price'],
-				'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
-				'pct_solde' => floatval($row['pct_solde']) ?: 57
+				'pct_acompte' => floatval($row['pct_acompte']) ?: 47,
+				'pct_solde' => floatval($row['pct_solde']) ?: 53
 			];
 		}
 
@@ -628,8 +628,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					'netprice' => floatval($row['netprice']),
 					'discount_percent' => floatval($row['discount_percent']),
 					'discount_amount' => floatval($row['discount_amount']),
-					'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
-					'pct_solde' => floatval($row['pct_solde']) ?: 57
+					'pct_acompte' => floatval($row['pct_acompte']) ?: 47,
+					'pct_solde' => floatval($row['pct_solde']) ?: 53
 				];
 			}
 
@@ -778,8 +778,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					'netprice' => floatval($row['netprice']),
 					'discount_percent' => floatval($row['discount_percent']),
 					'discount_amount' => floatval($row['discount_amount']),
-					'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
-					'pct_solde' => floatval($row['pct_solde']) ?: 57
+					'pct_acompte' => floatval($row['pct_acompte']) ?: 47,
+					'pct_solde' => floatval($row['pct_solde']) ?: 53
 				];
 			}
 
