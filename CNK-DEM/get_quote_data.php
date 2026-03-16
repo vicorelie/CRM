@@ -42,8 +42,8 @@ try {
 
     // Récupérer les produits du devis avec leurs pourcentages acompte/solde
     $productsQuery = "SELECT ipr.*, p.productname, p.unit_price,
-                             COALESCE(pcf.cf_1051, 43) as pct_acompte,
-                             COALESCE(pcf.cf_1053, 57) as pct_solde
+                             COALESCE(ipr.pct_acompte, pcf.cf_1051, 43) as pct_acompte,
+                             COALESCE(ipr.pct_solde, pcf.cf_1053, 57) as pct_solde
                       FROM vtiger_inventoryproductrel ipr
                       LEFT JOIN vtiger_products p ON p.productid = ipr.productid
                       LEFT JOIN vtiger_productcf pcf ON pcf.productid = ipr.productid

@@ -290,6 +290,29 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 			);
 		}
 
+		// Sauvegarder pct_acompte/pct_solde par ligne produit
+		$totalProductCount = intval($request->get('totalProductCount'));
+		if ($totalProductCount > 0) {
+			$lineItems = $adb->pquery(
+				"SELECT lineitem_id, productid, sequence_no FROM vtiger_inventoryproductrel WHERE id = ? ORDER BY sequence_no",
+				array($recordId)
+			);
+			$lineItemIds = array();
+			while ($li = $adb->fetch_array($lineItems)) {
+				$lineItemIds[] = $li['lineitem_id'];
+			}
+			for ($i = 1; $i <= $totalProductCount; $i++) {
+				$pctAcompte = $request->get('pctAcompte' . $i);
+				$pctSolde   = $request->get('pctSolde' . $i);
+				if ($pctAcompte !== null && isset($lineItemIds[$i - 1])) {
+					$adb->pquery(
+						"UPDATE vtiger_inventoryproductrel SET pct_acompte = ?, pct_solde = ? WHERE lineitem_id = ?",
+						array(floatval($pctAcompte), floatval($pctSolde), $lineItemIds[$i - 1])
+					);
+				}
+			}
+		}
+
 		return $result;
 	}
 }

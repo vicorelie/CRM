@@ -430,6 +430,8 @@
                 var productName = row.find('input[name^="productName"]').val();
                 var qty = row.find('input[name^="qty"]').val();
                 var listPrice = row.find('input[name^="listPrice"]').val();
+                var pctAcompte = row.attr('data-pct-acompte') || 43;
+                var pctSolde = row.attr('data-pct-solde') || 57;
 
                 var fields = [
                     {name: 'hdnProductId' + idx, value: productId},
@@ -442,7 +444,9 @@
                     {name: 'discount_amount' + idx, value: '0'},
                     {name: 'productDeleted' + idx, value: '0'},
                     {name: 'lineItemType' + idx, value: 'Products'},
-                    {name: 'subproduct_ids' + idx, value: ''}
+                    {name: 'subproduct_ids' + idx, value: ''},
+                    {name: 'pctAcompte' + idx, value: pctAcompte},
+                    {name: 'pctSolde' + idx, value: pctSolde}
                 ];
 
                 fields.forEach(function(field) {
@@ -1768,6 +1772,8 @@
                 var productName = row.find('input[name^="productName"]').val();
                 var qty = row.find('input[name^="qty"]').val();
                 var listPrice = row.find('input[name^="listPrice"]').val();
+                var pctAcompte = row.attr('data-pct-acompte') || 43;
+                var pctSolde = row.attr('data-pct-solde') || 57;
 
                 var fields = [
                     {name: 'hdnProductId' + idx, value: productId},
@@ -1780,7 +1786,9 @@
                     {name: 'discount_amount' + idx, value: '0'},
                     {name: 'productDeleted' + idx, value: '0'},
                     {name: 'lineItemType' + idx, value: 'Products'},
-                    {name: 'subproduct_ids' + idx, value: ''}
+                    {name: 'subproduct_ids' + idx, value: ''},
+                    {name: 'pctAcompte' + idx, value: pctAcompte},
+                    {name: 'pctSolde' + idx, value: pctSolde}
                 ];
 
                 fields.forEach(function(field) {
@@ -3488,6 +3496,8 @@
                 container.append('<input type="hidden" name="discount_type' + lineNum + '" value="zero">');
                 container.append('<input type="hidden" name="productTotal' + lineNum + '" value="' + lineTotal + '">');
                 container.append('<input type="hidden" name="netPrice' + lineNum + '" value="' + lineTotal + '">');
+                container.append('<input type="hidden" name="pctAcompte' + lineNum + '" value="' + (p.pctAcompte || 43) + '">');
+                container.append('<input type="hidden" name="pctSolde' + lineNum + '" value="' + (p.pctSolde || 57) + '">');
             });
 
             // Submit form

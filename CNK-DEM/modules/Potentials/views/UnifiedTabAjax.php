@@ -607,8 +607,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$productsQuery = "SELECT ivp.productid, ivp.quantity, ivp.listprice, ivp.discount_percent,
 							  ivp.discount_amount, ivp.comment, ivp.description, ivp.lineitem_id,
 							  p.productname,
-							  COALESCE(pcf.cf_1051, 43) as pct_acompte,
-							  COALESCE(pcf.cf_1053, 57) as pct_solde,
+							  COALESCE(ivp.pct_acompte, pcf.cf_1051, 43) as pct_acompte,
+							  COALESCE(ivp.pct_solde, pcf.cf_1053, 57) as pct_solde,
 							  (ivp.quantity * ivp.listprice - COALESCE(ivp.discount_amount, 0)
 							   - (ivp.quantity * ivp.listprice * COALESCE(ivp.discount_percent, 0) / 100)) as netprice
 							  FROM vtiger_inventoryproductrel ivp
@@ -757,8 +757,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			$productsQuery = "SELECT ivp.productid, ivp.quantity, ivp.listprice, ivp.discount_percent,
 							  ivp.discount_amount, ivp.comment, ivp.description, ivp.lineitem_id,
 							  p.productname,
-							  COALESCE(pcf.cf_1051, 43) as pct_acompte,
-							  COALESCE(pcf.cf_1053, 57) as pct_solde,
+							  COALESCE(ivp.pct_acompte, pcf.cf_1051, 43) as pct_acompte,
+							  COALESCE(ivp.pct_solde, pcf.cf_1053, 57) as pct_solde,
 							  (ivp.quantity * ivp.listprice - COALESCE(ivp.discount_amount, 0)
 							   - (ivp.quantity * ivp.listprice * COALESCE(ivp.discount_percent, 0) / 100)) as netprice
 							  FROM vtiger_inventoryproductrel ivp
@@ -967,8 +967,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 			while ($lineItem = $db->fetchByAssoc($lineItemsResult)) {
 				$insertQuery = "INSERT INTO vtiger_inventoryproductrel
 					(id, productid, sequence_no, quantity, listprice, comment, description,
-					 incrementondel, tax1, tax2, tax3, discount_percent, discount_amount, lineitem_id)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+					 incrementondel, tax1, tax2, tax3, discount_percent, discount_amount, lineitem_id,
+					 pct_acompte, pct_solde)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 				// Generate new lineitem_id
 				$lineItemId = $db->getUniqueID('vtiger_inventoryproductrel');
@@ -987,7 +988,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 					$lineItem['tax3'],
 					$lineItem['discount_percent'],
 					$lineItem['discount_amount'],
-					$lineItemId
+					$lineItemId,
+					$lineItem['pct_acompte'],
+					$lineItem['pct_solde']
 				]);
 			}
 
@@ -1514,20 +1517,21 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 	private function _copyProductLines($db, $sourceId, $invoiceId) {
 		$prodResult = $db->pquery(
 			"SELECT productid, sequence_no, quantity, listprice, discount_percent, discount_amount,
-			 comment, description, tax1, tax2, tax3, incrementondel
+			 comment, description, tax1, tax2, tax3, incrementondel, pct_acompte, pct_solde
 			 FROM vtiger_inventoryproductrel WHERE id = ?", [$sourceId]
 		);
 
 		while ($row = $db->fetch_array($prodResult)) {
 			$db->pquery(
 				"INSERT INTO vtiger_inventoryproductrel (id, productid, sequence_no, quantity, listprice,
-				 discount_percent, discount_amount, comment, description, tax1, tax2, tax3, incrementondel)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				 discount_percent, discount_amount, comment, description, tax1, tax2, tax3, incrementondel,
+				 pct_acompte, pct_solde)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				[$invoiceId, $row['productid'], $row['sequence_no'], $row['quantity'], $row['listprice'],
 				 $row['discount_percent'] ?? 0, $row['discount_amount'] ?? 0,
 				 $row['comment'] ?? '', html_entity_decode($row['description'] ?? '', ENT_QUOTES, 'UTF-8'),
 				 $row['tax1'] ?? 0, $row['tax2'] ?? 0, $row['tax3'] ?? 0,
-				 $row['incrementondel'] ?? 1]
+				 $row['incrementondel'] ?? 1, $row['pct_acompte'], $row['pct_solde']]
 			);
 		}
 
