@@ -312,9 +312,23 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $this->log("MailSend OK, Message-ID: $messageId");
 
             // Collecter les noms de toutes les pièces jointes pour l'historique
+            // Les PDFs incluent leur path pour être sauvegardés dans vtiger_attachments
             $attachmentNames = [];
+            // Seuls DEVIS et INVENTAIRE sont sauvegardés (les autres sont juste listés sans téléchargement)
+            $pdfSaveKeywords = ['DEVIS', 'INVENTAIRE'];
             foreach ($pdfAttachments as $att) {
-                $attachmentNames[] = ['name' => $att['name'], 'type' => 'pdf'];
+                $shouldSave = false;
+                foreach ($pdfSaveKeywords as $kw) {
+                    if (stripos($att['name'], $kw) !== false) {
+                        $shouldSave = true;
+                        break;
+                    }
+                }
+                $entry = ['name' => $att['name'], 'type' => 'pdf'];
+                if ($shouldSave) {
+                    $entry['_path'] = $att['path'];
+                }
+                $attachmentNames[] = $entry;
             }
             if (!empty($docAttachmentIds) && is_array($docAttachmentIds)) {
                 foreach ($docAttachmentIds as $docId) {
@@ -332,12 +346,12 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
                 }
             }
 
-            // Enregistrer l'email dans l'historique VTiger
+            // Enregistrer l'email dans l'historique VTiger (sauvegarde aussi les PDFs en vtiger_attachments)
             $ccString = !empty($ccAddresses) ? implode(',', $ccAddresses) : '';
             $this->saveEmailToHistory($recordId, $toEmail, $ccString, $subject, $body, $emailTemplateId, $attachmentNames, $messageId);
             $this->log("Email enregistré dans l'historique");
 
-            // Nettoyer les fichiers temporaires PDF
+            // Nettoyer les fichiers temporaires PDF (les copies sont en vtiger_attachments/storage)
             foreach ($pdfAttachments as $attachment) {
                 if (file_exists($attachment['path'])) {
                     @unlink($attachment['path']);
@@ -395,6 +409,75 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
     }
 
     /**
+     * Sauvegarder un fichier PDF dans vtiger_email_pdf_attachments (table légère dédiée)
+     * Retourne l'id inséré ou null en cas d'erreur
+     */
+    private function saveFileAsVtigerAttachment($db, $filePath, $fileName, $emailCrmId) {
+        try {
+            global $root_directory;
+            $rootDir = !empty($root_directory) ? rtrim($root_directory, '/') . '/' : '';
+
+            // Dossier dédié aux PDFs emails (hors arborescence vtiger standard)
+            $yearMonth = date('Y-m');
+            $storageDir = $rootDir . 'storage/email_pdfs/' . $yearMonth . '/';
+            if (!is_dir($storageDir)) {
+                mkdir($storageDir, 0755, true);
+            }
+
+            // Nom de fichier unique sur disque
+            $uniqueName = uniqid('epdf_') . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+            $destPath = $storageDir . $uniqueName;
+            if (!copy($filePath, $destPath)) {
+                $this->log("saveFileAsVtigerAttachment: échec copie $filePath → $destPath");
+                return null;
+            }
+
+            // Nettoyage auto : supprimer les entrées + fichiers de plus de 90 jours
+            $this->cleanupOldEmailPdfs($db, $rootDir);
+
+            // Enregistrer dans la table dédiée
+            $db->pquery(
+                "INSERT INTO vtiger_email_pdf_attachments (email_id, filename, filepath, created_at)
+                 VALUES (?, ?, ?, NOW())",
+                [$emailCrmId, $fileName, $destPath]
+            );
+            $insertId = $db->getLastInsertID();
+
+            $this->log("saveFileAsVtigerAttachment: OK, id=$insertId, file=$destPath");
+            return $insertId;
+        } catch (Exception $e) {
+            $this->log("saveFileAsVtigerAttachment ERROR: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Supprimer les PDFs emails de plus de 90 jours (fichiers + lignes DB)
+     */
+    private function cleanupOldEmailPdfs($db, $rootDir) {
+        try {
+            $result = $db->pquery(
+                "SELECT id, filepath FROM vtiger_email_pdf_attachments WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY) LIMIT 200",
+                []
+            );
+            $ids = [];
+            while ($row = $db->fetch_array($result)) {
+                if (!empty($row['filepath']) && file_exists($row['filepath'])) {
+                    @unlink($row['filepath']);
+                }
+                $ids[] = intval($row['id']);
+            }
+            if (!empty($ids)) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $db->pquery("DELETE FROM vtiger_email_pdf_attachments WHERE id IN ($placeholders)", $ids);
+                $this->log("cleanupOldEmailPdfs: supprimé " . count($ids) . " entrées");
+            }
+        } catch (Exception $e) {
+            $this->log("cleanupOldEmailPdfs ERROR: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Enregistrer l'email envoyé dans l'historique VTiger
      */
     private function saveEmailToHistory($potentialId, $toEmail, $ccEmail, $subject, $body, $templateId, $attachments = [], $messageId = '') {
@@ -432,7 +515,28 @@ class Potentials_SendEmail_Action extends Vtiger_Action_Controller {
             $toEmailJson = json_encode([$toEmail]);
             $this->log("INSERT its4you_emails: crmId=$crmId, from=$fromEmail, to=$toEmailJson, related_to=$potentialId, contact_id=$contactId");
 
-            $attachmentJson = !empty($attachments) ? json_encode($attachments) : '';
+            // Sauvegarder les PDFs dans vtiger_attachments et mettre à jour les IDs
+            $finalAttachments = [];
+            foreach ($attachments as $att) {
+                if ($att['type'] === 'pdf' && !empty($att['_path']) && file_exists($att['_path'])) {
+                    $vtAttachId = $this->saveFileAsVtigerAttachment($db, $att['_path'], $att['name'], $crmId);
+                    $entry = ['name' => $att['name'], 'type' => 'pdf'];
+                    if ($vtAttachId) {
+                        $entry['id'] = $vtAttachId;
+                    }
+                    $finalAttachments[] = $entry;
+                } else {
+                    // Retirer _path de l'entrée finale, lier les documents existants
+                    unset($att['_path']);
+                    $finalAttachments[] = $att;
+                    if (!empty($att['id']) && $att['type'] === 'document') {
+                        // Lier le document vtiger à l'email
+                        $db->pquery("INSERT IGNORE INTO vtiger_seattachmentsrel (crmid, attachmentsid) VALUES (?, ?)", [$crmId, $att['id']]);
+                    }
+                }
+            }
+
+            $attachmentJson = !empty($finalAttachments) ? json_encode($finalAttachments) : '';
 
             $sql = "INSERT INTO its4you_emails (its4you_emails_id, from_email, to_email, cc_email, bcc_email, subject, body, email_flag, related_to, contact_id, user_id, email_template_ids, attachment_ids, emails_module)
                     VALUES (?, ?, ?, ?, '', ?, ?, 'SENT', ?, ?, ?, ?, ?, 'Potentials')";

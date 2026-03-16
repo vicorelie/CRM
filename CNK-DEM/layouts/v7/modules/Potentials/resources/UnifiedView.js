@@ -238,6 +238,7 @@
         TVA_RATE: 1.20,
         isSaving: false,  // Flag to prevent concurrent saves
         isLoading: false, // Flag to prevent auto-save during quote loading
+        isLocked: false,  // Flag: devis validé = lecture seule
         autoSaveTimeout: null, // Timeout for debounced auto-save
 
         triggerDebouncedAutoSave: function() {
@@ -389,6 +390,12 @@
             // Skip auto-save during quote loading
             if (this.isLoading) {
                 console.log('[UnifiedDevis] Skipping auto-save during loading');
+                return;
+            }
+
+            // Skip auto-save for validated (locked) quotes
+            if (this.isLocked) {
+                console.log('[UnifiedDevis] Skipping auto-save: devis validé');
                 return;
             }
 
@@ -609,6 +616,11 @@
 
         addProduct: function(product, qty) {
             var isManual = (String(product.id) === String(this.MANUAL_PRODUCT_ID));
+
+            // Block modification of locked (validated) quotes
+            if (this.isLocked && !this.isLoading) {
+                return;
+            }
 
             // Allow duplicates for manual products, block for catalog products
             if (!isManual && this.selectedProducts[product.id]) {
@@ -913,6 +925,9 @@
 
             console.log('[UnifiedDevis] loadQuote called with quoteId:', quoteId);
 
+            // Réinitialiser le verrou avant de charger (état propre)
+            this.setReadOnly(false);
+
             // Set loading flag to prevent auto-save during loading
             this.isLoading = true;
             console.log('[UnifiedDevis] isLoading set to true');
@@ -963,6 +978,7 @@
                     toggle.find('span').text('Non validé');
                     chip.removeClass('validated');
                 }
+                self.setReadOnly(isValidated);
 
                 // Load discount (remise) values
                 var discountPercent = parseFloat(quote.discount_percent) || 0;
@@ -1040,7 +1056,51 @@
             }
 
             // Trigger auto-save
+            var nowValidated = jQuery('#unified_cf_1162').val() === '1';
+            this.setReadOnly(nowValidated);
             this.triggerDebouncedAutoSave();
+        },
+
+        setReadOnly: function(locked) {
+            this.isLocked = locked;
+
+            // Champs du formulaire
+            var fields = [
+                '#unified_subject', '#unified_cf_1005', '#unified_prestataire',
+                '#unified_cf_1125', '#unified_cf_1269',
+                '#unified_cf_1127', '#unified_cf_1127_ttc', '#unified_cf_1129',
+                '#unified_cf_1139', '#unified_montant_total_ttc', '#unified_acompte_ttc',
+                '#unified_remise_percent', '#unified_remise_amount',
+                '#unified_productSearch'
+            ];
+            jQuery(fields.join(',')).prop('disabled', locked);
+            jQuery('input[name="unified_remise_type"]').prop('disabled', locked);
+
+            // Boutons d'ajout/suppression produits
+            jQuery('#unified_productsList .btn-danger, #unified_productsList button').prop('disabled', locked);
+            jQuery('.unified-qty-input, .unified-price-input').prop('disabled', locked);
+            jQuery('button[onclick="UnifiedDevis.addManualProduct()"]').prop('disabled', locked);
+
+            // Bouton supprimer devis
+            if (locked) {
+                jQuery('#unified_btnDeleteQuote').hide();
+            } else {
+                jQuery('#unified_btnDeleteQuote').show();
+            }
+
+            // Bannière verrouillé
+            var banner = jQuery('#unified_locked_banner');
+            if (locked) {
+                if (!banner.length) {
+                    jQuery('#devisTabContainer .quote-form-container').prepend(
+                        '<div id="unified_locked_banner" style="background:#fff3cd;border:1px solid #ffc107;color:#856404;padding:8px 12px;border-radius:6px;margin-bottom:10px;font-size:13px;">' +
+                        '<i class="fa fa-lock"></i> Devis validé — lecture seule. Dé-validez pour modifier.' +
+                        '</div>'
+                    );
+                }
+            } else {
+                banner.remove();
+            }
         },
 
         deleteQuote: function() {

@@ -14,6 +14,21 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 
 		$incomingRecordId = $request->get('record');
 
+		// CUSTOM: Bloquer la modification d'un devis validé (cf_1162 = '1')
+		// Exception : si le save ne fait que changer cf_1162 (toggle validation)
+		if ($incomingRecordId) {
+			$validResult = $adb->pquery("SELECT cf_1162 FROM vtiger_quotescf WHERE quoteid = ?", array($incomingRecordId));
+			if ($adb->num_rows($validResult) > 0) {
+				$currentValidated = $adb->query_result($validResult, 0, 'cf_1162');
+				$incomingValidated = $request->get('cf_1162');
+				// Devis validé ET le save n'est pas un toggle de validation
+				if ($currentValidated == '1' && $incomingValidated == '1') {
+					error_log("[QUOTES SAVE] Blocked: tentative de modification du devis validé #$incomingRecordId");
+					return;
+				}
+			}
+		}
+
 		// CUSTOM: Calculer cf_1137 AVANT parent::process()
 		$forfaitTarif = floatval($request->get('cf_1127')) ?: 0;
 		$forfaitSupplement = floatval($request->get('cf_1129')) ?: 0;

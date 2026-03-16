@@ -1037,7 +1037,11 @@ jQuery(document).ready(function() {
                             else if (['xls','xlsx','csv'].indexOf(ext) !== -1) { attIcon = 'fa-file-excel-o'; attColor = '#27ae60'; }
                             else if (['doc','docx'].indexOf(ext) !== -1) { attIcon = 'fa-file-word-o'; attColor = '#2980b9'; }
                             else if (['png','jpg','jpeg','gif'].indexOf(ext) !== -1) { attIcon = 'fa-file-image-o'; attColor = '#3498db'; }
-                            attHtml += '<span class="view-att-chip"><i class="fa ' + attIcon + '" style="color:' + attColor + ';"></i> ' + att.name + '</span>';
+                            if (att.id) {
+                                attHtml += '<a href="index.php?module=Potentials&action=GetEmailAttachment&record=' + recordId + '&attach_id=' + att.id + '" target="_blank" class="view-att-chip" style="text-decoration:none;"><i class="fa ' + attIcon + '" style="color:' + attColor + ';"></i> ' + att.name + ' <i class="fa fa-download" style="font-size:10px;opacity:0.7;"></i></a>';
+                            } else {
+                                attHtml += '<span class="view-att-chip"><i class="fa ' + attIcon + '" style="color:' + attColor + ';"></i> ' + att.name + '</span>';
+                            }
                         }
                         $attBox.html(attHtml).show();
                     } else {
