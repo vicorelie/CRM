@@ -3229,23 +3229,9 @@
                 });
             }
 
+            // Toujours recalculer depuis les pct — ne pas restaurer cf_1166 comme "manuel"
+            jQuery('#odm_hidden_manual_acompte').val('');
             this.calculateTotals();
-
-            // Restaurer l'acompte saisi manuellement si différent du calculé
-            if (parseFloat(data.cf_1166) > 0) {
-                var savedAcompte = parseFloat(data.cf_1166);
-                var calculatedAcompte = parseFloat(jQuery('#odm_acompte_ttc').val()) || 0;
-                if (Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
-                    var totalTTC = parseFloat(jQuery('#odm_montant_total_ttc').text()) || 0;
-                    jQuery('#odm_acompte_ttc').val(savedAcompte.toFixed(2));
-                    jQuery('#odm_hidden_manual_acompte').val(savedAcompte.toFixed(2));
-                    jQuery('#odm_hidden_cf_1166').val(savedAcompte.toFixed(2));
-                    var soldeTTC = Math.max(0, totalTTC - savedAcompte);
-                    jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
-                    jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
-                    jQuery('#odm_acompte_reset').show();
-                }
-            }
         },
 
         /**
