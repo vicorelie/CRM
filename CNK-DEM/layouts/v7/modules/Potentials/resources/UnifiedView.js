@@ -991,20 +991,9 @@
                 });
 
                 // Recalcul final après chargement de tous les produits (avec remise)
+                // Toujours recalculer depuis les pct_acompte — ne pas restaurer cf_1055 comme "manuel"
+                jQuery('#unified_hidden_manual_acompte').val('');
                 self.updateMontantTotal();
-
-                // Restaurer l'acompte saisi manuellement si différent du calculé (cf_1055 en DB)
-                if (parseFloat(quote.cf_1055) > 0) {
-                    var savedAcompte = parseFloat(quote.cf_1055);
-                    var calculatedAcompte = parseFloat(jQuery('#unified_acompte_ttc').val()) || 0;
-                    if (Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
-                        var totalTTC = parseFloat(jQuery('#unified_montant_total_ttc').val()) || 0;
-                        jQuery('#unified_acompte_ttc').val(savedAcompte.toFixed(2));
-                        jQuery('#unified_hidden_manual_acompte').val(savedAcompte.toFixed(2));
-                        jQuery('#unified_solde_ttc').text(Math.max(0, totalTTC - savedAcompte).toFixed(2) + ' €');
-                        jQuery('#unified_acompte_reset').show();
-                    }
-                }
 
                 // Loading complete - re-enable auto-save
                 self.isLoading = false;
