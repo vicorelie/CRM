@@ -260,6 +260,16 @@
             this.initProductSearch();
             this.registerEventHandlers();
 
+            // Auto-sélectionner le dernier devis créé après un reload post-création
+            var selectFlag = sessionStorage.getItem('selectLatestQuote_' + this.potentialId);
+            if (selectFlag) {
+                sessionStorage.removeItem('selectLatestQuote_' + this.potentialId);
+                var firstChip = jQuery('.quote-chip').first();
+                if (firstChip.length) {
+                    firstChip.click();
+                }
+            }
+
             console.log('[UnifiedDevis] Initialized');
         },
 
@@ -1835,6 +1845,11 @@
                 var currentTab = jQuery('#unifiedTabNav li.active a').data('tab') || 'devis';
                 var potentialId = jQuery('#devisTabContainer').data('potential-id');
                 sessionStorage.setItem('activeTab_' + potentialId, currentTab);
+
+                // Si création, demander l'auto-sélection du nouveau devis après reload
+                if (!recordId) {
+                    sessionStorage.setItem('selectLatestQuote_' + potentialId, '1');
+                }
 
                 // Reload the page to show updated quotes
                 setTimeout(function() {
