@@ -110,7 +110,6 @@ class Quotes_Save_Action extends Inventory_Save_Action {
 		// Récupérer la remise globale depuis le request (hdnDiscountPercent / hdnDiscountAmount)
 		$reqDiscountPercent = floatval($request->get('hdnDiscountPercent')) ?: 0;
 		$reqDiscountAmount = floatval($request->get('hdnDiscountAmount')) ?: 0;
-		error_log("[QUOTES SAVE] Remise: hdnDiscountPercent={$reqDiscountPercent}, hdnDiscountAmount={$reqDiscountAmount}");
 
 		// Calculer le total HT (produits + forfait + assurance) - AVANT remise
 		$subtotalBeforeDiscount = $productsSubTotal + $totalForfaitHT + $assuranceTarif;

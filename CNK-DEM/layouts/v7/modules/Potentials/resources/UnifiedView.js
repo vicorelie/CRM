@@ -378,7 +378,7 @@
             });
         },
 
-        autoSaveQuoteWithProducts: function() {
+        autoSaveQuoteWithProducts: function(forceEvenIfLocked) {
             var self = this;
             var quoteId = jQuery('#unified_selectedQuoteId').val();
 
@@ -393,15 +393,18 @@
                 return;
             }
 
-            // Skip auto-save for validated (locked) quotes
-            if (this.isLocked) {
+            // Skip auto-save for validated (locked) quotes (sauf lors du toggle de validation lui-même)
+            if (this.isLocked && !forceEvenIfLocked) {
                 console.log('[UnifiedDevis] Skipping auto-save: devis validé');
                 return;
             }
 
-            // Prevent concurrent saves
+            // Prevent concurrent saves — retry once after delay
             if (this.isSaving) {
-                console.log('[UnifiedDevis] Already saving, skipping');
+                console.log('[UnifiedDevis] Already saving, scheduling retry');
+                var self = this;
+                clearTimeout(this.autoSaveTimeout);
+                this.autoSaveTimeout = setTimeout(function() { self.autoSaveQuoteWithProducts(forceEvenIfLocked); }, 1200);
                 return;
             }
 
@@ -1004,22 +1007,34 @@
                 self.productCounter = 0;
                 self.selectedProducts = {};
 
+                var defaultPct = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 47;
+                var defaultPctSolde = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 53;
                 (data.products || []).forEach(function(product) {
                     if (product.productid) {
                         self.addProduct({
                             id: product.productid,
                             name: product.productname,
                             unit_price: product.listprice,
-                            pct_acompte: product.pct_acompte || 47,
-                            pct_solde: product.pct_solde || 53
+                            pct_acompte: product.pct_acompte || defaultPct,
+                            pct_solde: product.pct_solde || defaultPctSolde
                         }, product.quantity);
                     }
                 });
 
-                // Recalcul final après chargement de tous les produits (avec remise)
-                // Toujours recalculer depuis les pct_acompte — ne pas restaurer cf_1055 comme "manuel"
+                // Recalcul depuis les pct_acompte
                 jQuery('#unified_hidden_manual_acompte').val('');
                 self.updateMontantTotal();
+
+                // Si cf_1055 en DB diffère de la valeur calculée (modification manuelle), la restaurer
+                var savedAcompte  = parseFloat(quote.cf_1055) || 0;
+                var calcAcompte   = parseFloat(jQuery('#unified_acompte_ttc').val()) || 0;
+                if (Math.abs(savedAcompte - calcAcompte) > 0.01) {
+                    jQuery('#unified_acompte_ttc').val(savedAcompte.toFixed(2));
+                    jQuery('#unified_hidden_manual_acompte').val(savedAcompte.toFixed(2));
+                    jQuery('#unified_acompte_reset').show();
+                    var totalTTC = parseFloat(jQuery('#unified_montant_total_ttc').val()) || 0;
+                    jQuery('#unified_solde_ttc').text(Math.max(0, totalTTC - savedAcompte).toFixed(2) + ' €');
+                }
 
                 // Loading complete - re-enable auto-save
                 self.isLoading = false;
@@ -1055,10 +1070,11 @@
                 chip.addClass('validated');
             }
 
-            // Trigger auto-save
+            // Trigger save immédiat avant de verrouiller (sinon isLocked bloquerait le save)
             var nowValidated = jQuery('#unified_cf_1162').val() === '1';
             this.setReadOnly(nowValidated);
-            this.triggerDebouncedAutoSave();
+            clearTimeout(this.autoSaveTimeout);
+            this.autoSaveQuoteWithProducts(true); // force: bypass isLocked
         },
 
         setReadOnly: function(locked) {
@@ -1075,6 +1091,7 @@
             ];
             jQuery(fields.join(',')).prop('disabled', locked);
             jQuery('input[name="unified_remise_type"]').prop('disabled', locked);
+            if (locked) { jQuery('#unified_acompte_reset').hide(); }
 
             // Boutons d'ajout/suppression produits
             jQuery('#unified_productsList .btn-danger, #unified_productsList button').prop('disabled', locked);

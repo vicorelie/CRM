@@ -41,12 +41,9 @@ try {
     $quoteData = $result->fetch_assoc();
 
     // Récupérer les produits du devis avec leurs pourcentages acompte/solde
-    $productsQuery = "SELECT ipr.*, p.productname, p.unit_price,
-                             COALESCE(ipr.pct_acompte, pcf.cf_1051, 47) as pct_acompte,
-                             COALESCE(ipr.pct_solde, pcf.cf_1053, 53) as pct_solde
+    $productsQuery = "SELECT ipr.*, p.productname, p.unit_price
                       FROM vtiger_inventoryproductrel ipr
                       LEFT JOIN vtiger_products p ON p.productid = ipr.productid
-                      LEFT JOIN vtiger_productcf pcf ON pcf.productid = ipr.productid
                       WHERE ipr.id = ?
                       ORDER BY ipr.sequence_no";
 
@@ -68,8 +65,8 @@ try {
             'comment' => $product['comment'],
             'discount_percent' => $product['discount_percent'],
             'discount_amount' => $product['discount_amount'],
-            'pct_acompte' => floatval($product['pct_acompte']) ?: 47,
-            'pct_solde' => floatval($product['pct_solde']) ?: 53
+            'pct_acompte' => floatval($product['pct_acompte']) ?: null,
+            'pct_solde'   => floatval($product['pct_solde'])   ?: null
         ];
     }
 
