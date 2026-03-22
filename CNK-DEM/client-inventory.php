@@ -15,6 +15,7 @@ $savedVolume = 0;
 $savedVolumeFinal = 0;
 $savedBoxes = 0;
 $savedInventoryB64 = '';
+$isLocked = false;
 
 if (empty($token)) {
     $error = 'Lien invalide. Veuillez contacter votre conseiller CNK DEM.';
@@ -70,6 +71,16 @@ if (empty($token)) {
                 $inventoryJson = $affaire['cf_969'] ?: '{}';
                 $inventoryJson = html_entity_decode($inventoryJson, ENT_QUOTES, 'UTF-8');
                 $savedInventoryB64 = base64_encode($inventoryJson);
+
+                // Vérifier si l'affaire est validée (cf_1164 = checkbox)
+                $stmtLock = $conn->prepare("SELECT cf_1164 FROM vtiger_potentialscf WHERE potentialid = ?");
+                $stmtLock->bind_param('i', $potentialId);
+                $stmtLock->execute();
+                $lockRow = $stmtLock->get_result()->fetch_assoc();
+                if ($lockRow && $lockRow['cf_1164'] == '1') {
+                    $isLocked = true;
+                }
+                $stmtLock->close();
             }
         }
         $conn->close();
@@ -293,12 +304,18 @@ if (empty($token)) {
 <?php else: ?>
 
 <div class="page-content">
+    <?php if ($isLocked): ?>
+    <div style="background:#BD3733; color:#fff; text-align:center; padding:14px 20px; font-size:15px; font-weight:600;">
+        <i class="fa fa-lock"></i> Votre dossier a été validé — l'inventaire n'est plus modifiable.
+    </div>
+    <?php endif; ?>
     <div class="inventaire-tab-container" id="inventaireTabContainer"
          data-record-id="<?php echo $potentialId; ?>"
          data-saved-volume="<?php echo $savedVolume; ?>"
          data-saved-volume-final="<?php echo $savedVolumeFinal; ?>"
          data-saved-boxes="<?php echo $savedBoxes; ?>"
-         data-saved-inventory-b64="<?php echo htmlspecialchars($savedInventoryB64); ?>">
+         data-saved-inventory-b64="<?php echo htmlspecialchars($savedInventoryB64); ?>"
+         data-locked="<?php echo $isLocked ? '1' : '0'; ?>">
 
         <!-- Toolbar -->
         <div class="inventory-toolbar">
@@ -379,6 +396,7 @@ window.ClientInventaire = {
     categoriesInfo: {},
     autoSaveTimeout: null,
     isSaving: false,
+    isLocked: false,
 
     showNotification: function(msg, type) {
         var el = document.createElement('div');
@@ -390,6 +408,7 @@ window.ClientInventaire = {
     },
 
     triggerDebouncedAutoSave: function() {
+        if (this.isLocked) return;
         var self = this;
         clearTimeout(this.autoSaveTimeout);
         this.autoSaveTimeout = setTimeout(function() { self.autoSave(); }, 1000);
@@ -408,6 +427,8 @@ window.ClientInventaire = {
             try { savedInventory = JSON.parse(atob(savedInventoryB64)); } catch(e) {}
         }
 
+        this.isLocked = container.data('locked') === 1;
+
         this.loadItemsFromDatabase().then(function() {
             if (savedInventory && Object.keys(savedInventory).length > 0) {
                 self.inventory = savedInventory;
@@ -418,9 +439,17 @@ window.ClientInventaire = {
             self.updateTotalVolume();
             self.initSearch();
 
-            jQuery('#unified-volumeFinal').off('change blur').on('change blur', function() {
-                self.triggerDebouncedAutoSave();
-            });
+            if (self.isLocked) {
+                // Désactiver tous les inputs et boutons
+                jQuery('#inventaireTabContainer input, #inventaireTabContainer button, #inventaireTabContainer select').prop('disabled', true);
+                jQuery('.qty-input').prop('disabled', true);
+                jQuery('.inventory-toolbar').css('pointer-events', 'none').css('opacity', '0.6');
+                jQuery('#unified-new-article-form').hide();
+            } else {
+                jQuery('#unified-volumeFinal').off('change blur').on('change blur', function() {
+                    self.triggerDebouncedAutoSave();
+                });
+            }
         });
     },
 

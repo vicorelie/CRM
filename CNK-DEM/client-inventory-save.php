@@ -39,6 +39,16 @@ try {
     $recordId = intval($row['potential_id']);
     $stmt->close();
 
+    // Vérifier si l'affaire est validée (cf_1164)
+    $stmtLock = $conn->prepare("SELECT cf_1164 FROM vtiger_potentialscf WHERE potentialid = ?");
+    $stmtLock->bind_param('i', $recordId);
+    $stmtLock->execute();
+    $lockRow = $stmtLock->get_result()->fetch_assoc();
+    $stmtLock->close();
+    if ($lockRow && $lockRow['cf_1164'] == '1') {
+        throw new Exception('L\'affaire est validée, l\'inventaire ne peut plus être modifié.');
+    }
+
     // Récupérer les données POST
     $volume = isset($_POST['volume']) ? floatval($_POST['volume']) : 0;
     $volumeFinal = isset($_POST['volume_final']) ? floatval($_POST['volume_final']) : 0;
