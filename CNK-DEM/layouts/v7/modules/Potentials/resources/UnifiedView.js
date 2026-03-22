@@ -450,8 +450,8 @@
                 var productName = row.find('input[name^="productName"]').val();
                 var qty = row.find('input[name^="qty"]').val();
                 var listPrice = row.find('input[name^="listPrice"]').val();
-                var pctAcompte = row.attr('data-pct-acompte') || 47;
-                var pctSolde = row.attr('data-pct-solde') || 53;
+                var pctAcompte = row.attr('data-pct-acompte') || 45;
+                var pctSolde = row.attr('data-pct-solde') || 55;
 
                 var fields = [
                     {name: 'hdnProductId' + idx, value: productId},
@@ -596,7 +596,7 @@
 
             products.forEach(function(product) {
                 var div = jQuery('<div style="padding:10px;cursor:pointer;border-bottom:1px solid #eee"></div>');
-                div.html('<strong>' + product.productname + '</strong><br><small>' + parseFloat(product.unit_price || 0).toFixed(2) + ' EUR | Acompte: ' + (product.pct_acompte || 47) + '% / Solde: ' + (product.pct_solde || 53) + '%</small>');
+                div.html('<strong>' + product.productname + '</strong><br><small>' + parseFloat(product.unit_price || 0).toFixed(2) + ' EUR | Acompte: ' + (product.pct_acompte || 45) + '% / Solde: ' + (product.pct_solde || 55) + '%</small>');
                 div.on('mouseenter', function() { jQuery(this).css('background', '#f0f0f0'); });
                 div.on('mouseleave', function() { jQuery(this).css('background', 'white'); });
                 div.on('click', function() {
@@ -604,8 +604,8 @@
                         id: product.id,
                         name: product.productname,
                         unit_price: product.unit_price,
-                        pct_acompte: product.pct_acompte || 47,
-                        pct_solde: product.pct_solde || 53
+                        pct_acompte: product.pct_acompte || 45,
+                        pct_solde: product.pct_solde || 55
                     }, 1);
                     jQuery('#unified_productSearch').val('');
                     resultsDiv.hide();
@@ -640,8 +640,8 @@
             var unitPrice = parseFloat(product.unit_price || 0).toFixed(2);
             var quantity = qty || 1;
             var lineTotal = (parseFloat(unitPrice) * parseInt(quantity)).toFixed(2);
-            var pctAcompte = product.pct_acompte || 47;
-            var pctSolde = product.pct_solde || 53;
+            var pctAcompte = product.pct_acompte || 45;
+            var pctSolde = product.pct_solde || 55;
             var counter = this.productCounter;
             var removeFunc = isManual ? 'removeManualProduct' : 'removeProduct';
             var removeArgs = isManual ? 'this' : 'this,' + product.id;
@@ -680,8 +680,8 @@
                 id: this.MANUAL_PRODUCT_ID,
                 name: '',
                 unit_price: 0,
-                pct_acompte: parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 47,
-                pct_solde: parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 53
+                pct_acompte: parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 45,
+                pct_solde: parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 55
             }, 1);
             // Focus on the last added name input
             jQuery('#unified_productsList tr:last .unified-name-input').attr('placeholder', 'Nom du produit').focus();
@@ -755,8 +755,8 @@
         },
 
         updateMontantTotal: function() {
-            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 47;
-            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 53;
+            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 45;
+            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 55;
 
             var forfaitHT = parseFloat(jQuery('#unified_cf_1127').val()) || 0;
             var supplementHT = parseFloat(jQuery('#unified_cf_1129').val()) || 0;
@@ -772,7 +772,7 @@
                     var lineTotal = parseFloat(totalCell.text()) || 0;
                     produitsHT += lineTotal;
 
-                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 47;
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 45;
                     var pctSolde = 100 - pctAcompte;
 
                     produitsAcompteHT += lineTotal * pctAcompte / 100;
@@ -853,7 +853,7 @@
                 if (totalCell.length) {
                     var lineTotal = parseFloat(totalCell.text()) || 0;
                     produitsHT += lineTotal;
-                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 47;
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 45;
                     produitsAcompteHT += lineTotal * pctAcompte / 100;
                     produitsSoldeHT += lineTotal * (100 - pctAcompte) / 100;
                 }
@@ -903,8 +903,8 @@
             jQuery('#unified_remise_display').text(remiseHT.toFixed(2) + ' €');
 
             // Recalculate acompte/solde avec remise proportionnelle
-            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 47;
-            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 53;
+            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 45;
+            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 55;
 
             var forfaitAcompteHT = (forfaitHT * PCT_ACOMPTE_FORFAIT / 100) + supplementHT;
             var acompteHTBrut2 = forfaitAcompteHT + produitsAcompteHT + assuranceHT;
@@ -962,8 +962,8 @@
                 jQuery('#unified_cf_1129').val(quote.cf_1129 || 0);
                 jQuery('#unified_cf_1139').val(quote.cf_1139 || '');
                 jQuery('#unified_prestataire').val(quote.prestataire || '');
-                jQuery('#unified_hidden_cf_1133').val(quote.cf_1133 || 47);
-                jQuery('#unified_hidden_cf_1135').val(quote.cf_1135 || 53);
+                jQuery('#unified_hidden_cf_1133').val(quote.cf_1133 || 45);
+                jQuery('#unified_hidden_cf_1135').val(quote.cf_1135 || 55);
 
                 // Load validation status
                 var isValidated = quote.cf_1162 === '1' || quote.cf_1162 === 1;
@@ -1007,8 +1007,8 @@
                 self.productCounter = 0;
                 self.selectedProducts = {};
 
-                var defaultPct = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 47;
-                var defaultPctSolde = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 53;
+                var defaultPct = parseFloat(jQuery('#unified_hidden_cf_1133').val()) || 45;
+                var defaultPctSolde = parseFloat(jQuery('#unified_hidden_cf_1135').val()) || 55;
                 (data.products || []).forEach(function(product) {
                     if (product.productid) {
                         self.addProduct({
@@ -1848,8 +1848,8 @@
                 var productName = row.find('input[name^="productName"]').val();
                 var qty = row.find('input[name^="qty"]').val();
                 var listPrice = row.find('input[name^="listPrice"]').val();
-                var pctAcompte = row.attr('data-pct-acompte') || 47;
-                var pctSolde = row.attr('data-pct-solde') || 53;
+                var pctAcompte = row.attr('data-pct-acompte') || 45;
+                var pctSolde = row.attr('data-pct-solde') || 55;
 
                 var fields = [
                     {name: 'hdnProductId' + idx, value: productId},
@@ -2847,8 +2847,8 @@
             this.productCounter++;
             var idx = this.productCounter;
 
-            pctAcompte = parseFloat(pctAcompte) || 47;
-            pctSolde = parseFloat(pctSolde) || 53;
+            pctAcompte = parseFloat(pctAcompte) || 45;
+            pctSolde = parseFloat(pctSolde) || 55;
 
             this.selectedProducts[idx] = {
                 id: id,
@@ -2903,8 +2903,8 @@
          */
         calculateTotals: function() {
             // Read percentages from hidden fields (copied from quote)
-            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 47;
-            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 53;
+            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 45;
+            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 55;
 
             var forfaitHT = parseFloat(jQuery('#odm_cf_1180').val()) || 0;
             var supplementHT = parseFloat(jQuery('#odm_cf_1182').val()) || 0;
@@ -2922,7 +2922,7 @@
                     produitsHT += lineTotal;
 
                     // Get product-specific percentages
-                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 47;
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 45;
                     var pctSolde = 100 - pctAcompte;
 
                     produitsAcompteHT += lineTotal * pctAcompte / 100;
@@ -3087,8 +3087,8 @@
             jQuery('#odm_hidden_cf_1172').val(data.cf_1141 || 14); // Tarif pour 1000 (default 14)
 
             // Pourcentages acompte/solde du forfait
-            jQuery('#odm_hidden_cf_1176').val(data.cf_1133 || 47); // % acompte
-            jQuery('#odm_hidden_cf_1178').val(data.cf_1135 || 53); // % solde
+            jQuery('#odm_hidden_cf_1176').val(data.cf_1133 || 45); // % acompte
+            jQuery('#odm_hidden_cf_1178').val(data.cf_1135 || 55); // % solde
 
             // Description forfait
             jQuery('#odm_hidden_cf_1188').val(data.cf_1131 || '');
@@ -3120,7 +3120,7 @@
             // Products (with percentages from quote)
             if (data.products && data.products.length > 0) {
                 data.products.forEach(function(p) {
-                    self.addProduct(p.productid, p.productname, p.listprice, p.quantity, p.pct_acompte || 47, p.pct_solde || 53);
+                    self.addProduct(p.productid, p.productname, p.listprice, p.quantity, p.pct_acompte || 45, p.pct_solde || 55);
                 });
             }
 
@@ -3225,8 +3225,8 @@
 
             // Preserve quote_id and other fields from existing ODM
             jQuery('#odm_hidden_quote_id').val(data.quote_id || '');
-            jQuery('#odm_hidden_cf_1176').val(data.cf_1176 || 47); // % Acompte
-            jQuery('#odm_hidden_cf_1178').val(data.cf_1178 || 53); // % Solde
+            jQuery('#odm_hidden_cf_1176').val(data.cf_1176 || 45); // % Acompte
+            jQuery('#odm_hidden_cf_1178').val(data.cf_1178 || 55); // % Solde
             jQuery('#odm_hidden_cf_1188').val(data.cf_1188 || ''); // Description forfait
             jQuery('#odm_hidden_cf_1190').val(data.cf_1190 || ''); // Description assurance
 
@@ -3302,7 +3302,7 @@
             // Products - avec pourcentages acompte/solde
             if (data.products && data.products.length > 0) {
                 data.products.forEach(function(p) {
-                    self.addProduct(p.productid, p.productname, p.listprice, p.quantity, p.pct_acompte || 47, p.pct_solde || 53);
+                    self.addProduct(p.productid, p.productname, p.listprice, p.quantity, p.pct_acompte || 45, p.pct_solde || 55);
                 });
             }
 
@@ -3453,8 +3453,8 @@
             if (this.quoteData) {
                 jQuery('#odm_hidden_cf_1172').val(this.quoteData.cf_1141 || '');  // Tarif pour 1000
                 jQuery('#odm_hidden_cf_1174').val(this.quoteData.cf_1143 || '');  // Tarif assurance
-                jQuery('#odm_hidden_cf_1176').val(this.quoteData.cf_1133 || 47);  // % Acompte
-                jQuery('#odm_hidden_cf_1178').val(this.quoteData.cf_1135 || 53);  // % Solde
+                jQuery('#odm_hidden_cf_1176').val(this.quoteData.cf_1133 || 45);  // % Acompte
+                jQuery('#odm_hidden_cf_1178').val(this.quoteData.cf_1135 || 55);  // % Solde
                 jQuery('#odm_hidden_cf_1188').val(this.quoteData.cf_1131 || '');  // Description forfait
                 jQuery('#odm_hidden_cf_1190').val(this.quoteData.cf_1145 || '');  // Description assurance
             }
@@ -3493,8 +3493,8 @@
             jQuery('#odm_hidden_cf_1174').val(assuranceHT.toFixed(2));
 
             // Acompte/Solde - use percentages from hidden fields
-            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 47;
-            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 53;
+            var PCT_ACOMPTE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1176').val()) || 45;
+            var PCT_SOLDE_FORFAIT = parseFloat(jQuery('#odm_hidden_cf_1178').val()) || 55;
 
             // Calculate products with individual percentages
             var produitsAcompteHT = 0;
@@ -3504,7 +3504,7 @@
                 var totalCell = row.find('.product-total');
                 if (totalCell.length) {
                     var lineTotal = parseFloat(totalCell.text()) || 0;
-                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 47;
+                    var pctAcompte = parseFloat(row.attr('data-pct-acompte')) || 45;
                     var pctSolde = 100 - pctAcompte;
                     produitsAcompteHT += lineTotal * pctAcompte / 100;
                     produitsSoldeHT += lineTotal * pctSolde / 100;
@@ -3563,8 +3563,8 @@
                 container.append('<input type="hidden" name="discount_type' + lineNum + '" value="zero">');
                 container.append('<input type="hidden" name="productTotal' + lineNum + '" value="' + lineTotal + '">');
                 container.append('<input type="hidden" name="netPrice' + lineNum + '" value="' + lineTotal + '">');
-                container.append('<input type="hidden" name="pctAcompte' + lineNum + '" value="' + (p.pctAcompte || 47) + '">');
-                container.append('<input type="hidden" name="pctSolde' + lineNum + '" value="' + (p.pctSolde || 53) + '">');
+                container.append('<input type="hidden" name="pctAcompte' + lineNum + '" value="' + (p.pctAcompte || 45) + '">');
+                container.append('<input type="hidden" name="pctSolde' + lineNum + '" value="' + (p.pctSolde || 55) + '">');
             });
 
             // Submit form

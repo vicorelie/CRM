@@ -75,8 +75,8 @@ Inventory_Edit_Js("Quotes_Edit_Js",{
         // CUSTOM: Ajouter le forfait au calcul Acompte/Solde
         var forfaitTarif = parseFloat(jQuery('[name="cf_1127"]').val()) || 0;
         var forfaitSupplement = parseFloat(jQuery('[name="cf_1129"]').val()) || 0;
-        var forfaitPctAcompte = parseFloat(jQuery('[name="cf_1133"]').val()) || 43;
-        var forfaitPctSolde = parseFloat(jQuery('[name="cf_1135"]').val()) || 57;
+        var forfaitPctAcompte = parseFloat(jQuery('[name="cf_1133"]').val()) || 45;
+        var forfaitPctSolde = parseFloat(jQuery('[name="cf_1135"]').val()) || 55;
 
         if (forfaitTarif > 0 || forfaitSupplement > 0) {
             // Le tarif forfait est divisé selon les %, le supplément va 100% à l'acompte

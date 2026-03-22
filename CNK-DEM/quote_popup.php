@@ -53,8 +53,8 @@ while ($row = $quotesResult->fetch_assoc()) {
 // Charger tous les produits avec leurs pourcentages acompte/solde
 $products = [];
 $productsQuery = "SELECT p.productid as id, p.productname, p.unit_price,
-                         COALESCE(pcf.cf_1051, 43) as pct_acompte,
-                         COALESCE(pcf.cf_1053, 57) as pct_solde
+                         COALESCE(pcf.cf_1051, 45) as pct_acompte,
+                         COALESCE(pcf.cf_1053, 55) as pct_solde
                   FROM vtiger_products p
                   INNER JOIN vtiger_crmentity c ON c.crmid = p.productid
                   LEFT JOIN vtiger_productcf pcf ON pcf.productid = p.productid
@@ -67,8 +67,8 @@ if ($productsResult) {
             'id' => $row['id'],
             'productname' => $row['productname'],
             'unit_price' => $row['unit_price'],
-            'pct_acompte' => floatval($row['pct_acompte']) ?: 43,
-            'pct_solde' => floatval($row['pct_solde']) ?: 57
+            'pct_acompte' => floatval($row['pct_acompte']) ?: 45,
+            'pct_solde' => floatval($row['pct_solde']) ?: 55
         ];
     }
 }
@@ -573,7 +573,7 @@ if ($contactId > 0) {
                     produitsHT += lineTotal;
 
                     // Récupérer les pourcentages spécifiques du produit
-                    var pctAcompte = parseFloat(row.getAttribute('data-pct-acompte')) || 43;
+                    var pctAcompte = parseFloat(row.getAttribute('data-pct-acompte')) || 45;
 
                     // Le solde est toujours le complément à 100%
                     var pctSolde = 100 - pctAcompte;
@@ -670,8 +670,8 @@ if ($contactId > 0) {
                                 id: product.productid,
                                 name: product.productname,
                                 unit_price: product.listprice,
-                                pct_acompte: product.pct_acompte || 43,
-                                pct_solde: product.pct_solde || 57
+                                pct_acompte: product.pct_acompte || 45,
+                                pct_solde: product.pct_solde || 55
                             }, product.quantity);
                         }
                     });
@@ -721,6 +721,9 @@ if ($contactId > 0) {
                 var qty = row.querySelector('input[name^="qty"]').value;
                 var listPrice = row.querySelector('input[name^="listPrice"]').value;
 
+                var pctAcompte = row.getAttribute('data-pct-acompte') || 45;
+                var pctSolde = row.getAttribute('data-pct-solde') || 55;
+
                 var fields = [
                     {name: 'hdnProductId' + idx, value: productId},
                     {name: 'productName' + idx, value: productName},
@@ -732,7 +735,9 @@ if ($contactId > 0) {
                     {name: 'discount_amount' + idx, value: '0'},
                     {name: 'productDeleted' + idx, value: '0'},
                     {name: 'lineItemType' + idx, value: 'Products'},
-                    {name: 'subproduct_ids' + idx, value: ''}
+                    {name: 'subproduct_ids' + idx, value: ''},
+                    {name: 'pctAcompte' + idx, value: pctAcompte},
+                    {name: 'pctSolde' + idx, value: pctSolde}
                 ];
 
                 fields.forEach(function(field) {
@@ -998,7 +1003,7 @@ if ($contactId > 0) {
             products.forEach(function(product) {
                 var div = document.createElement('div');
                 div.style.cssText = 'padding:10px;cursor:pointer;border-bottom:1px solid #eee';
-                div.innerHTML = '<strong>' + product.productname + '</strong><br><small>' + parseFloat(product.unit_price || 0).toFixed(2) + ' € | Acompte: ' + (product.pct_acompte || 43) + '% / Solde: ' + (product.pct_solde || 57) + '%</small>';
+                div.innerHTML = '<strong>' + product.productname + '</strong><br><small>' + parseFloat(product.unit_price || 0).toFixed(2) + ' € | Acompte: ' + (product.pct_acompte || 45) + '% / Solde: ' + (product.pct_solde || 55) + '%</small>';
                 div.onmouseover = function() { this.style.background = '#f0f0f0'; };
                 div.onmouseout = function() { this.style.background = 'white'; };
                 div.onclick = function() {
@@ -1006,8 +1011,8 @@ if ($contactId > 0) {
                         id: product.id,
                         name: product.productname,
                         unit_price: product.unit_price,
-                        pct_acompte: product.pct_acompte || 43,
-                        pct_solde: product.pct_solde || 57
+                        pct_acompte: product.pct_acompte || 45,
+                        pct_solde: product.pct_solde || 55
                     }, 1);
                     document.getElementById('productSearch').value = '';
                     resultsDiv.style.display = 'none';
@@ -1028,8 +1033,8 @@ if ($contactId > 0) {
             var unitPrice = parseFloat(product.unit_price || 0).toFixed(2);
             var quantity = qty || 1;
             var lineTotal = (parseFloat(unitPrice) * parseInt(quantity)).toFixed(2);
-            var pctAcompte = product.pct_acompte || 43;
-            var pctSolde = product.pct_solde || 57;
+            var pctAcompte = product.pct_acompte || 45;
+            var pctSolde = product.pct_solde || 55;
 
             var row = document.createElement('tr');
             row.setAttribute('data-product-id', product.id);
