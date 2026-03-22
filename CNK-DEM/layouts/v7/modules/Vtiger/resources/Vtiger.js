@@ -215,7 +215,7 @@ Vtiger.Class('Vtiger_Index_Js', {
 	 * Function registers event for Calendar Reminder popups
 	 */
 	registerActivityReminder : function() {
-		var activityReminderInterval = app.getActivityReminderInterval();
+		var activityReminderInterval = app.getActivityReminderInterval() || 60;
 		if(activityReminderInterval != '') {
 			var cacheActivityReminder = app.storage.get('activityReminder', 0);
 			var currentTime = new Date().getTime()/1000;
@@ -237,7 +237,7 @@ Vtiger.Class('Vtiger_Index_Js', {
 	 * Function request for reminder popups
 	 */
 	requestReminder : function() {
-		var activityReminder = app.getActivityReminderInterval();
+		var activityReminder = app.getActivityReminderInterval() || 60;
 		if(!activityReminder) {
 			return;
 		}
@@ -255,11 +255,18 @@ Vtiger.Class('Vtiger_Index_Js', {
 				'mode' : 'getReminders'
 			}
 		}).then(function(e, res) {
-			if(!res.hasOwnProperty('result')) {
-				for(i=0; i< res.length; i++) {
-					var record = res[i];
-					if(typeof record == 'object') {
-						Vtiger_Index_Js.showReminderPopup(record);
+			var records = e;
+			if(!records || (Array.isArray(records) && records.length === 0)) {
+				records = res;
+			}
+			if(records && typeof records === 'object') {
+				if(records.result) records = records.result;
+				if(Array.isArray(records) && records.length > 0) {
+					for(var i=0; i< records.length; i++) {
+						var record = records[i];
+						if(typeof record == 'object') {
+							Vtiger_Index_Js.showReminderPopup(record);
+						}
 					}
 				}
 			}

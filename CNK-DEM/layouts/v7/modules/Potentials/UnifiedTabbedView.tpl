@@ -1274,6 +1274,11 @@ input[type="number"] { -moz-appearance: textfield; }
         }
         UnifiedTabbedView.init({$RECORD_ID});
 
+        // Activer le polling des rappels dans la vue Unified
+        if (typeof Vtiger_Index_Js !== 'undefined') {
+            Vtiger_Index_Js.registerActivityReminder();
+        }
+
         // Global metrics bar - show/hide based on active tab
         var metricsBar = jQuery('#globalMetricsBar');
         var tabContent = jQuery('#unifiedTabbedView');

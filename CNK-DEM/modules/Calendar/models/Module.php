@@ -877,11 +877,17 @@ class Calendar_Module_Model extends Vtiger_Module_Model {
 		$activityReminder = $currentUserModel->getCurrentUserActivityReminderInSeconds();
 		$recordModels = array();
 
+		// Fallback: si reminder_interval non configuré, utiliser 60 secondes
+		if($activityReminder == '' || $activityReminder == 0) {
+			$activityReminder = 60;
+		}
+
 		if($activityReminder != '' ) {
 			$currentTime = time();
 			$date = date('Y-m-d', strtotime("+$activityReminder seconds", $currentTime));
 			$time = date('H:i',   strtotime("+$activityReminder seconds", $currentTime));
 			$dateAndTime = $date.' '.$time;
+			$userId = $currentUserModel->getId();
 			$reminderActivitiesResult = "SELECT reminderid, recordid FROM vtiger_activity_reminder_popup
 								INNER JOIN vtiger_activity on vtiger_activity.activityid = vtiger_activity_reminder_popup.recordid
 								INNER JOIN vtiger_crmentity ON vtiger_activity_reminder_popup.recordid = vtiger_crmentity.crmid
@@ -893,7 +899,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model {
 									TIME_FORMAT(vtiger_activity_reminder_popup.time_start,'%H:%i')
 								) <= ?
 								AND vtiger_activity.eventstatus <> 'Held' AND (vtiger_activity.status <> 'Completed' OR vtiger_activity.status IS NULL) LIMIT 20";
-			$result = $db->pquery($reminderActivitiesResult, array($currentUserModel->getId(), $dateAndTime));
+			$result = $db->pquery($reminderActivitiesResult, array($userId, $dateAndTime));
 			$rows = $db->num_rows($result);
 			for($i=0; $i<$rows; $i++) {
 				$recordId = $db->query_result($result, $i, 'recordid');
