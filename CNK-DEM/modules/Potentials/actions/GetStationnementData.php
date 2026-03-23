@@ -23,7 +23,6 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 				pcf.cf_1385 as demande_livraison_2,
 				pcf.cf_1376 as demande_chargement_3,
 				pcf.cf_1394 as demande_livraison_3,
-				pcf.cf_1397 as statut,
 				pcf.cf_933 as ville_chargement,
 				pcf.cf_935 as ville_livraison
 				FROM vtiger_potential p
@@ -31,9 +30,12 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 				INNER JOIN vtiger_potentialscf pcf ON pcf.potentialid = p.potentialid
 				WHERE ce.deleted = 0
 				AND pcf.cf_1164 = '1'
-				AND (pcf.cf_1091 = '1' OR pcf.cf_1089 = '1' OR
-					 pcf.cf_1367 = '1' OR pcf.cf_1385 = '1' OR
-					 pcf.cf_1376 = '1' OR pcf.cf_1394 = '1')
+				AND (pcf.cf_1091 IN ('Oui','En attente','Validé','Refusé')
+				  OR pcf.cf_1089 IN ('Oui','En attente','Validé','Refusé')
+				  OR pcf.cf_1367 IN ('Oui','En attente','Validé','Refusé')
+				  OR pcf.cf_1385 IN ('Oui','En attente','Validé','Refusé')
+				  OR pcf.cf_1376 IN ('Oui','En attente','Validé','Refusé')
+				  OR pcf.cf_1394 IN ('Oui','En attente','Validé','Refusé'))
 				ORDER BY p.potentialname";
 
 		$result = $db->pquery($sql, []);
@@ -41,79 +43,80 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 		while ($row = $db->fetchByAssoc($result)) {
 			$potentialId = $row['potentialid'];
 			$potentialName = html_entity_decode($row['potentialname'] ?? '', ENT_QUOTES, 'UTF-8');
-			$statutRaw = $row['statut'] ?? '';
-			$statut = !empty($statutRaw) ? html_entity_decode($statutRaw, ENT_QUOTES, 'UTF-8') : 'Non défini';
 
-			// Couleur selon le statut
-			$color = '#95a5a6'; // Gris (Non défini)
-			if ($statut === 'En attente') {
-				$color = '#f39c12'; // Orange
-			} elseif ($statut === 'Validé') {
-				$color = '#27ae60'; // Vert
-			} elseif ($statut === 'Refusé') {
-				$color = '#e74c3c'; // Rouge
-			}
-
-			// Préparer les demandes
+			// Collecter les demandes individuelles avec leur propre statut
 			$demandes = [];
-			$hasChargement = ($row['demande_chargement_1'] === '1' ||
-							  $row['demande_chargement_2'] === '1' ||
-							  $row['demande_chargement_3'] === '1');
-			$hasLivraison = ($row['demande_livraison_1'] === '1' ||
-							 $row['demande_livraison_2'] === '1' ||
-							 $row['demande_livraison_3'] === '1');
 
-			if ($hasChargement) {
-				$demandes[] = [
-					'type' => 'chargement',
-					'date' => $row['date_chargement'],
-					'ville' => html_entity_decode($row['ville_chargement'] ?? '', ENT_QUOTES, 'UTF-8')
-				];
+			// Chargement: cf_1091, cf_1367, cf_1376
+			$chargementFields = [
+				'demande_chargement_1' => 'Chargement 1',
+				'demande_chargement_2' => 'Chargement 2',
+				'demande_chargement_3' => 'Chargement 3',
+			];
+			foreach ($chargementFields as $field => $label) {
+				$val = $row[$field] ?? '';
+				if (in_array($val, ['Oui', 'En attente', 'Validé', 'Refusé'])) {
+					$demandes[] = [
+						'type' => 'chargement',
+						'label' => $label,
+						'date' => $row['date_chargement'],
+						'ville' => html_entity_decode($row['ville_chargement'] ?? '', ENT_QUOTES, 'UTF-8'),
+						'statut' => $this->resolveStatut($val),
+						'color' => $this->statutColor($this->resolveStatut($val))
+					];
+				}
 			}
 
-			if ($hasLivraison) {
-				$demandes[] = [
-					'type' => 'livraison',
-					'date' => $row['date_livraison'],
-					'ville' => html_entity_decode($row['ville_livraison'] ?? '', ENT_QUOTES, 'UTF-8')
-				];
+			// Livraison: cf_1089, cf_1385, cf_1394
+			$livraisonFields = [
+				'demande_livraison_1' => 'Livraison 1',
+				'demande_livraison_2' => 'Livraison 2',
+				'demande_livraison_3' => 'Livraison 3',
+			];
+			foreach ($livraisonFields as $field => $label) {
+				$val = $row[$field] ?? '';
+				if (in_array($val, ['Oui', 'En attente', 'Validé', 'Refusé'])) {
+					$demandes[] = [
+						'type' => 'livraison',
+						'label' => $label,
+						'date' => $row['date_livraison'],
+						'ville' => html_entity_decode($row['ville_livraison'] ?? '', ENT_QUOTES, 'UTF-8'),
+						'statut' => $this->resolveStatut($val),
+						'color' => $this->statutColor($this->resolveStatut($val))
+					];
+				}
 			}
+
+			if (empty($demandes)) continue;
+
+			// Statut global = pire statut parmi les demandes (En attente > Refusé > Validé)
+			$globalStatut = $this->worstStatut($demandes);
+			$globalColor = $this->statutColor($globalStatut);
 
 			$affaires[] = [
 				'potentialId' => $potentialId,
 				'potentialName' => $potentialName,
-				'statut' => $statut,
-				'color' => $color,
+				'statut' => $globalStatut,
+				'color' => $globalColor,
 				'demandes' => $demandes
 			];
 
-			// Créer des événements pour le calendrier (seulement si date définie)
-			if ($hasChargement && !empty($row['date_chargement']) && $row['date_chargement'] != '0000-00-00') {
-				$events[] = [
-					'id' => $potentialId . '_chargement',
-					'title' => $potentialName . ' (Chargement)',
-					'start' => $row['date_chargement'],
-					'backgroundColor' => $color,
-					'borderColor' => $color,
-					'potentialId' => $potentialId,
-					'type' => 'chargement',
-					'statut' => $statut,
-					'ville' => html_entity_decode($row['ville_chargement'] ?? '', ENT_QUOTES, 'UTF-8')
-				];
-			}
-
-			if ($hasLivraison && !empty($row['date_livraison']) && $row['date_livraison'] != '0000-00-00') {
-				$events[] = [
-					'id' => $potentialId . '_livraison',
-					'title' => $potentialName . ' (Livraison)',
-					'start' => $row['date_livraison'],
-					'backgroundColor' => $color,
-					'borderColor' => $color,
-					'potentialId' => $potentialId,
-					'type' => 'livraison',
-					'statut' => $statut,
-					'ville' => html_entity_decode($row['ville_livraison'] ?? '', ENT_QUOTES, 'UTF-8')
-				];
+			// Créer des événements calendrier par demande
+			foreach ($demandes as $demande) {
+				$date = $demande['date'];
+				if (!empty($date) && $date != '0000-00-00') {
+					$events[] = [
+						'id' => $potentialId . '_' . str_replace(' ', '_', strtolower($demande['label'])),
+						'title' => $potentialName . ' (' . $demande['label'] . ')',
+						'start' => $date,
+						'backgroundColor' => $demande['color'],
+						'borderColor' => $demande['color'],
+						'potentialId' => $potentialId,
+						'type' => $demande['type'],
+						'statut' => $demande['statut'],
+						'ville' => $demande['ville']
+					];
+				}
 			}
 		}
 
@@ -125,5 +128,43 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 
 		header('Content-Type: application/json');
 		echo json_encode($responseData);
+	}
+
+	/**
+	 * Résout le statut affiché : "Oui" → "En attente" (le commercial a demandé, la logistique n'a pas encore traité)
+	 */
+	private function resolveStatut($val) {
+		if ($val === 'Oui') return 'En attente';
+		return $val; // En attente, Validé, Refusé
+	}
+
+	/**
+	 * Couleur selon le statut
+	 */
+	private function statutColor($statut) {
+		switch ($statut) {
+			case 'En attente': return '#f39c12';
+			case 'Validé': return '#27ae60';
+			case 'Refusé': return '#e74c3c';
+			default: return '#95a5a6';
+		}
+	}
+
+	/**
+	 * Retourne le pire statut parmi les demandes (priorité : En attente > Refusé > Validé)
+	 */
+	private function worstStatut($demandes) {
+		$hasEnAttente = false;
+		$hasRefuse = false;
+		$hasValide = false;
+		foreach ($demandes as $d) {
+			if ($d['statut'] === 'En attente') $hasEnAttente = true;
+			if ($d['statut'] === 'Refusé') $hasRefuse = true;
+			if ($d['statut'] === 'Validé') $hasValide = true;
+		}
+		if ($hasEnAttente) return 'En attente';
+		if ($hasRefuse) return 'Refusé';
+		if ($hasValide) return 'Validé';
+		return 'Non défini';
 	}
 }

@@ -85,7 +85,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 
 				case 'odm':
 					$currentUser = Users_Record_Model::getCurrentUserModel();
-					if ($currentUser->get('is_admin') !== 'on') {
+					$userRole = $currentUser->get('roleid');
+					if (empty($userRole)) $userRole = fetchUserRole($currentUser->getId());
+					if ($currentUser->get('is_admin') !== 'on' && $userRole !== 'H6') {
 						echo '<div class="alert alert-danger">Accès réservé aux administrateurs</div>';
 						break;
 					}
@@ -94,7 +96,9 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 
 				case 'facture':
 					$currentUser = Users_Record_Model::getCurrentUserModel();
-					if ($currentUser->get('is_admin') !== 'on') {
+					$userRole = $currentUser->get('roleid');
+					if (empty($userRole)) $userRole = fetchUserRole($currentUser->getId());
+					if ($currentUser->get('is_admin') !== 'on' && $userRole !== 'H6') {
 						echo '<div class="alert alert-danger">Accès réservé aux administrateurs</div>';
 						break;
 					}
@@ -1151,8 +1155,10 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$db = PearDatabase::getInstance();
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 
-		// Admin check
-		if ($currentUser->get('is_admin') !== 'on') {
+		// Admin or logistics check
+		$userRole = $currentUser->get('roleid');
+		if (empty($userRole)) $userRole = fetchUserRole($currentUser->getId());
+		if ($currentUser->get('is_admin') !== 'on' && $userRole !== 'H6') {
 			echo json_encode(['success' => false, 'error' => 'Accès réservé aux administrateurs']);
 			return;
 		}

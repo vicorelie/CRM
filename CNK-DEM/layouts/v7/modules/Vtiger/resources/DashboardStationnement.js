@@ -138,35 +138,34 @@ var DashboardStationnement = {
 		var html = '<table class="table table-bordered table-striped">' +
 			'<thead>' +
 			'<tr>' +
-			'<th style="width:40%;">Affaire</th>' +
-			'<th style="width:15%;">Statut</th>' +
-			'<th style="width:45%;">Demandes</th>' +
+			'<th style="width:35%;">Affaire</th>' +
+			'<th style="width:65%;">Demandes</th>' +
 			'</tr>' +
 			'</thead>' +
 			'<tbody>';
 
 		affaires.forEach(function(affaire) {
-			// Badge de statut avec couleur
-			var statutBadge = '<span style="display:inline-block; padding:4px 10px; border-radius:3px; color:#fff; background:' + affaire.color + '; font-weight:bold;">' +
-				affaire.statut +
-				'</span>';
-
-			// Liste des demandes
-			var demandesHtml = '<ul style="margin:0; padding-left:20px;">';
+			// Liste des demandes avec statut individuel
+			var demandesHtml = '<table style="width:100%; border:none; margin:0;">';
 			affaire.demandes.forEach(function(demande) {
-				var typeLabel = demande.type === 'chargement' ? 'Chargement' : 'Livraison';
 				var dateLabel = demande.date ? demande.date : '<span style="color:#e74c3c;">Date non définie</span>';
 				var villeLabel = demande.ville ? ' - ' + demande.ville : '';
-				demandesHtml += '<li><strong>' + typeLabel + '</strong>: ' + dateLabel + villeLabel + '</li>';
+				var statutBadge = '<span style="display:inline-block; padding:2px 8px; border-radius:3px; color:#fff; background:' + demande.color + '; font-size:11px; font-weight:bold;">' +
+					demande.statut + '</span>';
+
+				demandesHtml += '<tr style="border:none;">' +
+					'<td style="border:none; padding:2px 5px; width:120px;"><strong>' + demande.label + '</strong></td>' +
+					'<td style="border:none; padding:2px 5px;">' + dateLabel + villeLabel + '</td>' +
+					'<td style="border:none; padding:2px 5px; width:100px; text-align:right;">' + statutBadge + '</td>' +
+					'</tr>';
 			});
-			demandesHtml += '</ul>';
+			demandesHtml += '</table>';
 
 			html += '<tr>' +
 				'<td><a href="index.php?module=Potentials&view=Unified&record=' + affaire.potentialId + '&app=SALES" target="_blank">' +
 				affaire.potentialName +
 				'</a></td>' +
-				'<td>' + statutBadge + '</td>' +
-				'<td>' + demandesHtml + '</td>' +
+				'<td style="padding:5px;">' + demandesHtml + '</td>' +
 				'</tr>';
 		});
 
@@ -187,20 +186,16 @@ var DashboardStationnement = {
 			editable: false,
 			eventLimit: true,
 			events: function(start, end, timezone, callback) {
-				callback(DashboardStationnement.allEvents);
+				callback(DashboardStationnement.filterEvents(DashboardStationnement.allEvents));
 			},
 			eventClick: function(event, jsEvent, view) {
 				window.open('index.php?module=Potentials&view=Unified&record=' + event.potentialId + '&app=SALES', '_blank');
 			},
 			eventRender: function(event, element) {
-				var tip = event.potentialName + '\n' +
-					'Type: ' + (event.type === 'chargement' ? 'Chargement' : 'Livraison') + '\n' +
+				var tip = event.title + '\n' +
 					'Statut: ' + event.statut;
 				if (event.ville) {
 					tip += '\nVille: ' + event.ville;
-				}
-				if (event.adresse) {
-					tip += '\nAdresse: ' + event.adresse;
 				}
 				element.attr('title', tip);
 			}
@@ -245,20 +240,22 @@ var DashboardStationnement = {
 
 	filterAffaires: function(affaires) {
 		return affaires.filter(function(affaire) {
-			// Filtrer par statut
-			if (DashboardStationnement.activeFilters.statuts.indexOf(affaire.statut) === -1) {
-				return false;
-			}
-
-			// Filtrer par type (au moins une demande doit correspondre)
-			var hasMatchingType = false;
+			// Au moins une demande doit correspondre aux filtres actifs (statut ET type)
+			var hasMatch = false;
 			affaire.demandes.forEach(function(demande) {
-				if (DashboardStationnement.activeFilters.types.indexOf(demande.type) !== -1) {
-					hasMatchingType = true;
+				if (DashboardStationnement.activeFilters.statuts.indexOf(demande.statut) !== -1 &&
+					DashboardStationnement.activeFilters.types.indexOf(demande.type) !== -1) {
+					hasMatch = true;
 				}
 			});
+			return hasMatch;
+		});
+	},
 
-			return hasMatchingType;
+	filterEvents: function(events) {
+		return events.filter(function(event) {
+			return DashboardStationnement.activeFilters.statuts.indexOf(event.statut) !== -1 &&
+				DashboardStationnement.activeFilters.types.indexOf(event.type) !== -1;
 		});
 	},
 

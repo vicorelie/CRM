@@ -51,8 +51,25 @@ class Calendar_ActivityReminder_Action extends Vtiger_Action_Controller{
 	function getReminders(Vtiger_Request $request) {
 		$recordModels = Calendar_Module_Model::getCalendarReminder();
 		$records = array();
+		$db = PearDatabase::getInstance();
 		foreach($recordModels as $record) {
-			$records[] = $record->getDisplayableValues();
+			$values = $record->getDisplayableValues();
+			// Ajouter le lien vers l'affaire/prospect lié
+			$relResult = $db->pquery(
+				"SELECT sar.crmid, ce.setype, ce.label FROM vtiger_seactivityrel sar
+				 INNER JOIN vtiger_crmentity ce ON ce.crmid = sar.crmid
+				 WHERE sar.activityid = ? LIMIT 1",
+				array($record->getId())
+			);
+			if ($db->num_rows($relResult) > 0) {
+				$relModule = $db->query_result($relResult, 0, 'setype');
+				$relId = $db->query_result($relResult, 0, 'crmid');
+				$relLabel = $db->query_result($relResult, 0, 'label');
+				$values['related_module'] = $relModule;
+				$values['related_id'] = $relId;
+				$values['related_label'] = html_entity_decode($relLabel, ENT_QUOTES, 'UTF-8');
+			}
+			$records[] = $values;
 			$record->updateReminderStatus();
 		}
 

@@ -283,6 +283,7 @@ Vtiger.Class('Vtiger_Index_Js', {
 				'<i id="reminder-postpone-'+record.id+'" title="'+app.vtranslate('JS_POSTPONE')+'" class="cursorPointer fa fa-clock-o"></i>',
 			'message' : '<div class="col-sm-12">'+
 				'<div class="row">'+
+				(record.related_id ? '<div class="col-sm-12 font13px" style="margin-bottom:4px"><i class="fa fa-briefcase"></i> <a target="_blank" href="index.php?module=' + record.related_module + '&view=Detail&record=' + record.related_id + '" style="color:#fff;text-decoration:underline">' + record.related_label + '</a></div>' : '') +
 				'<div class="col-sm-12 font13px">'+
 				app.vtranslate('JS_START_DATE_TIME') + ' : ' + record.date_start+
 				'</div>'+
