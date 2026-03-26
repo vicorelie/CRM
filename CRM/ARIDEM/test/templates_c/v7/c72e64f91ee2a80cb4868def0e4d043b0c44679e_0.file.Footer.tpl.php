@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-07 21:00:54
+/* Smarty version 4.5.5, created on 2026-03-19 23:50:38
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/Footer.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6935eb06b51465_72747779',
+  'unifunc' => 'content_69bc8bcec494e8_94226959',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'c72e64f91ee2a80cb4868def0e4d043b0c44679e' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/Footer.tpl',
-      1 => 1765057370,
+      1 => 1773964200,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6935eb06b51465_72747779 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69bc8bcec494e8_94226959 (Smarty_Internal_Template $_smarty_tpl) {
 ?><br>
 <div class="small" style="color: rgb(153, 153, 153);text-align: center;"><?php echo vtranslate('PDFMaker','PDFMaker');?>
  <?php echo PDFMaker_Version_Helper::$version;?>

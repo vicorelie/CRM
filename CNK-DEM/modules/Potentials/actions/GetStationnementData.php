@@ -40,9 +40,9 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 
 		$result = $db->pquery($sql, []);
 
-		while ($row = $db->fetchByAssoc($result)) {
+		while ($row = $db->fetchByAssoc($result, -1, false)) {
 			$potentialId = $row['potentialid'];
-			$potentialName = html_entity_decode($row['potentialname'] ?? '', ENT_QUOTES, 'UTF-8');
+			$potentialName = $row['potentialname'] ?? '';
 
 			// Collecter les demandes individuelles avec leur propre statut
 			$demandes = [];
@@ -60,7 +60,7 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 						'type' => 'chargement',
 						'label' => $label,
 						'date' => $row['date_chargement'],
-						'ville' => html_entity_decode($row['ville_chargement'] ?? '', ENT_QUOTES, 'UTF-8'),
+						'ville' => $row['ville_chargement'] ?? '',
 						'statut' => $this->resolveStatut($val),
 						'color' => $this->statutColor($this->resolveStatut($val))
 					];
@@ -80,7 +80,7 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 						'type' => 'livraison',
 						'label' => $label,
 						'date' => $row['date_livraison'],
-						'ville' => html_entity_decode($row['ville_livraison'] ?? '', ENT_QUOTES, 'UTF-8'),
+						'ville' => $row['ville_livraison'] ?? '',
 						'statut' => $this->resolveStatut($val),
 						'color' => $this->statutColor($this->resolveStatut($val))
 					];
@@ -131,10 +131,10 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 	}
 
 	/**
-	 * Résout le statut affiché : "Oui" → "En attente" (le commercial a demandé, la logistique n'a pas encore traité)
+	 * Résout le statut affiché : "Oui" → "Non défini" (le commercial a demandé, la logistique n'a pas encore traité)
 	 */
 	private function resolveStatut($val) {
-		if ($val === 'Oui') return 'En attente';
+		if ($val === 'Oui') return 'Non défini';
 		return $val; // En attente, Validé, Refusé
 	}
 
@@ -154,14 +154,17 @@ class Potentials_GetStationnementData_Action extends Vtiger_Action_Controller {
 	 * Retourne le pire statut parmi les demandes (priorité : En attente > Refusé > Validé)
 	 */
 	private function worstStatut($demandes) {
+		$hasNonDefini = false;
 		$hasEnAttente = false;
 		$hasRefuse = false;
 		$hasValide = false;
 		foreach ($demandes as $d) {
+			if ($d['statut'] === 'Non défini') $hasNonDefini = true;
 			if ($d['statut'] === 'En attente') $hasEnAttente = true;
 			if ($d['statut'] === 'Refusé') $hasRefuse = true;
 			if ($d['statut'] === 'Validé') $hasValide = true;
 		}
+		if ($hasNonDefini) return 'Non défini';
 		if ($hasEnAttente) return 'En attente';
 		if ($hasRefuse) return 'Refusé';
 		if ($hasValide) return 'Validé';

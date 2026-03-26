@@ -187,8 +187,8 @@
                     <label><span class="required">*</span> Sujet</label>
                     <input type="text" id="odm_subject" value="" required style="width: 150px;">
                 </div>
-                {* Prestataire (admin only) *}
-                {if $IS_ADMIN}
+                {* Prestataire (admin + logistique) *}
+                {if $IS_ADMIN || $USER_ROLE eq 'H6'}
                 <div class="inline-field">
                     <label>Prestataire</label>
                     <select id="odm_prestataire" style="width: 120px;">
@@ -1781,7 +1781,7 @@ jQuery(document).ready(function() {
     jQuery('#odm_cf_1317').val(odmPotentialData.cf_1075);
     jQuery('#odm_cf_1318').val(odmPotentialData.cf_1019 == '1' ? '1' : '0');
     jQuery('#odm_cf_1319').val(odmPotentialData.cf_1067 == '1' ? '1' : '0');
-    jQuery('#odm_cf_1321').val(odmPotentialData.cf_1091 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1321').val(odmPotentialData.cf_1091 == 'Oui' ? '1' : '0');
     jQuery('#odm_cf_1322').val(odmPotentialData.cf_1071 == '1' ? '1' : '0');
     jQuery('#odm_cf_1323').val(odmPotentialData.cf_1035);
 
@@ -1797,7 +1797,7 @@ jQuery(document).ready(function() {
     jQuery('#odm_cf_1330').val(odmPotentialData.cf_1077);
     jQuery('#odm_cf_1331').val(odmPotentialData.cf_1021 == '1' ? '1' : '0');
     jQuery('#odm_cf_1332').val(odmPotentialData.cf_1069 == '1' ? '1' : '0');
-    jQuery('#odm_cf_1334').val(odmPotentialData.cf_1089 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1334').val(odmPotentialData.cf_1089 == 'Oui' ? '1' : '0');
     jQuery('#odm_cf_1335').val(odmPotentialData.cf_1073 == '1' ? '1' : '0');
     jQuery('#odm_cf_1336').val(odmPotentialData.cf_1037);
 
@@ -1814,7 +1814,7 @@ jQuery(document).ready(function() {
     jQuery('#odm_hidden_cf_1318').val(odmPotentialData.cf_1019 == '1' ? '1' : '0');
     jQuery('#odm_hidden_cf_1319').val(odmPotentialData.cf_1067 == '1' ? '1' : '0');
     jQuery('#odm_hidden_cf_1320').val(odmPotentialData.cf_1023);
-    jQuery('#odm_hidden_cf_1321').val(odmPotentialData.cf_1091 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1321').val(odmPotentialData.cf_1091 == 'Oui' ? '1' : '0');
     jQuery('#odm_hidden_cf_1322').val(odmPotentialData.cf_1071 == '1' ? '1' : '0');
     jQuery('#odm_hidden_cf_1323').val(odmPotentialData.cf_1035);
     jQuery('#odm_hidden_cf_1324').val(odmPotentialData.cf_1049);
@@ -1827,7 +1827,7 @@ jQuery(document).ready(function() {
     jQuery('#odm_hidden_cf_1331').val(odmPotentialData.cf_1021 == '1' ? '1' : '0');
     jQuery('#odm_hidden_cf_1332').val(odmPotentialData.cf_1069 == '1' ? '1' : '0');
     jQuery('#odm_hidden_cf_1333').val(odmPotentialData.cf_1025);
-    jQuery('#odm_hidden_cf_1334').val(odmPotentialData.cf_1089 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1334').val(odmPotentialData.cf_1089 == 'Oui' ? '1' : '0');
     jQuery('#odm_hidden_cf_1335').val(odmPotentialData.cf_1073 == '1' ? '1' : '0');
     jQuery('#odm_hidden_cf_1336').val(odmPotentialData.cf_1037);
     jQuery('#odm_hidden_cf_1349').val(odmPotentialData.cf_1259);

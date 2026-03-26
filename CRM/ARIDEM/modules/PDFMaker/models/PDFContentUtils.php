@@ -554,7 +554,6 @@ class PDFMaker_PDFContentUtils_Model extends Vtiger_Base_Model
 
     public function getFieldValueUtils($efocus, $emodule, $fieldname, $value, $UITypes, $inventory_currency, $ignored_picklist_values, $def_charset, $decimals, $decimal_point, $thousands_separator, $language, $id)
     {
-
         $db = PearDatabase::getInstance();
         $res2 = $db->pquery("SELECT * FROM vtiger_crmentity WHERE crmid = ?", array($id));
         $CData = $db->fetchByAssoc($res2, 0);
@@ -563,39 +562,51 @@ class PDFMaker_PDFContentUtils_Model extends Vtiger_Base_Model
             $type = "e";
             $relid = $value;
             $fieldid = 0;
+
             if (in_array($fieldname, $UITypes["userorotherfields"]) || in_array($fieldname, $UITypes["userfields"])) {
                 $type = "u";
+
                 if (in_array($fieldname, $UITypes["userorotherfields"])) {
                     $culumnname = "smcreatorid";
                 } else {
                     $culumnname = "smownerid";
                 }
-                $field_res = $db->pquery("SELECT fieldid FROM  vtiger_field WHERE tabid=("
+
+                $field_res = $db->pquery(
+                    "SELECT fieldid FROM  vtiger_field WHERE tabid=("
                     . "SELECT tabid FROM  vtiger_tab WHERE name =
-                                        (SELECT setype FROM vtiger_crmentity WHERE crmid = ?) ) AND columnname = ?", array($efocus->id, $culumnname));
+                                        (SELECT setype FROM vtiger_crmentity WHERE crmid = ?) ) AND columnname = ?",
+                    array($efocus->id, $culumnname)
+                );
                 $fieldid = $db->query_result($field_res, 0, "fieldid");
+
                 if ($efocus->id != $id) {
                     $relid = $efocus->id;
                 }
-            } else {
-                if ($efocus->id == $id) {
-                    $referenceModuleName = getSalesEntityType($value);
-                    if ($referenceModuleName) {
-                        $field_res = $db->pquery("SELECT fieldid FROM vtiger_field WHERE tablename=(SELECT tablename FROM vtiger_entityname WHERE modulename=?) "
-                            . "AND fieldname=(SELECT fieldname FROM vtiger_entityname WHERE modulename=?)", array($referenceModuleName, $referenceModuleName));
-                        $fieldid = $db->query_result($field_res, 0, "fieldid");
-                    }
-                } else {
-                    if ($efocus->id) {
-                        $field_res = $db->pquery("SELECT fieldid FROM vtiger_field WHERE tabid=(SELECT tabid FROM vtiger_tab WHERE name=(SELECT setype FROM vtiger_crmentity WHERE crmid = ?) ) "
-                            . "AND fieldname=?", array($efocus->id, $fieldname));
-                        $fieldid = $db->query_result($field_res, 0, "fieldid");
-                        $relid = $efocus->id;
-                    }
+            } elseif ($efocus->id == $id) {
+                $referenceModuleName = getSalesEntityType($value);
+
+                if ($referenceModuleName) {
+                    $field_res = $db->pquery(
+                        "SELECT fieldid FROM vtiger_field WHERE tablename=(SELECT tablename FROM vtiger_entityname WHERE modulename=?) "
+                        . "AND fieldname=(SELECT fieldname FROM vtiger_entityname WHERE modulename=?)",
+                        array($referenceModuleName, $referenceModuleName)
+                    );
+                    $fieldid = $db->query_result($field_res, 0, "fieldid");
                 }
+            } elseif ($efocus->id) {
+                $field_res = $db->pquery(
+                    "SELECT fieldid FROM vtiger_field WHERE tabid=(SELECT tabid FROM vtiger_tab WHERE name=(SELECT setype FROM vtiger_crmentity WHERE crmid = ?) ) "
+                    . "AND fieldname=?",
+                    array($efocus->id, $fieldname)
+                );
+                $fieldid = $db->query_result($field_res, 0, "fieldid");
+                $relid = $efocus->id;
             }
+
             if ($fieldid != 0) {
                 $label_res = $db->pquery("SELECT label FROM its4you_historized WHERE crmid =? AND relid=? AND type=? AND field_id = ? ", array($id, $relid, $type, $fieldid));
+
                 if ($label_res != false && $db->num_rows($label_res) != 0) {
                     return $db->query_result($label_res, 0, 'label');
                 }
@@ -673,9 +684,10 @@ class PDFMaker_PDFContentUtils_Model extends Vtiger_Base_Model
                 $value = vtranslate('LBL_NO');
             }
         } elseif (isset($UITypes["textareas"]) && in_array($fieldname, $UITypes["textareas"])) {
-            if (strpos($value, '&lt;br /&gt;') === false && strpos($value, '&lt;br/&gt;') === false && strpos($value, '&lt;br&gt;') === false) {
+            if (!$this->hasHtml($value)) {
                 $value = nl2br($value);
             }
+
             $value = html_entity_decode($value, ENT_QUOTES, $def_charset);
         } elseif (isset($UITypes["multipicklists"]) && in_array($fieldname, $UITypes["multipicklists"])) {
             $MultipicklistValues = explode(" |##| ", $value);
@@ -722,7 +734,17 @@ class PDFMaker_PDFContentUtils_Model extends Vtiger_Base_Model
                 $value = "";
             }
         }
+
         return $value;
+    }
+
+    public function hasHtml($value)
+    {
+        return preg_match('/<\s*\/?\s*[a-z][^>]*>/i', $value) ||
+            preg_match('/&lt;\s*\/?\s*[a-z][^&]*&gt;/i', $value) ||
+            false !== strpos($value, '&lt;br /&gt;') ||
+            false !== strpos($value, '&lt;br/&gt;') ||
+            false !== strpos($value, '&lt;br&gt;');
     }
 
     public function getTermsAndConditionsCustom($value)

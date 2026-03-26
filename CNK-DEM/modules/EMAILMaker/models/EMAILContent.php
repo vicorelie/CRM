@@ -1268,6 +1268,25 @@ class EMAILMaker_EMAILContent_Model extends EMAILMaker_EMAILContentUtils_Model
 
     private function convertInventoryModules()
     {
+        // Toujours résoudre $TOTAL$, $CURRENCYSYMBOL$ etc. même sans lignes produit
+        if (isset(self::$focus->column_fields["hdnGrandTotal"])) {
+            $IRepl = array();
+            $IRepl["SUBTOTAL"] = $this->formatNumberToEMAIL(self::$focus->column_fields["hdnSubTotal"]);
+            $IRepl["TOTAL"] = $this->formatNumberToEMAIL(self::$focus->column_fields["hdnGrandTotal"]);
+            $IRepl["ADJUSTMENT"] = $this->formatNumberToEMAIL(self::$focus->column_fields["txtAdjustment"]);
+            $currencytype = $this->getInventoryCurrencyInfoCustom(self::$module, self::$focus);
+            $currencytype["currency_symbol"] = str_replace("€", "&euro;", $currencytype["currency_symbol"]);
+            $currencytype["currency_symbol"] = str_replace("£", "&pound;", $currencytype["currency_symbol"]);
+            $IRepl["CURRENCYNAME"] = getTranslatedCurrencyString($currencytype["currency_name"]);
+            $IRepl["CURRENCYSYMBOL"] = $currencytype["currency_symbol"];
+            $IRepl["CURRENCYCODE"] = $currencytype["currency_code"];
+            foreach ($IRepl as $r_key => $r_value) {
+                self::$rep["$" . $r_key . "$"] = $r_value;
+                self::$rep["$" . "s-" . strtolower($r_key) . "$"] = $r_value;
+            }
+            $this->replaceContent();
+        }
+
         $result = self::$db->pquery("select * from vtiger_inventoryproductrel where id=?", array(self::$focus->id));
         $num_rows = self::$db->num_rows($result);
         if ($num_rows > 0) {

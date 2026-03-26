@@ -87,7 +87,7 @@ $languageStrings = array(
 	'Created Time' => 'Dátum odoslania', 
 	'LBL_ATTACHMENTS' => 'Attachments', 
 	'LBL_MESSAGE' => 'Message', 
-	'LBL_LICENSE_USED_BY_OTHER_USERS' => 'License used by other users', 
+	'LBL_LICENSE_USED_BY_OTHER_USERS' => 'Počet zakúpených licencií pre používateľov bol dosiahnutý. Bol dosiahnutý limit používateľských licencií.', 
 	'SENT' => 'SENT', 
 	'SAVED' => 'SAVED', 
 	'Marketing Recipient' => 'Marketing Recipient', 
@@ -97,6 +97,7 @@ $languageStrings = array(
 	'LBL_FILENAME' => 'Filename', 
 	'LBL_FOLDER' => 'Folder', 
 	'LBL_BANNED_WORD' => 'Banned word: ', 
+	'LBL_STORAGE_NOT_WRITABLE' => 'Storage folder is not writable. Please set write permissions for folder: storage/', 
 );
 
 $jsLanguageStrings = array(

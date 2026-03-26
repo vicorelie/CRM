@@ -533,4 +533,13 @@ class ITS4YouEmails_Utils_Helper
 			'module' => '',
 		];
 	}
+
+    public static function isWritableStorage()
+    {
+        global $root_directory;
+
+        $dir = rtrim($root_directory, '/');
+
+        return is_writable($dir . '/storage/') && is_writable($dir . '/' . decideFilePath());
+    }
 }

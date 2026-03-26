@@ -13,7 +13,7 @@ if (!function_exists('its4you_if')) {
 
     function its4you_if($param1, $comparator, $param2, $whatToReturn1, $whatToReturn2 = '')
     {
-        global $default_charset;
+        global $default_charset, $PDFContent;
         $param1 = htmlentities($param1, ENT_QUOTES, $default_charset);
         $comparator = html_entity_decode($comparator, ENT_COMPAT, 'utf-8');
         $param2 = htmlentities($param2, ENT_QUOTES, $default_charset);
@@ -36,7 +36,13 @@ if (!function_exists('its4you_if')) {
 
 
         if (in_array($comparator, array('==', '!=', '>=', '<=', '>', '<'))) {
-            return nl2br(html_entity_decode(eval("if('$param1' $comparator '$param2'){return '$whatToReturn1';} else {return '$whatToReturn2';}"), ENT_COMPAT, $default_charset));
+            $value = decode_html(eval("if('$param1' $comparator '$param2'){return '$whatToReturn1';} else {return '$whatToReturn2';}"));
+
+            if ($PDFContent->hasHtml($value)) {
+                return $value;
+            }
+
+            return nl2br($value);
         } else {
             return "Error! second parameter must be one from following: ==,!=,<,>,<=,>=";
         }

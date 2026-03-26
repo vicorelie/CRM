@@ -18,6 +18,19 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 		$totalForfaitHT = $forfaitTarif + $forfaitSupplement;
 		$request->set('cf_1184', $totalForfaitHT);
 
+		// Lire les pct_acompte/pct_solde depuis le request AVANT parent::process()
+		// (parent::process() crée les lignes produits SANS pct_acompte/pct_solde)
+		$totalProductCount = intval($request->get('totalProductCount'));
+		$requestPctByLine = array(); // index 0-based => [pctAcompte, pctSolde]
+		for ($i = 1; $i <= $totalProductCount; $i++) {
+			$pctA = $request->get('pctAcompte' . $i);
+			$pctS = $request->get('pctSolde' . $i);
+			$requestPctByLine[$i - 1] = [
+				'pctAcompte' => ($pctA !== null && $pctA !== '') ? floatval($pctA) : null,
+				'pctSolde'   => ($pctS !== null && $pctS !== '') ? floatval($pctS) : null
+			];
+		}
+
 		// Appeler la méthode parent pour sauvegarder
 		$result = parent::process($request);
 
@@ -39,6 +52,27 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 
 		if (!$recordId) {
 			return $result;
+		}
+
+		// Sauvegarder pct_acompte/pct_solde par ligne produit IMMÉDIATEMENT après parent::process()
+		// pour qu'ils soient disponibles lors du calcul acompte/solde
+		if ($totalProductCount > 0) {
+			$lineItems = $adb->pquery(
+				"SELECT lineitem_id FROM vtiger_inventoryproductrel WHERE id = ? ORDER BY sequence_no",
+				array($recordId)
+			);
+			$lineItemIds = array();
+			while ($li = $adb->fetch_array($lineItems)) {
+				$lineItemIds[] = $li['lineitem_id'];
+			}
+			foreach ($requestPctByLine as $idx => $pcts) {
+				if ($pcts['pctAcompte'] !== null && isset($lineItemIds[$idx])) {
+					$adb->pquery(
+						"UPDATE vtiger_inventoryproductrel SET pct_acompte = ?, pct_solde = ? WHERE lineitem_id = ?",
+						array($pcts['pctAcompte'], $pcts['pctSolde'], $lineItemIds[$idx])
+					);
+				}
+			}
 		}
 
 		// CUSTOM: Récupérer les valeurs
@@ -107,6 +141,7 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 		$taxRate = 0.20;
 
 		// Calculer Acompte et Solde des produits
+		// Les pct_acompte/pct_solde sont maintenant à jour dans la DB
 		$totalProduitsAcompteHT = 0;
 		$totalProduitsSoldeHT = 0;
 
@@ -128,7 +163,7 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 				$lineTotal = ($quantity * $listPrice * (1 - $lineDiscountPercent / 100)) - $lineDiscountAmount;
 
 				if ($lineTotal > 0 && $productId) {
-					// Priorité : pct_acompte sauvegardé sur la ligne, puis catalogue, puis % forfait
+					// Priorité : pct_acompte sauvegardé sur la ligne (maintenant à jour), puis catalogue, puis % forfait
 					$savedPctAcompte = $adb->query_result($lineItemsResult, $i, 'pct_acompte');
 					$savedPctSolde   = $adb->query_result($lineItemsResult, $i, 'pct_solde');
 
@@ -221,29 +256,6 @@ class SalesOrder_Save_Action extends Inventory_Save_Action {
 				"UPDATE vtiger_inventoryproductrel SET description = ? WHERE lineitem_id = ?",
 				array($decoded, $prodRow['lineitem_id'])
 			);
-		}
-
-		// Sauvegarder pct_acompte/pct_solde par ligne produit
-		$totalProductCount = intval($request->get('totalProductCount'));
-		if ($totalProductCount > 0) {
-			$lineItems = $adb->pquery(
-				"SELECT lineitem_id FROM vtiger_inventoryproductrel WHERE id = ? ORDER BY sequence_no",
-				array($recordId)
-			);
-			$lineItemIds = array();
-			while ($li = $adb->fetch_array($lineItems)) {
-				$lineItemIds[] = $li['lineitem_id'];
-			}
-			for ($i = 1; $i <= $totalProductCount; $i++) {
-				$pctAcompte = $request->get('pctAcompte' . $i);
-				$pctSolde   = $request->get('pctSolde' . $i);
-				if ($pctAcompte !== null && isset($lineItemIds[$i - 1])) {
-					$adb->pquery(
-						"UPDATE vtiger_inventoryproductrel SET pct_acompte = ?, pct_solde = ? WHERE lineitem_id = ?",
-						array(floatval($pctAcompte), floatval($pctSolde), $lineItemIds[$i - 1])
-					);
-				}
-			}
 		}
 
 		return $result;

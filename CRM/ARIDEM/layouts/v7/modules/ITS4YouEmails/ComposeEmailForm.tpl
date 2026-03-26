@@ -59,10 +59,9 @@
                         <div class="row toEmailField">
                             <div class="col-lg-12">
                                 <div class="col-lg-2">
-                                    <span class="pull-right">{vtranslate('LBL_FROM_EMAIL',$MODULE)}&nbsp</span>
+                                    <span class="pull-right">{vtranslate('LBL_FROM_EMAIL',$MODULE)}&nbsp;</span>
                                 </div>
                                 <div class="col-lg-6">
-                                    {assign var=CURRENT_USER_ID value=Users_Record_Model::getCurrentUserModel()->getId()}
                                     <select name="from_email" class="select2 inputElement">
                                         <optgroup label="{vtranslate('LBL_FROM_EMAIL',$MODULE)}">
                                             {html_options  options=$FROM_EMAILS selected=$SELECTED_DEFAULT_FROM}
@@ -71,7 +70,7 @@
                                             <optgroup label="{vtranslate('LBL_SMTP',$MODULE)}">
                                                 {foreach from=$SMTP_RECORDS item=SMTP_RECORD key=SMTP_RECORD_ID}
                                                     {if !$SMTP_RECORD->isEmpty('from_email_field')}
-                                                        <option value="s::{$SMTP_RECORD->getId()}" {if $SMTP_RECORD->get('user_id') eq $CURRENT_USER_ID}selected="selected"{/if}>{$SMTP_RECORD->get('from_name_field')} &lt;{$SMTP_RECORD->get('from_email_field')}&gt;</option>
+                                                        <option value="s::{$SMTP_RECORD->getId()}" {if ITS4YouEmails_Record_Model::isSelectedDefaultFromSMTP($SMTP_RECORD, $SELECTED_DEFAULT_FROM)}selected="selected"{/if}>{$SMTP_RECORD->get('from_name_field')} &lt;{$SMTP_RECORD->get('from_email_field')}&gt;</option>
                                                     {/if}
                                                 {/foreach}
                                             </optgroup>
@@ -172,57 +171,61 @@
                                     <span class="pull-right">{vtranslate('LBL_ATTACHMENT',$MODULE)}</span>
                                 </div>
                                 <div class="col-lg-6">
-                                    <div class="dropdown display-inline-block">
-                                        <div class="dropdown-toggle btn btn-default" data-toggle="dropdown">
-                                            <span style="margin-right: 1rem;">{vtranslate('LBL_MORE', $MODULE)}</span>
-                                            <i class="fa fa-caret-down"></i>
-                                        </div>
-                                        <ul class="dropdown-menu dropdown-menu-right">
-                                            <li>
-                                                <div class="dropdown-item" style="padding: 4px 6px;">
-                                                    <input type="file" class="{if $FILE_ATTACHED}removeNoFileChosen{/if}" id="multiFile" name="file[]" title="{vtranslate('LBL_UPLOAD', $MODULE)}"/>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" id="browseCrm" data-url="{$DOCUMENTS_URL}" title="{vtranslate('LBL_BROWSE_CRM',$MODULE)}">{vtranslate('LBL_BROWSE_CRM',$MODULE)}</a>
-                                            </li>
-                                            {if $RECORD_DOCUMENTS_URL}
-                                            <li>
-                                                <a class="dropdown-item" href="#" id="browseRecord" data-url="{$RECORD_DOCUMENTS_URL}" title="{vtranslate('LBL_BROWSE_RECORD',$MODULE)}">{vtranslate('LBL_BROWSE_RECORD',$MODULE)}</a>
-                                            </li>
-                                            {/if}
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <div id="attachments" style="margin-top: 1rem;">
-                                            {foreach item=ATTACHMENT from=$ATTACHMENTS}
-                                                {if ('docid'|array_key_exists:$ATTACHMENT)}
-                                                    {assign var=DOCUMENT_ID value=$ATTACHMENT['docid']}
-                                                    {assign var=FILE_TYPE value="document"}
-                                                {else}
-                                                    {assign var=FILE_TYPE value="file"}
+                                    {if !ITS4YouEmails_Utils_Helper::isWritableStorage()}
+                                        <span class="text-danger">{vtranslate('LBL_STORAGE_NOT_WRITABLE',$MODULE)}</span>
+                                    {else}
+                                        <div class="dropdown display-inline-block">
+                                            <div class="dropdown-toggle btn btn-default" data-toggle="dropdown">
+                                                <span style="margin-right: 1rem;">{vtranslate('LBL_MORE', $MODULE)}</span>
+                                                <i class="fa fa-caret-down"></i>
+                                            </div>
+                                            <ul class="dropdown-menu dropdown-menu-right">
+                                                <li>
+                                                    <div class="dropdown-item" style="padding: 4px 6px;">
+                                                        <input type="file" class="{if $FILE_ATTACHED}removeNoFileChosen{/if}" id="multiFile" name="file[]" title="{vtranslate('LBL_UPLOAD', $MODULE)}"/>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" id="browseCrm" data-url="{$DOCUMENTS_URL}" title="{vtranslate('LBL_BROWSE_CRM',$MODULE)}">{vtranslate('LBL_BROWSE_CRM',$MODULE)}</a>
+                                                </li>
+                                                {if $RECORD_DOCUMENTS_URL}
+                                                <li>
+                                                    <a class="dropdown-item" href="#" id="browseRecord" data-url="{$RECORD_DOCUMENTS_URL}" title="{vtranslate('LBL_BROWSE_RECORD',$MODULE)}">{vtranslate('LBL_BROWSE_RECORD',$MODULE)}</a>
+                                                </li>
                                                 {/if}
-                                                <div class="MultiFile-label customAttachment" data-file-id="{$ATTACHMENT['fileid']}" data-file-type="{$FILE_TYPE}" data-file-size="{$ATTACHMENT['size']}" {if $FILE_TYPE eq "document"} data-document-id="{$DOCUMENT_ID}"{/if}>
-                                                    {if $ATTACHMENT['nondeletable'] neq true}
-                                                        <a name="removeAttachment" class="removeAttachment cursorPointer">x </a>
-                                                    {/if}
-                                                    <span>{$ATTACHMENT['attachment']}</span>
-                                                </div>
-                                            {/foreach}
+                                            </ul>
                                         </div>
-                                        {if $PDF_TEMPLATES}
-                                            <input type="hidden" name="pdftemplateids" value="{$PDF_TEMPLATE_IDS}">
-                                            <input type="hidden" name="pdflanguage" value="{$PDF_TEMPLATE_LANGUAGE}">
-                                            {foreach key=PDF_TEMPLATE_ID item=PDF_TEMPLATE_NAME from=$PDF_TEMPLATES}
-                                                <div class="row">
-                                                    <a href="#" class="generatePreviewPDF cursorPointer" data-templateid="{$PDF_TEMPLATE_ID}">
-                                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i>
-                                                        <span style="margin-left: 1rem">{$PDF_TEMPLATE_NAME}</span>
-                                                    </a>
-                                                </div>
-                                            {/foreach}
-                                        {/if}
-                                    </div>
+                                        <div>
+                                            <div id="attachments" style="margin-top: 1rem;">
+                                                {foreach item=ATTACHMENT from=$ATTACHMENTS}
+                                                    {if ('docid'|array_key_exists:$ATTACHMENT)}
+                                                        {assign var=DOCUMENT_ID value=$ATTACHMENT['docid']}
+                                                        {assign var=FILE_TYPE value="document"}
+                                                    {else}
+                                                        {assign var=FILE_TYPE value="file"}
+                                                    {/if}
+                                                    <div class="MultiFile-label customAttachment" data-file-id="{$ATTACHMENT['fileid']}" data-file-type="{$FILE_TYPE}" data-file-size="{$ATTACHMENT['size']}" {if $FILE_TYPE eq "document"} data-document-id="{$DOCUMENT_ID}"{/if}>
+                                                        {if $ATTACHMENT['nondeletable'] neq true}
+                                                            <a name="removeAttachment" class="removeAttachment cursorPointer">x </a>
+                                                        {/if}
+                                                        <span>{$ATTACHMENT['attachment']}</span>
+                                                    </div>
+                                                {/foreach}
+                                            </div>
+                                            {if $PDF_TEMPLATES}
+                                                <input type="hidden" name="pdftemplateids" value="{$PDF_TEMPLATE_IDS}">
+                                                <input type="hidden" name="pdflanguage" value="{$PDF_TEMPLATE_LANGUAGE}">
+                                                {foreach key=PDF_TEMPLATE_ID item=PDF_TEMPLATE_NAME from=$PDF_TEMPLATES}
+                                                    <div class="row">
+                                                        <a href="#" class="generatePreviewPDF cursorPointer" data-templateid="{$PDF_TEMPLATE_ID}">
+                                                            <i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+                                                            <span style="margin-left: 1rem">{$PDF_TEMPLATE_NAME}</span>
+                                                        </a>
+                                                    </div>
+                                                {/foreach}
+                                            {/if}
+                                        </div>
+                                    {/if}
                                 </div>
                                 <div class="col-lg-4 insertTemplate" style="text-align: right;">
                                     <button id="selectEmailTemplate" class="btn btn-success pull-right" data-url="{ITS4YouEmails_Record_Model::getSelectTemplateUrl($SOURCERECORD, $SOURCEMODULE)}">{vtranslate('LBL_SELECT_EMAIL_TEMPLATE',$MODULE)}</button>
@@ -243,12 +246,7 @@
                     </div>
                     <div class="row templateContent">
                         <div class="col-lg-12">
-                            <div class="col-lg-2">
-                                <span class="pull-right">{vtranslate('LBL_DESCRIPTION',$MODULE)}</span>
-                            </div>
-                            <div class="col-lg-10">
-                                <textarea style="width:100%;height:300px;" id="description" name="description">{$DESCRIPTION}</textarea>
-                            </div>
+                            <textarea style="width:390px;height:200px;" id="description" name="description">{$DESCRIPTION}</textarea>
                         </div>
                     </div>
 

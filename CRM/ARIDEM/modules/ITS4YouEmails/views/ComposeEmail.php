@@ -1044,7 +1044,7 @@ class ITS4YouEmails_ComposeEmail_View extends Vtiger_ComposeEmail_View
     {
         $emailTemplateId = $this->getEmailTemplateIds($request);
         $savedDefaultFrom = ITS4YouEmails_Utils_Helper::getSavedFromField($emailTemplateId);
-        $selectedDefaultFrom = '';
+        $selectedDefaultFrom = $savedDefaultFrom;
         $fromEmails = array();
         $userDefaultFrom = ITS4YouEmails_Utils_Helper::getUserFromEmails($fromEmails, $savedDefaultFrom);
         $organizationDefaultFrom = ITS4YouEmails_Utils_Helper::getOrganizationFromEmails($fromEmails, $savedDefaultFrom);

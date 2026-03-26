@@ -48,7 +48,7 @@ class ITS4YouEmails_Tracker_Handler
             /** @var ITS4YouEmails_Record_Model $recordModel */
             $recordModel = ITS4YouEmails_Record_Model::getInstanceById($recordId);
             $recordModel->saveClickCount(intval($recordModel->get('click_count')) + 1);
-            $recordModel->saveAccess($parentId, $_REQUEST['id']);
+            $recordModel->saveAccess($parentId, $_REQUEST['id'], 1);
         }
 
         if (!empty($redirectUrl)) {
@@ -84,7 +84,7 @@ class ITS4YouEmails_Tracker_Handler
             }
 
             $recordModel->saveAccessCount(intval($recordModel->get('access_count')) + 1);
-            $recordModel->saveAccess($parentId, $_REQUEST['id']);
+            $recordModel->saveAccess($parentId, $_REQUEST['id'], 2);
 
             Vtiger_ShortURL_Helper::sendTrackerImage();
         }

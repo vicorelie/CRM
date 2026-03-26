@@ -18,18 +18,18 @@ if (!function_exists('datefmt')) {
      */
     function datefmt($date, $outFormat = "d.m.Y")
     {
-        if ($date) {
-            if (strlen($date) > 10) {
-                $date = substr($date, 0, 10);
-            }
-
-            $sqlFormatDate = getValidDBInsertDateValue($date);
-            $date = new DateTime($sqlFormatDate);
-
-            return $date->format($outFormat);
+        if (empty($date) || strlen($date) < 6) {
+            return '';
         }
 
-        return '';
+        if (strlen($date) > 10) {
+            $date = substr($date, 0, 10);
+        }
+
+        $sqlFormatDate = getValidDBInsertDateValue($date);
+        $date = new DateTime($sqlFormatDate);
+
+        return $date->format($outFormat);
     }
 }
 

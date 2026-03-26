@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-08 06:34:51
+/* Smarty version 4.5.5, created on 2026-03-19 23:52:38
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/Footer.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6936718b2f6199_62638622',
+  'unifunc' => 'content_69bc8c46175dc9_22845544',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '0b1ad93fc10ea05bb574b08e287d9c79035342d0' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/Footer.tpl',
-      1 => 1763717833,
+      1 => 1773964210,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6936718b2f6199_62638622 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69bc8c46175dc9_22845544 (Smarty_Internal_Template $_smarty_tpl) {
 ?>
 <br><div class="small" style="color: rgb(153, 153, 153);text-align: center;"><?php echo vtranslate('EMAILMaker','EMAILMaker');?>
  <?php echo EMAILMaker_Version_Helper::$version;?>

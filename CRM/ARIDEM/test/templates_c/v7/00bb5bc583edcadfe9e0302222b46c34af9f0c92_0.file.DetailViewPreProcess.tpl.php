@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-08 06:34:54
+/* Smarty version 4.5.5, created on 2026-03-19 23:52:39
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/DetailViewPreProcess.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6936718ec8b500_86530407',
+  'unifunc' => 'content_69bc8c47cffc16_45211295',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '00bb5bc583edcadfe9e0302222b46c34af9f0c92' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/DetailViewPreProcess.tpl',
-      1 => 1763717833,
+      1 => 1773964210,
       2 => 'file',
     ),
   ),
@@ -21,7 +21,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
     'file:modules/Vtiger/partials/Topbar.tpl' => 1,
   ),
 ),false)) {
-function content_6936718ec8b500_86530407 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69bc8c47cffc16_45211295 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_subTemplateRender("file:modules/Vtiger/partials/Topbar.tpl", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, false);
 ?>
 

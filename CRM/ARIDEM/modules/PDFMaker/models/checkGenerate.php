@@ -10,7 +10,22 @@
 
 class PDFMaker_checkGenerate_Model extends Vtiger_Module_Model
 {
+    public $source_module;
+    public $forview;
+    public $idslist;
+    public $record;
+    public $mode;
+    public $language;
+    public $type;
+    public $is_portal;
+    public $default_mode;
+    public $export_file;
 
+    public $onlyname;
+
+    public $export_file_name;
+
+    public $generate_type;
     /**
      * @var object
      */

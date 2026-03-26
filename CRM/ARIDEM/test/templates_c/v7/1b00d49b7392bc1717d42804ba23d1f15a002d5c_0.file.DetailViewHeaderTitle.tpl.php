@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-08 06:34:54
+/* Smarty version 4.5.5, created on 2026-03-19 23:52:39
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/DetailViewHeaderTitle.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6936718eca1ba5_07053364',
+  'unifunc' => 'content_69bc8c47d13752_96048643',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '1b00d49b7392bc1717d42804ba23d1f15a002d5c' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/DetailViewHeaderTitle.tpl',
-      1 => 1763717833,
+      1 => 1773964210,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6936718eca1ba5_07053364 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69bc8c47d13752_96048643 (Smarty_Internal_Template $_smarty_tpl) {
 ?><div class="col-lg-6 col-md-6 col-sm-6"><div class="record-header clearfix"><?php if (!$_smarty_tpl->tpl_vars['MODULE']->value) {
 $_smarty_tpl->_assignInScope('MODULE', $_smarty_tpl->tpl_vars['MODULE_NAME']->value);
 }?><div class="hidden-sm hidden-xs recordImage bg_<?php echo $_smarty_tpl->tpl_vars['MODULE']->value;?>

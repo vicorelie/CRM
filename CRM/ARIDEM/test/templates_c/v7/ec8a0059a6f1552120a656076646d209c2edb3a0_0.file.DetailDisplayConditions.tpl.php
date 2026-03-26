@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-07 21:01:02
+/* Smarty version 4.5.5, created on 2026-03-19 23:50:41
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/DetailDisplayConditions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6935eb0e3ad204_14570562',
+  'unifunc' => 'content_69bc8bd17c0ff2_38713560',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'ec8a0059a6f1552120a656076646d209c2edb3a0' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/PDFMaker/DetailDisplayConditions.tpl',
-      1 => 1765057370,
+      1 => 1773964200,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6935eb0e3ad204_14570562 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69bc8bd17c0ff2_38713560 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_assignInScope('DISPLAY_CONDITION', $_smarty_tpl->tpl_vars['PDFMAKER_RECORD_MODEL']->value->getConditonDisplayValue());
 $_smarty_tpl->_assignInScope('ALL_CONDITIONS', $_smarty_tpl->tpl_vars['DISPLAY_CONDITION']->value['All']);
 $_smarty_tpl->_assignInScope('ANY_CONDITIONS', $_smarty_tpl->tpl_vars['DISPLAY_CONDITION']->value['Any']);

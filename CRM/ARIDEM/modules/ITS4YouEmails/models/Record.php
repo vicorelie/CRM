@@ -996,14 +996,15 @@ class ITS4YouEmails_Record_Model extends Vtiger_Record_Model
         return boolval($adb->num_rows($result));
     }
 
-    public function saveAccess($recordId, $accessId = '')
+    public function saveAccess($recordId, $accessId = '', $accessType = 0)
     {
         $adb = PearDatabase::getInstance();
-        $adb->pquery('INSERT INTO its4you_emails_access (record_id, mail_id, access_id, access_time) VALUES (?,?,?,?)', [
+        $adb->pquery('INSERT INTO its4you_emails_access (record_id, mail_id, access_id, access_time, access_type) VALUES (?,?,?,?, ?)', [
             $recordId,
             $this->getId(),
             $accessId,
-            date('Y-m-d H:i:s')
+            date('Y-m-d H:i:s'),
+            $accessType
         ]);
     }
 
@@ -1243,4 +1244,19 @@ class ITS4YouEmails_Record_Model extends Vtiger_Record_Model
 
 		$this->setBannedWords(array_merge((array)$ITS4YouEmails_BannedWords, ['#ITS4YouEmails_Do_Not_Send_Mail#']));
 	}
+
+    public static function isSelectedDefaultFromSMTP($smtpRecord, $defaultFrom)
+    {
+        if (empty($defaultFrom)) {
+            return $smtpRecord->get('user_id') === Users_Record_Model::getCurrentUserModel()->getId();
+        }
+
+        $parts = explode('_', $defaultFrom, 2);
+
+        if ($parts[0] === '2') {
+            return $parts[1] == $smtpRecord->getId();
+        }
+
+        return false;
+    }
 }

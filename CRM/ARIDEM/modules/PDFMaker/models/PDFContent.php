@@ -223,52 +223,15 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
     public function getContent()
     {
         PDFMaker_PDFMaker_Model::getSimpleHtmlDomFile();
-        $img_root = vglobal('img_root_directory');
+
 
         if (self::$module == 'Calendar') {
             self::$rep = array();
         }
 
-        self::$content = self::$body;
-        self::$content = self::$header . self::$section_sep;
-        self::$content .= self::$body . self::$section_sep;
-        self::$content .= self::$footer;
-        self::$rep['$siteurl$'] = self::$site_url;
-        self::$rep['&nbsp;'] = ' ';
-        self::$rep['##PAGE##'] = '{PAGENO}';
-        self::$rep['##PAGES##'] = '{nb}';
-        $this->replaceDates();
-        self::$rep["src='"] = "src='" . $img_root;
-        self::$rep["$" . strtoupper(self::$module) . "_CRMID$"] = self::$focus->id;
-        self::$rep["%" . strtoupper(self::$module) . "_CRMID%"] = "CRMID";
-        $createdtime = new DateTimeField(self::$focus->column_fields['createdtime']);
-        $displayValueCreated = $createdtime->getDisplayDateTimeValue();
-        $modifiedtime = new DateTimeField(self::$focus->column_fields['modifiedtime']);
-        $displayValueModified = $modifiedtime->getDisplayDateTimeValue();
-        self::$rep["$" . strtoupper(self::$module) . "_CREATEDTIME_DATETIME$"] = $displayValueCreated;
-        self::$rep["$" . strtoupper(self::$module) . "_MODIFIEDTIME_DATETIME$"] = $displayValueModified;
-        $this->convertEntityImages();
-        $this->replaceContent();
-        self::$content = html_entity_decode(self::$content, ENT_QUOTES, self::$def_charset);
-        $html = str_get_html(self::$content);
-        $page_break_after = $html->find("div[style^=page-break-after]");
-
-        if (is_array($page_break_after)) {
-            foreach ($page_break_after as $div_page_break) {
-                $div_page_break->outertext = self::$pagebreak;
-                self::$content = $html->save();
-            }
-        }
-
-        $page_break_after2 = $html->find("div[style^=PAGE-BREAK-AFTER]");
-
-        if (is_array($page_break_after2)) {
-            foreach ($page_break_after2 as $div_page_break) {
-                $div_page_break->outertext = self::$pagebreak;
-                self::$content = $html->save();
-            }
-        }
-
+        $this->replaceBaseVariables();
+        $this->decodeContent();
+        $this->replacePageBreaks();
         $this->convertRelatedModule();
         $this->convertRelatedBlocks();
         $this->replaceFieldsToContent(self::$module, self::$focus);
@@ -295,6 +258,8 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
         $this->convertHideTR();
         $this->replaceSignature();
         $this->replacePageBreak();
+        $this->normalizeContent();
+
         $PDF_content = array();
         list($PDF_content["header"], $PDF_content["body"], $PDF_content["footer"]) = explode(
             self::$section_sep,
@@ -302,6 +267,64 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
         );
 
         return $PDF_content;
+    }
+
+    public function normalizeContent(): void
+    {
+        // Remove stray <br> around list tags to avoid extra spacing in PDF
+        self::$content = preg_replace('/(<(?:ul|ol|li)\b[^>]*>)\s*<br\s*\/?>/i', '$1', self::$content);
+        self::$content = preg_replace('/(<\/li>)\s*<br\s*\/?>/i', '$1', self::$content);
+        self::$content = preg_replace('/<br\s*\/?>\s*(<\/?(?:ul|ol|li)\b[^>]*>)/i', '$1', self::$content);
+        self::$content = preg_replace('/(?:<br\s*\/?>\s*)+(?=<(?:ul|ol)\b)/i', '', self::$content);
+        self::$content = preg_replace('/<\/(ul|ol)>\s*(?:<br\s*\/?>\s*)+(?=<(?:ul|ol)\b)/i', '</$1>', self::$content);
+        self::$content = preg_replace('/<p[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>\s*(<(?:ul|ol)\b)/i', '$1', self::$content);
+        self::$content = preg_replace('/(<\/(?:ul|ol)>)\s*<p[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/i', '$1', self::$content);
+    }
+
+    public function decodeContent()
+    {
+        self::$content = html_entity_decode(self::$content, ENT_QUOTES, self::$def_charset);
+    }
+
+    public function replaceBaseVariables()
+    {
+        self::$content = self::$header . self::$section_sep . self::$body . self::$section_sep . self::$footer;
+        self::$rep['$siteurl$'] = self::$site_url;
+        self::$rep['&nbsp;'] = ' ';
+        self::$rep['##PAGE##'] = '{PAGENO}';
+        self::$rep['##PAGES##'] = '{nb}';
+        $this->replaceDates();
+        $createdtime = new DateTimeField(self::$focus->column_fields['createdtime']);
+        $modifiedtime = new DateTimeField(self::$focus->column_fields['modifiedtime']);
+        self::$rep["src='"] = "src='" . vglobal('img_root_directory');
+        self::$rep['$' . strtoupper(self::$module) . '_CRMID$'] = self::$focus->id;
+        self::$rep['%' . strtoupper(self::$module) . '_CRMID%'] = 'CRMID';
+        self::$rep['$' . strtoupper(self::$module) . '_CREATEDTIME_DATETIME$'] = $createdtime->getDisplayDateTimeValue();
+        self::$rep['$' . strtoupper(self::$module) . '_MODIFIEDTIME_DATETIME$'] = $modifiedtime->getDisplayDateTimeValue();
+        $this->convertEntityImages();
+        $this->replaceContent();
+    }
+
+    public function replacePageBreaks()
+    {
+        $html = str_get_html(self::$content);
+        $page_break_after = $html->find('div[style^=page-break-after]');
+
+        if (is_array($page_break_after)) {
+            foreach ($page_break_after as $div_page_break) {
+                $div_page_break->outertext = self::$pagebreak;
+                self::$content = $html->save();
+            }
+        }
+
+        $page_break_after2 = $html->find('div[style^=PAGE-BREAK-AFTER]');
+
+        if (is_array($page_break_after2)) {
+            foreach ($page_break_after2 as $div_page_break) {
+                $div_page_break->outertext = self::$pagebreak;
+                self::$content = $html->save();
+            }
+        }
     }
 
     public function retrieveAssignedUser()
@@ -686,7 +709,7 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
                 $fieldDisplayValue = !empty($fieldValue) ? $this->getTranslatedStringCustom($fieldValue, $field->getModuleName(), self::$language) : '';
                 break;
             case 'text':
-                $fieldDisplayValue = decode_html($field->getDisplayValue($fieldValue));
+                $fieldDisplayValue = $this->hasHtml($fieldValue) ? decode_html($fieldValue) : decode_html($field->getDisplayValue($fieldValue));
                 break;
             default:
                 $fieldDisplayValue = $field->getDisplayValue($fieldValue);

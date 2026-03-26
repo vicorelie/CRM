@@ -9,7 +9,7 @@
 
 class PDFMaker_Version_Helper
 {
-    public static $version = '4.76';
+    public static $version = '4.78';
 
     public function getVersion()
     {

@@ -98,6 +98,7 @@ $languageStrings = array(
 	'LBL_FILENAME' => 'Názov súboru', 
 	'LBL_FOLDER' => 'Priečinok', 
 	'LBL_BANNED_WORD' => 'Banned word: ', 
+	'LBL_STORAGE_NOT_WRITABLE' => 'Priečinok úložiska nie je možné zapisovať. Nastavte pre priečinok povolenia na zápis: storage/', 
 );
 
 $jsLanguageStrings = array(

@@ -9,7 +9,7 @@
 
 class EMAILMaker_Version_Helper
 {
-    public static $version = '4.63';
+    public static $version = '4.64';
     public function getVersion()
     {
         return self::$version;

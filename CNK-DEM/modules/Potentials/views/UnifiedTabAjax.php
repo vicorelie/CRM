@@ -189,6 +189,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 
 		// Check if current user is admin
 		$isAdmin = ($currentUser->get('is_admin') === 'on');
+		$userRole = $currentUser->get('roleid');
+		if (empty($userRole)) $userRole = fetchUserRole($currentUser->getId());
 
 		// Get validation field (cf_1164) from Potential
 		$validationValue = $recordModel->get('cf_1164');
@@ -286,6 +288,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('CSRF_TOKEN', $csrfToken);
 		$viewer->assign('DEFAULT_VALIDITY_DATE', $defaultValidityDate);
 		$viewer->assign('IS_ADMIN', $isAdmin);
+		$viewer->assign('USER_ROLE', $userRole);
 		$viewer->assign('VALIDATION_VALUE', $validationValue);
 
 		error_log('[UnifiedTabAjax] Devis variables set, rendering template...');
@@ -357,6 +360,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$currentUserId = $currentUser->getId();
 		$isAdmin = ($currentUser->get('is_admin') === 'on');
+		$odmUserRole = $currentUser->get('roleid');
+		if (empty($odmUserRole)) $odmUserRole = fetchUserRole($currentUser->getId());
 
 		// Load only VALIDATED quotes (cf_1162 = '1')
 		$validatedQuotes = [];
@@ -491,6 +496,7 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 		$viewer->assign('CONTACT_ID', $contactId);
 		$viewer->assign('CURRENT_USER_ID', $currentUserId);
 		$viewer->assign('IS_ADMIN', $isAdmin);
+		$viewer->assign('USER_ROLE', $odmUserRole);
 		$viewer->assign('VALIDATED_QUOTES', $validatedQuotes);
 		$viewer->assign('SALESORDERS', $salesOrders);
 		$viewer->assign('PRODUCTS_JSON', json_encode($products));

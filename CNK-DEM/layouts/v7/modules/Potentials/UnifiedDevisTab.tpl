@@ -99,7 +99,7 @@
                     <label>Date validite</label>
                     <input type="date" id="unified_cf_1005" value="{$DEFAULT_VALIDITY_DATE}">
                 </div>
-                {if $IS_ADMIN}
+                {if $IS_ADMIN || $USER_ROLE eq 'H6'}
                 <div class="form-group">
                     <label>Prestataire</label>
                     <select id="unified_prestataire">

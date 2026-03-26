@@ -608,6 +608,17 @@ class EMAILMaker_Fields_Model extends Vtiger_Base_Model
             }
         }
 
+        if (vtlib_isModuleActive('ITS4YouSMTP') && getTabid('ITS4YouSMTP')) {
+            /** @var ITS4YouSMTP_Module_Model $moduleModel */
+            $moduleModel = Vtiger_Module_Model::getInstance('ITS4YouSMTP');
+            $records = $moduleModel->getRecords();
+
+            foreach ($records as $record) {
+                $options['2_' . $record->getId()] = sprintf('%s <%s>', $record->get('from_name_field'), $record->get('from_email_field'));
+            }
+        }
+
+
         return $options;
     }
 
@@ -742,7 +753,7 @@ class EMAILMaker_Fields_Model extends Vtiger_Base_Model
     public static function updateMembersGroups(&$members, $type, $data)
     {
         foreach ($members[$type] as $memberId => $memberData) {
-            list($sharingType, $sharingId) = explode(':', $memberId);
+            [$sharingType, $sharingId] = explode(':', $memberId);
 
             if (empty($data[$sharingId])) {
                 unset($members[$sharingType][$memberId]);

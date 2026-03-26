@@ -1,5 +1,4 @@
 <?php
 $languageStrings = array(
-'Monsieur'	=>	'Monsieur',
-'Madame'	=>	'Madame',
+'Mr Mme'	=>	'Mr Mme',
 );

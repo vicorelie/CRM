@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 4.5.5, created on 2025-12-08 06:34:51
+/* Smarty version 4.5.5, created on 2026-03-19 23:52:38
   from '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/ListEMAILActions.tpl' */
 
 /* @var Smarty_Internal_Template $_smarty_tpl */
 if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   'version' => '4.5.5',
-  'unifunc' => 'content_6936718b2f2ff3_57333927',
+  'unifunc' => 'content_69bc8c46172b21_84308718',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '0dd68975701ed430c090a872aa56184fdd0cda8d' => 
     array (
       0 => '/var/www/CRM/ARIDEM/layouts/v7/modules/EMAILMaker/ListEMAILActions.tpl',
-      1 => 1763717833,
+      1 => 1773964210,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
   array (
   ),
 ),false)) {
-function content_6936718b2f2ff3_57333927 (Smarty_Internal_Template $_smarty_tpl) {
+function content_69bc8c46172b21_84308718 (Smarty_Internal_Template $_smarty_tpl) {
 $_smarty_tpl->_checkPlugins(array(0=>array('file'=>'/var/www/CRM/ARIDEM/vendor/smarty/smarty/libs/plugins/modifier.count.php','function'=>'smarty_modifier_count',),));
 ?>
 <div id="listview-actions" class="listview-actions-container">
