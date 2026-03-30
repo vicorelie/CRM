@@ -150,6 +150,7 @@ class Quotes_ManageStripePayments_Action extends Vtiger_BasicAjax_Action {
         }
 
         $remaining = $totalGeneral - $totalPaid;
+        if ($remaining < 0) $remaining = 0;
 
         return array(
             'success' => true,

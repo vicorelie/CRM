@@ -68,6 +68,9 @@
                 <button type="button" class="btn btn-sm" id="odm_btnSendEmailBdc" style="display:none; background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); color: white; border: none;" onclick="UnifiedODM.openSendEmailModal()">
                     <i class="fa fa-envelope"></i> Mail
                 </button>
+                <button type="button" class="btn btn-sm" id="odm_btnDeleteBdc" style="display:none; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none;" onclick="UnifiedODM.deleteBDC()" title="Supprimer ce BDC">
+                    <i class="fa fa-trash"></i>
+                </button>
             </div>
             {else}
             <div class="no-bdc-bar">

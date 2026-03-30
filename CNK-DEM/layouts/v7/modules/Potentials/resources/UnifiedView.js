@@ -3033,6 +3033,9 @@
             // Show form and actions
             jQuery('#odmFormContainer').show();
             jQuery('#odmActionsBar').show();
+            jQuery('#odm_btnViewPdf').hide();
+            jQuery('#odm_btnSendEmailBdc').hide();
+            jQuery('#odm_btnDeleteBdc').hide();
             jQuery('#odm_btnSaveText').text('Créer ODM');
             jQuery('#odm_btnSave').removeClass('btn-primary').addClass('btn-success');
 
@@ -3173,6 +3176,7 @@
             jQuery('#odmActionsBar').show();
             jQuery('#odm_btnViewPdf').show();
             jQuery('#odm_btnSendEmailBdc').show();
+            jQuery('#odm_btnDeleteBdc').show();
             jQuery('#odm_btnSaveText').text('Enregistrer ODM');
             jQuery('#odm_btnSave').removeClass('btn-success').addClass('btn-primary');
 
@@ -3306,9 +3310,23 @@
                 });
             }
 
-            // Toujours recalculer depuis les pct — ne pas restaurer cf_1166 comme "manuel"
+            // Recalculer depuis les pct
             jQuery('#odm_hidden_manual_acompte').val('');
             this.calculateTotals();
+
+            // Si l'acompte sauvegardé (cf_1166) diffère du calculé, restaurer la valeur sauvegardée
+            var savedAcompte = parseFloat(data.cf_1166) || 0;
+            var calculatedAcompte = parseFloat(jQuery('#odm_acompte_ttc').val()) || 0;
+            if (savedAcompte > 0 && Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
+                var totalTTC = parseFloat(jQuery('#odm_montant_total_ttc').text()) || 0;
+                jQuery('#odm_acompte_ttc').val(savedAcompte.toFixed(2));
+                jQuery('#odm_hidden_cf_1166').val(savedAcompte.toFixed(2));
+                jQuery('#odm_hidden_manual_acompte').val(savedAcompte.toFixed(2));
+                var soldeTTC = Math.max(0, totalTTC - savedAcompte);
+                jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
+                jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+                jQuery('#odm_acompte_reset').show();
+            }
         },
 
         /**
@@ -3319,6 +3337,7 @@
             jQuery('#odmActionsBar').hide();
             jQuery('#odm_btnViewPdf').hide();
             jQuery('#odm_btnSendEmailBdc').hide();
+            jQuery('#odm_btnDeleteBdc').hide();
             jQuery('.odm-chip, .quote-chip').removeClass('selected');
 
             // Clear form
@@ -3345,6 +3364,55 @@
             jQuery('#odm_hidden_manual_acompte').val('');
             jQuery('#odm_acompte_reset').hide();
             jQuery('#odm_solde_ttc').text('0.00 €');
+        },
+
+        /**
+         * Delete the currently selected BDC
+         */
+        deleteBDC: function() {
+            var salesOrderId = this.currentSOId;
+            if (!salesOrderId) {
+                app.helper.showErrorNotification({ message: 'Aucun BDC sélectionné' });
+                return;
+            }
+
+            var chip = jQuery('.odm-chip[data-salesorderid="' + salesOrderId + '"]');
+            var soNo = chip.find('.chip-no').text() || 'ce BDC';
+
+            if (!confirm('Supprimer ' + soNo + ' ?\nCette action est irréversible.')) {
+                return;
+            }
+
+            var self = this;
+            jQuery.ajax({
+                url: 'index.php',
+                type: 'POST',
+                data: {
+                    module: 'SalesOrder',
+                    action: 'DeleteAjax',
+                    record: salesOrderId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response && response.success) {
+                        app.helper.showSuccessNotification({ message: soNo + ' supprimé' });
+                        chip.remove();
+                        self.cancelEdit();
+                        // Update BDC count
+                        var remaining = jQuery('.odm-chips .odm-chip').length;
+                        jQuery('.odm-label').html('<i class="fa fa-clipboard"></i> BDC (' + remaining + '):');
+                        if (remaining === 0) {
+                            jQuery('.bdc-column .odm-bar').replaceWith('<div class="no-bdc-bar"><i class="fa fa-info-circle"></i><span>Aucun BDC</span></div>');
+                        }
+                    } else {
+                        app.helper.showErrorNotification({ message: response.error && response.error.message || 'Erreur lors de la suppression' });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('[UnifiedODM] Delete error:', error);
+                    app.helper.showErrorNotification({ message: 'Erreur: ' + error });
+                }
+            });
         },
 
         /**
