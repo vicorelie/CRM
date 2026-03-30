@@ -1224,13 +1224,13 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
                     $productName .= '<br /><small>' . $comment . '</small>';
                 }
 
-                $Details['P'][$i]['PRODUCTNAME'] = $productName;
+                $Details['P'][$i]['PRODUCTNAME'] = html_entity_decode($productName, ENT_QUOTES, 'UTF-8');
 
                 if (!$this->isRecordExists($psId) && empty($productTitle)) {
                     $productTitle = $this->translateString('LBL_ITEM_DELETED_FROM_SYSTEM', 'PDFMaker');
                 }
 
-                $Details['P'][$i]['PRODUCTTITLE'] = $productTitle;
+                $Details['P'][$i]['PRODUCTTITLE'] = html_entity_decode($productTitle, ENT_QUOTES, 'UTF-8');
 
                 $inventoryProductRelDescription = $psDescription;
 
