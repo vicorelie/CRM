@@ -467,7 +467,7 @@
                         <i id="odm_acompte_reset" class="fa fa-undo" title="Remettre le montant calculé" style="display:none;cursor:pointer;opacity:0.8;font-size:0.85em;" onclick="UnifiedODM.resetAcompte()"></i>
                     </div>
                     <div class="total-value">
-                        <input type="number" id="odm_acompte_ttc" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                        <input type="number" id="odm_acompte_ttc" value="0" step="0.01" min="0" onwheel="this.blur()" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
                     </div>
                 </div>
                 <div class="total-box total-solde">
@@ -479,7 +479,7 @@
                         Mt Prestataire <small style="opacity:0.7;font-size:0.7em;">✎</small>
                     </div>
                     <div class="total-value">
-                        <input type="number" id="odm_cf_1403" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                        <input type="number" id="odm_cf_1403" value="0" step="0.01" min="0" onwheel="this.blur()" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
                     </div>
                 </div>
                 <div class="total-box total-encaisser">
@@ -487,7 +487,7 @@
                         Mt Client <small style="opacity:0.7;font-size:0.7em;">✎</small>
                     </div>
                     <div class="total-value">
-                        <input type="number" id="odm_cf_1405" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                        <input type="number" id="odm_cf_1405" value="0" step="0.01" min="0" onwheel="this.blur()" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
                     </div>
                 </div>
             </div>
