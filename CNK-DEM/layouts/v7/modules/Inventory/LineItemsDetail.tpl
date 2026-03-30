@@ -150,9 +150,9 @@
                                 {if empty($displayProductName)}{assign var="displayProductName" value=$LINE_ITEM_DETAIL["productName$INDEX"]}{/if}
                                 <div>
                                     {if $LINE_ITEM_DETAIL["productDeleted$INDEX"]}
-                                        {$displayProductName}
+                                        {decode_html($displayProductName)}
                                     {else}
-                                        <h5><a class="fieldValue" href="index.php?module={$LINE_ITEM_DETAIL["entityType$INDEX"]}&view=Detail&record={$LINE_ITEM_DETAIL["hdnProductId$INDEX"]}" target="_blank">{$displayProductName}</a></h5>
+                                        <h5><a class="fieldValue" href="index.php?module={$LINE_ITEM_DETAIL["entityType$INDEX"]}&view=Detail&record={$LINE_ITEM_DETAIL["hdnProductId$INDEX"]}" target="_blank">{decode_html($displayProductName)}</a></h5>
                                         {/if}
                                 </div>
                                 {if $LINE_ITEM_DETAIL["productDeleted$INDEX"]}
