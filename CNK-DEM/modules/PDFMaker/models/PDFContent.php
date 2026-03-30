@@ -1166,6 +1166,9 @@ class PDFMaker_PDFContent_Model extends PDFMaker_PDFContentUtils_Model
                 $productDescription = isset($PData['productDescription' . $sequence]) ? trim($PData['productDescription' . $sequence]) : '';
                 $originalProductName = $PData['productName' . $sequence];
                 $productTitle = $productName = !empty($productDescription) ? $productDescription : $originalProductName;
+                // CNK-DEM: Décoder les entités HTML (query_result encode < en &lt;)
+                $productTitle = html_entity_decode($productTitle, ENT_QUOTES, 'UTF-8');
+                $productName = html_entity_decode($productName, ENT_QUOTES, 'UTF-8');
                 $entityType = $PData['entityType' . $sequence];
                 $productId = $psId = $PData['hdnProductId' . $sequence];
                 $productFocus = CRMEntity::getInstance('Products');
