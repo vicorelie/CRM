@@ -46,6 +46,33 @@
         /**
          * Invalidate a tab so it reloads on next access
          */
+        _ascFields: ['cf_1075','cf_1077','cf_1363','cf_1381','cf_1372','cf_1390'],
+        _escFields: ['cf_1019','cf_1021','cf_1318','cf_1331','cf_1364','cf_1382','cf_1373','cf_1391'],
+
+        applyAscEscColor: function(el) {
+            var $el = jQuery(el);
+            var $grp = $el.closest('.form-group');
+            var fn = $el.attr('data-fieldname');
+            var val = ($el.val() || '').toUpperCase();
+            var bg = '';
+            // Ascenseur (picklist: OUI/NON/PETIT/GRAND)
+            if (this._ascFields.indexOf(fn) !== -1) {
+                if (val === 'OUI' || val === 'GRAND') bg = '#d4edda';
+                else if (val === 'NON') bg = '#f8d7da';
+                else if (val === 'PETIT') bg = '#fff3cd';
+            }
+            // Escaliers (boolean 1/0 or checkbox)
+            if (this._escFields.indexOf(fn) !== -1) {
+                if (val === '1' || val === 'ON' || val === 'YES') bg = '#f8d7da';
+                else bg = '#d4edda';
+            }
+            if (bg) {
+                $grp.css({ 'background': bg, 'border-radius': '8px', 'padding': '4px 6px' });
+            } else {
+                $grp.css({ 'background': '', 'border-radius': '', 'padding': '' });
+            }
+        },
+
         invalidateTab: function(tabName) {
             this.loadedTabs[tabName] = false;
             console.log('[UnifiedView] Tab invalidated:', tabName);
@@ -143,7 +170,15 @@
         initializeTab: function(tabName) {
             switch(tabName) {
                 case 'details':
-                    // Re-register VTiger detail view events if needed
+                    // Colorize ascenseur / escaliers fields
+                    var allAscEsc = this._ascFields.concat(this._escFields);
+                    var selector = allAscEsc.map(function(f) { return 'select[data-fieldname="' + f + '"]'; }).join(', ');
+                    jQuery('#detailsTabContainer').find(selector).each(function() {
+                        UnifiedTabbedView.applyAscEscColor(this);
+                    });
+                    jQuery('#detailsTabContainer').on('change', selector, function() {
+                        UnifiedTabbedView.applyAscEscColor(this);
+                    });
                     break;
 
                 case 'devis':
