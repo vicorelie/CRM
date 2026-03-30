@@ -3036,6 +3036,11 @@
             jQuery('#odm_acompte_reset').hide();
             jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
 
+            // Default montant prestataire = solde (only if not editing existing)
+            if (!this.currentSOId) {
+                jQuery('#odm_cf_1403').val(soldeTTC.toFixed(2));
+            }
+
             // Update hidden fields for saving
             jQuery('#odm_hidden_cf_1174').val(assuranceHT.toFixed(2)); // Tarif assurance calculé
             jQuery('#odm_hidden_cf_1166').val(acompteTTC.toFixed(2)); // Total acompte TTC
@@ -3181,6 +3186,9 @@
                     jQuery('#odm_acompte_reset').show();
                 }
             }
+
+            // Default montant à encaisser client = reste à payer du devis lié
+            jQuery('#odm_cf_1405').val(parseFloat(data.cf_1275) || 0);
         },
 
         /**
@@ -3293,6 +3301,10 @@
             // Type de déménagement
             jQuery('#odm_cf_1352').val(data.cf_1352 || '');
 
+            // Montant prestataire & montant à encaisser client
+            jQuery('#odm_cf_1403').val(data.cf_1403 || 0);
+            jQuery('#odm_cf_1405').val(parseFloat(data.cf_1405) || parseFloat(data.quote_cf_1275) || 0);
+
             // Dates (visible fields)
             jQuery('#odm_cf_1309').val(data.cf_1309 || '');
             jQuery('#odm_cf_1324').val(data.cf_1324 || '');
@@ -3399,6 +3411,8 @@
             jQuery('#odm_hidden_manual_acompte').val('');
             jQuery('#odm_acompte_reset').hide();
             jQuery('#odm_solde_ttc').text('0.00 €');
+            jQuery('#odm_cf_1403').val('0');
+            jQuery('#odm_cf_1405').val('0');
         },
 
         /**
@@ -3528,6 +3542,8 @@
             jQuery('#odm_hidden_sostatus').val(jQuery('#odm_sostatus').val());
             jQuery('#odm_hidden_prestataire').val(jQuery('#odm_prestataire').val());
             jQuery('#odm_hidden_cf_1352').val(jQuery('#odm_cf_1352').val()); // Type de déménagement
+            jQuery('#odm_hidden_cf_1403').val(jQuery('#odm_cf_1403').val() || 0); // Montant prestataire
+            jQuery('#odm_hidden_cf_1405').val(jQuery('#odm_cf_1405').val() || 0); // Montant a encaisser client
             // Only set quote_id if we're creating from a quote, otherwise preserve existing value
             if (this.sourceQuoteId) {
                 jQuery('#odm_hidden_quote_id').val(this.sourceQuoteId);
@@ -3911,8 +3927,8 @@
                         $pdfList.html('<p class="text-muted" style="margin:6px;font-size:12px;">Aucun template PDF</p>');
                     }
 
-                    // Set prestataire email (fallback to contact email)
-                    jQuery('#odmEmailTo').val(data.vendor_email || data.contact_email || '');
+                    // Set prestataire email (fallback to default CNK email)
+                    jQuery('#odmEmailTo').val(data.vendor_email || 'demenagementcnk@gmail.com');
 
                     // Show modal
                     jQuery('#odmSendEmailModal').modal('show');

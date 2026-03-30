@@ -608,6 +608,8 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				'cf_1162' => $quoteModel->get('cf_1162'), // Validé
 				// Prestataire
 				'prestataire' => $quoteModel->get('prestataire'), // Vendor/Prestataire
+				// Paiements
+				'cf_1275' => $quoteModel->get('cf_1275'), // Reste à payer
 				// Remise globale
 				'discount_percent' => $quoteModel->get('hdnDiscountPercent'),
 				'discount_amount' => $quoteModel->get('hdnDiscountAmount'),
@@ -745,6 +747,10 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				'cf_1336' => $soModel->get('cf_1336'), // Monte meuble livraison
 				// Type de déménagement
 				'cf_1352' => $soModel->get('cf_1352'), // Type de déménagement
+				// Montant du prestataire
+				'cf_1403' => $soModel->get('cf_1403'),
+				// Montant a encaisser du client
+				'cf_1405' => $soModel->get('cf_1405'),
 				// Remise globale
 				'discount_percent' => $soModel->get('hdnDiscountPercent'),
 				'discount_amount' => $soModel->get('hdnDiscountAmount'),
@@ -762,6 +768,17 @@ class Potentials_UnifiedTabAjax_View extends Vtiger_IndexAjax_View {
 				}
 			}
 			$soData['prestataire_email'] = $prestataireEmail;
+
+			// Get reste à payer from linked quote
+			$quoteId = $soModel->get('quote_id');
+			if (!empty($quoteId)) {
+				try {
+					$quoteModel = Vtiger_Record_Model::getInstanceById($quoteId, 'Quotes');
+					$soData['quote_cf_1275'] = $quoteModel->get('cf_1275'); // Reste à payer du devis
+				} catch (Exception $e) {
+					// Ignore
+				}
+			}
 
 			// Get products from inventory with percentages
 			$productsQuery = "SELECT ivp.productid, ivp.quantity, ivp.listprice, ivp.discount_percent,

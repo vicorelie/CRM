@@ -173,6 +173,10 @@
 
         {* Type de déménagement *}
         <input type="hidden" name="cf_1352" id="odm_hidden_cf_1352" value="">
+        {* Montant du prestataire *}
+        <input type="hidden" name="cf_1403" id="odm_hidden_cf_1403" value="0">
+        {* Montant a encaisser du client *}
+        <input type="hidden" name="cf_1405" id="odm_hidden_cf_1405" value="0">
 
         <div id="odmHiddenProductsContainer"></div>
     </form>
@@ -469,6 +473,22 @@
                 <div class="total-box total-solde">
                     <div class="total-label">Solde</div>
                     <div class="total-value" id="odm_solde_ttc">0.00 €</div>
+                </div>
+                <div class="total-box total-prestataire">
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Mt Prestataire <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="odm_cf_1403" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
+                </div>
+                <div class="total-box total-encaisser">
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Mt Client <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="odm_cf_1405" value="0" step="0.01" min="0" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -920,6 +940,26 @@
     background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
     color: white;
 }
+
+.odm-tab-container .total-box.total-prestataire {
+    background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+    color: white;
+}
+
+#odm_cf_1403::-webkit-inner-spin-button,
+#odm_cf_1403::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#odm_cf_1403[type=number] { -moz-appearance: textfield; }
+#odm_cf_1403:focus { outline: none; border-bottom-color: rgba(255,255,255,0.9) !important; }
+
+.odm-tab-container .total-box.total-encaisser {
+    background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+    color: white;
+}
+
+#odm_cf_1405::-webkit-inner-spin-button,
+#odm_cf_1405::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#odm_cf_1405[type=number] { -moz-appearance: textfield; }
+#odm_cf_1405:focus { outline: none; border-bottom-color: rgba(255,255,255,0.9) !important; }
 
 /* Devis et BDC sur 2 colonnes */
 .odm-tab-container .quotes-bdc-row {
