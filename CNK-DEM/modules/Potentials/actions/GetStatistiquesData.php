@@ -53,12 +53,12 @@ class Potentials_GetStatistiquesData_Action extends Vtiger_Action_Controller {
 
 		$monthCondition = '';
 		if ($month > 0) {
-			$monthCondition = ' AND MONTH(ce.createdtime) = ?';
+			$monthCondition = ' AND MONTH(qcf.cf_1358) = ?';
 			$params[] = $month;
 		}
 
-		// Monthly validated quotes (filtered by Potential assignee)
-		$sql = "SELECT DATE_FORMAT(ce.createdtime, '%Y-%m') AS month_key,
+		// Monthly validated quotes (filtered by Potential assignee, by validation date)
+		$sql = "SELECT DATE_FORMAT(qcf.cf_1358, '%Y-%m') AS month_key,
 					COUNT(*) AS quote_count,
 					COALESCE(SUM(q.pre_tax_total), 0) AS total_ht
 				FROM vtiger_quotes q
@@ -67,7 +67,8 @@ class Potentials_GetStatistiquesData_Action extends Vtiger_Action_Controller {
 				LEFT JOIN vtiger_crmentity ce_pot ON ce_pot.crmid = q.potentialid
 				WHERE ce.deleted = 0
 					AND qcf.cf_1162 = '1'
-					AND YEAR(ce.createdtime) = ?"
+					AND qcf.cf_1358 IS NOT NULL
+					AND YEAR(qcf.cf_1358) = ?"
 				. $userCondition
 				. $monthCondition
 				. " GROUP BY month_key ORDER BY month_key ASC";
@@ -101,7 +102,16 @@ class Potentials_GetStatistiquesData_Action extends Vtiger_Action_Controller {
 			$totalValidatedHT += $ht;
 		}
 
-		// Pending quotes (filtered by Potential assignee)
+		// Pending quotes (not validated, filtered by creation date as fallback)
+		$pendingParams = array($year);
+		if ($filterUserId !== null) {
+			$pendingParams[] = $filterUserId;
+		}
+		$pendingMonthCond = '';
+		if ($month > 0) {
+			$pendingMonthCond = ' AND MONTH(ce.createdtime) = ?';
+			$pendingParams[] = $month;
+		}
 		$sqlPending = "SELECT COUNT(*) AS pending_count,
 						COALESCE(SUM(q.pre_tax_total), 0) AS pending_ht
 					FROM vtiger_quotes q
@@ -112,9 +122,9 @@ class Potentials_GetStatistiquesData_Action extends Vtiger_Action_Controller {
 						AND (qcf.cf_1162 IS NULL OR qcf.cf_1162 != '1')
 						AND YEAR(ce.createdtime) = ?"
 					. $userCondition
-					. $monthCondition;
+					. $pendingMonthCond;
 
-		$resultPending = $db->pquery($sqlPending, $params);
+		$resultPending = $db->pquery($sqlPending, $pendingParams);
 		$pendingRow = $db->fetchByAssoc($resultPending);
 		$pendingCount = intval($pendingRow['pending_count']);
 		$pendingHT = round(floatval($pendingRow['pending_ht']), 2);
@@ -132,7 +142,7 @@ class Potentials_GetStatistiquesData_Action extends Vtiger_Action_Controller {
 			$userParams = array($year);
 			$userMonthCond = '';
 			if ($month > 0) {
-				$userMonthCond = ' AND MONTH(ce.createdtime) = ?';
+				$userMonthCond = ' AND MONTH(qcf.cf_1358) = ?';
 				$userParams[] = $month;
 			}
 
@@ -147,7 +157,8 @@ class Potentials_GetStatistiquesData_Action extends Vtiger_Action_Controller {
 						INNER JOIN vtiger_users u ON u.id = ce_pot.smownerid
 						WHERE ce.deleted = 0
 							AND qcf.cf_1162 = '1'
-							AND YEAR(ce.createdtime) = ?"
+							AND qcf.cf_1358 IS NOT NULL
+							AND YEAR(qcf.cf_1358) = ?"
 						. $userMonthCond
 						. " GROUP BY u.id, u.first_name, u.last_name
 						ORDER BY total_ht DESC";
