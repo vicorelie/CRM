@@ -49,7 +49,8 @@ class Leads_ConfirmEmailAndConvert_Action extends Vtiger_Action_Controller {
 
 			// Préparer les données pour la conversion via webservice
 			$currentUser = Users_Record_Model::getCurrentUserModel();
-			$assignedUserId = $leadModel->get('assigned_user_id');
+			// CNK-DEM: Assigner à l'utilisateur qui convertit, pas au propriétaire du prospect
+			$assignedUserId = $currentUser->getId();
 			$firstname = $leadModel->get('firstname');
 			$lastname = $leadModel->get('lastname');
 			$fullName = trim($firstname . ' ' . $lastname);
