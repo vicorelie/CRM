@@ -58,7 +58,9 @@ class Leads_ConvertLead_View extends Vtiger_Index_View {
 		$viewer->assign('CONVERT_LEAD_FIELDS', $recordModel->getConvertLeadFields());
 
 		$assignedToFieldModel = $moduleModel->getField('assigned_user_id');
-		$assignedToFieldModel->set('fieldvalue', $recordModel->get('assigned_user_id'));
+		// CNK-DEM: Assigner à l'utilisateur qui convertit, pas au propriétaire du prospect
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$assignedToFieldModel->set('fieldvalue', $currentUser->getId());
 		$viewer->assign('ASSIGN_TO', $assignedToFieldModel);
 
 		$potentialModuleModel = Vtiger_Module_Model::getInstance('Potentials');
