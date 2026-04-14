@@ -56,14 +56,6 @@ class Potentials_ListView_Model extends Vtiger_ListView_Model {
 			"REPLACE(vtiger_potentialscf.cf_981, ' ', '') LIKE ",
 			$query
 		);
-
-		// CNK-DEM: Rôle H5 (Chargé de clientèle) → exclure les dossiers assignés à Team Selling (groupid=2)
-		$currentUser = Users_Record_Model::getCurrentUserModel();
-		$roleId = $currentUser->getRole();
-		if ($roleId === 'H5') {
-			$query .= ' AND vtiger_crmentity.smownerid != 2';
-		}
-
 		return $query;
 	}
 }
