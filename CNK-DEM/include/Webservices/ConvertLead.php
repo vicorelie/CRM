@@ -89,6 +89,8 @@ function vtws_convertlead($element, $user) {
 			$entityObjectValues = array();
 			$entityObjectValues['assigned_user_id'] = $element['assignedTo'];
 			$entityObjectValues = vtws_populateConvertLeadEntities($entityvalue, $entityObjectValues, $entityHandler, $leadHandler, $leadInfo);
+			// CNK-DEM: Forcer l'assignation à l'utilisateur qui convertit (pas celui du prospect)
+			$entityObjectValues['assigned_user_id'] = $element['assignedTo'];
 
 			//update potential related to property
 			if ($entityvalue['name'] == 'Potentials') {
