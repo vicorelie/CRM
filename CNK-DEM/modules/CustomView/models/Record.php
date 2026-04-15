@@ -1096,6 +1096,11 @@ class CustomView_Record_Model extends Vtiger_Base_Model {
 			}
 
 			$sql.= ")";
+
+			// CNK-DEM: Masquer la vue "Tous" des Prospects pour le rôle H5 (Chargé de clientèle)
+			if ($moduleName === 'Leads' && $userRole === 'H5') {
+				$sql .= " AND vtiger_customview.cvid != 1";
+			}
 		}
 
 		$result = $db->pquery($sql, $params);
