@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html data-kantu="1">
+<head>
+	<meta charset="UTF-8">
+	<title>Inventaire de Déménagement</title>
+	<style type="text/css">body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#111;line-height:1.3em;margin:0;padding:0;}
+    .page{padding:4px 15px;}
+    .topbar{background:#1F314D;color:#fff;padding:6px 10px;margin-bottom:6px;}
+    .topbar .name{font-size:12pt;font-weight:bold;color:#fff;}
+    .topbar .tag{font-size:7.5pt;color:#fff;}
+    .topbar .doc-title{font-size:11pt;font-weight:bold;color:#fff;}
+    .topbar .doc-no{font-size:9pt;color:#fff;}
+    .tbl{width:100%;border-collapse:collapse;margin:4px 0 6px;}
+    .tbl td,.tbl th{border:1px solid #444;padding:4px 5px;vertical-align:top;font-size:8.5pt;}
+    .tbl th{background:#e6e6e6;font-weight:bold;}
+	</style>
+</head>
+<body>
+<div class="page">
+
+<!-- TOPBAR -->
+<table cellpadding="0" cellspacing="0" width="100%" bgcolor="#1F314D" style="margin-bottom:6px;">
+	<tr>
+		<td style="padding:6px 10px;" valign="top" width="55%">
+			<strong style="font-size:12pt;color:#fff;">CNK DEM</strong><br />
+			<span style="font-size:7.5pt;color:#fff;">Votre sp&eacute;cialiste du d&eacute;m&eacute;nagement</span>
+		</td>
+		<td style="padding:6px 10px;text-align:right;" valign="top" width="45%">
+			<strong style="font-size:11pt;color:#fff;">INVENTAIRE DE D&Eacute;M&Eacute;NAGEMENT</strong><br />
+			<span style="font-size:9pt;color:#fff;">Devis N&deg; $QUOTES_QUOTE_NO$</span>
+		</td>
+	</tr>
+</table>
+
+<!-- INFORMATIONS CLIENT & COMMERCIAL -->
+<table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+	<tr>
+		<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td>
+				<strong>Client</strong><br />
+				$R_POTENTIALID_CONTACT_ID$
+			</td></tr>
+			</table>
+		</td>
+		<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="6" cellspacing="0" width="100%" style="border:1px solid #ddd;margin-bottom:6px;font-size:8.5pt;" bgcolor="#f5f5f5">
+			<tr><td>
+				<strong>Commercial</strong><br />
+				$R_POTENTIALID_ASSIGNED_USER_ID$<br />
+				<span style="font-size:7.5pt;color:#555;">Date : $R_POTENTIALID_CF_945$</span>
+			</td></tr>
+			</table>
+		</td>
+	</tr>
+</table>
+
+<!-- ADRESSES -->
+<table class="tbl">
+	<tr>
+		<th width="50%">CHARGEMENT</th>
+		<th width="50%">LIVRAISON</th>
+	</tr>
+	<tr>
+		<td>
+			<strong>Adresse :</strong><br />
+			$R_POTENTIALID_CF_955$<br />
+			$R_POTENTIALID_CF_933$ $R_POTENTIALID_CF_935$
+		</td>
+		<td>
+			<strong>Adresse :</strong><br />
+			$R_POTENTIALID_CF_957$<br />
+			$R_POTENTIALID_CF_949$ $R_POTENTIALID_CF_951$
+		</td>
+	</tr>
+</table>
+
+<!-- RÉSUMÉ VOLUMES -->
+<table cellpadding="4" cellspacing="0" width="100%" style="margin:8px 0 6px;" bgcolor="#1F314D">
+<tr><td><strong style="color:#fff;font-size:9pt;">R&eacute;sum&eacute; des volumes</strong></td></tr>
+</table>
+
+<table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin-bottom:10px;">
+	<tr>
+		<td style="padding-right:6px;" valign="top" width="50%">
+			<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #ddd;" bgcolor="#f5f5f5">
+			<tr>
+				<td style="font-size:8.5pt;"><strong>Volume estim&eacute; :</strong></td>
+				<td style="font-size:10pt;text-align:right;"><strong style="color:#1F314D;">$R_POTENTIALID_CF_939$ m&sup3;</strong></td>
+			</tr>
+			</table>
+		</td>
+		<td style="padding-left:6px;" valign="top" width="50%">
+			<table cellpadding="8" cellspacing="0" width="100%" style="border:1px solid #1F314D;" bgcolor="#1F314D">
+			<tr>
+				<td style="font-size:8.5pt;color:#fff;"><strong>Volume final :</strong></td>
+				<td style="font-size:10pt;text-align:right;"><strong style="color:#fff;">$R_POTENTIALID_CF_1259$ m&sup3;</strong></td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+
+<!-- TITRE INVENTAIRE DÉTAILLÉ -->
+<table cellpadding="4" cellspacing="0" width="100%" style="margin:8px 0 6px;" bgcolor="#1F314D">
+<tr><td><strong style="color:#fff;font-size:9pt;">Inventaire d&eacute;taill&eacute;</strong></td></tr>
+</table>
+
+<!-- INVENTAIRE HTML INJECTÉ -->
+$R_POTENTIALID_CF_965$
+
+</div>
+</body>
+</html>

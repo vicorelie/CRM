@@ -1,0 +1,2002 @@
+{*+**********************************************************************************
+* Unified ODM Tab - Bon de Commande / Ordre de Mission management
+* Same design as UnifiedDevisTab.tpl
+************************************************************************************}
+{strip}
+<div class="odm-tab-container" id="odmTabContainer"
+     data-potential-id="{$POTENTIAL_ID}"
+     data-contact-id="{$CONTACT_ID}"
+     data-csrf-token="{$CSRF_TOKEN}"
+     data-current-user-id="{$CURRENT_USER_ID}">
+
+    {* Devis validés et BDC sur 2 colonnes *}
+    <div class="quotes-bdc-row">
+        {* Colonne Devis validés *}
+        <div class="quotes-column">
+            {if $VALIDATED_QUOTES|@count > 0}
+            <div class="quotes-bar">
+                <span class="quotes-label"><i class="fa fa-check-circle" style="color: #27ae60;"></i> Devis validés ({$VALIDATED_QUOTES|@count}):</span>
+                <div class="quotes-chips">
+                    {foreach from=$VALIDATED_QUOTES item=QUOTE}
+                    <div class="quote-chip validated" data-quoteid="{$QUOTE.quoteid}" onclick="UnifiedODM.createFromQuote({$QUOTE.quoteid})" title="Créer BDC depuis {$QUOTE.quote_no}">
+                        <div class="chip-line1">
+                            <span class="chip-no">{$QUOTE.quote_no}</span>
+                            <span class="chip-sep">/</span>
+                            <span class="chip-date">{$QUOTE.created_date}</span>
+                        </div>
+                        <div class="chip-line2">
+                            <span class="chip-formule">{$QUOTE.cf_1125|default:'-'}</span>
+                            <span class="chip-sep">/</span>
+                            <span class="chip-total">{$QUOTE.total|number_format:0:',':' '}€</span>
+                        </div>
+                    </div>
+                    {/foreach}
+                </div>
+            </div>
+            {else}
+            <div class="no-quotes-bar">
+                <i class="fa fa-info-circle"></i>
+                <span>Aucun devis validé</span>
+            </div>
+            {/if}
+        </div>
+
+        {* Colonne BDC *}
+        <div class="bdc-column">
+            {if $SALESORDERS|@count > 0}
+            <div class="odm-bar">
+                <span class="odm-label"><i class="fa fa-clipboard"></i> BDC ({$SALESORDERS|@count}):</span>
+                <div class="odm-chips">
+                    {foreach from=$SALESORDERS item=SO}
+                    <div class="odm-chip{if $SO.sostatus eq 'Approved'} approved{/if}" data-salesorderid="{$SO.salesorderid}" onclick="UnifiedODM.loadSalesOrder({$SO.salesorderid})" title="{decode_html($SO.subject)}">
+                        <div class="chip-line1">
+                            <span class="chip-no">{$SO.salesorder_no}</span>
+                            <span class="chip-sep">/</span>
+                            <span class="chip-date">{$SO.created_date}</span>
+                        </div>
+                        <div class="chip-line2">
+                            <span class="chip-formule">{$SO.cf_1186|default:'-'}</span>
+                            <span class="chip-sep">/</span>
+                            <span class="chip-total">{$SO.total|number_format:0:',':' '}€</span>
+                        </div>
+                    </div>
+                    {/foreach}
+                </div>
+                <button type="button" class="btn btn-sm" id="odm_btnViewPdf" style="display:none; background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; border: none;" onclick="UnifiedODM.openPDFPreviewModal()">
+                    <i class="fa fa-file-pdf-o"></i> PDF
+                </button>
+                <button type="button" class="btn btn-sm" id="odm_btnSendEmailBdc" style="display:none; background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); color: white; border: none;" onclick="UnifiedODM.openSendEmailModal()">
+                    <i class="fa fa-envelope"></i> Mail
+                </button>
+                <button type="button" class="btn btn-sm" id="odm_btnDeleteBdc" style="display:none; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none;" onclick="UnifiedODM.deleteBDC()" title="Supprimer ce BDC">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+            {else}
+            <div class="no-bdc-bar">
+                <i class="fa fa-info-circle"></i>
+                <span>Aucun BDC</span>
+            </div>
+            {/if}
+        </div>
+    </div>
+
+    {* Hidden form for VTiger submission *}
+    <form id="unifiedODMForm" method="POST" action="index.php" style="display:none;">
+        <input type="hidden" name="__vtrftk" value="{$CSRF_TOKEN}">
+        <input type="hidden" name="module" value="SalesOrder">
+        <input type="hidden" name="action" value="Save">
+        <input type="hidden" name="record" id="odm_recordId" value="">
+        <input type="hidden" name="potential_id" value="{$POTENTIAL_ID}">
+        <input type="hidden" name="contact_id" value="{$CONTACT_ID}">
+        <input type="hidden" name="sourceRecord" value="{$POTENTIAL_ID}">
+        <input type="hidden" name="sourceModule" value="Potentials">
+        <input type="hidden" name="relationOperation" value="true">
+        <input type="hidden" name="currency_id" value="1">
+        <input type="hidden" name="assigned_user_id" value="{$CURRENT_USER_ID}">
+        <input type="hidden" name="quote_id" id="odm_hidden_quote_id" value="">
+        <input type="hidden" name="subject" id="odm_hidden_subject" value="">
+        <input type="hidden" name="duedate" id="odm_hidden_duedate" value="">
+        <input type="hidden" name="sostatus" id="odm_hidden_sostatus" value="Created">
+        <input type="hidden" name="prestataire" id="odm_hidden_prestataire" value="">
+        <input type="hidden" name="cf_1186" id="odm_hidden_cf_1186" value="">
+        <input type="hidden" name="cf_1180" id="odm_hidden_cf_1180" value="0">
+        <input type="hidden" name="cf_1182" id="odm_hidden_cf_1182" value="0">
+        <input type="hidden" name="cf_1184" id="odm_hidden_cf_1184" value="0">
+        <input type="hidden" name="cf_1170" id="odm_hidden_cf_1170" value="">
+        <input type="hidden" name="cf_1166" id="odm_hidden_cf_1166" value="0">
+        <input type="hidden" name="cf_1168" id="odm_hidden_cf_1168" value="0">
+        <input type="hidden" name="odm_manual_acompte_ttc" id="odm_hidden_manual_acompte" value="">
+        {* Champs supplémentaires copiés du devis *}
+        <input type="hidden" name="cf_1172" id="odm_hidden_cf_1172" value="">
+        <input type="hidden" name="cf_1174" id="odm_hidden_cf_1174" value="">
+        <input type="hidden" name="cf_1176" id="odm_hidden_cf_1176" value="43">
+        <input type="hidden" name="cf_1178" id="odm_hidden_cf_1178" value="57">
+        <input type="hidden" name="cf_1188" id="odm_hidden_cf_1188" value="">
+        <input type="hidden" name="cf_1190" id="odm_hidden_cf_1190" value="">
+        <input type="hidden" name="totalProductCount" id="odm_hidden_totalProductCount" value="0">
+
+        {* VTiger Inventory calculation fields *}
+        <input type="hidden" name="taxtype" value="individual">
+        <input type="hidden" name="hdnSubTotal" id="odm_hdnSubTotal" value="0">
+        <input type="hidden" name="hdnGrandTotal" id="odm_hdnGrandTotal" value="0">
+        <input type="hidden" name="hdnDiscountPercent" id="odm_hdnDiscountPercent" value="0">
+        <input type="hidden" name="hdnDiscountAmount" id="odm_hdnDiscountAmount" value="0">
+        <input type="hidden" name="hdnS_H_Percent" value="0">
+        <input type="hidden" name="hdnS_H_Amount" value="0">
+        <input type="hidden" name="hdnAdjustment" value="0">
+        <input type="hidden" name="pre_tax_total" id="odm_pre_tax_total" value="0">
+
+        {* Champs CHARGEMENT *}
+        <input type="hidden" name="cf_1309" id="odm_hidden_cf_1309" value="">
+        <input type="hidden" name="cf_1310" id="odm_hidden_cf_1310" value="">
+        <input type="hidden" name="cf_1311" id="odm_hidden_cf_1311" value="">
+        <input type="hidden" name="cf_1312" id="odm_hidden_cf_1312" value="">
+        <input type="hidden" name="cf_1313" id="odm_hidden_cf_1313" value="">
+        <input type="hidden" name="cf_1314" id="odm_hidden_cf_1314" value="">
+        <input type="hidden" name="cf_1315" id="odm_hidden_cf_1315" value="">
+        <input type="hidden" name="cf_1316" id="odm_hidden_cf_1316" value="">
+        <input type="hidden" name="cf_1317" id="odm_hidden_cf_1317" value="">
+        <input type="hidden" name="cf_1318" id="odm_hidden_cf_1318" value="0">
+        <input type="hidden" name="cf_1319" id="odm_hidden_cf_1319" value="0">
+        <input type="hidden" name="cf_1320" id="odm_hidden_cf_1320" value="">
+        <input type="hidden" name="cf_1321" id="odm_hidden_cf_1321" value="0">
+        <input type="hidden" name="cf_1322" id="odm_hidden_cf_1322" value="0">
+        <input type="hidden" name="cf_1323" id="odm_hidden_cf_1323" value="">
+
+        {* Champs DESTINATION *}
+        <input type="hidden" name="cf_1324" id="odm_hidden_cf_1324" value="">
+        <input type="hidden" name="cf_1325" id="odm_hidden_cf_1325" value="">
+        <input type="hidden" name="cf_1326" id="odm_hidden_cf_1326" value="">
+        <input type="hidden" name="cf_1327" id="odm_hidden_cf_1327" value="">
+        <input type="hidden" name="cf_1328" id="odm_hidden_cf_1328" value="">
+        <input type="hidden" name="cf_1329" id="odm_hidden_cf_1329" value="">
+        <input type="hidden" name="cf_1330" id="odm_hidden_cf_1330" value="">
+        <input type="hidden" name="cf_1331" id="odm_hidden_cf_1331" value="0">
+        <input type="hidden" name="cf_1332" id="odm_hidden_cf_1332" value="0">
+        <input type="hidden" name="cf_1333" id="odm_hidden_cf_1333" value="">
+        <input type="hidden" name="cf_1334" id="odm_hidden_cf_1334" value="0">
+        <input type="hidden" name="cf_1335" id="odm_hidden_cf_1335" value="0">
+        <input type="hidden" name="cf_1336" id="odm_hidden_cf_1336" value="">
+
+        {* Volume et Distance *}
+        <input type="hidden" name="cf_1349" id="odm_hidden_cf_1349" value="">
+        <input type="hidden" name="cf_1350" id="odm_hidden_cf_1350" value="">
+        <input type="hidden" name="cf_1351" id="odm_hidden_cf_1351" value="">
+
+        {* Billing Address (from Prestataire/Vendor) *}
+        <input type="hidden" name="bill_street" id="odm_hidden_bill_street" value="">
+        <input type="hidden" name="bill_city" id="odm_hidden_bill_city" value="">
+        <input type="hidden" name="bill_state" id="odm_hidden_bill_state" value="">
+        <input type="hidden" name="bill_code" id="odm_hidden_bill_code" value="">
+        <input type="hidden" name="bill_country" id="odm_hidden_bill_country" value="">
+
+        {* Type de déménagement *}
+        <input type="hidden" name="cf_1352" id="odm_hidden_cf_1352" value="">
+        {* Montant du prestataire *}
+        <input type="hidden" name="cf_1403" id="odm_hidden_cf_1403" value="0">
+        {* Montant a encaisser du client *}
+        <input type="hidden" name="cf_1405" id="odm_hidden_cf_1405" value="0">
+
+        <div id="odmHiddenProductsContainer"></div>
+    </form>
+
+    {* ODM Form *}
+    <div class="odm-form-container" id="odmFormContainer" style="display:none;">
+        <input type="hidden" id="odm_selectedSOId" value="">
+        <input type="hidden" id="odm_sourceQuoteId" value="">
+
+        {* Section Info + Dates + Volumes - Tout sur une ligne *}
+        <div class="form-section section-info-dates-volumes">
+            <div class="info-dates-volumes-bar">
+                {* Sujet *}
+                <div class="inline-field">
+                    <label><span class="required">*</span> Sujet</label>
+                    <input type="text" id="odm_subject" value="" required style="width: 150px;">
+                </div>
+                {* Prestataire (admin + logistique) *}
+                {if $IS_ADMIN || $USER_ROLE eq 'H6'}
+                <div class="inline-field">
+                    <label>Prestataire</label>
+                    <select id="odm_prestataire" style="width: 120px;">
+                        <option value="">--</option>
+                        {foreach from=$VENDORS item=VENDOR}
+                        <option value="{$VENDOR.id}">{$VENDOR.name}</option>
+                        {/foreach}
+                    </select>
+                </div>
+                {/if}
+                {* Statut *}
+                <div class="inline-field">
+                    <label>Statut</label>
+                    <select id="odm_sostatus" style="width: 100px;">
+                        <option value="Created">Créé</option>
+                        <option value="Approved">Approuvé</option>
+                        <option value="Delivered">Livré</option>
+                        <option value="Cancelled">Annulé</option>
+                    </select>
+                </div>
+                {* Type de déménagement *}
+                <div class="inline-field">
+                    <label>Type dém.</label>
+                    <select id="odm_cf_1352" style="width: 100px;">
+                        <option value="">--</option>
+                        <option value="Groupage">Groupage</option>
+                        <option value="Spécial">Spécial</option>
+                    </select>
+                </div>
+                {* Séparateur *}
+                <div class="inline-separator"></div>
+                {* Dates *}
+                <div class="inline-field">
+                    <label><i class="fa fa-truck"></i> Charg.</label>
+                    <input type="date" id="odm_cf_1309" class="date-input editable-field" data-hidden="odm_hidden_cf_1309" style="width: 130px;">
+                </div>
+                <div class="inline-field">
+                    <label><i class="fa fa-home"></i> Livr.</label>
+                    <input type="date" id="odm_cf_1324" class="date-input editable-field" data-hidden="odm_hidden_cf_1324" style="width: 130px;">
+                </div>
+                {* Séparateur *}
+                <div class="inline-separator"></div>
+                {* Métriques *}
+                <div class="inline-metric">
+                    <i class="fa fa-road"></i>
+                    <input type="text" id="odm_cf_1350_input" class="metric-input editable-field" data-hidden="odm_hidden_cf_1350" placeholder="-" title="Distance">
+                    <span class="metric-unit">km</span>
+                </div>
+                <div class="inline-metric">
+                    <i class="fa fa-archive"></i>
+                    <input type="text" id="odm_cf_1351_input" class="metric-input editable-field" data-hidden="odm_hidden_cf_1351" placeholder="-" title="Vol. inventaire">
+                    <span class="metric-unit">m³</span>
+                </div>
+                <div class="inline-metric">
+                    <i class="fa fa-cubes"></i>
+                    <input type="text" id="odm_cf_1349_input" class="metric-input editable-field" data-hidden="odm_hidden_cf_1349" placeholder="-" title="Vol. final">
+                    <span class="metric-unit">m³</span>
+                </div>
+            </div>
+        </div>
+
+        {* Section CHARGEMENT et LIVRAISON côte à côte *}
+        <div class="chargement-livraison-row">
+            {* Bloc CHARGEMENT *}
+            <div class="form-section section-chargement">
+                <div class="block-header header-chargement">
+                    <i class="fa fa-truck"></i> CHARGEMENT
+                </div>
+                <div class="block-content">
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Adresse chargement</label>
+                            <input type="text" id="odm_cf_1312" class="editable-field" data-hidden="odm_hidden_cf_1312">
+                        </div>
+                        <div class="form-group">
+                            <label>Ville chargement</label>
+                            <input type="text" id="odm_cf_1313" class="editable-field" data-hidden="odm_hidden_cf_1313">
+                        </div>
+                        <div class="form-group">
+                            <label>Code postal</label>
+                            <input type="text" id="odm_cf_1314" class="editable-field" data-hidden="odm_hidden_cf_1314">
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Type de logement</label>
+                            <select id="odm_cf_1315" class="editable-field" data-hidden="odm_hidden_cf_1315">
+                                <option value="">--</option>
+                                <option value="Maison">Maison</option>
+                                <option value="Appartement">Appartement</option>
+                                <option value="Box">Box</option>
+                                <option value="Bureau">Bureau</option>
+                                <option value="Entrepot">Entrepot</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Etage</label>
+                            <input type="text" id="odm_cf_1316" class="editable-field" data-hidden="odm_hidden_cf_1316">
+                        </div>
+                        <div class="form-group">
+                            <label>Ascenseur</label>
+                            <select id="odm_cf_1317" class="editable-field" data-hidden="odm_hidden_cf_1317">
+                                <option value="">--</option>
+                                <option value="OUI">OUI</option>
+                                <option value="NON">NON</option>
+                                <option value="PETIT">PETIT</option>
+                                <option value="GRAND">GRAND</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Escaliers</label>
+                            <select id="odm_cf_1318" class="editable-field" data-hidden="odm_hidden_cf_1318">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Transbordement</label>
+                            <select id="odm_cf_1319" class="editable-field" data-hidden="odm_hidden_cf_1319">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Distance portage</label>
+                            <input type="text" id="odm_cf_1320" class="editable-field" data-hidden="odm_hidden_cf_1320">
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Demande stationnement</label>
+                            <select id="odm_cf_1321" class="editable-field" data-hidden="odm_hidden_cf_1321">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Passage fenêtre</label>
+                            <select id="odm_cf_1322" class="editable-field" data-hidden="odm_hidden_cf_1322">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monte meuble</label>
+                            <select id="odm_cf_1323" class="editable-field" data-hidden="odm_hidden_cf_1323">
+                                <option value="">--</option>
+                                <option value="Oui">Oui</option>
+                                <option value="Non">Non</option>
+                                <option value="À confirmer">À confirmer</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {* Bloc LIVRAISON *}
+            <div class="form-section section-livraison">
+                <div class="block-header header-livraison">
+                    <i class="fa fa-home"></i> LIVRAISON
+                </div>
+                <div class="block-content">
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Adresse livraison</label>
+                            <input type="text" id="odm_cf_1325" class="editable-field" data-hidden="odm_hidden_cf_1325">
+                        </div>
+                        <div class="form-group">
+                            <label>Ville livraison</label>
+                            <input type="text" id="odm_cf_1326" class="editable-field" data-hidden="odm_hidden_cf_1326">
+                        </div>
+                        <div class="form-group">
+                            <label>Code postal</label>
+                            <input type="text" id="odm_cf_1327" class="editable-field" data-hidden="odm_hidden_cf_1327">
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Type de logement</label>
+                            <select id="odm_cf_1328" class="editable-field" data-hidden="odm_hidden_cf_1328">
+                                <option value="">--</option>
+                                <option value="Maison">Maison</option>
+                                <option value="Appartement">Appartement</option>
+                                <option value="Box">Box</option>
+                                <option value="Bureau">Bureau</option>
+                                <option value="Entrepot">Entrepot</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Etage</label>
+                            <input type="text" id="odm_cf_1329" class="editable-field" data-hidden="odm_hidden_cf_1329">
+                        </div>
+                        <div class="form-group">
+                            <label>Ascenseur</label>
+                            <select id="odm_cf_1330" class="editable-field" data-hidden="odm_hidden_cf_1330">
+                                <option value="">--</option>
+                                <option value="OUI">OUI</option>
+                                <option value="NON">NON</option>
+                                <option value="PETIT">PETIT</option>
+                                <option value="GRAND">GRAND</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Escaliers</label>
+                            <select id="odm_cf_1331" class="editable-field" data-hidden="odm_hidden_cf_1331">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Transbordement</label>
+                            <select id="odm_cf_1332" class="editable-field" data-hidden="odm_hidden_cf_1332">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Distance portage</label>
+                            <input type="text" id="odm_cf_1333" class="editable-field" data-hidden="odm_hidden_cf_1333">
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Demande stationnement</label>
+                            <select id="odm_cf_1334" class="editable-field" data-hidden="odm_hidden_cf_1334">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Passage fenêtre</label>
+                            <select id="odm_cf_1335" class="editable-field" data-hidden="odm_hidden_cf_1335">
+                                <option value="0">Non</option>
+                                <option value="1">Oui</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monte meuble</label>
+                            <select id="odm_cf_1336" class="editable-field" data-hidden="odm_hidden_cf_1336">
+                                <option value="">--</option>
+                                <option value="Oui">Oui</option>
+                                <option value="Non">Non</option>
+                                <option value="À confirmer">À confirmer</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {* Section Tarification - Totaux après CHARGEMENT/LIVRAISON *}
+        <div class="form-section section-tarification">
+            <div class="totals-row">
+                <div class="total-box total-ht">
+                    <div class="total-label">Total HT</div>
+                    <div class="total-value" id="odm_montant_total_ht">0.00 €</div>
+                </div>
+                <div class="total-box total-ttc">
+                    <div class="total-label">Total TTC</div>
+                    <div class="total-value" id="odm_montant_total_ttc">0.00 €</div>
+                </div>
+                <div class="total-box total-acompte">
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Acompte <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                        <i id="odm_acompte_reset" class="fa fa-undo" title="Remettre le montant calculé" style="display:none;cursor:pointer;opacity:0.8;font-size:0.85em;" onclick="UnifiedODM.resetAcompte()"></i>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="odm_acompte_ttc" value="0" step="0.01" min="0" onwheel="this.blur()" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
+                </div>
+                <div class="total-box total-solde">
+                    <div class="total-label">Solde</div>
+                    <div class="total-value" id="odm_solde_ttc">0.00 €</div>
+                </div>
+                <div class="total-box total-prestataire">
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Mt Prestataire <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="odm_cf_1403" value="0" step="0.01" min="0" onwheel="this.blur()" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
+                </div>
+                <div class="total-box total-encaisser">
+                    <div class="total-label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        Mt Client <small style="opacity:0.7;font-size:0.7em;">✎</small>
+                    </div>
+                    <div class="total-value">
+                        <input type="number" id="odm_cf_1405" value="0" step="0.01" min="0" onwheel="this.blur()" style="width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);color:white;font-size:1.2em;font-weight:700;text-align:center;padding:2px 0;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {* Section Remise - Compact *}
+        <div class="form-section section-remise-compact">
+            <span class="remise-label"><i class="fa fa-tag"></i> Remise:</span>
+            <label class="remise-option">
+                <input type="radio" name="odm_remise_type" value="none" checked> Aucune
+            </label>
+            <label class="remise-option">
+                <input type="radio" name="odm_remise_type" value="percent"> %
+                <input type="number" id="odm_remise_percent" value="0" step="0.01" min="0" max="15" class="remise-input" disabled style="width:60px;">
+            </label>
+            <label class="remise-option">
+                <input type="radio" name="odm_remise_type" value="amount"> €
+                <input type="number" id="odm_remise_amount" value="0" step="0.01" min="0" class="remise-input" disabled style="width:80px;">
+            </label>
+            <span class="remise-display">→ <strong id="odm_remise_display">0.00 €</strong></span>
+        </div>
+
+        {* Section Forfait + Produits - En bas *}
+        <div class="forfait-products-row">
+            {* Left: Forfait *}
+            <div class="form-section section-forfait">
+                <div class="form-section-title title-purple">
+                    <i class="fa fa-truck"></i>
+                    Forfait
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Type formule</label>
+                        <select id="odm_cf_1186">
+                            <option value="">-- Select --</option>
+                            <option value="ECO">ECO</option>
+                            <option value="ECO PLUS">ECO PLUS</option>
+                            <option value="CONFORT">CONFORT</option>
+                            <option value="LUXE">LUXE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Forfait HT</label>
+                        <input type="number" id="odm_cf_1180" value="" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row-2" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Supplement</label>
+                        <input type="number" id="odm_cf_1182" value="" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Forfait TTC</label>
+                        <input type="number" id="odm_cf_1184" value="0" step="0.01" readonly style="background: #f0f0f0;">
+                    </div>
+                </div>
+            </div>
+
+            {* Right: Products *}
+            <div class="form-section section-products">
+                <div class="form-section-title title-green">
+                    <i class="fa fa-cubes"></i>
+                    Produits et services
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group" style="position: relative;">
+                        <label>Rechercher</label>
+                        <input type="text" id="odm_productSearch" placeholder="Ajouter un produit...">
+                        <div id="odm_productResults" style="position:absolute;background:white;border:2px solid #e0e0e0;border-radius:8px;margin-top:5px;max-height:250px;overflow-y:auto;display:none;z-index:100;box-shadow:0 4px 15px rgba(0,0,0,0.1);left:0;right:0;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Assurance</label>
+                        <select id="odm_cf_1170">
+                            <option value="">-- Select --</option>
+                            {for $i=4000 to 26000 step 1000}
+                            <option value="{$i}" {if $i == 4000}selected{/if}>{$i|number_format:0:',':' '} €</option>
+                            {/for}
+                        </select>
+                    </div>
+                </div>
+                <table id="odm_productsTable" class="data-table" style="display:none">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th style="width:80px">Qte</th>
+                            <th style="width:100px">PU</th>
+                            <th style="width:90px">Total</th>
+                            <th style="width:50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="odm_productsList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {* Section PDF Templates *}
+    {if $PDF_TEMPLATES|@count > 0}
+    <div class="form-section section-pdf" id="odmPdfSection" style="display:none;">
+        <div class="form-section-title title-red">
+            <i class="fa fa-file-pdf-o"></i>
+            Documents PDF à envoyer
+            <button type="button" class="btn btn-sm" onclick="UnifiedODM.toggleAllPdfTemplates()" style="margin-left: auto; padding: 4px 10px; font-size: 11px;background: #f8f9fa; color: #333; border: 2px solid #e0e0e0;">
+                <i class="fa fa-check-square-o"></i> Tout
+            </button>
+        </div>
+        <div class="pdf-templates-grid">
+            {foreach from=$PDF_TEMPLATES item=TEMPLATE}
+            <div class="pdf-template-item" onclick="UnifiedODM.togglePdfTemplate(this, {$TEMPLATE.id})">
+                <input type="checkbox" class="odm-pdf-template-checkbox" value="{$TEMPLATE.id}" data-name="{decode_html($TEMPLATE.name)}" style="display:none;">
+                <span class="pdf-template-name">{$TEMPLATE.name}</span>
+            </div>
+            {/foreach}
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
+            <input type="email" id="odm_pdfRecipientEmail" value="" placeholder="Email prestataire" style="flex: 1;">
+            <button type="button" class="btn btn-info" id="odm_btnSendMail" style="display:none;" onclick="UnifiedODM.sendMail()">
+                <i class="fa fa-envelope"></i> Envoyer mail
+            </button>
+        </div>
+    </div>
+    {/if}
+
+    {* Actions *}
+    <div class="actions-bar" id="odmActionsBar" style="display: none; gap: 10px; justify-content: center;">
+        <button type="button" class="btn btn-default" onclick="UnifiedODM.cancelEdit()">
+            <i class="fa fa-times"></i> Annuler
+        </button>
+        <button type="button" id="odm_btnSave" class="btn btn-success" onclick="UnifiedODM.saveBDC()">
+            <i class="fa fa-save"></i> <span id="odm_btnSaveText">Enregistrer ODM</span>
+        </button>
+    </div>
+</div>
+{/strip}
+
+<style>
+/* ODM Tab - Same styles as Devis Tab */
+.odm-tab-container {
+    padding: 0;
+}
+
+.odm-tab-container .form-section {
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.odm-tab-container .form-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.odm-tab-container .form-section-title.title-purple { color: #667eea; }
+.odm-tab-container .form-section-title.title-purple i { color: #667eea; }
+.odm-tab-container .form-section-title.title-green { color: #28a745; }
+.odm-tab-container .form-section-title.title-green i { color: #28a745; }
+.odm-tab-container .form-section-title.title-red { color: #e74c3c; }
+.odm-tab-container .form-section-title.title-red i { color: #e74c3c; }
+
+/* PDF Section */
+.odm-tab-container .section-pdf {
+    border-left: 3px solid #e74c3c;
+}
+
+.odm-tab-container .pdf-templates-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.odm-tab-container .pdf-template-item {
+    padding: 8px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f0f0f0;
+    border: 2px solid transparent;
+}
+
+.odm-tab-container .pdf-template-item:hover {
+    background: #e8e8e8;
+}
+
+.odm-tab-container .pdf-template-item.checked {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-color: #1e7e34;
+}
+
+.odm-tab-container #odm_pdfRecipientEmail {
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.odm-tab-container #odm_pdfRecipientEmail:focus {
+    border-color: #17a2b8;
+    outline: none;
+}
+
+.odm-tab-container .form-group {
+    margin-bottom: 8px;
+}
+
+.odm-tab-container .form-group label {
+    display: block;
+    font-size: 11px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #666;
+    font-weight: 600;
+}
+
+.odm-tab-container .form-group label .required {
+    color: #e74c3c;
+}
+
+.odm-tab-container .form-group input,
+.odm-tab-container .form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.odm-tab-container .form-group input:focus,
+.odm-tab-container .form-group select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+/* Grid layouts */
+.odm-tab-container .form-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.odm-tab-container .form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.odm-tab-container .form-row-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+/* Forfait + Products side by side */
+.odm-tab-container .forfait-products-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.odm-tab-container .forfait-products-row .form-section {
+    margin-bottom: 0;
+}
+
+.odm-tab-container .section-forfait {
+    border-left: 3px solid #667eea;
+}
+
+.odm-tab-container .section-products {
+    border-left: 3px solid #28a745;
+}
+
+.odm-tab-container .section-remise {
+    padding: 10px 15px;
+    background: #fef9e7;
+    border: 1px solid #f0e6c0;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+.odm-tab-container .section-remise-compact {
+    background: #fef9e7;
+    border: 1px solid #f0e6c0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.odm-tab-container .section-remise-compact .remise-label {
+    font-weight: 600;
+    color: #7d6608;
+    white-space: nowrap;
+}
+.odm-tab-container .section-remise-compact .remise-label i {
+    color: #d4ac0d;
+    margin-right: 4px;
+}
+.odm-tab-container .section-remise-compact .remise-display {
+    margin-left: auto;
+    font-size: 14px;
+    color: #e74c3c;
+    white-space: nowrap;
+}
+.odm-tab-container .section-remise-compact .remise-display strong {
+    font-size: 16px;
+}
+.odm-tab-container .remise-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.odm-tab-container .remise-label {
+    font-weight: 600;
+    color: #7d6608;
+    white-space: nowrap;
+}
+.odm-tab-container .remise-label i {
+    color: #d4ac0d;
+    margin-right: 4px;
+}
+.odm-tab-container .remise-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.odm-tab-container .remise-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.odm-tab-container .remise-input {
+    width: 80px;
+    padding: 4px 6px;
+    border: 1px solid #d5c87a;
+    border-radius: 6px;
+    font-size: 13px;
+    text-align: center;
+}
+.odm-tab-container .remise-input:disabled {
+    background: #f5f0d5;
+    opacity: 0.5;
+}
+.odm-tab-container .remise-unit {
+    font-size: 12px;
+    color: #7d6608;
+}
+.odm-tab-container .remise-result {
+    margin-left: auto;
+    font-size: 14px;
+    color: #e74c3c;
+    white-space: nowrap;
+}
+.odm-tab-container .remise-result strong {
+    font-size: 16px;
+}
+
+.odm-tab-container .remise-options {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.odm-tab-container .remise-display {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #e74c3c;
+}
+
+.odm-tab-container .remise-display strong {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.odm-tab-container .section-tarification {
+    border-top: 3px solid #e67e22;
+}
+
+/* Totals row */
+.odm-tab-container .totals-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.odm-tab-container .total-box {
+    flex: 1;
+    min-width: 100px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.odm-tab-container .total-box .total-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+.odm-tab-container .total-box .total-value {
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+.odm-tab-container .total-box.total-ht {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.odm-tab-container .total-box.total-ttc {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+}
+
+.odm-tab-container .total-box.total-acompte {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+}
+
+#odm_acompte_ttc::-webkit-inner-spin-button,
+#odm_acompte_ttc::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#odm_acompte_ttc[type=number] { -moz-appearance: textfield; }
+#odm_acompte_ttc:focus { outline: none; border-bottom-color: rgba(255,255,255,0.9) !important; }
+
+.odm-tab-container .total-box.total-solde {
+    background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+    color: white;
+}
+
+.odm-tab-container .total-box.total-prestataire {
+    background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+    color: white;
+}
+
+#odm_cf_1403::-webkit-inner-spin-button,
+#odm_cf_1403::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#odm_cf_1403[type=number] { -moz-appearance: textfield; }
+#odm_cf_1403:focus { outline: none; border-bottom-color: rgba(255,255,255,0.9) !important; }
+
+.odm-tab-container .total-box.total-encaisser {
+    background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+    color: white;
+}
+
+#odm_cf_1405::-webkit-inner-spin-button,
+#odm_cf_1405::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#odm_cf_1405[type=number] { -moz-appearance: textfield; }
+#odm_cf_1405:focus { outline: none; border-bottom-color: rgba(255,255,255,0.9) !important; }
+
+/* Devis et BDC sur 2 colonnes */
+.odm-tab-container .quotes-bdc-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.odm-tab-container .quotes-column,
+.odm-tab-container .bdc-column {
+    min-width: 0;
+}
+
+.odm-tab-container .quotes-column .quotes-bar,
+.odm-tab-container .bdc-column .odm-bar {
+    margin-bottom: 0;
+    height: 100%;
+}
+
+.odm-tab-container .no-bdc-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 8px;
+    color: #1976d2;
+    border: 1px solid #90caf9;
+    height: 100%;
+}
+
+.odm-tab-container .no-bdc-bar i {
+    font-size: 1.2em;
+}
+
+/* Section Info + Dates + Volumes sur une ligne */
+.odm-tab-container .section-info-dates-volumes {
+    border-top: 3px solid #17a2b8;
+    padding: 10px 12px;
+}
+
+.odm-tab-container .info-dates-volumes-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.odm-tab-container .inline-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.odm-tab-container .inline-field label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #666;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.odm-tab-container .inline-field label i {
+    color: #17a2b8;
+    margin-right: 2px;
+}
+
+.odm-tab-container .inline-field input,
+.odm-tab-container .inline-field select {
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.odm-tab-container .inline-field input:focus,
+.odm-tab-container .inline-field select:focus {
+    border-color: #17a2b8;
+    outline: none;
+}
+
+.odm-tab-container .inline-separator {
+    width: 1px;
+    height: 35px;
+    background: #e0e0e0;
+    margin: 0 5px;
+}
+
+.odm-tab-container .inline-metric {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f8f9fa;
+    padding: 6px 10px;
+    border-radius: 15px;
+    border: 1px solid #e0e0e0;
+}
+
+.odm-tab-container .inline-metric i {
+    color: #17a2b8;
+    font-size: 12px;
+}
+
+.odm-tab-container .inline-metric .metric-input {
+    width: 45px;
+    padding: 3px 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    background: white;
+}
+
+.odm-tab-container .inline-metric .metric-unit {
+    font-size: 10px;
+    color: #999;
+}
+
+/* ODM chips bar */
+.odm-tab-container .odm-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #17a2b8;
+    flex-wrap: wrap;
+}
+
+.odm-tab-container .odm-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #17a2b8;
+    white-space: nowrap;
+}
+
+.odm-tab-container .odm-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.odm-tab-container .odm-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px 7px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+    text-align: center;
+}
+
+.odm-tab-container .odm-chip:hover {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.odm-tab-container .odm-chip.selected {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    border-color: #0d6b7a;
+}
+
+.odm-tab-container .odm-chip.approved {
+    border: 3px solid #28a745;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.4);
+}
+
+/* Quotes chips for creating BDC */
+.odm-tab-container .quotes-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #27ae60;
+    flex-wrap: wrap;
+}
+
+.odm-tab-container .quotes-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #27ae60;
+    white-space: nowrap;
+}
+
+.odm-tab-container .quotes-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.odm-tab-container .quote-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px 7px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #27ae60;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+    text-align: center;
+}
+
+.odm-tab-container .quote-chip:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #20c997 100%);
+    color: white;
+}
+
+.odm-tab-container .quote-chip.validated {
+    border: 3px solid #28a745;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.4);
+}
+
+.odm-tab-container .quote-chip .chip-line1,
+.odm-tab-container .quote-chip .chip-line2,
+.odm-tab-container .odm-chip .chip-line1,
+.odm-tab-container .odm-chip .chip-line2 {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+}
+
+.odm-tab-container .quote-chip .chip-line1,
+.odm-tab-container .odm-chip .chip-line1 {
+    font-weight: 600;
+}
+
+.odm-tab-container .quote-chip .chip-line2,
+.odm-tab-container .odm-chip .chip-line2 {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.odm-tab-container .chip-sep {
+    opacity: 0.5;
+}
+
+.odm-tab-container .chip-formule {
+    font-weight: 500;
+}
+
+.odm-tab-container .chip-total {
+    font-weight: 600;
+}
+
+/* No quotes bar */
+.odm-tab-container .no-quotes-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 8px;
+    color: #856404;
+    border: 1px solid #ffc107;
+    height: 100%;
+}
+
+.odm-tab-container .no-quotes-bar i {
+    font-size: 1.2em;
+}
+
+/* Actions bar */
+.odm-tab-container .actions-bar {
+    display: flex;
+    padding: 15px;
+    margin-top: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.odm-tab-container .actions-bar .btn {
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+/* Products table */
+.odm-tab-container .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.odm-tab-container .data-table th,
+.odm-tab-container .data-table td {
+    padding: 8px 10px;
+    font-size: 13px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.odm-tab-container .data-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+.odm-tab-container .data-table td input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.odm-tab-container .data-table .btn-remove {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.odm-tab-container .data-table .btn-remove:hover {
+    background: #c0392b;
+}
+
+/* Section Dates et Volumes */
+.odm-tab-container .section-dates-volumes {
+    border-top: 3px solid #17a2b8;
+    padding: 8px 12px;
+}
+
+.odm-tab-container .dates-volumes-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.odm-tab-container .date-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.odm-tab-container .date-group i {
+    color: #17a2b8;
+}
+
+.odm-tab-container .date-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+}
+
+.odm-tab-container .date-type-badge {
+    background: #17a2b8;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.odm-tab-container .date-input {
+    padding: 5px 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #f8f9fa;
+    width: 130px;
+}
+
+.odm-tab-container .metrics-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.odm-tab-container .metric-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f8f9fa;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+.odm-tab-container .metric-item i {
+    color: #17a2b8;
+}
+
+.odm-tab-container .metric-label {
+    font-size: 11px;
+    color: #666;
+}
+
+.odm-tab-container .metric-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+}
+
+.odm-tab-container .metric-unit {
+    font-size: 11px;
+    color: #999;
+}
+
+.odm-tab-container .metric-input {
+    width: 50px;
+    padding: 2px 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    background: white;
+}
+
+.odm-tab-container .metric-input:focus {
+    border-color: #17a2b8;
+    outline: none;
+}
+
+.odm-tab-container .editable-metric {
+    background: white;
+}
+
+/* Chargement et Livraison côte à côte */
+.odm-tab-container .chargement-livraison-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.odm-tab-container .section-chargement,
+.odm-tab-container .section-livraison {
+    padding: 0;
+    overflow: hidden;
+}
+
+.odm-tab-container .block-header {
+    padding: 10px 15px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.odm-tab-container .header-chargement {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.odm-tab-container .header-livraison {
+    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+}
+
+.odm-tab-container .block-content {
+    padding: 12px;
+}
+
+.odm-tab-container .section-chargement .form-group input,
+.odm-tab-container .section-livraison .form-group input {
+    background: #f8f9fa;
+    font-size: 12px;
+    padding: 6px 8px;
+}
+
+.odm-tab-container .section-chargement .form-group label,
+.odm-tab-container .section-livraison .form-group label {
+    font-size: 10px;
+    margin-bottom: 3px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .odm-tab-container .info-dates-volumes-bar {
+        gap: 8px;
+    }
+    .odm-tab-container .inline-field input,
+    .odm-tab-container .inline-field select {
+        font-size: 11px;
+        padding: 5px 6px;
+    }
+}
+
+@media (max-width: 992px) {
+    .odm-tab-container .form-row-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .odm-tab-container .forfait-products-row {
+        grid-template-columns: 1fr;
+    }
+    .odm-tab-container .section-products {
+        border-left: none;
+        border-top: 3px solid #28a745;
+    }
+    .odm-tab-container .chargement-livraison-row {
+        grid-template-columns: 1fr;
+    }
+    .odm-tab-container .quotes-bdc-row {
+        grid-template-columns: 1fr;
+    }
+    .odm-tab-container .info-dates-volumes-bar {
+        flex-wrap: wrap;
+    }
+    .odm-tab-container .inline-separator {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .odm-tab-container .form-row-4,
+    .odm-tab-container .form-row-3,
+    .odm-tab-container .form-row-2 {
+        grid-template-columns: 1fr;
+    }
+    .odm-tab-container .totals-row {
+        flex-direction: column;
+    }
+    .odm-tab-container .info-dates-volumes-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px !important;
+        padding: 8px !important;
+    }
+
+    .odm-tab-container .quotes-bar,
+    .odm-tab-container .odm-bar {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .odm-tab-container .quotes-label,
+    .odm-tab-container .odm-label {
+        font-size: 12px !important;
+    }
+
+    .odm-tab-container .quote-chip,
+    .odm-tab-container .odm-chip {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
+
+    .odm-tab-container .no-quotes-bar,
+    .odm-tab-container .no-bdc-bar {
+        padding: 10px !important;
+        font-size: 12px !important;
+    }
+
+    .odm-tab-container .actions-bar {
+        padding: 10px !important;
+        margin-top: 10px !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .odm-tab-container .actions-bar .btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        flex: 1 1 auto !important;
+        min-width: 120px !important;
+    }
+
+    .odm-tab-container .inline-field label {
+        font-size: 11px !important;
+    }
+
+    .odm-tab-container .inline-field input,
+    .odm-tab-container .inline-field select {
+        font-size: 12px !important;
+        padding: 6px 8px !important;
+    }
+}
+
+/* PDF Preview Modal (ODM) */
+#odmPdfPreviewModal .modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+}
+#odmPdfPreviewModal .modal-header {
+    border-bottom: none;
+    padding: 16px 24px;
+}
+#odmPdfPreviewModal .modal-header .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+#odmPdfPreviewModal .modal-header .modal-title .fa { margin-right: 10px; opacity: 0.9; }
+#odmPdfPreviewModal .modal-header .close { font-size: 28px; text-shadow: none; margin-top: -2px; }
+#odmPdfPreviewModal .pdf-tpl-sidebar {
+    background: linear-gradient(180deg, #f8f9fb 0%, #f1f3f6 100%) !important;
+    border-right: 1px solid #e2e6ea !important;
+}
+#odmPdfPreviewModal .pdf-tpl-sidebar-title {
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    color: #9aa0a8 !important;
+    letter-spacing: 1.2px !important;
+    font-weight: 700 !important;
+    padding: 12px 18px 8px !important;
+    margin-bottom: 4px;
+}
+#odmPdfPreviewModal .pdf-tpl-item {
+    padding: 11px 18px;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: #5a6370;
+    border-left: 3px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 2px 8px 2px 0;
+    border-radius: 0 8px 8px 0;
+    line-height: 1.4;
+}
+#odmPdfPreviewModal .pdf-tpl-item:hover {
+    background: rgba(52, 152, 219, 0.08);
+    color: #2c3e50;
+    border-left-color: #bdc3c7;
+}
+#odmPdfPreviewModal .pdf-tpl-item.active {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.12) 0%, rgba(41, 128, 185, 0.08) 100%);
+    border-left-color: #3498db;
+    color: #1a6fb5;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(52, 152, 219, 0.15);
+}
+#odmPdfPreviewModal .pdf-tpl-item .fa { margin-right: 10px; color: #e74c3c; font-size: 13px; opacity: 0.8; }
+#odmPdfPreviewModal .pdf-tpl-item.active .fa { opacity: 1; }
+#odmPdfPreviewModal .modal-body { background: #e8eaed; }
+#odmPdfPreviewModal .modal-footer {
+    border-top: 1px solid #e9ecef;
+    background: #fafbfc;
+    padding: 12px 24px !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+#odmPdfPreviewModal .modal-footer .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s ease;
+}
+#odmPdfPreviewModal .modal-footer .btn-info {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+#odmPdfPreviewModal .modal-footer .btn-info:hover {
+    box-shadow: 0 4px 14px rgba(52, 152, 219, 0.45);
+    transform: translateY(-1px);
+}
+#odmPdfPreviewModal .modal-footer .btn-default {
+    background: white;
+    color: #5a6370;
+    border: 1px solid #dde1e5;
+}
+#odmPdfPreviewModal .modal-footer .btn-default:hover {
+    background: #f0f2f5;
+    color: #2c3e50;
+}
+#odmPdfPreviewModal #odmPdfPreviewLoading {
+    background: rgba(232, 234, 237, 0.85);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: absolute;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+#odmPdfPreviewModal #odmPdfPreviewLoading .fa-spinner { color: #3498db; }
+#odmPdfPreviewModal #odmPdfPreviewLoading p { color: #7f8c9b; font-size: 13px; font-weight: 500; }
+
+/* ODM Send Email Modal */
+#odmSendEmailModal .modal-content { border-radius: 12px; overflow: hidden; }
+#odmSendEmailModal .modal-header { background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); color: white; border-bottom: none; }
+#odmSendEmailModal .modal-header .close { color: white; opacity: 0.8; }
+#odmSendEmailModal .modal-footer { background: #f8f9fa; border-top: 1px solid #e0e0e0; }
+#odmSendEmailModal .odm-email-form .form-group { margin-bottom: 12px; }
+#odmSendEmailModal .odm-email-form .form-group label { font-weight: 600; font-size: 13px; color: #333; margin-bottom: 4px; display: block; }
+#odmSendEmailModal .odm-email-form .form-group input,
+#odmSendEmailModal .odm-email-form .form-group select { width: 100%; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 13px; }
+#odmSendEmailModal .odm-email-form .form-group input:focus,
+#odmSendEmailModal .odm-email-form .form-group select:focus { border-color: #e91e63; outline: none; box-shadow: 0 0 0 3px rgba(233,30,99,0.1); }
+#odmSendEmailModal .odm-pdf-att-box label { display: block; padding: 6px 10px; margin: 3px 0; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+#odmSendEmailModal .odm-pdf-att-box label:hover { background: #f8f9fa; }
+#odmSendEmailModal .odm-pdf-att-box label input { margin-right: 6px; accent-color: #e91e63; }
+#odmSendEmailModal .odm-email-preview { border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+#odmSendEmailModal .odm-email-preview-subject { padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; font-size: 13px; font-weight: 600; }
+#odmSendEmailModal .odm-email-preview-subject input { width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; }
+#odmSendEmailModal .odm-email-preview-body { min-height: 200px; }
+#odmSendEmailModal .odm-email-preview-body [contenteditable] { padding: 12px; font-size: 13px; min-height: 200px; outline: none; }
+</style>
+
+{* Modal Envoi Email BDC *}
+<div class="modal fade" id="odmSendEmailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-envelope"></i> Envoyer un Email - BDC</h4>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="odm-email-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Email destinataire <span style="color:#e74c3c;">*</span></label>
+                            <input type="email" id="odmEmailTo" placeholder="client@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>CC</label>
+                            <input type="email" id="odmEmailCc" placeholder="cc@example.com">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Template Email <span style="color:#e74c3c;">*</span></label>
+                            <select id="odmEmailTemplate">
+                                <option value="">-- Choisir un template --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa fa-paperclip"></i> PDFs à joindre</label>
+                            <div id="odmEmailPdfList" class="odm-pdf-att-box" style="max-height:120px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:8px;padding:4px;">
+                                <p class="text-muted" style="margin:6px;font-size:12px;">Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="odmEmailPreviewField" style="display:none;">
+                        <label style="font-weight:600;font-size:13px;color:#333;margin-bottom:6px;display:block;">Aperçu</label>
+                        <div class="odm-email-preview">
+                            <div class="odm-email-preview-subject">
+                                <input type="text" id="odmEmailPreviewSubject" placeholder="Objet">
+                            </div>
+                            <div class="odm-email-preview-body">
+                                <div id="odmEmailPreviewBody" contenteditable="true"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="odmEmailSendBtn" disabled>
+                    <i class="fa fa-send"></i> Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var odmAllProducts = {$PRODUCTS_JSON|default:'[]'};
+var odmPotentialId = {$POTENTIAL_ID};
+var odmContactId = {$CONTACT_ID|default:0};
+var odmCsrfToken = '{$CSRF_TOKEN}';
+var odmPdfTemplates = [
+{foreach from=$PDF_TEMPLATES item=TPL name=tplLoop}
+    {ldelim}id: {$TPL.id}, name: '{$TPL.name|escape:'javascript'}'{rdelim}{if !$smarty.foreach.tplLoop.last},{/if}
+{/foreach}
+];
+
+// Données du Potential pour CHARGEMENT/LIVRAISON
+var odmPotentialData = {
+    // Dates
+    cf_1043: '{$POTENTIAL_DATA.cf_1043|escape:'javascript'}',
+    cf_1045: '{$POTENTIAL_DATA.cf_1045|escape:'javascript'}',
+    cf_1047: '{$POTENTIAL_DATA.cf_1047|escape:'javascript'}',
+    cf_1049: '{$POTENTIAL_DATA.cf_1049|escape:'javascript'}',
+    // Volume et Distance
+    cf_961: '{$POTENTIAL_DATA.cf_961|escape:'javascript'}',
+    cf_939: '{$POTENTIAL_DATA.cf_939|escape:'javascript'}',
+    cf_1259: '{$POTENTIAL_DATA.cf_1259|escape:'javascript'}',
+    // CHARGEMENT
+    cf_955: '{$POTENTIAL_DATA.cf_955|escape:'javascript'}',
+    cf_933: '{$POTENTIAL_DATA.cf_933|escape:'javascript'}',
+    cf_935: '{$POTENTIAL_DATA.cf_935|escape:'javascript'}',
+    cf_1097: '{$POTENTIAL_DATA.cf_1097|escape:'javascript'}',
+    cf_1011: '{$POTENTIAL_DATA.cf_1011|escape:'javascript'}',
+    cf_1075: '{$POTENTIAL_DATA.cf_1075|escape:'javascript'}',
+    cf_1019: '{$POTENTIAL_DATA.cf_1019|escape:'javascript'}',
+    cf_1067: '{$POTENTIAL_DATA.cf_1067|escape:'javascript'}',
+    cf_1023: '{$POTENTIAL_DATA.cf_1023|escape:'javascript'}',
+    cf_1091: '{$POTENTIAL_DATA.cf_1091|escape:'javascript'}',
+    cf_1071: '{$POTENTIAL_DATA.cf_1071|escape:'javascript'}',
+    cf_1035: '{$POTENTIAL_DATA.cf_1035|escape:'javascript'}',
+    // LIVRAISON
+    cf_957: '{$POTENTIAL_DATA.cf_957|escape:'javascript'}',
+    cf_949: '{$POTENTIAL_DATA.cf_949|escape:'javascript'}',
+    cf_951: '{$POTENTIAL_DATA.cf_951|escape:'javascript'}',
+    cf_1009: '{$POTENTIAL_DATA.cf_1009|escape:'javascript'}',
+    cf_1013: '{$POTENTIAL_DATA.cf_1013|escape:'javascript'}',
+    cf_1077: '{$POTENTIAL_DATA.cf_1077|escape:'javascript'}',
+    cf_1021: '{$POTENTIAL_DATA.cf_1021|escape:'javascript'}',
+    cf_1069: '{$POTENTIAL_DATA.cf_1069|escape:'javascript'}',
+    cf_1025: '{$POTENTIAL_DATA.cf_1025|escape:'javascript'}',
+    cf_1089: '{$POTENTIAL_DATA.cf_1089|escape:'javascript'}',
+    cf_1073: '{$POTENTIAL_DATA.cf_1073|escape:'javascript'}',
+    cf_1037: '{$POTENTIAL_DATA.cf_1037|escape:'javascript'}'
+};
+
+// Initialiser les champs CHARGEMENT/LIVRAISON au chargement
+jQuery(document).ready(function() {
+    // Dates
+    jQuery('#odm_cf_1309').val(odmPotentialData.cf_1043);
+    jQuery('#odm_cf_1324').val(odmPotentialData.cf_1049);
+
+    // Déterminer le type de date
+    if (odmPotentialData.cf_1045 && odmPotentialData.cf_1047) {
+        jQuery('#odm_date_type').text('Période').css('background', '#f39c12');
+    } else {
+        jQuery('#odm_date_type').text('Date fixe').css('background', '#17a2b8');
+    }
+
+    // Volumes et Distance (editable inputs)
+    jQuery('#odm_cf_1350_input').val(odmPotentialData.cf_961 || '');
+    jQuery('#odm_cf_1351_input').val(odmPotentialData.cf_939 || '');
+    jQuery('#odm_cf_1349_input').val(odmPotentialData.cf_1259 || '');
+
+    // CHARGEMENT - Text fields
+    jQuery('#odm_cf_1312').val(odmPotentialData.cf_955);
+    jQuery('#odm_cf_1313').val(odmPotentialData.cf_933);
+    jQuery('#odm_cf_1314').val(odmPotentialData.cf_935);
+    jQuery('#odm_cf_1316').val(odmPotentialData.cf_1011);
+    jQuery('#odm_cf_1320').val(odmPotentialData.cf_1023);
+
+    // CHARGEMENT - Selects
+    jQuery('#odm_cf_1315').val(odmPotentialData.cf_1097);
+    jQuery('#odm_cf_1317').val(odmPotentialData.cf_1075);
+    jQuery('#odm_cf_1318').val(odmPotentialData.cf_1019 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1319').val(odmPotentialData.cf_1067 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1321').val(odmPotentialData.cf_1091 == 'Oui' ? '1' : '0');
+    jQuery('#odm_cf_1322').val(odmPotentialData.cf_1071 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1323').val(odmPotentialData.cf_1035);
+
+    // LIVRAISON - Text fields
+    jQuery('#odm_cf_1325').val(odmPotentialData.cf_957);
+    jQuery('#odm_cf_1326').val(odmPotentialData.cf_949);
+    jQuery('#odm_cf_1327').val(odmPotentialData.cf_951);
+    jQuery('#odm_cf_1329').val(odmPotentialData.cf_1013);
+    jQuery('#odm_cf_1333').val(odmPotentialData.cf_1025);
+
+    // LIVRAISON - Selects
+    jQuery('#odm_cf_1328').val(odmPotentialData.cf_1009);
+    jQuery('#odm_cf_1330').val(odmPotentialData.cf_1077);
+    jQuery('#odm_cf_1331').val(odmPotentialData.cf_1021 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1332').val(odmPotentialData.cf_1069 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1334').val(odmPotentialData.cf_1089 == 'Oui' ? '1' : '0');
+    jQuery('#odm_cf_1335').val(odmPotentialData.cf_1073 == '1' ? '1' : '0');
+    jQuery('#odm_cf_1336').val(odmPotentialData.cf_1037);
+
+    // Remplir les champs cachés avec les valeurs initiales
+    jQuery('#odm_hidden_cf_1309').val(odmPotentialData.cf_1043);
+    jQuery('#odm_hidden_cf_1310').val(odmPotentialData.cf_1045);
+    jQuery('#odm_hidden_cf_1311').val(odmPotentialData.cf_1047);
+    jQuery('#odm_hidden_cf_1312').val(odmPotentialData.cf_955);
+    jQuery('#odm_hidden_cf_1313').val(odmPotentialData.cf_933);
+    jQuery('#odm_hidden_cf_1314').val(odmPotentialData.cf_935);
+    jQuery('#odm_hidden_cf_1315').val(odmPotentialData.cf_1097);
+    jQuery('#odm_hidden_cf_1316').val(odmPotentialData.cf_1011);
+    jQuery('#odm_hidden_cf_1317').val(odmPotentialData.cf_1075);
+    jQuery('#odm_hidden_cf_1318').val(odmPotentialData.cf_1019 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1319').val(odmPotentialData.cf_1067 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1320').val(odmPotentialData.cf_1023);
+    jQuery('#odm_hidden_cf_1321').val(odmPotentialData.cf_1091 == 'Oui' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1322').val(odmPotentialData.cf_1071 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1323').val(odmPotentialData.cf_1035);
+    jQuery('#odm_hidden_cf_1324').val(odmPotentialData.cf_1049);
+    jQuery('#odm_hidden_cf_1325').val(odmPotentialData.cf_957);
+    jQuery('#odm_hidden_cf_1326').val(odmPotentialData.cf_949);
+    jQuery('#odm_hidden_cf_1327').val(odmPotentialData.cf_951);
+    jQuery('#odm_hidden_cf_1328').val(odmPotentialData.cf_1009);
+    jQuery('#odm_hidden_cf_1329').val(odmPotentialData.cf_1013);
+    jQuery('#odm_hidden_cf_1330').val(odmPotentialData.cf_1077);
+    jQuery('#odm_hidden_cf_1331').val(odmPotentialData.cf_1021 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1332').val(odmPotentialData.cf_1069 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1333').val(odmPotentialData.cf_1025);
+    jQuery('#odm_hidden_cf_1334').val(odmPotentialData.cf_1089 == 'Oui' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1335').val(odmPotentialData.cf_1073 == '1' ? '1' : '0');
+    jQuery('#odm_hidden_cf_1336').val(odmPotentialData.cf_1037);
+    jQuery('#odm_hidden_cf_1349').val(odmPotentialData.cf_1259);
+    jQuery('#odm_hidden_cf_1350').val(odmPotentialData.cf_961);
+    jQuery('#odm_hidden_cf_1351').val(odmPotentialData.cf_939);
+
+    // Synchroniser les champs éditables avec les champs cachés lors des modifications
+    jQuery('.editable-field').on('change input', function() {
+        var hiddenId = jQuery(this).data('hidden');
+        if (hiddenId) {
+            jQuery('#' + hiddenId).val(jQuery(this).val());
+        }
+    });
+
+    // === Remise Logic ===
+    // Activer/désactiver les champs de remise selon le type sélectionné
+    jQuery('input[name="odm_remise_type"]').on('change', function() {
+        var type = jQuery(this).val();
+        jQuery('#odm_remise_percent, #odm_remise_amount').prop('disabled', true).val(0);
+        if (type === 'percent') {
+            jQuery('#odm_remise_percent').prop('disabled', false);
+        } else if (type === 'amount') {
+            jQuery('#odm_remise_amount').prop('disabled', false);
+        }
+        if (window.UnifiedODM && typeof UnifiedODM.calculateTotals === 'function') {
+            UnifiedODM.calculateTotals();
+        }
+    });
+
+    jQuery('#odm_remise_percent, #odm_remise_amount').on('blur', function() {
+        if (window.UnifiedODM && typeof UnifiedODM.calculateTotals === 'function') {
+            UnifiedODM.calculateTotals();
+        }
+    });
+
+    // === ODM Send Email Logic ===
+
+    // Template change → load preview
+    jQuery('#odmEmailTemplate').on('change', function() {
+        var templateId = jQuery(this).val();
+        var soId = jQuery('#odm_selectedSOId').val();
+        if (!templateId || !soId) {
+            jQuery('#odmEmailPreviewField').hide();
+            jQuery('#odmEmailSendBtn').prop('disabled', true);
+            return;
+        }
+        jQuery('#odmEmailPreviewBody').html('<div style="text-align:center;padding:30px;color:#999;"><i class="fa fa-spinner fa-spin"></i> Chargement...</div>');
+        jQuery('#odmEmailPreviewField').show();
+        jQuery.ajax({
+            url: 'index.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { module: 'Potentials', action: 'PreviewEmailTemplate', record: odmPotentialId, email_template: templateId, salesorder_id: soId },
+            success: function(response) {
+                var data = response.result || response;
+                if (data.subject) jQuery('#odmEmailPreviewSubject').val(data.subject);
+                if (data.body) {
+                    jQuery('#odmEmailPreviewBody').html(data.body);
+                }
+                jQuery('#odmEmailSendBtn').prop('disabled', false);
+            },
+            error: function() {
+                jQuery('#odmEmailPreviewBody').html('<div style="color:#e74c3c;padding:10px;">Erreur de chargement</div>');
+            }
+        });
+    });
+
+    // Send email
+    jQuery('#odmEmailSendBtn').on('click', function() {
+        var toEmail = jQuery('#odmEmailTo').val();
+        var ccEmail = jQuery('#odmEmailCc').val();
+        var templateId = jQuery('#odmEmailTemplate').val();
+        var soId = jQuery('#odm_selectedSOId').val();
+        if (!toEmail) { alert('Veuillez saisir une adresse email'); return; }
+        if (!templateId) { alert('Veuillez sélectionner un template email'); return; }
+
+        var pdfTemplates = [];
+        jQuery('#odmEmailPdfList input:checked').each(function() { pdfTemplates.push(jQuery(this).val()); });
+
+        var customSubject = jQuery('#odmEmailPreviewSubject').val();
+        var customBody = jQuery('#odmEmailPreviewBody').html();
+
+        var $btn = jQuery(this);
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Envoi...');
+
+        jQuery.ajax({
+            url: 'index.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                module: 'Potentials',
+                action: 'SendEmail',
+                record: odmPotentialId,
+                email: toEmail,
+                cc: ccEmail,
+                email_template: templateId,
+                pdf_templates: pdfTemplates,
+                salesorder_id: soId,
+                custom_subject: customSubject,
+                custom_body: customBody
+            },
+            success: function(response) {
+                var data = response.result || response;
+                if (data.success) {
+                    jQuery('#odmSendEmailModal').modal('hide');
+                    alert('Email envoyé avec succès !');
+                } else {
+                    alert('Erreur: ' + (data.error || "Impossible d'envoyer l'email"));
+                }
+            },
+            error: function() {
+                alert("Erreur lors de l'envoi de l'email");
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html('<i class="fa fa-send"></i> Envoyer');
+            }
+        });
+    });
+
+    // Reset modal on open
+    jQuery('#odmSendEmailModal').on('show.bs.modal', function() {
+        jQuery('#odmEmailPreviewField').hide();
+        jQuery('#odmEmailPreviewBody').html('');
+        jQuery('#odmEmailPreviewSubject').val('');
+        jQuery('#odmEmailTemplate').val('');
+        jQuery('#odmEmailSendBtn').prop('disabled', true);
+    });
+});
+</script>

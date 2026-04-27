@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Leads - CNK Déménagement</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: #333;
+            background: #fff;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 40px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #e8f4fc; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: #c7254e;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .info-box {
+            background: #e8f4fc;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-box strong {
+            color: #2980b9;
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 40px 0;
+        }
+        .api-key {
+            background: #2d2d2d;
+            color: #f39c12;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        @media print {
+            body { padding: 20px; }
+            pre { white-space: pre-wrap; }
+            h2 { page-break-before: auto; }
+        }
+    </style>
+</head>
+<body>
+    <h1>API Création de Leads - CNK Déménagement</h1>
+
+    <div class="info-box">
+        <h3 style="margin-top:0;">Informations de connexion</h3>
+        <p><strong>URL :</strong> <code>https://crm.cnkdem.com/api_create_lead.php</code></p>
+        <p><strong>Méthode :</strong> <code>POST</code></p>
+        <p><strong>Clé API :</strong></p>
+        <div class="api-key">5b7371c8da6d17e52e3f92994da8553dd9c8006927eb725f296c930483724c4f</div>
+    </div>
+
+    <h2>Authentification</h2>
+    <p>La clé API doit être envoyée de l'une des manières suivantes :</p>
+    <ul>
+        <li><strong>Header HTTP</strong> (recommandé) : <code>X-API-Key: VOTRE_CLE_API</code></li>
+        <li><strong>Paramètre URL</strong> : <code>?api_key=VOTRE_CLE_API</code></li>
+    </ul>
+
+    <h2>Format des données</h2>
+    <p>L'API accepte deux formats :</p>
+    <ul>
+        <li><code>application/json</code> (recommandé)</li>
+        <li><code>application/x-www-form-urlencoded</code></li>
+    </ul>
+
+    <hr>
+
+    <h2>Champs supportés</h2>
+
+    <h3>Contact (informations de base)</h3>
+    <table>
+        <tr><th>Champ</th><th>Alias acceptés</th><th>Requis</th><th>Description</th></tr>
+        <tr><td>Nom</td><td><code>lastname</code>, <code>nom</code></td><td><strong>Oui</strong></td><td>Nom de famille</td></tr>
+        <tr><td>Prénom</td><td><code>firstname</code>, <code>prenom</code></td><td>Non</td><td>Prénom</td></tr>
+        <tr><td>Email</td><td><code>email</code>, <code>mail</code></td><td>Non</td><td>Adresse email</td></tr>
+        <tr><td>Téléphone</td><td><code>phone</code>, <code>telephone</code>, <code>tel</code></td><td>Non</td><td>Téléphone fixe</td></tr>
+        <tr><td>Mobile</td><td><code>mobile</code>, <code>portable</code></td><td>Non</td><td>Téléphone mobile</td></tr>
+        <tr><td>Société</td><td><code>company</code>, <code>societe</code>, <code>entreprise</code></td><td>Non</td><td>Nom de l'entreprise</td></tr>
+    </table>
+
+    <h3>Adresse de départ</h3>
+    <table>
+        <tr><th>Champ</th><th>Alias acceptés</th><th>Description</th></tr>
+        <tr><td>Adresse</td><td><code>address</code>, <code>adresse</code>, <code>adresse_depart</code></td><td>Rue et numéro</td></tr>
+        <tr><td>Ville</td><td><code>city</code>, <code>ville</code>, <code>ville_depart</code></td><td>Ville de départ</td></tr>
+        <tr><td>Code postal</td><td><code>postalcode</code>, <code>code_postal</code>, <code>cp</code>, <code>cp_depart</code></td><td>Code postal</td></tr>
+        <tr><td>Pays</td><td><code>country</code>, <code>pays</code></td><td>Pays (défaut: France)</td></tr>
+    </table>
+
+    <h3>Adresse d'arrivée</h3>
+    <table>
+        <tr><th>Champ</th><th>Alias acceptés</th><th>Description</th></tr>
+        <tr><td>Adresse arrivée</td><td><code>adresse_arrivee</code>, <code>adresse_livraison</code></td><td>Rue d'arrivée</td></tr>
+        <tr><td>Ville arrivée</td><td><code>ville_arrivee</code></td><td>Ville de destination</td></tr>
+        <tr><td>Code postal arrivée</td><td><code>cp_arrivee</code>, <code>code_postal_arrivee</code></td><td>CP de destination</td></tr>
+        <tr><td>Département arrivée</td><td><code>departement_arrivee</code>, <code>dept_arrivee</code></td><td>Département (ex: 69)</td></tr>
+    </table>
+
+    <h3>Informations déménagement</h3>
+    <table>
+        <tr><th>Champ</th><th>Alias acceptés</th><th>Format</th><th>Description</th></tr>
+        <tr><td>Date déménagement</td><td><code>date_demenagement</code>, <code>date_souhaitee</code></td><td>YYYY-MM-DD</td><td>Date souhaitée</td></tr>
+        <tr><td>Volume</td><td><code>volume</code></td><td>-</td><td>Volume en m³</td></tr>
+        <tr><td>Description</td><td><code>description</code>, <code>commentaire</code>, <code>message</code></td><td>-</td><td>Détails</td></tr>
+    </table>
+
+    <hr>
+
+    <h2>Exemples</h2>
+
+    <h3>Exemple simple (cURL)</h3>
+    <pre><code>curl -X POST "https://crm.cnkdem.com/api_create_lead.php" \
+  -H "X-API-Key: 5b7371c8da6d17e52e3f92994da8553dd9c8006927eb725f296c930483724c4f" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nom": "Dupont",
+    "prenom": "Jean",
+    "email": "jean.dupont@email.com",
+    "telephone": "0612345678"
+  }'</code></pre>
+
+    <h3>Exemple complet (déménagement)</h3>
+    <pre><code>curl -X POST "https://crm.cnkdem.com/api_create_lead.php" \
+  -H "X-API-Key: 5b7371c8da6d17e52e3f92994da8553dd9c8006927eb725f296c930483724c4f" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nom": "Dupont",
+    "prenom": "Jean",
+    "email": "jean.dupont@email.com",
+    "telephone": "0612345678",
+    "mobile": "0712345678",
+    "adresse_depart": "123 Rue de la Paix",
+    "ville_depart": "Paris",
+    "cp_depart": "75001",
+    "adresse_arrivee": "456 Avenue des Champs",
+    "ville_arrivee": "Lyon",
+    "cp_arrivee": "69001",
+    "date_demenagement": "2026-03-15",
+    "volume": "30",
+    "description": "Déménagement appartement 3 pièces"
+  }'</code></pre>
+
+    <h3>Exemple PHP</h3>
+    <pre><code>&lt;?php
+$data = [
+    'nom' => 'Dupont',
+    'prenom' => 'Jean',
+    'email' => 'jean.dupont@email.com',
+    'telephone' => '0612345678',
+    'ville_depart' => 'Paris',
+    'ville_arrivee' => 'Lyon',
+    'date_demenagement' => '2026-03-15',
+    'volume' => '30'
+];
+
+$ch = curl_init('https://crm.cnkdem.com/api_create_lead.php');
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => [
+        'X-API-Key: 5b7371c8da6d17e52e3f92994da8553dd9c8006927eb725f296c930483724c4f',
+        'Content-Type: application/json'
+    ],
+    CURLOPT_POSTFIELDS => json_encode($data)
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+print_r(json_decode($response, true));</code></pre>
+
+    <hr>
+
+    <h2>Réponses</h2>
+
+    <h3>Succès (HTTP 201)</h3>
+    <div class="info-box success">
+        <pre style="background:transparent;color:#155724;margin:0;padding:0;"><code>{
+  "success": true,
+  "message": "Lead créé avec succès",
+  "lead_id": 123,
+  "lead_no": "P-0018254"
+}</code></pre>
+    </div>
+
+    <h3>Erreurs</h3>
+    <table>
+        <tr><th>Code HTTP</th><th>Signification</th><th>Exemple</th></tr>
+        <tr><td>400</td><td>Requête invalide</td><td><code>{"success":false,"error":"Le champ lastname (nom) est requis"}</code></td></tr>
+        <tr><td>401</td><td>Clé API invalide</td><td><code>{"success":false,"error":"Invalid API key"}</code></td></tr>
+        <tr><td>405</td><td>Méthode non autorisée</td><td><code>{"success":false,"error":"Method not allowed. Use POST."}</code></td></tr>
+        <tr><td>500</td><td>Erreur serveur</td><td><code>{"success":false,"error":"Erreur lors de la création..."}</code></td></tr>
+    </table>
+
+    <hr>
+
+    <p style="text-align:center;color:#888;font-size:12px;margin-top:40px;">
+        Documentation API CNK Déménagement - Générée le 03/02/2026
+    </p>
+</body>
+</html>

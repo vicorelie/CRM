@@ -1,0 +1,332 @@
+<?php
+/*+***********************************************************************************
+ * The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+ *************************************************************************************/
+class Quotes_Save_Action extends Inventory_Save_Action {
+
+	public function process(Vtiger_Request $request) {
+		global $adb;
+
+		$incomingRecordId = $request->get('record');
+
+		// CUSTOM: Bloquer la modification d'un devis validé (cf_1162 = '1')
+		// Exception : si le save ne fait que changer cf_1162 (toggle validation)
+		if ($incomingRecordId) {
+			$validResult = $adb->pquery("SELECT cf_1162 FROM vtiger_quotescf WHERE quoteid = ?", array($incomingRecordId));
+			if ($adb->num_rows($validResult) > 0) {
+				$currentValidated = $adb->query_result($validResult, 0, 'cf_1162');
+				$incomingValidated = $request->get('cf_1162');
+				// Devis validé ET le save n'est pas un toggle de validation
+				if ($currentValidated == '1' && $incomingValidated == '1') {
+					error_log("[QUOTES SAVE] Blocked: tentative de modification du devis validé #$incomingRecordId");
+					return;
+				}
+			}
+		}
+
+		// CUSTOM: Calculer cf_1137 AVANT parent::process()
+		$forfaitTarif = floatval($request->get('cf_1127')) ?: 0;
+		$forfaitSupplement = floatval($request->get('cf_1129')) ?: 0;
+		$assuranceTarif = floatval($request->get('cf_1143')) ?: 0;
+		$totalForfaitHT = $forfaitTarif + $forfaitSupplement;
+		$request->set('cf_1137', $totalForfaitHT);
+
+		// Appeler la méthode parent pour sauvegarder le devis
+		$result = parent::process($request);
+
+		// CUSTOM: Recalculer les totaux à partir des Acompte/Solde (qui incluent le forfait)
+		// Récupérer le recordId - priorité à $this->savedRecordId (défini par parent::saveRecord())
+		$recordId = $this->savedRecordId;
+
+		// Fallback sur request si savedRecordId n'est pas défini
+		if (!$recordId) {
+			$recordId = $request->get('record');
+		}
+
+		// Dernier recours: chercher le dernier devis créé
+		if (!$recordId) {
+			$lastIdResult = $adb->pquery("SELECT MAX(crmid) as lastid FROM vtiger_crmentity WHERE setype = 'Quotes'", array());
+			if ($adb->num_rows($lastIdResult) > 0) {
+				$recordId = $adb->query_result($lastIdResult, 0, 'lastid');
+			}
+		}
+
+		if (!$recordId) {
+			error_log("[QUOTES SAVE] ERREUR: Aucun recordId trouvé, abandon des mises à jour custom");
+			return $result;
+		}
+
+		// CUSTOM: Récupérer les valeurs - certaines depuis REQUEST, d'autres depuis DB
+		$forfaitTarif = floatval($request->get('cf_1127')) ?: 0;
+		$forfaitSupplement = floatval($request->get('cf_1129')) ?: 0;
+
+		// Gérer les pourcentages - accepter 0 comme valeur valide
+		$forfaitPctAcompteValue = $request->get('cf_1133');
+		$forfaitPctAcompte = ($forfaitPctAcompteValue !== null && $forfaitPctAcompteValue !== '') ? floatval($forfaitPctAcompteValue) : 43;
+
+		$forfaitPctSoldeValue = $request->get('cf_1135');
+		$forfaitPctSolde = ($forfaitPctSoldeValue !== null && $forfaitPctSoldeValue !== '') ? floatval($forfaitPctSoldeValue) : 57;
+
+		// CUSTOM: Lire cf_1139 (Montant assurance) et cf_1141 (Tarif pour 1000) depuis la DB
+		$assuranceResult = $adb->pquery("SELECT cf_1139, cf_1141 FROM vtiger_quotescf WHERE quoteid = ?", array($recordId));
+		$montantAssurance = 0;
+		$tarifPour1000 = 0;
+		if ($adb->num_rows($assuranceResult) > 0) {
+			$montantAssurance = floatval($adb->query_result($assuranceResult, 0, 'cf_1139')) ?: 0;
+			$tarifPour1000 = floatval($adb->query_result($assuranceResult, 0, 'cf_1141')) ?: 0;
+		}
+
+		// CUSTOM: Calculer cf_1143 (Tarif assurance) = ((cf_1139 / 1000) - 4) * cf_1141
+		$assuranceTarif = 0;
+		if ($montantAssurance > 0 && $tarifPour1000 > 0) {
+			$assuranceTarif = (($montantAssurance / 1000) - 4) * $tarifPour1000;
+		}
+
+		// CUSTOM: Mettre à jour cf_1143 dans la DB
+		$adb->pquery("UPDATE vtiger_quotescf SET cf_1143 = ? WHERE quoteid = ?", array($assuranceTarif, $recordId));
+
+		// Calculer le Total forfait (cf_1137 = cf_1127 + cf_1129)
+		$totalForfaitHT = $forfaitTarif + $forfaitSupplement;
+
+		// Récupérer le subtotal UNIQUEMENT des produits (pas forfait, pas assurance)
+		// en calculant depuis la source (vtiger_inventoryproductrel)
+		$productsResult = $adb->pquery(
+			"SELECT SUM(COALESCE(quantity, 0) * COALESCE(listprice, 0) * (1 - COALESCE(discount_percent, 0)/100) - COALESCE(discount_amount, 0)) as products_subtotal
+			 FROM vtiger_inventoryproductrel
+			 WHERE id = ?",
+			array($recordId)
+		);
+
+		$productsSubTotal = 0;
+		if ($adb->num_rows($productsResult) > 0) {
+			$productsSubTotal = floatval($adb->query_result($productsResult, 0, 'products_subtotal')) ?: 0;
+		}
+
+		// Récupérer la remise globale depuis le request (hdnDiscountPercent / hdnDiscountAmount)
+		$reqDiscountPercent = floatval($request->get('hdnDiscountPercent')) ?: 0;
+		$reqDiscountAmount = floatval($request->get('hdnDiscountAmount')) ?: 0;
+
+		// Calculer le total HT (produits + forfait + assurance) - AVANT remise
+		$subtotalBeforeDiscount = $productsSubTotal + $totalForfaitHT + $assuranceTarif;
+
+		// TVA 20%
+		$taxRate = 0.20;
+
+		// Calculer Acompte et Solde des produits - PRODUIT PAR PRODUIT
+		$totalProduitsAcompteHT = 0;
+		$totalProduitsSoldeHT = 0;
+
+		// Récupérer toutes les lignes de produits/services du devis
+		$lineItemsResult = $adb->pquery(
+			"SELECT productid, quantity, listprice, discount_percent, discount_amount
+			 FROM vtiger_inventoryproductrel
+			 WHERE id = ?",
+			array($recordId)
+		);
+
+		if ($adb->num_rows($lineItemsResult) > 0) {
+			for ($i = 0; $i < $adb->num_rows($lineItemsResult); $i++) {
+				$productId = $adb->query_result($lineItemsResult, $i, 'productid');
+				$quantity = floatval($adb->query_result($lineItemsResult, $i, 'quantity')) ?: 0;
+				$listPrice = floatval($adb->query_result($lineItemsResult, $i, 'listprice')) ?: 0;
+				$lineDiscountPercent = floatval($adb->query_result($lineItemsResult, $i, 'discount_percent')) ?: 0;
+				$lineDiscountAmount = floatval($adb->query_result($lineItemsResult, $i, 'discount_amount')) ?: 0;
+
+				// Calculer le total après remise pour cette ligne
+				$lineTotal = ($quantity * $listPrice * (1 - $lineDiscountPercent / 100)) - $lineDiscountAmount;
+
+				if ($lineTotal > 0 && $productId) {
+					// Déterminer si c'est un produit ou un service
+					// Essayer d'abord dans vtiger_productcf
+					$pctResult = $adb->pquery(
+						"SELECT cf_1051, cf_1053 FROM vtiger_productcf WHERE productid = ?",
+						array($productId)
+					);
+
+					// Si pas trouvé dans products, essayer dans services
+					if ($adb->num_rows($pctResult) == 0) {
+						$pctResult = $adb->pquery(
+							"SELECT cf_1051, cf_1053 FROM vtiger_servicecf WHERE serviceid = ?",
+							array($productId)
+						);
+					}
+
+					// Récupérer les pourcentages ou utiliser les valeurs par défaut du forfait
+					$pctAcompte = $forfaitPctAcompte;  // Valeur par défaut
+					$pctSolde = $forfaitPctSolde;      // Valeur par défaut
+
+					if ($adb->num_rows($pctResult) > 0) {
+						$dbAcompte = $adb->query_result($pctResult, 0, 'cf_1051');
+						$dbSolde = $adb->query_result($pctResult, 0, 'cf_1053');
+
+						// Utiliser la valeur de la DB même si c'est 0
+						if ($dbAcompte !== null && $dbAcompte !== '') {
+							$pctAcompte = floatval($dbAcompte);
+						}
+						if ($dbSolde !== null && $dbSolde !== '') {
+							$pctSolde = floatval($dbSolde);
+						}
+					}
+
+					// Calculer la contribution de cette ligne
+					$lineAcompte = ($lineTotal * $pctAcompte) / 100;
+					$lineSolde = ($lineTotal * $pctSolde) / 100;
+
+					$totalProduitsAcompteHT += $lineAcompte;
+					$totalProduitsSoldeHT += $lineSolde;
+				}
+			}
+		}
+
+		// Calculer Forfait Acompte et Forfait Solde
+		// Le tarif forfait est divisé selon les %, le supplément va 100% à l'acompte
+		$forfaitAcompteHT = ($forfaitTarif * $forfaitPctAcompte / 100) + $forfaitSupplement;
+		$forfaitSoldeHT = $forfaitTarif * $forfaitPctSolde / 100;
+
+		// Calculer Acompte et Solde TTC
+		// Produits: calculés produit par produit ci-dessus
+		// Forfait: répartition selon pourcentages
+		// Supplément forfait: 100% à l'acompte
+		// Assurance: 100% à l'acompte
+		$totalAcompteHT = $totalProduitsAcompteHT + $forfaitAcompteHT + $assuranceTarif;
+		$totalSoldeHT = $totalProduitsSoldeHT + $forfaitSoldeHT;
+
+		// Appliquer la remise globale sur le HT
+		$globalDiscountPercent = 0;
+		$globalDiscountHT = 0;
+		if ($reqDiscountPercent > 0) {
+			$globalDiscountPercent = $reqDiscountPercent;
+			$globalDiscountHT = $subtotalBeforeDiscount * $reqDiscountPercent / 100;
+		} elseif ($reqDiscountAmount > 0) {
+			$globalDiscountHT = $reqDiscountAmount;
+		}
+		$totalHTAfterDiscount = $subtotalBeforeDiscount - $globalDiscountHT;
+		if ($totalHTAfterDiscount < 0) $totalHTAfterDiscount = 0;
+
+		// Répartir la remise proportionnellement sur acompte et solde
+		$totalHTBrut = $totalAcompteHT + $totalSoldeHT;
+		if ($globalDiscountHT > 0 && $totalHTBrut > 0) {
+			$ratio = ($totalHTBrut - $globalDiscountHT) / $totalHTBrut;
+			$totalAcompteHT = $totalAcompteHT * $ratio;
+			$totalSoldeHT = $totalSoldeHT * $ratio;
+			if ($totalAcompteHT < 0) $totalAcompteHT = 0;
+			if ($totalSoldeHT < 0) $totalSoldeHT = 0;
+		}
+
+		// Calculer les montants TTC
+		$grandTotal = $totalHTAfterDiscount * (1 + $taxRate);
+
+		// Si l'acompte a été saisi manuellement, utiliser cette valeur
+		$manualAcompteTTC = $request->get('manual_acompte_ttc');
+		if ($manualAcompteTTC !== null && $manualAcompteTTC !== '' && floatval($manualAcompteTTC) >= 0) {
+			$totalAcompteTTC = floatval($manualAcompteTTC);
+			$totalSoldeTTC = max(0, $grandTotal - $totalAcompteTTC);
+		} else {
+			$totalAcompteTTC = $totalAcompteHT * (1 + $taxRate);
+			$totalSoldeTTC = $totalSoldeHT * (1 + $taxRate);
+		}
+
+		// Calculer le montant déjà payé depuis vtiger_stripe_payments
+		$paidResult = $adb->pquery(
+			"SELECT COALESCE(SUM(amount), 0) as total_paid FROM vtiger_stripe_payments WHERE quote_id = ? AND status = 'paid'",
+			array($recordId)
+		);
+		$totalPaid = floatval($adb->query_result($paidResult, 0, 'total_paid'));
+
+		// Calculer le reste à payer
+		$resteAPayer = $grandTotal - $totalPaid;
+		if ($resteAPayer < 0) $resteAPayer = 0;
+
+		// Déterminer les statuts de paiement
+		$statutAcompte = '';
+		$statutSolde = '';
+
+		if ($totalPaid > 0) {
+			if ($totalPaid < $totalAcompteTTC) {
+				// Payé partiellement l'acompte
+				$statutAcompte = 'Partiel';
+				$statutSolde = '';
+			} elseif ($totalPaid >= $totalAcompteTTC && $totalPaid < $grandTotal) {
+				// Acompte payé, solde partiel ou non commencé
+				$statutAcompte = 'Payé';
+				if ($totalPaid > $totalAcompteTTC) {
+					$statutSolde = 'Partiel';
+				}
+			} elseif ($totalPaid >= $grandTotal) {
+				// Tout est payé
+				$statutAcompte = 'Payé';
+				$statutSolde = 'Payé';
+			}
+		}
+
+		// Mettre à jour vtiger_quotescf (la ligne devrait déjà exister après parent::process())
+		$updateResult = $adb->pquery(
+			"UPDATE vtiger_quotescf SET cf_1137 = ?, cf_1055 = ?, cf_1057 = ?, cf_1275 = ?, cf_1083 = ?, cf_1085 = ?, cf_1403 = ? WHERE quoteid = ?",
+			array($totalForfaitHT, $totalAcompteTTC, $totalSoldeTTC, $resteAPayer, $statutAcompte, $statutSolde, $totalPaid, $recordId)
+		);
+
+		// Mettre à jour les totaux VTiger
+		// subtotal = Total HT AVANT remise (produits + forfait + assurance)
+		// discount_percent = % de remise (appliqué sur HT)
+		// discount_amount = Montant remise en HT
+		// pre_tax_total = HT APRÈS remise
+		// total = Grand Total TTC après remise
+		$newSubTotal = $subtotalBeforeDiscount;
+		$newDiscountPercent = $globalDiscountPercent > 0 ? $globalDiscountPercent : null;
+		$newDiscountAmount = $globalDiscountHT;
+		$newPreTaxTotal = $totalHTAfterDiscount;
+		$newTotal = $grandTotal;
+
+		// Note: Il n'y a PAS de colonne tax_totalamount dans vtiger_quotes
+		// La taxe est calculée à la volée comme: total - pre_tax_total
+		// Inclut prestataire car presence=2 empêche VTiger de le sauvegarder via son mécanisme standard
+		$prestataireId = intval($request->get('prestataire')) ?: null;
+		$updateResult2 = $adb->pquery(
+			"UPDATE vtiger_quotes SET subtotal = ?, discount_percent = ?, discount_amount = ?, pre_tax_total = ?, total = ?, prestataire = ? WHERE quoteid = ?",
+			array($newSubTotal, $newDiscountPercent, $newDiscountAmount, $newPreTaxTotal, $newTotal, $prestataireId, $recordId)
+		);
+
+		// Décoder les entités HTML dans les descriptions de produits (VTiger encode < en &lt; via HTMLPurifier)
+		$prodRows = $adb->pquery(
+			"SELECT lineitem_id, description FROM vtiger_inventoryproductrel WHERE id = ? AND (description LIKE '%&lt;%' OR description LIKE '%&gt;%' OR description LIKE '%&amp;%' OR description LIKE '%&quot;%')",
+			array($recordId)
+		);
+		while ($prodRow = $adb->fetch_array($prodRows)) {
+			$decoded = html_entity_decode($prodRow['description'], ENT_QUOTES, 'UTF-8');
+			$adb->pquery(
+				"UPDATE vtiger_inventoryproductrel SET description = ? WHERE lineitem_id = ?",
+				array($decoded, $prodRow['lineitem_id'])
+			);
+		}
+
+		// Sauvegarder pct_acompte/pct_solde par ligne produit
+		$totalProductCount = intval($request->get('totalProductCount'));
+		if ($totalProductCount > 0) {
+			$lineItems = $adb->pquery(
+				"SELECT lineitem_id, productid, sequence_no FROM vtiger_inventoryproductrel WHERE id = ? ORDER BY sequence_no",
+				array($recordId)
+			);
+			$lineItemIds = array();
+			while ($li = $adb->fetch_array($lineItems)) {
+				$lineItemIds[] = $li['lineitem_id'];
+			}
+			for ($i = 1; $i <= $totalProductCount; $i++) {
+				$pctAcompte = $request->get('pctAcompte' . $i);
+				$pctSolde   = $request->get('pctSolde' . $i);
+				if ($pctAcompte !== null && isset($lineItemIds[$i - 1])) {
+					$adb->pquery(
+						"UPDATE vtiger_inventoryproductrel SET pct_acompte = ?, pct_solde = ? WHERE lineitem_id = ?",
+						array(floatval($pctAcompte), floatval($pctSolde), $lineItemIds[$i - 1])
+					);
+				}
+			}
+		}
+
+		return $result;
+	}
+}

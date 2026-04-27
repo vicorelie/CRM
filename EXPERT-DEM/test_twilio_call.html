@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Twilio Click-to-Call</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📞 Test Twilio Click-to-Call</h1>
+
+        <div class="info">
+            <strong>⚠️ Mode Trial:</strong><br>
+            Tu ne peux appeler que des numéros vérifiés dans Twilio.<br>
+            Vérifie tes numéros sur: <a href="https://console.twilio.com/us1/develop/phone-numbers/manage/verified" target="_blank">Twilio Console</a>
+        </div>
+
+        <div class="form-group">
+            <label for="toNumber">Numéro à appeler (avec indicatif +33 ou +1):</label>
+            <input type="tel" id="toNumber" placeholder="+33612345678" required>
+        </div>
+
+        <div class="form-group">
+            <label for="fromNumber">Ton numéro (optionnel - Twilio appellera d'abord ce numéro):</label>
+            <input type="tel" id="fromNumber" placeholder="+33698765432">
+        </div>
+
+        <button onclick="makeCall()">📞 Passer l'appel</button>
+
+        <div id="result" class="result"></div>
+
+        <div style="margin-top: 30px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
+            <h3>💡 Comment ça fonctionne?</h3>
+            <ol>
+                <li>Twilio appelle le numéro FROM (ton numéro)</li>
+                <li>Quand tu décroches, Twilio dit "Connexion en cours..."</li>
+                <li>Twilio connecte ensuite vers le numéro TO (contact)</li>
+            </ol>
+            <p><strong>Si FROM est vide:</strong> Twilio appelle directement le numéro TO</p>
+        </div>
+    </div>
+
+    <script>
+        function makeCall() {
+            const toNumber = document.getElementById('toNumber').value.trim();
+            const fromNumber = document.getElementById('fromNumber').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!toNumber) {
+                showResult('error', 'Veuillez entrer un numéro à appeler');
+                return;
+            }
+
+            // Validation basique du format
+            if (!toNumber.startsWith('+')) {
+                showResult('error', 'Le numéro doit commencer par + (ex: +33612345678)');
+                return;
+            }
+
+            showResult('info', 'Appel en cours...');
+
+            const url = 'twilio_call.php?to=' + encodeURIComponent(toNumber) +
+                        (fromNumber ? '&from=' + encodeURIComponent(fromNumber) : '');
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showResult('success',
+                            '✓ Appel initié avec succès!<br>' +
+                            'Call SID: ' + data.call_sid + '<br>' +
+                            'Status: ' + data.status
+                        );
+                    } else {
+                        showResult('error', '✗ Erreur: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    showResult('error', '✗ Erreur de connexion: ' + error.message);
+                });
+        }
+
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + type;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Twilio - Vérification DOM</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .instructions {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .code {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Test Twilio - Vérification DOM</h1>
+
+        <div class="instructions">
+            <strong>Instructions :</strong><br>
+            1. Ouvre une fiche Contact dans le CRM<br>
+            2. Appuie sur F12 pour ouvrir la console du navigateur<br>
+            3. Copie-colle le code ci-dessous dans la console<br>
+            4. Appuie sur Entrée<br>
+            5. Copie le résultat et envoie-le moi
+        </div>
+
+        <h3>Code à copier dans la console :</h3>
+        <div class="code">// Test 1: Chercher les champs téléphone dans le header
+console.log('=== TEST HEADER FIELDS ===');
+console.log('Phone header:', jQuery('span.phone.value').length, jQuery('span.phone.value').text());
+console.log('Mobile header:', jQuery('span.mobile.value').length, jQuery('span.mobile.value').text());
+
+// Test 2: Chercher les champs téléphone dans les blocs
+console.log('\n=== TEST BLOCK FIELDS ===');
+console.log('Phone block:', jQuery('#Contacts_detailView_fieldValue_phone span.value').length, jQuery('#Contacts_detailView_fieldValue_phone span.value').text());
+console.log('Mobile block:', jQuery('#Contacts_detailView_fieldValue_mobile span.value').length, jQuery('#Contacts_detailView_fieldValue_mobile span.value').text());
+
+// Test 3: Lister tous les éléments avec class "value"
+console.log('\n=== TOUS LES ELEMENTS AVEC CLASS VALUE ===');
+jQuery('span.value').each(function(i) {
+    var text = jQuery(this).text().trim();
+    if (text && text.length > 0 && text !== '-') {
+        console.log('Element ' + i + ':', this.className, '|', text.substring(0, 50));
+    }
+});
+
+// Test 4: Vérifier si le JS est chargé
+console.log('\n=== VERIFICATION JS ===');
+console.log('Contacts_Detail_Js existe:', typeof Contacts_Detail_Js !== 'undefined');
+
+// Test 5: Vérifier si le CSS est chargé
+console.log('\n=== VERIFICATION CSS ===');
+var cssLoaded = false;
+for (var i = 0; i < document.styleSheets.length; i++) {
+    if (document.styleSheets[i].href && document.styleSheets[i].href.indexOf('TwilioClickToCall') > -1) {
+        cssLoaded = true;
+        console.log('CSS Twilio chargé:', document.styleSheets[i].href);
+        break;
+    }
+}
+if (!cssLoaded) console.log('CSS Twilio NON chargé');
+
+console.log('\n=== FIN DES TESTS ===');</div>
+
+        <div class="success">
+            <strong>✅ Changements effectués :</strong><br><br>
+
+            <strong>1. Correction des sélecteurs CSS dans Detail.js :</strong><br>
+            - Anciens sélecteurs : <code>.fieldname-phone .value</code><br>
+            - Nouveaux sélecteurs : <code>span.phone.value</code> et <code>#Contacts_detailView_fieldValue_phone span.value</code><br><br>
+
+            <strong>2. Ajout du chargement CSS :</strong><br>
+            - Fichier : <code>/modules/Contacts/views/Detail.php</code><br>
+            - Méthode : <code>getHeaderCss()</code><br><br>
+
+            <strong>3. Cache vidé :</strong><br>
+            - templates_c/ ✅<br>
+            - cache/ ✅
+        </div>
+
+        <h3>🔍 Si les boutons n'apparaissent toujours pas :</h3>
+        <ol>
+            <li>Rafraîchis la page Contact avec <strong>Ctrl+F5</strong> (vide le cache navigateur)</li>
+            <li>Exécute le code de test dans la console</li>
+            <li>Envoie-moi les résultats pour que je puisse diagnostiquer</li>
+        </ol>
+    </div>
+</body>
+</html>

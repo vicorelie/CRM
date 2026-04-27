@@ -1,0 +1,31 @@
+<?xml version='1.0'?>
+<schema>
+	<tables>
+		<table>
+			<name>its4you_keymetrics4you</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_keymetrics4you` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `smcreatorid` int(19) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `deleted` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB]]></sql>
+		</table>
+		<table>
+			<name>its4you_keymetrics4you_rows</name>
+			<sql><![CDATA[CREATE TABLE IF NOT EXISTS `its4you_keymetrics4you_rows` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `km_id` int(11) NOT NULL,
+  `smcreatorid` int(19) NOT NULL,
+  `label` varchar(255) NOT NULL,
+  `reportid` int(11) NOT NULL,
+  `metrics_type` varchar(50) NOT NULL DEFAULT 'report',
+  `column_str` varchar(255) NOT NULL,
+  `sequence` int(11) DEFAULT NULL,
+  `deleted` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB]]></sql>
+		</table>
+	</tables>
+</schema>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html data-kantu="1">
+<head>
+<meta charset="UTF-8">
+<title>Ordre de mission</title>
+<style type="text/css">
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: #111;
+    line-height: 1.25;
+    margin: 0;
+    padding: 0;
+}
+.wrap { padding: 16px 18px; }
+
+/* HEADER */
+.header {
+    width: 100%;
+    border-bottom: 2px solid #111;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+.header:after { content: ""; display: table; clear: both; }
+.h-left { float: left; width: 58%; }
+.h-right { float: right; width: 40%; text-align: right; }
+
+.brand { font-size: 12pt; font-weight: bold; }
+.addr { font-size: 8.5pt; margin-top: 2px; }
+.title {
+    font-size: 14pt;
+    font-weight: bold;
+    letter-spacing: 0.4px;
+}
+.subtitle { font-size: 8pt; color: #444; margin-top: 2px; }
+
+/* TABLES */
+table { border-collapse: collapse; width: 100%; }
+.t {
+    width: 100%;
+    border: 1px solid #111;
+    margin-top: 6px;
+}
+.t td, .t th {
+    border: 1px solid #111;
+    padding: 6px 7px;
+    vertical-align: top;
+}
+.t th {
+    background: #efefef;
+    font-weight: bold;
+}
+.center { text-align: center; }
+.right { text-align: right; }
+.muted { color: #444; }
+.bigval { font-size: 10pt; font-weight: bold; }
+
+/* SECTION TITLES */
+.sec {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* Two columns block in same table row */
+.two-col th {
+    background: #dcdcdc;
+    text-align: center;
+    font-weight: bold;
+}
+.label { width: 28%; color: #333; }
+.val { width: 72%; }
+
+/* Small grid inside cells */
+.mini {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+}
+.mini td {
+    border: 0;
+    padding: 1px 0;
+    font-size: 8.5pt;
+}
+.mini .k { width: 55%; color: #333; }
+.mini .v { width: 45%; font-weight: bold; }
+
+/* Footer line */
+.footline {
+    margin-top: 14px;
+    border-top: 2px solid #111;
+    padding-top: 6px;
+    font-size: 8pt;
+    color: #333;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<!-- EN-TÊTE -->
+<div class="header">
+    <div class="h-left">
+        <img src="$COMPANY_LOGO$" style="height:52px;" alt="Logo" /><br>
+        <div class="brand">$COMPANY_NAME$</div>
+        <div class="addr">
+            $COMPANY_ADDRESS$<br />
+            $COMPANY_CODE$ $COMPANY_CITY$<br />
+            Tél: $COMPANY_PHONE$<br />
+            Email: $COMPANY_MAIL$
+        </div>
+    </div>
+    <div class="h-right">
+        <div class="title">ORDRE DE MISSION</div>
+        <div class="bigval">n° $salesorder_no$</div>
+        <div class="subtitle">Document obligatoire par arrêté du 09/11/1999</div>
+    </div>
+</div>
+
+<!-- BLOC INFOS CLIENT / DEVIS -->
+<table class="t">
+    <tbody>
+        <tr>
+            <th style="width:18%;">Client n°</th>
+            <td style="width:52%;"><span class="bigval">$(Contacts : contact_no)$</span> &nbsp; $(Contacts : firstname)$ $(Contacts : lastname)$</td>
+            <th style="width:15%;">Téléphone</th>
+            <td class="center" style="width:15%;"><span class="bigval">$(Contacts : phone)$</span></td>
+        </tr>
+        <tr>
+            <th>Selon devis n°</th>
+            <td><span class="bigval">$(Quotes : quote_no)$</span></td>
+            <th>Date</th>
+            <td class="center"><span class="bigval">$createdtime$</span></td>
+        </tr>
+        <tr>
+            <th>Entreprise exécutante</th>
+            <td colspan="3"><span class="bigval">$(Vendors : vendorname)$</span></td>
+        </tr>
+        <tr>
+            <th>Volume</th>
+            <td><span class="bigval">$cf_1349$</span> m³</td>
+            <th>Distance</th>
+            <td class="center"><span class="bigval">$cf_1350$</span> km</td>
+        </tr>
+        <tr>
+            <th>Nature</th>
+            <td><span class="bigval">Déménagement</span></td>
+            <th>Prestation</th>
+            <td class="center"><span class="bigval">$cf_1186$</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- CHARGEMENT / LIVRAISON -->
+<table class="t two-col">
+    <tbody>
+        <tr>
+            <th style="width:50%;">Chargement</th>
+            <th style="width:50%;">Livraison</th>
+        </tr>
+        <tr>
+            <td>
+                <div><b>Période</b> : $cf_1309$ ($cf_1310$ - $cf_1311$)</div>
+                <div style="margin-top:4px;">
+                    <b>Adresse</b><br />
+                    $cf_1312$<br />
+                    $cf_1314$ $cf_1313$
+                </div>
+                <div style="margin-top:4px;"><b>Téléphone</b> : $(Contacts : phone)$</div>
+                <table class="mini">
+                    <tbody>
+                        <tr>
+                            <td class="k">Accès / Etage</td>
+                            <td class="v">$cf_1316$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Digicode</td>
+                            <td class="v">-</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Ascenseur</td>
+                            <td class="v">$cf_1317$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Monte-meubles</td>
+                            <td class="v">$cf_1323$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Passage fenêtre</td>
+                            <td class="v">$cf_1322$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Transbordement</td>
+                            <td class="v">$cf_1319$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Portage</td>
+                            <td class="v">$cf_1320$ m</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Stationnement</td>
+                            <td class="v">$cf_1321$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Type logement</td>
+                            <td class="v">$cf_1315$</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <div><b>Période</b> : $cf_1324$</div>
+                <div style="margin-top:4px;">
+                    <b>Adresse</b><br />
+                    $cf_1325$<br />
+                    $cf_1327$ $cf_1326$
+                </div>
+                <div style="margin-top:4px;"><b>Téléphone</b> : $(Contacts : phone)$</div>
+                <table class="mini">
+                    <tbody>
+                        <tr>
+                            <td class="k">Accès / Etage</td>
+                            <td class="v">$cf_1329$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Digicode</td>
+                            <td class="v">-</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Ascenseur</td>
+                            <td class="v">$cf_1330$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Monte-meubles</td>
+                            <td class="v">$cf_1336$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Passage fenêtre</td>
+                            <td class="v">$cf_1335$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Transbordement</td>
+                            <td class="v">$cf_1332$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Portage</td>
+                            <td class="v">$cf_1333$ m</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Stationnement</td>
+                            <td class="v">$cf_1334$</td>
+                        </tr>
+                        <tr>
+                            <td class="k">Type logement</td>
+                            <td class="v">$cf_1328$</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- GARANTIE / VALEURS -->
+<table class="t">
+    <tbody>
+        <tr>
+            <td style="width:50%;">
+                <b>Garantie :</b> Assurance complémentaire<br />
+                <span class="muted">Valeur globale (euros) :</span> <b>$cf_1170$ €</b>
+            </td>
+            <td style="width:50%;">
+                <span class="muted">Valeur maximale par objet non listé (euros) :</span> <b>-</b><br />
+                <span class="muted">Valeurs individuelles déclarées (euros) :</span> <b>-</b>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- A REMPLIR LORS DE L'EXECUTION -->
+<div class="sec">A remplir lors de l'exécution :</div>
+<table class="t">
+    <tbody>
+        <tr>
+            <td style="width:50%;">
+                Véhicule(s) : ____________________<br /><br />
+                Chef d'équipe : ____________________<br />
+                Chauffeur : ____________________<br />
+                Déménageur(s) : ____________________<br /><br />
+                Poids Lourds : ____________________
+            </td>
+            <td style="width:50%;">
+                N° de licence : ____________________<br /><br />
+                Matériel à prendre :<br />
+                $description$<br /><br />
+                Instructions Particulières :<br />
+                $cf_1188$
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- MONTANT A ENCAISSER -->
+<table class="t">
+    <tbody>
+        <tr>
+            <td class="right" style="width:70%;"><b>Montant à encaisser (Solde) :</b></td>
+            <td class="center" style="width:30%;"><span style="font-size:12pt; font-weight:bold;">$cf_1168$ €</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- FOOTER SOCIETE -->
+<div class="footline">
+    $COMPANY_NAME$ - SIRET: $COMPANY_SIRET$ - TVA: $COMPANY_TVA$
+</div>
+
+</div>
+</body>
+</html>

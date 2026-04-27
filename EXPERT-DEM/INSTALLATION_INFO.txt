@@ -1,0 +1,43 @@
+╔════════════════════════════════════════════════════════════╗
+║        CRM-TYPE - Instance Template de Démonstration      ║
+╚════════════════════════════════════════════════════════════╝
+
+Date d'installation: 2025-11-14 12:15:26
+
+🌐 ACCÈS WEB:
+   URL: http://crm-type.webama.fr/ (HTTP temporaire)
+   HTTPS: Sera configuré après propagation DNS complète
+   
+   Utilisateur: admin
+   Mot de passe: admin
+
+🗄️ BASE DE DONNÉES:
+   Nom: crm_type
+   Utilisateur: crm_type
+   Mot de passe: oSc1zhkA0T6p41xh
+   Host: localhost
+   Port: 3306
+
+📁 CHEMINS:
+   Racine: /var/www/CRM/CRM-TYPE/
+   Vhost Nginx: /etc/nginx/sites-available/crm-type.webama.fr
+   Logs: /var/log/nginx/crm-type.webama.fr.*.log
+
+⚠️ ÉTAT DNS:
+   DNS actuel: pointe vers 109.234.164.84 (ancien serveur)
+   DNS cible: 145.239.48.184 (ce serveur)
+   Statut: En attente de propagation DNS complète
+
+📋 PROCHAINES ÉTAPES:
+
+   1. Attendre la propagation DNS complète (peut prendre 1-24h)
+   2. Vérifier avec: dig +short crm-type.webama.fr
+   3. Une fois DNS propagé, générer SSL:
+      certbot --nginx -d crm-type.webama.fr
+   4. Tester l'accès via https://crm-type.webama.fr/
+
+🔒 SÉCURITÉ:
+   ⚠️  Changer le mot de passe admin après première connexion
+   ⚠️  Cette instance est un template de démonstration
+   ⚠️  Ne pas utiliser pour des données de production
+
