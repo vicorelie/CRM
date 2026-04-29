@@ -97,7 +97,7 @@ var DashboardCalendar = {
 	initFullCalendar: function() {
 		jQuery('#dashboardCalendar').fullCalendar({
 			header: {
-				left: 'prev,next today',
+				left: 'prev,next today gotoDate',
 				center: 'title',
 				right: 'month,agendaWeek,agendaDay'
 			},
@@ -118,7 +118,14 @@ var DashboardCalendar = {
 				agendaWeek: { columnFormat: 'ddd DD/MM' },
 				agendaDay: { columnFormat: 'dddd DD/MM' }
 			},
-			eventLimit: false,
+			customButtons: {
+				gotoDate: {
+					text: '📅',
+					click: function() {
+						jQuery('#dashCalGotoDate').datepicker('show');
+					}
+				}
+			},
 			events: function(start, end, timezone, callback) {
 				jQuery.ajax({
 					url: 'index.php',
@@ -186,6 +193,20 @@ var DashboardCalendar = {
 					element.attr('title', tip);
 				}
 			}
+		});
+
+		// Ajouter un input datepicker caché sur le bouton gotoDate
+		var gotoBtn = jQuery('.fc-gotoDate-button');
+		gotoBtn.css('font-size', '14px');
+		var hiddenInput = jQuery('<input type="text" id="dashCalGotoDate" style="position:absolute; opacity:0; width:0; height:0; pointer-events:none;">');
+		gotoBtn.css('position', 'relative').append(hiddenInput);
+		hiddenInput.datepicker({
+			autoclose: true,
+			format: 'dd/mm/yyyy',
+			language: 'fr',
+			todayHighlight: true
+		}).on('changeDate', function(e) {
+			jQuery('#dashboardCalendar').fullCalendar('gotoDate', moment(e.date));
 		});
 	},
 
