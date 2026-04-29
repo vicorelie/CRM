@@ -78,6 +78,18 @@ define('DEFAULT_ASSIGNED_USER', 'admin'); // Utilisateur assigné par défaut
 define('DEFAULT_LEAD_SOURCE', 'API External'); // Source par défaut
 define('API_LOG_FILE', __DIR__ . '/logs/api_leads.log');
 
+// Extrait la première date YYYY-MM-DD d'une chaîne (gère ISO 8601, périodes "du X au Y", "X/Y", "X - Y")
+function extractFirstDate($value) {
+    if (empty($value)) return '';
+    if (preg_match('/(\d{4}-\d{2}-\d{2})/', $value, $m)) {
+        return $m[1];
+    }
+    if (preg_match('/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/', $value, $m)) {
+        return sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
+    }
+    return substr($value, 0, 10);
+}
+
 // Fonction de logging
 function apiLog($message, $data = null) {
     $logDir = dirname(API_LOG_FILE);
@@ -181,7 +193,7 @@ $leadData = [
     'cf_973'      => $input['ville_arrivee'] ?? '',                                    // Ville arrivée
     'cf_979'      => $input['cp_arrivee'] ?? $input['code_postal_arrivee'] ?? '',     // Code postal arrivé
     'cf_977'      => $input['departement_arrivee'] ?? $input['dept_arrivee'] ?? '',   // Département arrivé
-    'cf_1192'     => substr($input['date_demenagement'] ?? $input['date_souhaitee'] ?? '', 0, 10),   // Date de déménagement (extrait YYYY-MM-DD depuis ISO 8601)
+    'cf_1192'     => extractFirstDate($input['date_demenagement'] ?? $input['date_du'] ?? $input['date_souhaitee'] ?? ''),   // Date de déménagement (si période → première date)
     'cf_1147'     => $input['date_rappel'] ?? '',                                      // Date de rappel
     'cf_1149'     => $input['heure_rappel'] ?? '',                                     // Heure de rappel
     'cf_1307'     => $input['volume'] ?? '',                                           // Volume (m³)
