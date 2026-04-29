@@ -15,10 +15,63 @@ class Potentials_DetailView_Model extends Vtiger_DetailView_Model {
 	 * @return <array> - array of link models in the format as below
 	 *                   array('linktype'=>list of link models);
 	 */
+	/**
+	 * Override: parent builds tab URLs from $recordModel->getDetailViewUrl() which is forced to
+	 * view=Unified. We rebuild them with view=Detail so the Summary/Details/Updates tabs work.
+	 */
+	public function getDetailViewRelatedLinks() {
+		$recordModel = $this->getRecord();
+		$moduleName = $recordModel->getModuleName();
+		$parentModuleModel = $this->getModule();
+		$detailBase = 'index.php?module='.$moduleName.'&view=Detail&record='.$recordModel->getId();
+		$relatedLinks = array();
+
+		if ($parentModuleModel->isSummaryViewSupported()) {
+			$relatedLinks[] = array(
+				'linktype' => 'DETAILVIEWTAB',
+				'linklabel' => vtranslate('LBL_SUMMARY', $moduleName),
+				'linkKey' => 'LBL_RECORD_SUMMARY',
+				'linkurl' => $detailBase.'&mode=showDetailViewByMode&requestMode=summary',
+				'linkicon' => ''
+			);
+		}
+		$relatedLinks[] = array(
+			'linktype' => 'DETAILVIEWTAB',
+			'linklabel' => vtranslate('LBL_DETAILS', $moduleName),
+			'linkKey' => 'LBL_RECORD_DETAILS',
+			'linkurl' => $detailBase.'&mode=showDetailViewByMode&requestMode=full',
+			'linkicon' => ''
+		);
+
+		if ($parentModuleModel->isTrackingEnabled()) {
+			$relatedLinks[] = array(
+				'linktype' => 'DETAILVIEWTAB',
+				'linklabel' => 'LBL_UPDATES',
+				'linkurl' => $detailBase.'&mode=showRecentActivities&page=1',
+				'linkicon' => ''
+			);
+		}
+
+		$relationModels = $parentModuleModel->getRelations();
+		foreach ($relationModels as $relation) {
+			$relatedLinks[] = array(
+				'linktype' => 'DETAILVIEWRELATED',
+				'linklabel' => $relation->get('label'),
+				'linkurl' => $relation->getListUrl($recordModel),
+				'linkicon' => '',
+				'relatedModuleName' => $relation->get('relatedModuleName'),
+				'linkid' => $relation->getId()
+			);
+		}
+
+		return $relatedLinks;
+	}
+
 	public function getDetailViewLinks($linkParams) {
 		$currentUserModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
 
 		$linkModelList = parent::getDetailViewLinks($linkParams);
+
 		$recordModel = $this->getRecord();
 		$invoiceModuleModel = Vtiger_Module_Model::getInstance('Invoice');
 		$quoteModuleModel = Vtiger_Module_Model::getInstance('Quotes');

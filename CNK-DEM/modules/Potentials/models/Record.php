@@ -17,6 +17,10 @@ class Potentials_Record_Model extends Vtiger_Record_Model {
 		return 'index.php?module='.$this->getModuleName().'&view=Unified&record='.$this->getId();
 	}
 
+	public function getUpdatesUrl() {
+		return 'index.php?module='.$this->getModuleName().'&view=Detail&record='.$this->getId().'&mode=showRecentActivities&page=1&tab_label=LBL_UPDATES';
+	}
+
 	function getCreateInvoiceUrl() {
 		$invoiceModuleModel = Vtiger_Module_Model::getInstance('Invoice');
 		return $invoiceModuleModel->getCreateRecordUrl().'&sourceRecord='.$this->getId().'&sourceModule='.$this->getModuleName().'&potential_id='.$this->getId().'&account_id='.$this->get('related_to').'&contact_id='.$this->get('contact_id');
