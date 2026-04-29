@@ -129,10 +129,10 @@ function generateInventoryHTML($conn, $inventory) {
     $html = '<table border="0" style="font-size:9px; width:100%; border-collapse:collapse;">
         <thead>
             <tr>
-                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:left; width:50%;"><strong>Article</strong></th>
-                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:center; width:15%;"><strong>Qté</strong></th>
-                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:right; width:15%;"><strong>Vol.</strong></th>
-                <th bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:right; width:20%;"><strong>Total</strong></th>
+                <th bgcolor="#1b4aad" style="color:#fff; padding:4px 6px; text-align:left; width:50%;"><strong>Article</strong></th>
+                <th bgcolor="#1b4aad" style="color:#fff; padding:4px 6px; text-align:center; width:15%;"><strong>Qté</strong></th>
+                <th bgcolor="#1b4aad" style="color:#fff; padding:4px 6px; text-align:right; width:15%;"><strong>Vol.</strong></th>
+                <th bgcolor="#1b4aad" style="color:#fff; padding:4px 6px; text-align:right; width:20%;"><strong>Total</strong></th>
             </tr>
         </thead>
         <tbody>';
@@ -147,8 +147,8 @@ function generateInventoryHTML($conn, $inventory) {
     }
 
     $html .= '<tr>
-            <td colspan="3" bgcolor="#f5f5f5" style="padding:4px 6px; text-align:right;"><strong>Volume total :</strong></td>
-            <td bgcolor="#1F314D" style="color:#fff; padding:4px 6px; text-align:right;"><strong>' . number_format($grandTotal, 2, ',', ' ') . ' m³</strong></td>
+            <td colspan="3" style="background-color:#f5f5f5; padding:4px 6px; text-align:right;"><strong>Volume total :</strong></td>
+            <td style="background-color:#1b4aad; color:#fff; padding:4px 6px; text-align:right;"><strong>' . number_format($grandTotal, 2, ',', ' ') . ' m³</strong></td>
         </tr>
     </tbody>
     </table>';
