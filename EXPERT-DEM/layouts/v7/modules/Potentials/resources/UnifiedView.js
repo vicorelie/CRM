@@ -2865,6 +2865,7 @@
                 jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
                 jQuery('#odm_hidden_manual_acompte').val(acompteTTC.toFixed(2));
                 jQuery('#odm_acompte_reset').show();
+                jQuery('#odm_cf_1403').val(soldeTTC.toFixed(2));
             });
         },
 
@@ -3036,10 +3037,8 @@
             jQuery('#odm_acompte_reset').hide();
             jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
 
-            // Default montant prestataire = solde (only if not editing existing)
-            if (!this.currentSOId) {
-                jQuery('#odm_cf_1403').val(soldeTTC.toFixed(2));
-            }
+            // Mt Prestataire = solde (suit toujours le solde, même en édition)
+            jQuery('#odm_cf_1403').val(soldeTTC.toFixed(2));
 
             // Update hidden fields for saving
             jQuery('#odm_hidden_cf_1174').val(assuranceHT.toFixed(2)); // Tarif assurance calculé
@@ -3180,6 +3179,7 @@
                 var soldeTTC = Math.max(0, totalTTC - savedAcompte);
                 jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
                 jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+                jQuery('#odm_cf_1403').val(soldeTTC.toFixed(2));
                 // Afficher reset seulement si l'acompte diffère du calcul proportionnel
                 if (Math.abs(savedAcompte - calculatedAcompte) > 0.01) {
                     jQuery('#odm_hidden_manual_acompte').val(savedAcompte.toFixed(2));
@@ -3372,6 +3372,7 @@
                 var soldeTTC = Math.max(0, totalTTC - savedAcompte);
                 jQuery('#odm_solde_ttc').text(soldeTTC.toFixed(2) + ' €');
                 jQuery('#odm_hidden_cf_1168').val(soldeTTC.toFixed(2));
+                jQuery('#odm_cf_1403').val(soldeTTC.toFixed(2));
                 jQuery('#odm_acompte_reset').show();
             }
         },
