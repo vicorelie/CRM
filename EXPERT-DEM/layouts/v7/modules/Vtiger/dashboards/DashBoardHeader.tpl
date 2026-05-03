@@ -30,6 +30,11 @@
 		<button class='btn btn-warning' id="openDashboardStationnement" style="margin-right:10px;">
 			<i class="fa fa-car"></i> Stationnement
 		</button>
+		{if $CURRENT_USER->get('is_admin') eq 'on' || $CURRENT_USER->get('roleid') eq 'H6'}
+		<button class='btn btn-info' id="openBlockedDatesModal" style="margin-right:10px;">
+			<i class="fa fa-ban"></i> Gestion des dates
+		</button>
+		{/if}
 		<div class="btn-group">
 			{if $SELECTABLE_WIDGETS|count gt 0}
 				<button class='btn btn-default addButton dropdown-toggle' data-toggle='dropdown'>
@@ -129,3 +134,181 @@ jQuery(document).ready(function() {
 });
 {/if}
 </script>
+
+{if $CURRENT_USER->get('is_admin') eq 'on' || $CURRENT_USER->get('roleid') eq 'H6'}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/fr.js"></script>
+<style>
+.flatpickr-day.flatpickr-disabled.cnk-blocked-day,
+.flatpickr-day.cnk-blocked-day {
+	background: #f8d7da !important;
+	color: #c82333 !important;
+	border-color: #f5c6cb !important;
+	text-decoration: line-through !important;
+	font-weight: bold !important;
+	cursor: not-allowed !important;
+	opacity: 1 !important;
+}
+.flatpickr-day.cnk-blocked-day:hover {
+	background: #f5c6cb !important;
+	color: #721c24 !important;
+}
+</style>
+<!-- Modale Gestion des dates bloquées -->
+<div class="modal fade" id="blockedDatesModal" tabindex="-1" role="dialog" aria-labelledby="blockedDatesModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document" style="max-width:850px;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="blockedDatesModalLabel"><i class="fa fa-ban"></i> Gestion des dates bloquées</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-sm-6">
+						<h5>Bloquer une date</h5>
+						<div class="form-group">
+							<label>Date</label>
+							<input type="text" id="bd_picker" class="form-control" placeholder="Cliquer pour sélectionner...">
+						</div>
+						<div class="form-group">
+							<label>Commentaire (optionnel)</label>
+							<input type="text" id="bd_comment" class="form-control" maxlength="255" placeholder="Ex: férié, complet...">
+						</div>
+						<button type="button" class="btn btn-success" id="bd_btn_add"><i class="fa fa-plus"></i> Bloquer cette date</button>
+					</div>
+					<div class="col-sm-6">
+						<h5>Dates déjà bloquées (<span id="bd_count">0</span>)</h5>
+						<div id="bd_list" style="max-height:400px;overflow-y:auto;border:1px solid #ddd;padding:8px;border-radius:4px;">
+							<p class="text-muted" style="text-align:center;">Chargement...</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+(function() {
+	var BD = {
+		blockedSet: new Set(),
+		picker: null,
+
+		init: function() {
+			var self = this;
+			jQuery('#openBlockedDatesModal').on('click', function() {
+				jQuery('#blockedDatesModal').modal('show');
+				self.loadList();
+			});
+			jQuery('#bd_btn_add').on('click', function() { self.add(); });
+			jQuery('#bd_list').on('click', '.bd-delete', function() {
+				var date = jQuery(this).data('date');
+				if (confirm('Débloquer la date ' + date + ' ?')) self.del(date);
+			});
+		},
+
+		ensurePicker: function() {
+			if (this.picker || typeof flatpickr === 'undefined') return;
+			var self = this;
+			this.picker = flatpickr('#bd_picker', {
+				dateFormat: 'Y-m-d',
+				showMonths: 1,
+				locale: (typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.fr) ? flatpickr.l10ns.fr : 'default',
+				onDayCreate: function(dObj, dStr, fp, dayElem) {
+					var d = dayElem.dateObj;
+					if (!d) return;
+					var iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+					if (self.blockedSet.has(iso)) {
+						dayElem.classList.add('cnk-blocked-day');
+						dayElem.title = 'Déjà bloquée';
+					}
+				}
+			});
+		},
+
+		loadList: function() {
+			var self = this;
+			jQuery.ajax({
+				url: 'index.php?module=Vtiger&action=BlockedDates&mode=list',
+				type: 'GET',
+				dataType: 'json',
+				success: function(resp) {
+					var data = (resp && resp.result && resp.result.data) || [];
+					self.blockedSet = new Set(data.map(function(d){ return d.date; }));
+					self.renderList(data);
+					self.ensurePicker();
+					if (self.picker) self.picker.redraw();
+				},
+				error: function() {
+					jQuery('#bd_list').html('<p class="text-danger">Erreur de chargement</p>');
+				}
+			});
+		},
+
+		renderList: function(data) {
+			jQuery('#bd_count').text(data.length);
+			if (!data.length) {
+				jQuery('#bd_list').html('<p class="text-muted" style="text-align:center;">Aucune date bloquée</p>');
+				return;
+			}
+			var html = '<table class="table table-condensed" style="margin:0;"><thead><tr><th>Date</th><th>Commentaire</th><th></th></tr></thead><tbody>';
+			data.forEach(function(d) {
+				var prettyDate = d.date.split('-').reverse().join('/');
+				html += '<tr>'
+					+ '<td><strong>' + prettyDate + '</strong></td>'
+					+ '<td>' + (d.comment ? jQuery('<div>').text(d.comment).html() : '<span class="text-muted">-</span>') + '</td>'
+					+ '<td style="text-align:right;"><button class="btn btn-xs btn-danger bd-delete" data-date="' + d.date + '" title="Débloquer"><i class="fa fa-trash"></i></button></td>'
+					+ '</tr>';
+			});
+			html += '</tbody></table>';
+			jQuery('#bd_list').html(html);
+		},
+
+		add: function() {
+			var date = jQuery('#bd_picker').val();
+			var comment = jQuery('#bd_comment').val();
+			if (!date) { alert('Sélectionnez une date'); return; }
+			var self = this;
+			jQuery.ajax({
+				url: 'index.php?module=Vtiger&action=BlockedDates&mode=add',
+				type: 'POST',
+				data: { date: date, comment: comment },
+				dataType: 'json',
+				success: function(resp) {
+					if (resp && resp.success) {
+						jQuery('#bd_picker').val('');
+						jQuery('#bd_comment').val('');
+						self.loadList();
+					} else {
+						alert('Erreur: ' + ((resp && resp.error && resp.error.message) || 'Inconnue'));
+					}
+				},
+				error: function() { alert('Erreur réseau lors de l\'ajout'); }
+			});
+		},
+
+		del: function(date) {
+			var self = this;
+			jQuery.ajax({
+				url: 'index.php?module=Vtiger&action=BlockedDates&mode=delete',
+				type: 'POST',
+				data: { date: date },
+				dataType: 'json',
+				success: function(resp) {
+					if (resp && resp.success) self.loadList();
+					else alert('Erreur lors de la suppression');
+				},
+				error: function() { alert('Erreur réseau lors de la suppression'); }
+			});
+		}
+	};
+
+	jQuery(document).ready(function() { BD.init(); });
+})();
+</script>
+{/if}
+

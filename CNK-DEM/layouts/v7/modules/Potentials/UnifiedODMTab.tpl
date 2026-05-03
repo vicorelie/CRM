@@ -230,11 +230,11 @@
                 {* Dates *}
                 <div class="inline-field">
                     <label><i class="fa fa-truck"></i> Charg.</label>
-                    <input type="date" id="odm_cf_1309" class="date-input editable-field" data-hidden="odm_hidden_cf_1309" style="width: 130px;">
+                    <input type="date" id="odm_cf_1309" class="date-input editable-field cnk-blockable-date" data-hidden="odm_hidden_cf_1309" style="width: 130px;">
                 </div>
                 <div class="inline-field">
                     <label><i class="fa fa-home"></i> Livr.</label>
-                    <input type="date" id="odm_cf_1324" class="date-input editable-field" data-hidden="odm_hidden_cf_1324" style="width: 130px;">
+                    <input type="date" id="odm_cf_1324" class="date-input editable-field cnk-blockable-date" data-hidden="odm_hidden_cf_1324" style="width: 130px;">
                 </div>
                 {* Séparateur *}
                 <div class="inline-separator"></div>

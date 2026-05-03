@@ -57,21 +57,21 @@
         <div class="date-fields-compact date-unique-container" style="{if $PERIODE_DEBUT neq '' || $PERIODE_FIN neq ''}display:none;{/if}">
             <div class="date-field-item">
                 <span class="date-field-label"><i class="fa fa-upload" style="color:#27ae60"></i> Charg.</span>
-                <input type="date" class="date-input-compact" id="date_unique_chargement" value="{if $DATE_UNIQUE_CHARGEMENT}{$DATE_UNIQUE_CHARGEMENT|date_format:'%Y-%m-%d'}{/if}">
+                <input type="date" class="date-input-compact cnk-blockable-date" id="date_unique_chargement" value="{if $DATE_UNIQUE_CHARGEMENT}{$DATE_UNIQUE_CHARGEMENT|date_format:'%Y-%m-%d'}{/if}">
             </div>
             <div class="date-field-item">
                 <span class="date-field-label"><i class="fa fa-download" style="color:#e74c3c"></i> Livr.</span>
-                <input type="date" class="date-input-compact" id="date_unique_livraison" value="{if $DATE_UNIQUE_LIVRAISON}{$DATE_UNIQUE_LIVRAISON|date_format:'%Y-%m-%d'}{/if}">
+                <input type="date" class="date-input-compact cnk-blockable-date" id="date_unique_livraison" value="{if $DATE_UNIQUE_LIVRAISON}{$DATE_UNIQUE_LIVRAISON|date_format:'%Y-%m-%d'}{/if}">
             </div>
         </div>
         <div class="date-fields-compact date-period-container" style="{if $PERIODE_DEBUT eq '' && $PERIODE_FIN eq ''}display:none;{/if}">
             <div class="date-field-item">
                 <span class="date-field-label"><i class="fa fa-calendar-plus-o" style="color:#3498db"></i> Du</span>
-                <input type="date" class="date-input-compact" id="date_periode_debut" value="{if $PERIODE_DEBUT}{$PERIODE_DEBUT|date_format:'%Y-%m-%d'}{/if}">
+                <input type="date" class="date-input-compact cnk-blockable-date" id="date_periode_debut" value="{if $PERIODE_DEBUT}{$PERIODE_DEBUT|date_format:'%Y-%m-%d'}{/if}">
             </div>
             <div class="date-field-item">
                 <span class="date-field-label"><i class="fa fa-calendar-times-o" style="color:#9b59b6"></i> Au</span>
-                <input type="date" class="date-input-compact" id="date_periode_fin" value="{if $PERIODE_FIN}{$PERIODE_FIN|date_format:'%Y-%m-%d'}{/if}">
+                <input type="date" class="date-input-compact cnk-blockable-date" id="date_periode_fin" value="{if $PERIODE_FIN}{$PERIODE_FIN|date_format:'%Y-%m-%d'}{/if}">
             </div>
         </div>
         {* Key Metrics - Distance, Volume estimé, Volume final *}
