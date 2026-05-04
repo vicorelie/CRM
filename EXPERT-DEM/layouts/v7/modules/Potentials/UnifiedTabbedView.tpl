@@ -1456,3 +1456,6 @@ input[type="number"] { -moz-appearance: textfield; }
     });
 })();
 </script>
+
+{* Validation des dates bloquées sur les inputs date *}
+<script src="layouts/v7/modules/Potentials/resources/BlockedDatesPicker.js"></script>
