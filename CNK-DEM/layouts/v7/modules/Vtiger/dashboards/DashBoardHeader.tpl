@@ -216,6 +216,8 @@ jQuery(document).ready(function() {
 			var self = this;
 			this.picker = flatpickr('#bd_picker', {
 				dateFormat: 'Y-m-d',
+				altInput: true,
+				altFormat: 'd/m/Y',
 				showMonths: 1,
 				locale: (typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.fr) ? flatpickr.l10ns.fr : 'default',
 				onDayCreate: function(dObj, dStr, fp, dayElem) {

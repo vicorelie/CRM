@@ -16,9 +16,20 @@
         pendingInputs: [],
 
         init: function() {
+            var self = this;
             this.load();
-            this.observe();
             this.attachAll();
+            // Re-scan when AJAX requests complete (covers tab loading)
+            jQuery(document).ajaxComplete(function(event, xhr, settings) {
+                // Skip our own AJAX calls
+                if (settings && settings.url && settings.url.indexOf('GetBlockedDates') !== -1) return;
+                if (settings && settings.url && settings.url.indexOf('BlockedDates') !== -1) return;
+                self.attachAll();
+            });
+            // Lazy attach on focus/click (covers any late-loaded inputs)
+            jQuery(document).on('focusin mousedown', 'input.cnk-blockable-date', function() {
+                if (!this._cnkBlockedAttached) self.attach(this);
+            });
         },
 
         load: function() {
@@ -57,6 +68,9 @@
 
         attach: function(input) {
             if (!input || input._cnkBlockedAttached) return;
+            // Skip flatpickr's own altInput sibling (created with altInput:true)
+            if (input.classList && (input.classList.contains('flatpickr-alt-input') || input.classList.contains('flatpickr-input'))) return;
+            if (input._flatpickr) return; // already has a flatpickr instance
             if (typeof flatpickr === 'undefined') return; // flatpickr not loaded yet
             if (!this.loaded) {
                 this.pendingInputs.push(input);
@@ -71,6 +85,8 @@
 
             flatpickr(input, {
                 dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
                 allowInput: false,
                 showMonths: 1,
                 locale: (typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.fr) ? flatpickr.l10ns.fr : 'default',
@@ -91,33 +107,17 @@
                 onChange: function(selectedDates, dateStr) {
                     // Trigger change on the original input so existing handlers fire
                     jQuery(input).trigger('change').trigger('input');
+                },
+                onReady: function(selectedDates, dateStr, fp) {
+                    // Mark the altInput sibling so it's not re-processed
+                    if (fp.altInput) {
+                        fp.altInput._cnkBlockedAttached = true;
+                        fp.altInput.classList.remove('cnk-blockable-date');
+                    }
                 }
             });
         },
 
-        observe: function() {
-            var self = this;
-            if (!window.MutationObserver) return;
-            var observer = new MutationObserver(function(mutations) {
-                var found = false;
-                mutations.forEach(function(m) {
-                    m.addedNodes.forEach(function(node) {
-                        if (node.nodeType !== 1) return;
-                        if (node.matches && node.matches('input.cnk-blockable-date')) {
-                            self.attach(node);
-                            found = true;
-                        } else if (node.querySelectorAll) {
-                            node.querySelectorAll('input.cnk-blockable-date').forEach(function(el) {
-                                self.attach(el);
-                                found = true;
-                            });
-                        }
-                    });
-                });
-                if (found && !self.loaded && !self.loading) self.load();
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-        }
     };
 
     // Inject CSS for blocked dates (red, non-clickable)

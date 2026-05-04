@@ -1456,9 +1456,3 @@ input[type="number"] { -moz-appearance: textfield; }
     });
 })();
 </script>
-
-{* Flatpickr + Blocked Dates handler (grise les dates marquées "complètes") *}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/fr.js"></script>
-<script src="layouts/v7/modules/Potentials/resources/BlockedDatesPicker.js"></script>
