@@ -129,7 +129,7 @@ export function CampaignsList({ refreshKey }: Props) {
 
   async function pushToProvider(c: CampaignRich) {
     // Préparation du body de push : récupère les valeurs depuis la campagne stockée
-    const dailyBudget = c.dailyBudget ?? c.budget;
+    let dailyBudget = c.dailyBudget ?? c.budget ?? 0;
     if (!dailyBudget) {
       const v = prompt(
         "Budget quotidien (€) ?\nLa campagne sera créée en PAUSED, tu activeras manuellement après vérification.",
@@ -141,7 +141,7 @@ export function CampaignsList({ refreshKey }: Props) {
         alert("Budget invalide");
         return;
       }
-      (c as { dailyBudget: number }).dailyBudget = parsed;
+      dailyBudget = parsed;
     }
     const finalUrl =
       prompt(
@@ -212,7 +212,7 @@ export function CampaignsList({ refreshKey }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dailyBudget: c.dailyBudget,
+          dailyBudget,
           campaignType: c.objective ?? "TRAFFIC",
           finalUrl,
           countries: ["FR"],

@@ -239,6 +239,10 @@ async function metaPost<T = MetaResource>(
   }
   params.set("access_token", account.accessToken);
 
+  // Log du payload (sans le token) pour debug
+  const bodyForLog = { ...body };
+  console.log(`[meta.pushCampaign] POST ${resource}:`, JSON.stringify(bodyForLog).slice(0, 800));
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -281,9 +285,29 @@ function mapObjective(campaignType: string | undefined): string {
   return "OUTCOME_TRAFFIC"; // défaut sûr
 }
 
-/** Mappe l'objective → optimization_goal cohérent côté AdSet. */
+/**
+ * Mappe vers un objective LEGACY (pré-2024). Certains comptes pub Meta ne
+ * supportent pas encore les "Outcomes" v22+ et exigent les anciennes valeurs.
+ * Utilisé en fallback automatique si Meta retourne code 100/4834011.
+ */
+function mapLegacyObjective(campaignType: string | undefined): string {
+  const v = (campaignType ?? "").toLowerCase().trim();
+  if (!v) return "LINK_CLICKS";
+  if (v.includes("notori") || v.includes("aware") || v === "reach") return "REACH";
+  if (v.includes("trafic") || v.includes("traffic") || v.includes("clic")) return "LINK_CLICKS";
+  if (v.includes("engag") || v.includes("video") || v.includes("vidéo")) return "POST_ENGAGEMENT";
+  if (v.includes("lead") || v.includes("contact") || v.includes("formul")) return "LEAD_GENERATION";
+  if (v.includes("vente") || v.includes("sale") || v.includes("convers") || v.includes("achat")) {
+    return "CONVERSIONS";
+  }
+  if (v.includes("app") || v.includes("install")) return "APP_INSTALLS";
+  return "LINK_CLICKS";
+}
+
+/** Mappe l'objective → optimization_goal cohérent côté AdSet (Outcomes v22+ ET legacy). */
 function mapOptimizationGoal(objective: string): string {
   switch (objective) {
+    // Outcomes v22+ (2024-2026)
     case "OUTCOME_AWARENESS":
       return "REACH";
     case "OUTCOME_TRAFFIC":
@@ -296,6 +320,23 @@ function mapOptimizationGoal(objective: string): string {
       return "OFFSITE_CONVERSIONS";
     case "OUTCOME_APP_PROMOTION":
       return "APP_INSTALLS";
+    // Legacy (pré-2024) — pour les comptes pub qui ne supportent pas Outcomes
+    case "REACH":
+      return "REACH";
+    case "LINK_CLICKS":
+      return "LINK_CLICKS";
+    case "POST_ENGAGEMENT":
+      return "POST_ENGAGEMENT";
+    case "LEAD_GENERATION":
+      return "LEAD_GENERATION";
+    case "CONVERSIONS":
+      return "OFFSITE_CONVERSIONS";
+    case "APP_INSTALLS":
+      return "APP_INSTALLS";
+    case "BRAND_AWARENESS":
+      return "BRAND_AWARENESS";
+    case "VIDEO_VIEWS":
+      return "THRUPLAY";
     default:
       return "LINK_CLICKS";
   }
@@ -305,8 +346,10 @@ function mapOptimizationGoal(objective: string): string {
 function mapBillingEvent(objective: string): string {
   switch (objective) {
     case "OUTCOME_TRAFFIC":
+    case "LINK_CLICKS":
       return "LINK_CLICKS";
     case "OUTCOME_ENGAGEMENT":
+    case "POST_ENGAGEMENT":
       return "POST_ENGAGEMENT";
     default:
       return "IMPRESSIONS";
@@ -363,35 +406,60 @@ async function pushCampaign(
   const resources: Record<string, string> = {};
 
   try {
+    // 1) Campaign — Outcomes (v22+) avec CBO (daily_budget au niveau Campaign, obligatoire 2025+)
     const objective = mapObjective(input.campaignType);
+    let campaign: MetaResource;
+    try {
+      campaign = await metaPost<MetaResource>(account, `${accountId}/campaigns`, {
+        name: input.name,
+        objective,
+        status: "PAUSED",
+        special_ad_categories: ["NONE"],
+        buying_type: "AUCTION",
+        // CBO 2025+ : daily_budget en cents + bid_strategy au niveau Campaign
+        daily_budget: Math.round(input.dailyBudget * 100),
+        bid_strategy: "LOWEST_COST_WITHOUT_CAP",
+      });
+    } catch (e1) {
+      const msg1 = e1 instanceof Error ? e1.message : String(e1);
+      console.error(`[meta.pushCampaign] Erreur campaign Outcomes : ${msg1}`);
+
+      // Si ce n'est pas un problème d'objective rejeté, on remonte
+      const isObjectiveRejected = msg1.includes("Invalid Objective") || msg1.includes("objective is invalid");
+      if (!isObjectiveRejected) throw e1;
+
+      // Fallback rare : compte legacy qui refuse Outcomes (peu probable en 2026 mais on garde)
+      console.log(`[meta.pushCampaign] Outcome ${objective} refusé → fallback legacy`);
+      const legacyObjective = mapLegacyObjective(input.campaignType);
+      campaign = await metaPost<MetaResource>(account, `${accountId}/campaigns`, {
+        name: input.name,
+        objective: legacyObjective,
+        status: "PAUSED",
+        special_ad_categories: ["NONE"],
+        buying_type: "AUCTION",
+        daily_budget: Math.round(input.dailyBudget * 100),
+      });
+    }
+    resources.campaign = campaign.id;
+
+    // optimization_goal et billing_event dépendent de l'objective finalement utilisé
     const optimizationGoal = mapOptimizationGoal(objective);
     const billingEvent = mapBillingEvent(objective);
-
-    // 1) Campaign
-    const campaign = await metaPost<MetaResource>(account, `${accountId}/campaigns`, {
-      name: input.name,
-      objective,
-      status: "PAUSED",
-      special_ad_categories: [], // requis depuis 2021
-      buying_type: "AUCTION",
-    });
-    resources.campaign = campaign.id;
 
     // 2) AdSet — Advantage+ Audience par défaut (best practice 2026)
     const startTime = new Date(Date.now() + 60_000).toISOString(); // +1min pour éviter "start_time in past"
     const adset = await metaPost<MetaResource>(account, `${accountId}/adsets`, {
       name: `${input.name} – Ensemble`,
       campaign_id: campaign.id,
-      daily_budget: Math.round(input.dailyBudget * 100), // Meta utilise les cents
+      // Pas de daily_budget ni bid_strategy ici : ils sont au niveau Campaign (CBO)
       billing_event: billingEvent,
       optimization_goal: optimizationGoal,
-      bid_strategy: "LOWEST_COST_WITHOUT_CAP",
+      // destination_type explicite pour OUTCOME_TRAFFIC (Meta exige depuis v21+)
+      destination_type: "WEBSITE",
       targeting: {
         geo_locations: { countries: input.countries ?? ["FR"] },
         age_min: 18,
         age_max: 65,
-        // Advantage+ Audience — meilleur ML Meta, +11% CTR, -32% CPA en moy.
-        targeting_automation: { advantage_audience: 1 },
       },
       start_time: startTime,
       status: "PAUSED",
