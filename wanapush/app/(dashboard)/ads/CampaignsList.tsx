@@ -150,9 +150,58 @@ export function CampaignsList({ refreshKey }: Props) {
       ) ?? undefined;
     if (!finalUrl) return;
 
+    // Image — option 1 : générer via IA, option 2 : URL existante, option 3 : skip
+    let imageUrl: string | undefined;
+    if (c.type === "META_ADS") {
+      const choice = prompt(
+        "Image de la publicité ?\n\n" +
+          "• Tape un brief court (ex : 'formation SEO IA pour entrepreneurs') → on génère l'image avec l'IA\n" +
+          "• Ou colle une URL d'image existante (https://...)\n" +
+          "• Ou laisse vide → annonce sans image",
+        "",
+      );
+      if (choice && choice.trim()) {
+        const trimmed = choice.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+          imageUrl = trimmed;
+        } else {
+          // Brief → génération IA
+          setBusyId(c.id);
+          try {
+            const r = await fetch("/api/ads/generate-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                brief: { productOrService: trimmed, tone: "casual" },
+                size: "square",
+              }),
+            });
+            const j = await r.json();
+            if (!r.ok || !j.url) {
+              alert(`Échec génération image : ${j.error ?? "?"}`);
+              setBusyId(null);
+              return;
+            }
+            imageUrl = j.url;
+            alert(
+              `Image générée par ${j.model}. Elle apparaîtra dans l'annonce Meta après push.`,
+            );
+          } catch (e) {
+            alert(`Erreur génération image : ${e instanceof Error ? e.message : "?"}`);
+            setBusyId(null);
+            return;
+          } finally {
+            setBusyId(null);
+          }
+        }
+      }
+    }
+
     if (
       !confirm(
-        `Pousser la campagne "${c.name}" vers ${PLATFORM_META[c.type].label} ?\n\nLa campagne sera créée en PAUSED dans le Manager natif. Tu pourras l'activer manuellement après vérification.`,
+        `Pousser la campagne "${c.name}" vers ${PLATFORM_META[c.type].label} ?\n\n` +
+          (imageUrl ? `Avec image : ${imageUrl.slice(0, 80)}\n\n` : "Sans image (link-only ad)\n\n") +
+          "La campagne sera créée en PAUSED dans le Manager natif. Tu pourras l'activer manuellement après vérification.",
       )
     )
       return;
@@ -167,6 +216,7 @@ export function CampaignsList({ refreshKey }: Props) {
           campaignType: c.objective ?? "TRAFFIC",
           finalUrl,
           countries: ["FR"],
+          ...(imageUrl ? { imageUrl } : {}),
         }),
       });
       const j = await res.json();

@@ -415,17 +415,23 @@ async function pushCampaign(
     const description = (input.descriptions?.[0] ?? "").slice(0, 30);
     const primaryText = (input.primaryText ?? headline).slice(0, 125);
 
+    const linkData: Record<string, unknown> = {
+      link: finalUrl,
+      message: primaryText,
+      name: headline,
+      description,
+      call_to_action: { type: mapCTA(input.cta) },
+    };
+    // Si on a une image URL publique, Meta la télécharge et crée un image_hash en interne
+    if (input.imageUrl) {
+      linkData.picture = input.imageUrl;
+    }
+
     const creative = await metaPost<MetaResource>(account, `${accountId}/adcreatives`, {
       name: `${input.name} – Créa`,
       object_story_spec: {
         page_id: pageId,
-        link_data: {
-          link: finalUrl,
-          message: primaryText,
-          name: headline,
-          description,
-          call_to_action: { type: mapCTA(input.cta) },
-        },
+        link_data: linkData,
       },
     });
     resources.creative = creative.id;
