@@ -23,7 +23,7 @@ import { decrypt } from "@/lib/crypto";
 import { STANDARD_EVENTS } from "@/lib/capi/types";
 import type { ClientEventInput, ServerEvent } from "@/lib/capi/types";
 import { hashUserData } from "@/lib/capi/hash";
-import { enrichUserData } from "@/lib/capi/enrich";
+import { enrichUserData, parseCookies } from "@/lib/capi/enrich";
 import { sendEvents } from "@/lib/capi/client";
 import { checkAndIncrement } from "@/lib/capi/rate-limit";
 
@@ -98,6 +98,13 @@ export async function POST(
   const slug = params.slug;
   if (!slug || slug.length > 200) {
     return noContent(); // 204 — pas d'info à un attaquant qui tente des slugs random
+  }
+
+  // ───── 0) Opt-out RGPD : si le visiteur a refusé le tracking, on drop silencieusement
+  //         Détection via cookie wp-no-track posé par /api/capi/[slug]/opt-out ou par le bandeau JS
+  const cookies = parseCookies(req.headers.get("cookie"));
+  if (cookies.get("wp-no-track") === "1") {
+    return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
   }
 
   // ───── 1) IP visiteur (pour rate limit + enrichissement)

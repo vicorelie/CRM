@@ -115,15 +115,76 @@ fbq('init', ${jsString(config.pixelId)});
     } catch (_) {}
   };
 
-  // API consent (utilisable par un bandeau cookie tiers)
+  // ─── Cookie helpers (consent / opt-out persistents 1 an) ───
+  function readCookie(name) {
+    var parts = (document.cookie || '').split(';');
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i].trim();
+      if (p.indexOf(name + '=') === 0) return decodeURIComponent(p.slice(name.length + 1));
+    }
+    return '';
+  }
+  function writeCookie(name, value, days) {
+    var d = new Date(Date.now() + days * 86400 * 1000);
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + d.toUTCString() + '; path=/; SameSite=Lax';
+  }
+
+  // ─── Consent state (cookie-aware) ───
+  // Si opt-out cookie présent : tracking off définitif (jusqu'à expiration cookie)
+  // Sinon si consent cookie présent : tracking on
+  // Sinon : si consentRequired → off + affiche le bandeau ; si pas → on direct
+  (function initConsent() {
+    if (readCookie('wp-no-track') === '1') {
+      window.__wpCapi.consented = false;
+      return;
+    }
+    if (readCookie('wp-consent') === '1') {
+      window.__wpCapi.consented = true;
+      return;
+    }
+    if (window.__wpCapi.consentRequired) {
+      // En attendant l'opt-in du visiteur via le bandeau
+      window.__wpCapi.consented = false;
+    }
+  })();
+
+  // API publique consent (peut être appelée par un bandeau tiers OU notre bandeau auto)
   window.wpConsent = function(granted) {
-    window.__wpCapi.consented = granted === true;
-    if (granted === true) window.wpTrack('PageView');
+    if (granted === true) {
+      window.__wpCapi.consented = true;
+      writeCookie('wp-consent', '1', 365);
+      window.wpTrack('PageView');
+    } else {
+      window.__wpCapi.consented = false;
+      writeCookie('wp-no-track', '1', 365);
+    }
+    var banner = document.getElementById('wp-consent-banner');
+    if (banner) banner.parentNode.removeChild(banner);
   };
 
-  // Auto-hook : PageView au load
+  // Bandeau RGPD auto — n'apparaît QUE si consentRequired=true ET pas de cookie déjà set
+  function showConsentBannerIfNeeded() {
+    if (!window.__wpCapi.consentRequired) return;
+    if (readCookie('wp-consent') === '1' || readCookie('wp-no-track') === '1') return;
+    if (document.getElementById('wp-consent-banner')) return;
+
+    var div = document.createElement('div');
+    div.id = 'wp-consent-banner';
+    div.setAttribute('role', 'dialog');
+    div.setAttribute('aria-label', 'Consentement cookies');
+    div.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:rgba(15,23,42,0.97);color:#fff;padding:16px 20px;font:14px/1.5 system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;box-shadow:0 -4px 24px rgba(0,0,0,0.2)';
+    div.innerHTML = '<span style="flex:1 1 auto;min-width:200px">Nous utilisons des cookies de mesure publicitaire (Meta Pixel) pour améliorer nos campagnes. Tu peux accepter ou refuser.</span><span style="display:flex;gap:8px;flex-shrink:0"><button id="wp-consent-refuse" type="button" style="background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit">Refuser</button><button id="wp-consent-accept" type="button" style="background:#7c3aed;border:none;color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600">Accepter</button></span>';
+    document.body.appendChild(div);
+    var ac = document.getElementById('wp-consent-accept');
+    var rf = document.getElementById('wp-consent-refuse');
+    if (ac) ac.addEventListener('click', function(){ window.wpConsent(true); });
+    if (rf) rf.addEventListener('click', function(){ window.wpConsent(false); });
+  }
+
+  // Auto-hook : PageView au load (si consent OK déjà)
   function autoPageView() {
     if (shouldTrack('PageView')) window.wpTrack('PageView');
+    showConsentBannerIfNeeded();
   }
 
   // Auto-hook : Lead sur form submit (extrait email/tel des inputs si présents)
