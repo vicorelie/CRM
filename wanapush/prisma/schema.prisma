@@ -1,0 +1,1407 @@
+// Schéma Prisma WanaPush — MySQL/MariaDB
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH (NextAuth.js + @auth/prisma-adapter)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOMAINE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  password      String?
+  plan          Plan      @default(STARTER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  businesses      Business[]
+  siteConnections SiteConnection[]
+  generatedSites  GeneratedSite[]
+  socialAccounts  SocialAccount[]
+  scheduledPosts  ScheduledPost[]
+  adAccounts      AdAccount[]
+  adAudiences     AdAudience[]
+  shops           Shop[]
+}
+
+// Connexion à un site web tiers (WordPress, Shopify, custom HTML, etc.).
+// Les credentials sont chiffrés en AES-256-GCM avant stockage.
+// Site web généré par l'IA (landing page ou multi-pages), stocké en DB
+// pour preview et téléchargement ultérieur.
+model GeneratedSite {
+  id        String   @id @default(cuid())
+  userId    String
+  slug      String?  @unique // Slug public pour wanapush.com/sites/<slug>/ (backfill depuis meta.siteSlug)
+  brief     Json // Brief original {type, sector, audience, keywords, lang, tone}
+  pages     Json // [{path, title, html, ...}]
+  meta      Json? // Stats : pages count, mots, score SEO estimé
+  createdAt DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sitePixel SitePixel?
+
+  @@index([userId])
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  siteSlug  String // Slug du site source — lien faible vers GeneratedSite.meta.siteSlug
+  type      String // "contact" | "newsletter"
+  data      Json // Données du formulaire : { name?, email?, phone?, message?, ... }
+  email     String? // Extrait pour faciliter recherche/filtrage
+  pageUrl   String? // URL de la page d'origine
+  ipHash    String? // Hash de l'IP pour rate-limiting/anti-spam (pas l'IP brute)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([siteSlug, createdAt])
+  @@index([siteSlug, read])
+}
+
+model SiteConnection {
+  id          String           @id @default(cuid())
+  userId      String
+  url         String
+  platform    SitePlatform
+  label       String? // Nom convivial choisi par l'utilisateur
+  // Credentials chiffrés (JSON encrypted blob). Voir lib/crypto.ts.
+  credentials String           @db.Text
+  status      ConnectionStatus @default(PENDING)
+  lastTestAt  DateTime?
+  lastError   String?          @db.Text
+  meta        Json? // Capacités détectées (Yoast, RankMath, REST API version, etc.)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum SitePlatform {
+  WORDPRESS
+  SHOPIFY
+  WEBFLOW
+  SQUARESPACE
+  CUSTOM_HTML
+  SFTP_HTML
+  OTHER
+}
+
+enum ConnectionStatus {
+  PENDING
+  CONNECTED
+  FAILED
+}
+
+model Business {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  sector        String?
+  website       String?
+  wanapushScore Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialAccounts SocialAccount[]
+  campaigns      Campaign[]
+
+  @@index([userId])
+}
+
+model SocialAccount {
+  id             String              @id @default(cuid())
+  userId         String
+  businessId     String?
+  platform       Platform
+  accountId      String // ID externe (page id, channel id, urn, etc.)
+  username       String?
+  displayName    String?
+  avatarUrl      String?             @db.Text
+  accessToken    String              @db.Text // chiffré AES-256-GCM
+  refreshToken   String?             @db.Text // chiffré
+  tokenExpiresAt DateTime?
+  scopes         String?             @db.Text // CSV des scopes OAuth obtenus
+  status         SocialAccountStatus @default(CONNECTED)
+  lastError      String?             @db.Text
+  meta           Json? // pageId, igBusinessId, channelId, urn, openId…
+  connectedAt    DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business       Business?             @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  scheduledPosts ScheduledPostTarget[]
+  analytics      PostAnalytics[]
+
+  @@unique([userId, platform, accountId])
+  @@index([userId])
+  @@index([businessId])
+}
+
+enum SocialAccountStatus {
+  CONNECTED
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
+// Un post planifié peut viser plusieurs comptes (cross-posting).
+// Chaque cible (ScheduledPostTarget) reçoit son propre statut + externalId.
+model ScheduledPost {
+  id          String              @id @default(cuid())
+  userId      String
+  caption     String              @db.Text
+  mediaUrls   Json // [{ url, type: "image"|"video", alt? }]
+  scheduledAt DateTime
+  status      ScheduledPostStatus @default(SCHEDULED)
+  publishedAt DateTime?
+  lastError   String?             @db.Text
+  options     Json? // {firstComment, location, hashtags, ttPrivacy, ytPrivacy, ytTitle, …}
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targets ScheduledPostTarget[]
+
+  @@index([userId])
+  @@index([status, scheduledAt])
+}
+
+model ScheduledPostTarget {
+  id          String              @id @default(cuid())
+  postId      String
+  accountId   String
+  platform    Platform
+  status      ScheduledPostStatus @default(SCHEDULED)
+  externalId  String? // id du post sur la plateforme cible
+  externalUrl String?             @db.Text
+  publishedAt DateTime?
+  lastError   String?             @db.Text
+  attempts    Int                 @default(0)
+
+  post    ScheduledPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  account SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([accountId])
+  @@index([status])
+}
+
+enum ScheduledPostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  CANCELED
+}
+
+model PostAnalytics {
+  id         String   @id @default(cuid())
+  accountId  String
+  platform   Platform
+  externalId String // id du post sur la plateforme
+  metrics    Json // {impressions, reach, likes, comments, shares, saves, views, watchTimeSec, ctr, ...}
+  fetchedAt  DateTime @default(now())
+
+  account SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, externalId, fetchedAt])
+  @@index([accountId])
+  @@index([platform, fetchedAt])
+}
+
+model Campaign {
+  id             String       @id @default(cuid())
+  businessId     String
+  adAccountId    String? // optionnel : campagne reliée à un Ad Account connecté
+  name           String
+  type           CampaignType
+  status         Status       @default(DRAFT)
+  budget         Float? // budget total saisi par l'user (peut être null en mode draft)
+  dailyBudget    Float? // budget journalier (Ad Manager)
+  lifetimeBudget Float? // budget total Ad Manager
+  startDate      DateTime?
+  endDate        DateTime?
+  objective      String? // ex AWARENESS, CONVERSIONS — code interne ou natif Meta/Google
+  externalId     String? // ID natif de la campagne sur la plateforme
+  targeting      Json? // audience & ciblage, géo, intérêts, mots-clés
+  results        Json? // legacy : variantes IA, audit ROAS… on garde pour compat
+  lastSyncAt     DateTime? // dernière fois qu'on a pull les KPIs
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  business  Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  adAccount AdAccount?  @relation(fields: [adAccountId], references: [id], onDelete: SetNull)
+  metrics   AdMetrics[]
+
+  @@index([businessId])
+  @@index([adAccountId])
+  @@index([externalId])
+}
+
+// Compte publicitaire connecté via OAuth (Meta Business Manager, Google Ads, TikTok, LinkedIn).
+// Tokens chiffrés AES-256-GCM. 1 user → N comptes pub.
+model AdAccount {
+  id             String          @id @default(cuid())
+  userId         String
+  platform       AdPlatform
+  externalId     String // act_xxx (Meta), customers/123 (Google), advertiser_id (TikTok), urn:li:sponsoredAccount:x (LinkedIn)
+  name           String? // nom convivial du compte
+  currency       String? // EUR, USD…
+  timezone       String?
+  accessToken    String          @db.Text // chiffré
+  refreshToken   String?         @db.Text // chiffré
+  tokenExpiresAt DateTime?
+  scopes         String?         @db.Text
+  status         AdAccountStatus @default(CONNECTED)
+  lastError      String?         @db.Text
+  meta           Json? // businessId Meta, managerId Google, etc.
+  connectedAt    DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns  Campaign[]
+  sitePixels SitePixel[]
+
+  @@unique([userId, platform, externalId])
+  @@index([userId])
+  @@index([platform])
+}
+
+enum AdAccountStatus {
+  CONNECTED
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
+enum AdPlatform {
+  META_ADS
+  GOOGLE_ADS
+  TIKTOK_ADS
+  LINKEDIN_ADS
+}
+
+// Snapshot quotidien des KPIs d'une campagne (1 ligne par campagne par jour).
+model AdMetrics {
+  id          String   @id @default(cuid())
+  campaignId  String
+  date        DateTime // jour du snapshot (00:00 UTC)
+  spend       Float    @default(0)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  revenue     Float    @default(0)
+  raw         Json? // payload brut renvoyé par la plateforme
+  fetchedAt   DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
+  @@index([campaignId])
+  @@index([date])
+}
+
+// Bibliothèque d'audiences réutilisables (text-based pour l'instant — Meta/Google
+// ont leurs propres audiences custom côté Ad Manager qu'on syncera plus tard).
+model AdAudience {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String   @db.Text
+  size        String? // estimation manuelle ou calculée ("~150k", "1M+")
+  tags        Json? // [string]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Plan {
+  STARTER
+  GROWTH
+  SCALE
+  ENTERPRISE
+}
+
+enum Platform {
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  FACEBOOK
+  LINKEDIN
+  TWITTER
+  PINTEREST
+}
+
+enum CampaignType {
+  META_ADS
+  GOOGLE_ADS
+  TIKTOK_ADS
+  LINKEDIN_ADS
+  SEO
+  EMAIL
+  ASO
+}
+
+enum Status {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// E-COMMERCE
+// Une "Shop" = une boutique configurée pour un site généré (1-1 avec siteSlug).
+// Tous les modèles e-commerce sont scopés à shopId pour isolation multi-tenant.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ═══ Boutique (config globale par site) ═══
+
+model Shop {
+  id          String  @id @default(cuid())
+  userId      String
+  siteSlug    String  @unique // lien faible vers GeneratedSite.meta.siteSlug
+  name        String
+  description String? @db.Text
+
+  // Localisation
+  currency   String @default("EUR") // ISO 4217
+  locale     String @default("fr-FR")
+  timezone   String @default("Europe/Paris")
+  weightUnit String @default("kg") // kg, g, lb, oz
+
+  // Contact business
+  email        String?
+  phone        String?
+  legalName    String?
+  legalAddress String? @db.Text
+  vatNumber    String? // SIRET, VAT...
+  logoUrl      String? @db.Text
+
+  // Stripe (clés chiffrées AES-256-GCM avant stockage)
+  stripeAccountId      String?
+  stripePublishableKey String? @db.Text
+  stripeSecretKey      String? @db.Text
+  stripeWebhookSecret  String? @db.Text
+  stripeMode           String  @default("test") // "test" | "live"
+
+  // PayPal (clés chiffrées)
+  paypalClientId String?
+  paypalSecret   String? @db.Text
+  paypalMode     String  @default("sandbox") // "sandbox" | "live"
+
+  // Settings
+  taxesIncluded      Boolean @default(false) // prix TTC affichés ?
+  requireShipping    Boolean @default(true)
+  allowGuestCheckout Boolean @default(true)
+  orderNumberFormat  String  @default("#{seq}") // template
+  orderNumberSeq     Int     @default(1000) // prochain n°
+
+  // Emails
+  fromEmail String?
+  fromName  String?
+
+  // Setup wizard
+  setupCompleted Boolean @default(false)
+  setupStep      Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products       Product[]
+  categories     Category[]
+  collections    Collection[]
+  stockLocations StockLocation[]
+  customers      Customer[]
+  carts          Cart[]
+  orders         Order[]
+  shippingZones  ShippingZone[]
+  taxRates       TaxRate[]
+  discounts      Discount[]
+  reviews        Review[]
+  stripeEvents   StripeEvent[]
+  auditLogs      AuditLog[]
+  shopOptions    ShopOption[]
+
+  @@index([userId])
+  @@index([siteSlug])
+}
+
+// Bibliothèque d'options réutilisables au niveau de la boutique
+// (ex: "Taille": [XS, S, M, L, XL], "Couleur": [Noir, Blanc, Rouge])
+// On référence ensuite ces options dans les produits au lieu de tout re-taper.
+model ShopOption {
+  id        String   @id @default(cuid())
+  shopId    String
+  name      String // "Taille", "Couleur", "Matière"
+  values    Json // string[] : ["S","M","L"]
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, name])
+  @@index([shopId])
+}
+
+// ═══ Catalogue : Product + Variants + Options ═══
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum ProductType {
+  PHYSICAL
+  DIGITAL
+  SERVICE
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  shopId      String
+  slug        String
+  title       String
+  description String?       @db.Text
+  excerpt     String?       @db.Text // résumé court
+  status      ProductStatus @default(DRAFT)
+  productType ProductType   @default(PHYSICAL)
+  vendor      String?
+
+  // SEO
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  // Inventory settings (au niveau produit)
+  trackInventory Boolean @default(true)
+  allowBackorder Boolean @default(false)
+
+  // Pricing/Inventory si pas de variantes
+  // (un Product a TOUJOURS au moins 1 ProductVariant, la "default" pour les
+  // produits sans options : on duplique pas la logique, tout passe par Variant)
+
+  // Display
+  featured    Boolean   @default(false)
+  position    Int       @default(0)
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop            Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  images          ProductImage[]
+  variants        ProductVariant[]
+  options         ProductOption[]
+  categories      ProductCategory[]
+  collections     ProductCollection[]
+  tags            ProductTag[]
+  reviews         Review[]
+  upsellsFrom     ProductUpsell[]     @relation("UpsellFrom")
+  upsellsTo       ProductUpsell[]     @relation("UpsellTo")
+  wishlistEntries WishlistItem[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, status])
+  @@index([shopId, featured])
+  @@index([shopId, publishedAt])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String  @db.Text
+  alt       String?
+  position  Int     @default(0)
+  width     Int?
+  height    Int?
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants ProductVariant[]
+
+  @@index([productId])
+}
+
+// Une "option" est un axe de variation : Taille, Couleur, Matière
+model ProductOption {
+  id        String @id @default(cuid())
+  productId String
+  name      String // "Taille"
+  position  Int    @default(0)
+
+  product Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values  ProductOptionValue[]
+
+  @@index([productId])
+}
+
+// Une valeur d'option : "S", "M", "L" pour Taille
+model ProductOptionValue {
+  id       String  @id @default(cuid())
+  optionId String
+  value    String
+  // Couleur hex (#RRGGBB) ou image (data URL ou URL absolue) associée à cette valeur.
+  // Pour les options visuelles (Couleur, Matière...), permet d'afficher des swatches.
+  color    String?
+  imageUrl String? @db.Text
+  position Int     @default(0)
+
+  option        ProductOption               @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  variantValues ProductVariantOptionValue[]
+
+  @@index([optionId])
+}
+
+// Une variante = combinaison unique (ex: S × Rouge × Coton)
+model ProductVariant {
+  id        String @id @default(cuid())
+  productId String
+
+  // Identité
+  sku     String?
+  barcode String?
+  title   String // "S / Rouge" ou "Default" si pas d'options
+
+  // Pricing (toujours sur Variant, même pour produit sans options)
+  price     Decimal  @db.Decimal(10, 2)
+  compareAt Decimal? @db.Decimal(10, 2) // prix barré (promo)
+  cost      Decimal? @db.Decimal(10, 2) // coût d'achat (pour marge)
+
+  // Inventory
+  weight     Decimal? @db.Decimal(10, 3)
+  weightUnit String? // override shop default
+
+  // Shipping
+  requiresShipping Boolean @default(true)
+
+  // Image dédiée à cette variante
+  imageId String?
+
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product      Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  image        ProductImage?               @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  optionValues ProductVariantOptionValue[]
+  stockLevels  StockLevel[]
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+
+  @@index([productId])
+  @@index([sku])
+}
+
+// Pivot : un variant a 1 valeur par option
+model ProductVariantOptionValue {
+  variantId     String
+  optionValueId String
+
+  variant     ProductVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  optionValue ProductOptionValue @relation(fields: [optionValueId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, optionValueId])
+  @@index([optionValueId])
+}
+
+// ═══ Catégories + Collections + Tags + Upsells ═══
+
+model Category {
+  id          String  @id @default(cuid())
+  shopId      String
+  parentId    String?
+  slug        String
+  name        String
+  description String? @db.Text
+  imageUrl    String? @db.Text
+  position    Int     @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  shop     Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  parent   Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[]        @relation("CategoryHierarchy")
+  products ProductCategory[]
+
+  @@unique([shopId, slug])
+  @@index([shopId])
+  @@index([parentId])
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+enum CollectionType {
+  MANUAL // produits ajoutés manuellement
+  SMART // règles automatiques (tag, price range, vendor, etc.)
+}
+
+model Collection {
+  id          String         @id @default(cuid())
+  shopId      String
+  slug        String
+  title       String
+  description String?        @db.Text
+  imageUrl    String?        @db.Text
+  type        CollectionType @default(MANUAL)
+  rules       Json? // pour SMART : conditions auto-apply
+  position    Int            @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  shop     Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products ProductCollection[]
+
+  @@unique([shopId, slug])
+  @@index([shopId])
+}
+
+model ProductCollection {
+  productId    String
+  collectionId String
+  position     Int    @default(0)
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+  @@index([collectionId])
+}
+
+model ProductTag {
+  productId String
+  tag       String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tag])
+  @@index([tag])
+}
+
+enum UpsellType {
+  UPSELL // proposer un produit plus cher / + gamme sup.
+  CROSSSELL // produit complémentaire (ex: étui pour téléphone)
+  RELATED // produit lié (affichage seulement)
+}
+
+model ProductUpsell {
+  productId String // produit source
+  upsellId  String // produit recommandé
+  type      UpsellType
+  position  Int        @default(0)
+
+  product       Product @relation("UpsellFrom", fields: [productId], references: [id], onDelete: Cascade)
+  upsellProduct Product @relation("UpsellTo", fields: [upsellId], references: [id], onDelete: Cascade)
+
+  @@id([productId, upsellId, type])
+  @@index([upsellId])
+}
+
+// ═══ Stock : Locations + Levels ═══
+
+model StockLocation {
+  id        String  @id @default(cuid())
+  shopId    String
+  name      String // "Entrepôt principal", "Boutique Paris"
+  address   String? @db.Text
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  shop   Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  levels StockLevel[]
+
+  @@index([shopId])
+}
+
+model StockLevel {
+  variantId  String
+  locationId String
+  quantity   Int    @default(0)
+  reserved   Int    @default(0) // hold pendant checkout
+  threshold  Int? // alerte si quantity < threshold
+
+  updatedAt DateTime @updatedAt
+
+  variant  ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  location StockLocation  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, locationId])
+  @@index([locationId])
+}
+
+// ═══ Customer + Adresses + Wishlist ═══
+
+model Customer {
+  id        String  @id @default(cuid())
+  shopId    String
+  userId    String? // si compte créé via NextAuth (login)
+  email     String
+  firstName String?
+  lastName  String?
+  phone     String?
+
+  // Marketing opt-in
+  marketingConsent   Boolean   @default(false)
+  marketingConsentAt DateTime?
+
+  // Notes internes (admin)
+  notes String? @db.Text
+
+  // Stats agrégées (denormalisé pour perfs dashboard)
+  totalSpent  Decimal   @default(0) @db.Decimal(10, 2)
+  ordersCount Int       @default(0)
+  lastOrderAt DateTime?
+
+  // Suspension
+  blocked       Boolean @default(false)
+  blockedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop      Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  addresses Address[]
+  orders    Order[]
+  reviews   Review[]
+  wishlist  WishlistItem[]
+  carts     Cart[]
+
+  @@unique([shopId, email])
+  @@index([shopId, email])
+  @@index([userId])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  customerId String?
+
+  // Identité
+  firstName String?
+  lastName  String?
+  company   String?
+  phone     String?
+
+  // Adresse
+  address1   String  @db.Text
+  address2   String? @db.Text
+  city       String
+  postalCode String
+  province   String?
+  country    String // ISO 3166-1 alpha-2 (FR, US, ...)
+
+  // Type
+  isDefault Boolean @default(false)
+  label     String? // "Maison", "Bureau"
+
+  createdAt DateTime @default(now())
+
+  customer       Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  shippingOrders Order[]   @relation("ShippingAddress")
+  billingOrders  Order[]   @relation("BillingAddress")
+
+  @@index([customerId])
+}
+
+model WishlistItem {
+  customerId String
+  productId  String
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, productId])
+  @@index([productId])
+}
+
+// ═══ Cart + CartItem ═══
+
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  COMPLETED
+  EXPIRED
+}
+
+model Cart {
+  id         String  @id @default(cuid())
+  shopId     String
+  customerId String?
+  sessionId  String // pour panier anonyme (cookie côté client)
+
+  currency String
+
+  // Totaux dénormalisés (snapshot pour perf, recalculés sur add/remove)
+  subtotal Decimal @default(0) @db.Decimal(10, 2)
+  shipping Decimal @default(0) @db.Decimal(10, 2)
+  tax      Decimal @default(0) @db.Decimal(10, 2)
+  discount Decimal @default(0) @db.Decimal(10, 2)
+  total    Decimal @default(0) @db.Decimal(10, 2)
+
+  discountCode     String?
+  shippingMethodId String? // ID de ShippingMethod choisie
+
+  status              CartStatus @default(ACTIVE)
+  abandonedRemindedAt DateTime?
+  expiresAt           DateTime?
+
+  // Snapshot adresses si en checkout
+  customerEmail       String?
+  customerPhone       String?
+  shippingAddressJson Json? // { firstName, lastName, address1, city, postalCode, country, ... }
+  billingAddressJson  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    CartItem[]
+
+  @@index([shopId, sessionId])
+  @@index([shopId, customerId])
+  @@index([status, updatedAt])
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int     @default(1)
+  unitPrice Decimal @db.Decimal(10, 2) // snapshot du prix à l'ajout
+
+  createdAt DateTime @default(now())
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, variantId])
+  @@index([cartId])
+}
+
+// ═══ Order + Items + Refund + Fulfillment ═══
+
+enum OrderStatus {
+  PENDING // créée mais pas payée
+  CONFIRMED // payée et prête pour fulfillment
+  CANCELLED
+}
+
+enum FinancialStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIAL
+  FULFILLED
+}
+
+model Order {
+  id          String  @id @default(cuid())
+  shopId      String
+  customerId  String?
+  orderNumber String // séquentiel par shop : "#1001"
+
+  status            OrderStatus       @default(PENDING)
+  financialStatus   FinancialStatus   @default(PENDING)
+  fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
+
+  // Snapshot client (au moment de la commande)
+  customerEmail String
+  customerName  String?
+  customerPhone String?
+
+  // Adresses (lien vers Address + snapshot Json pour résistance)
+  shippingAddressId   String?
+  billingAddressId    String?
+  shippingAddressJson Json? // snapshot
+  billingAddressJson  Json?
+
+  // Totaux
+  currency       String
+  subtotal       Decimal @db.Decimal(10, 2)
+  shippingCost   Decimal @default(0) @db.Decimal(10, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  total          Decimal @db.Decimal(10, 2)
+
+  // Paiement
+  paymentMethod   String? // "stripe" | "paypal" | "bank_transfer" | "manual"
+  paymentIntentId String? // Stripe PI ID ou PayPal Order ID
+  paidAt          DateTime?
+
+  // Livraison
+  shippingMethod   String? // snapshot du nom de méthode
+  shippingZone     String?
+  shippingTracking String?
+  shippingCarrier  String?
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+
+  // Code promo appliqué
+  discountCode String?
+
+  // Notes
+  customerNote String? @db.Text
+  internalNote String? @db.Text
+
+  // Source
+  pageUrl   String?
+  referrer  String?
+  ipHash    String?
+  userAgent String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  shop            Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  shippingAddress Address?      @relation("ShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  billingAddress  Address?      @relation("BillingAddress", fields: [billingAddressId], references: [id], onDelete: SetNull)
+  items           OrderItem[]
+  refunds         Refund[]
+  fulfillments    Fulfillment[]
+
+  @@unique([shopId, orderNumber])
+  @@index([shopId, status])
+  @@index([shopId, financialStatus])
+  @@index([shopId, createdAt])
+  @@index([customerEmail])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  variantId String? // SetNull si variante supprimée, mais snapshot reste
+
+  // Snapshot — pour ne PAS perdre l'info si produit/variante supprimé
+  productTitle String
+  variantTitle String?
+  sku          String?
+  imageUrl     String?  @db.Text
+  quantity     Int
+  unitPrice    Decimal  @db.Decimal(10, 2)
+  totalPrice   Decimal  @db.Decimal(10, 2)
+  weight       Decimal? @db.Decimal(10, 3)
+  taxRate      Decimal? @db.Decimal(5, 2)
+  taxAmount    Decimal? @db.Decimal(10, 2)
+
+  fulfilledQuantity Int @default(0) // déjà expédié
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model Refund {
+  id             String  @id @default(cuid())
+  orderId        String
+  amount         Decimal @db.Decimal(10, 2)
+  reason         String?
+  stripeRefundId String?
+  paypalRefundId String?
+  notes          String? @db.Text
+
+  // Items remboursés (Json pour flexibilité)
+  itemsJson Json? // [{orderItemId, quantity, amount}, ...]
+
+  createdAt DateTime @default(now())
+  createdBy String? // userId admin
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Fulfillment {
+  id      String            @id @default(cuid())
+  orderId String
+  status  FulfillmentStatus @default(UNFULFILLED)
+
+  trackingNumber String?
+  trackingUrl    String? @db.Text
+  carrier        String?
+
+  // Items inclus (Json)
+  itemsJson Json // [{orderItemId, quantity}]
+
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ═══ Shipping + Tax ═══
+
+enum ShippingType {
+  FLAT // taux fixe
+  WEIGHT_BASED // selon poids
+  PRICE_BASED // selon montant panier
+  FREE // gratuit (sous conditions ou non)
+  PICKUP // retrait en boutique / point relais
+}
+
+model ShippingZone {
+  id        String @id @default(cuid())
+  shopId    String
+  name      String // "France", "UE", "Reste du monde"
+  countries Json // ["FR", "BE", "CH"] — ISO 3166-1 alpha-2
+  position  Int    @default(0)
+
+  shop    Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  methods ShippingMethod[]
+
+  @@index([shopId])
+}
+
+model ShippingMethod {
+  id          String       @id @default(cuid())
+  zoneId      String
+  name        String // "Colissimo 24h", "Mondial Relay", "Retrait magasin"
+  description String?      @db.Text
+  type        ShippingType
+  carrier     String? // "Colissimo", "DHL", "Mondial Relay"
+
+  // Pricing selon type
+  flatRate Decimal? @db.Decimal(10, 2)
+  // Pour WEIGHT_BASED / PRICE_BASED : règles JSON
+  rules    Json? // [{min: 0, max: 1, price: 5.99}, ...]
+
+  // Free shipping
+  freeAboveAmount Decimal? @db.Decimal(10, 2)
+
+  // Affichage
+  estimatedDays String? // "2-3 jours ouvrés"
+  icon          String?
+  position      Int     @default(0)
+  enabled       Boolean @default(true)
+
+  zone ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@index([zoneId])
+}
+
+model TaxRate {
+  id                String  @id @default(cuid())
+  shopId            String
+  name              String // "TVA France 20%"
+  rate              Decimal @db.Decimal(5, 2) // 20.00 = 20%
+  country           String // ISO
+  region            String? // pour US states, CA provinces
+  postalCodePattern String? // regex optionnel
+
+  appliesToShipping Boolean @default(false)
+  enabled           Boolean @default(true)
+  position          Int     @default(0)
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, country])
+}
+
+// ═══ Discounts ═══
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+  BUY_X_GET_Y
+}
+
+enum DiscountApplicability {
+  ENTIRE_ORDER
+  SPECIFIC_PRODUCTS
+  SPECIFIC_CATEGORIES
+  SPECIFIC_COLLECTIONS
+}
+
+model Discount {
+  id          String  @id @default(cuid())
+  shopId      String
+  code        String // "SUMMER20"
+  description String?
+
+  type  DiscountType
+  value Decimal      @db.Decimal(10, 2) // % ou € selon type
+
+  // Buy X Get Y (si type = BUY_X_GET_Y)
+  bxgyBuyQuantity Int?
+  bxgyGetQuantity Int?
+  bxgyGetDiscount Decimal? @db.Decimal(5, 2) // %
+
+  // Conditions
+  minSubtotal     Decimal? @db.Decimal(10, 2)
+  minQuantity     Int?
+  firstOrderOnly  Boolean  @default(false)
+  oncePerCustomer Boolean  @default(false)
+
+  // Limites globales
+  usageLimit Int? // nombre max d'utilisations
+  usageCount Int       @default(0)
+  startsAt   DateTime?
+  endsAt     DateTime?
+
+  // Restrictions
+  applicability DiscountApplicability @default(ENTIRE_ORDER)
+  productIds    Json? // si SPECIFIC_PRODUCTS
+  categoryIds   Json? // si SPECIFIC_CATEGORIES
+  collectionIds Json? // si SPECIFIC_COLLECTIONS
+
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  usages DiscountUsage[]
+
+  @@unique([shopId, code])
+  @@index([shopId, enabled])
+}
+
+model DiscountUsage {
+  id         String   @id @default(cuid())
+  discountId String
+  customerId String?
+  orderId    String?
+  amount     Decimal? @db.Decimal(10, 2) // montant réduit appliqué
+  createdAt  DateTime @default(now())
+
+  discount Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+
+  @@index([discountId])
+  @@index([customerId])
+}
+
+// ═══ Reviews + Stripe Events + Audit Log ═══
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Review {
+  id         String  @id @default(cuid())
+  shopId     String
+  productId  String
+  customerId String?
+  orderId    String? // pour "verified purchase"
+
+  rating Int // 1..5
+  title  String?
+  body   String? @db.Text
+
+  authorName  String?
+  authorEmail String?
+
+  status           ReviewStatus @default(PENDING)
+  verifiedPurchase Boolean      @default(false)
+  reply            String?      @db.Text // réponse du marchand
+  repliedAt        DateTime?
+  helpfulCount     Int          @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([productId, status])
+  @@index([shopId, status])
+}
+
+// Webhooks Stripe : trace des événements reçus pour idempotence + audit
+model StripeEvent {
+  id          String    @id @default(cuid())
+  shopId      String
+  eventId     String    @unique // Stripe event.id
+  eventType   String // ex: "checkout.session.completed"
+  payload     Json
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  error       String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, eventType])
+  @@index([processed])
+}
+
+// Audit log pour tracer toutes les actions admin sur la boutique
+model AuditLog {
+  id        String   @id @default(cuid())
+  shopId    String
+  userId    String? // admin qui a fait l'action
+  action    String // "product.create", "order.refund", "discount.delete"...
+  resource  String? // ID de la ressource touchée
+  details   Json?
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, createdAt])
+  @@index([shopId, action])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARKETING TRACKING — Meta Pixel + Conversions API (CAPI) server-side
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Configuration Pixel/CAPI pour un site généré.
+// 1 GeneratedSite ↔ 0 ou 1 SitePixel. Liée à un AdAccount Meta dont on récupère
+// la liste des pixels via Graph API. Le capiAccessToken est chiffré (lib/crypto).
+model SitePixel {
+  id              String   @id @default(cuid())
+  generatedSiteId String   @unique
+  adAccountId     String
+
+  pixelId         String // ID du Pixel Meta (récupéré via /me/adaccounts/{id}/owned_pixels)
+  pixelName       String? // nom convivial affiché en UI
+  capiAccessToken String   @db.Text // CHIFFRÉ AES-256-GCM (lib/crypto.ts) — généré dans Meta Events Manager
+  testEventCode   String? // pour tests sans pollution prod (Meta > Events Manager > Test Events)
+
+  enabled         Boolean  @default(true)
+  events          Json // ["PageView","ViewContent","Lead","AddToCart","InitiateCheckout","Purchase","Schedule"]
+  consentRequired Boolean  @default(false) // RGPD : false en phase test, à passer à true en prod EU
+
+  lastEventAt     DateTime?
+  lastErrorAt     DateTime?
+  lastError       String?  @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  generatedSite GeneratedSite @relation(fields: [generatedSiteId], references: [id], onDelete: Cascade)
+  adAccount     AdAccount     @relation(fields: [adAccountId], references: [id], onDelete: Cascade)
+  capiEvents    CapiEvent[]
+
+  @@index([adAccountId])
+  @@index([enabled, lastEventAt])
+}
+
+// Audit log des events CAPI envoyés à Meta. PII toujours hashed (SHA256 spec Meta).
+// Sert au debug, à la conformité RGPD, et au retry des FAILED via cron.
+model CapiEvent {
+  id             String     @id @default(cuid())
+  sitePixelId    String
+  eventName      String // "PageView", "Lead", "Purchase", ...
+  eventId        String // partagé avec Pixel client pour dedup côté Meta
+  eventTime      DateTime
+  eventSourceUrl String?    @db.Text
+  userDataHashed Json? // {em, ph, fn, ln, ct, st, zp, country, client_ip_address, client_user_agent}
+  customData     Json? // {value, currency, content_ids, content_type, ...}
+  status         CapiStatus @default(SENT)
+  metaResponse   Json? // {events_received, fbtrace_id, messages}
+  errorMessage   String?    @db.Text
+  createdAt      DateTime   @default(now())
+
+  sitePixel SitePixel @relation(fields: [sitePixelId], references: [id], onDelete: Cascade)
+
+  @@index([sitePixelId, createdAt])
+  @@index([eventName, createdAt])
+  @@index([status, createdAt])
+}
+
+enum CapiStatus {
+  SENT
+  FAILED
+  RETRIED
+}
