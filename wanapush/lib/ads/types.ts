@@ -48,8 +48,26 @@ export type PushCampaignInput = {
   biddingTarget?: number;
   /** URL de destination des annonces */
   finalUrl?: string;
-  /** Codes pays ISO ciblés (ex: ["FR", "BE"]) */
+  /** Codes pays ISO ciblés (ex: ["FR", "BE"]) — legacy, équivalent à geoLocations.countries */
   countries?: string[];
+  /** Ciblage géographique complet Meta (cities/regions/zips/custom_locations + radius). Si fourni, prime sur `countries`. */
+  geoLocations?: {
+    countries?: string[];
+    regions?: Array<{ key: string }>;
+    cities?: Array<{
+      key: string;
+      radius?: number;
+      distance_unit?: "kilometer" | "mile";
+    }>;
+    zips?: Array<{ key: string }>;
+    custom_locations?: Array<{
+      latitude: number;
+      longitude: number;
+      radius: number;
+      distance_unit?: "kilometer" | "mile";
+      name?: string;
+    }>;
+  };
   /** Mots-clés pour Search/Display */
   keywords?: Array<{ text: string; matchType: "BROAD" | "PHRASE" | "EXACT" }>;
   /** Headlines (3-15 pour Google RSA, 1-5 pour Meta) */
@@ -64,6 +82,26 @@ export type PushCampaignInput = {
   audienceDescription?: string;
   /** URL publique de l'image creative (Meta télécharge depuis là si fourni) */
   imageUrl?: string;
+  /** DSA — nom du bénéficiaire (Meta UE, requis depuis juillet 2023). Fallback : nom du AdAccount. */
+  dsaBeneficiary?: string;
+  /** DSA — nom du payeur (Meta UE, requis depuis juillet 2023). Fallback : dsaBeneficiary. */
+  dsaPayor?: string;
+  /** Âge min ciblé (défaut 18). */
+  ageMin?: number;
+  /** Âge max ciblé (défaut 65). */
+  ageMax?: number;
+  /** Genres ciblés Meta : 1=male, 2=female. Si vide → tous. */
+  genders?: Array<1 | 2>;
+  /** Instagram actor_id (Meta) — pour ads cross-platform FB+IG. Auto-détecté si non fourni. */
+  instagramActorId?: string;
+  /** Toggle Advantage+ Audience (défaut true, best practice 2026). */
+  advantageAudience?: boolean;
+  /** Toggle Advantage+ Creative (défaut true, +14% CPR). */
+  advantageCreative?: boolean;
+  /** Toggle Multi-advertiser ads (défaut true, scale 2026). */
+  multiAdvertiserAds?: boolean;
+  /** Pixel Meta explicite — prend le pas sur l'auto-detect (utilisé pour Mode A/B/C destination). */
+  pixelId?: string;
 };
 
 export type PushCampaignResult = {

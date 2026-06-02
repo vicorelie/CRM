@@ -10,27 +10,32 @@ import { __pushTesting } from "../meta";
 const { mapObjective, mapOptimizationGoal, mapBillingEvent, mapCTA } = __pushTesting;
 
 describe("mapObjective", () => {
-  it("maps French keywords correctly", () => {
+  it("maps French keywords correctly (2026 — Trafic site → AWARENESS, seul à supporter destination WEBSITE sans Pixel)", () => {
     assert.equal(mapObjective("Notoriété"), "OUTCOME_AWARENESS");
-    assert.equal(mapObjective("Trafic"), "OUTCOME_TRAFFIC");
+    // "Trafic" site web → OUTCOME_AWARENESS en 2026 (seuls AWARENESS/LEADS/SALES supportent destination WEBSITE)
+    assert.equal(mapObjective("Trafic"), "OUTCOME_AWARENESS");
     assert.equal(mapObjective("Engagement"), "OUTCOME_ENGAGEMENT");
     assert.equal(mapObjective("Lead"), "OUTCOME_LEADS");
     assert.equal(mapObjective("Vente"), "OUTCOME_SALES");
     assert.equal(mapObjective("Conversions"), "OUTCOME_SALES");
+    // OUTCOME_TRAFFIC réservé aux destinations conversationnelles (Messenger/WhatsApp/Phone)
+    assert.equal(mapObjective("Messagerie"), "OUTCOME_TRAFFIC");
+    assert.equal(mapObjective("Appel téléphonique"), "OUTCOME_TRAFFIC");
   });
 
-  it("maps English keywords correctly", () => {
+  it("maps English keywords correctly (2026)", () => {
     assert.equal(mapObjective("Awareness"), "OUTCOME_AWARENESS");
-    assert.equal(mapObjective("Traffic"), "OUTCOME_TRAFFIC");
+    assert.equal(mapObjective("Traffic"), "OUTCOME_AWARENESS"); // 2026: website traffic → AWARENESS
     assert.equal(mapObjective("Leads"), "OUTCOME_LEADS");
     assert.equal(mapObjective("Sales"), "OUTCOME_SALES");
     assert.equal(mapObjective("App installs"), "OUTCOME_APP_PROMOTION");
+    assert.equal(mapObjective("WhatsApp messages"), "OUTCOME_TRAFFIC");
   });
 
-  it("falls back to OUTCOME_TRAFFIC for unknown/empty", () => {
-    assert.equal(mapObjective(undefined), "OUTCOME_TRAFFIC");
-    assert.equal(mapObjective(""), "OUTCOME_TRAFFIC");
-    assert.equal(mapObjective("xyzzy"), "OUTCOME_TRAFFIC");
+  it("falls back to OUTCOME_AWARENESS for unknown/empty (safest for website destination)", () => {
+    assert.equal(mapObjective(undefined), "OUTCOME_AWARENESS");
+    assert.equal(mapObjective(""), "OUTCOME_AWARENESS");
+    assert.equal(mapObjective("xyzzy"), "OUTCOME_AWARENESS");
   });
 
   it("is case-insensitive", () => {
@@ -49,7 +54,8 @@ describe("mapOptimizationGoal", () => {
     assert.equal(mapOptimizationGoal("OUTCOME_TRAFFIC"), "LINK_CLICKS");
   });
 
-  it("returns POST_ENGAGEMENT for engagement", () => {
+  it("returns POST_ENGAGEMENT for OUTCOME_ENGAGEMENT (interactions sociales)", () => {
+    // ENGAGEMENT = interactions sociales sur post/page → POST_ENGAGEMENT (universel)
     assert.equal(mapOptimizationGoal("OUTCOME_ENGAGEMENT"), "POST_ENGAGEMENT");
   });
 
@@ -72,8 +78,9 @@ describe("mapBillingEvent", () => {
     assert.equal(mapBillingEvent("OUTCOME_TRAFFIC"), "LINK_CLICKS");
   });
 
-  it("returns POST_ENGAGEMENT for engagement", () => {
+  it("returns POST_ENGAGEMENT for OUTCOME_ENGAGEMENT and legacy POST_ENGAGEMENT", () => {
     assert.equal(mapBillingEvent("OUTCOME_ENGAGEMENT"), "POST_ENGAGEMENT");
+    assert.equal(mapBillingEvent("POST_ENGAGEMENT"), "POST_ENGAGEMENT");
   });
 
   it("returns IMPRESSIONS as default (awareness, leads, sales)", () => {
@@ -136,11 +143,27 @@ describe("Integration sanity checks", () => {
     assert.equal(mapBillingEvent(obj), "IMPRESSIONS");
   });
 
-  it("Traffic objective → link clicks optimization → link clicks billing (CPC model)", () => {
+  it("Website traffic (Trafic) → AWARENESS objective + REACH optim + IMPRESSIONS billing (2026, destination WEBSITE OK)", () => {
+    // Site web en 2026 : OUTCOME_AWARENESS est le seul objectif universel à accepter destination_type=WEBSITE
+    // sans nécessiter un Pixel (LEADS/SALES en demandent un)
     const obj = mapObjective("Trafic");
+    assert.equal(obj, "OUTCOME_AWARENESS");
+    assert.equal(mapOptimizationGoal(obj), "REACH");
+    assert.equal(mapBillingEvent(obj), "IMPRESSIONS");
+  });
+
+  it("Messaging traffic (WhatsApp/Messenger) → OUTCOME_TRAFFIC (conversationnel)", () => {
+    const obj = mapObjective("Messagerie WhatsApp");
     assert.equal(obj, "OUTCOME_TRAFFIC");
     assert.equal(mapOptimizationGoal(obj), "LINK_CLICKS");
     assert.equal(mapBillingEvent(obj), "LINK_CLICKS");
+  });
+
+  it("Engagement (post likes) → OUTCOME_ENGAGEMENT + POST_ENGAGEMENT optim + POST_ENGAGEMENT billing", () => {
+    const obj = mapObjective("Engagement");
+    assert.equal(obj, "OUTCOME_ENGAGEMENT");
+    assert.equal(mapOptimizationGoal(obj), "POST_ENGAGEMENT");
+    assert.equal(mapBillingEvent(obj), "POST_ENGAGEMENT");
   });
 
   it("Awareness → reach + impressions (cheapest CPM)", () => {

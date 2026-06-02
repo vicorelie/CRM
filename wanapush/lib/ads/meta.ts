@@ -4,6 +4,7 @@
 // Setup côté Meta : ajouter le produit "Marketing API" sur l'app wanapush, ajouter
 // les permissions ads_management, ads_read, business_management. App review requise
 // pour publier hors mode dev.
+import { fetchPixelsForAdAccount } from "@/lib/capi/fetch-pixels";
 import type {
   AdAccountInfo,
   AdsConnector,
@@ -270,19 +271,54 @@ async function metaPost<T = MetaResource>(
   return json as T;
 }
 
-/** Mappe le champ libre `campaignType` du PushCampaignInput vers un Meta objective. */
+/**
+ * Mappe le champ libre `campaignType` du PushCampaignInput vers un Meta objective.
+ *
+ * ⚠️ IMPORTANT (Meta 2026) — table destination_type officielle :
+ *   - OUTCOME_TRAFFIC    : UNDEFINED, MESSENGER, WHATSAPP, PHONE_CALL (pas WEBSITE)
+ *   - OUTCOME_ENGAGEMENT : UNDEFINED, MESSENGER, WHATSAPP, PHONE_CALL, INSTAGRAM_DIRECT (pas WEBSITE)
+ *   - OUTCOME_AWARENESS  : inclut WEBSITE ✓
+ *   - OUTCOME_LEADS      : inclut WEBSITE ✓ (nécessite lead form ou Pixel)
+ *   - OUTCOME_SALES      : inclut WEBSITE ✓ (nécessite Pixel + conversion event)
+ *
+ * Conséquence : pour envoyer du trafic vers un SITE WEB sans config Pixel, on
+ * passe par OUTCOME_AWARENESS (REACH/IMPRESSIONS, destination WEBSITE OK).
+ *
+ * Doc : https://developers.facebook.com/docs/marketing-api/adset/destination_type/
+ */
 function mapObjective(campaignType: string | undefined): string {
   const v = (campaignType ?? "").toLowerCase().trim();
-  if (!v) return "OUTCOME_TRAFFIC";
-  if (v.includes("notori") || v.includes("aware") || v === "reach") return "OUTCOME_AWARENESS";
-  if (v.includes("trafic") || v.includes("traffic") || v.includes("clic")) return "OUTCOME_TRAFFIC";
-  if (v.includes("engag") || v.includes("video") || v.includes("vidéo")) return "OUTCOME_ENGAGEMENT";
-  if (v.includes("lead") || v.includes("contact") || v.includes("formul")) return "OUTCOME_LEADS";
-  if (v.includes("vente") || v.includes("sale") || v.includes("convers") || v.includes("achat")) {
+  if (!v) return "OUTCOME_AWARENESS";
+  if (v.includes("notori") || v.includes("aware") || v === "reach")
+    return "OUTCOME_AWARENESS";
+  // "trafic site" → AWARENESS (seule la branche AWARENESS/LEADS/SALES supporte destination WEBSITE)
+  if (v.includes("trafic") || v.includes("traffic") || v.includes("clic"))
+    return "OUTCOME_AWARENESS";
+  // Messagerie / appel = vraies destinations conversationnelles
+  if (
+    v.includes("message") ||
+    v.includes("messenger") ||
+    v.includes("whatsapp") ||
+    v.includes("appel") ||
+    v.includes("call")
+  ) {
+    return "OUTCOME_TRAFFIC";
+  }
+  // ENGAGEMENT = interactions sociales (post likes, vidéo views) — pas pour driver vers site
+  if (v.includes("engag") || v.includes("video") || v.includes("vidéo"))
+    return "OUTCOME_ENGAGEMENT";
+  if (v.includes("lead") || v.includes("contact") || v.includes("formul"))
+    return "OUTCOME_LEADS";
+  if (
+    v.includes("vente") ||
+    v.includes("sale") ||
+    v.includes("convers") ||
+    v.includes("achat")
+  ) {
     return "OUTCOME_SALES";
   }
   if (v.includes("app") || v.includes("install")) return "OUTCOME_APP_PROMOTION";
-  return "OUTCOME_TRAFFIC"; // défaut sûr
+  return "OUTCOME_AWARENESS"; // défaut sûr : seul à supporter destination WEBSITE sans config Pixel
 }
 
 /**
@@ -311,8 +347,10 @@ function mapOptimizationGoal(objective: string): string {
     case "OUTCOME_AWARENESS":
       return "REACH";
     case "OUTCOME_TRAFFIC":
+      // OUTCOME_TRAFFIC = conversationnel (Messenger/WhatsApp/Phone)
       return "LINK_CLICKS";
     case "OUTCOME_ENGAGEMENT":
+      // ENGAGEMENT (Messenger/WhatsApp/Phone/Instagram_Direct) → POST_ENGAGEMENT universel
       return "POST_ENGAGEMENT";
     case "OUTCOME_LEADS":
       return "OFFSITE_CONVERSIONS";
@@ -352,6 +390,7 @@ function mapBillingEvent(objective: string): string {
     case "POST_ENGAGEMENT":
       return "POST_ENGAGEMENT";
     default:
+      // OUTCOME_AWARENESS/LEADS/SALES + legacy : IMPRESSIONS universel
       return "IMPRESSIONS";
   }
 }
@@ -390,6 +429,23 @@ async function getDefaultPageId(account: AdAccountInfo): Promise<string | null> 
   }
 }
 
+/** Récupère l'Instagram actor_id (compte IG Business) lié à une Page FB — pour ads cross-platform. */
+async function getInstagramActorId(
+  pageId: string,
+  accessToken: string,
+): Promise<string | null> {
+  try {
+    const r = await fetch(
+      `${GRAPH_V22}/${pageId}?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    if (!r.ok) return null;
+    const j = (await r.json()) as { instagram_business_account?: { id: string } };
+    return j.instagram_business_account?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Crée une campagne complète sur Meta Ads (Campaign → AdSet → Creative → Ad).
  * Tout est créé en PAUSED. L'externalId retourné est l'ID de la Campaign.
@@ -406,6 +462,20 @@ async function pushCampaign(
   const resources: Record<string, string> = {};
 
   try {
+    // 0) Page ID — requis avant la création de l'AdSet pour le promoted_object
+    //    (Meta refuse les AdSets AWARENESS/REACH+WEBSITE sans page sponsor → subcode 3858081).
+    //    On le fetch EN PREMIER pour échouer vite sans laisser de Campaign orpheline côté Meta.
+    let pageId = (account.meta?.pageId as string | undefined) ?? undefined;
+    if (!pageId) pageId = (await getDefaultPageId(account)) ?? undefined;
+    if (!pageId) {
+      return {
+        ok: false,
+        error:
+          "Aucune Facebook Page accessible pour publier l'annonce. Connecte une page dans Meta Business Manager puis ré-OAuth.",
+        resources,
+      };
+    }
+
     // 1) Campaign — Outcomes (v22+) avec CBO (daily_budget au niveau Campaign, obligatoire 2025+)
     const objective = mapObjective(input.campaignType);
     let campaign: MetaResource;
@@ -447,33 +517,189 @@ async function pushCampaign(
     const billingEvent = mapBillingEvent(objective);
 
     // 2) AdSet — Advantage+ Audience par défaut (best practice 2026)
+    //    promoted_object.page_id : OBLIGATOIRE pour AWARENESS/REACH+WEBSITE
+    //    promoted_object.pixel_id + custom_event_type : OBLIGATOIRE pour LEADS/SALES (subcode 1815143 sinon)
+    //    dsa_beneficiary + dsa_payor : OBLIGATOIRES UE depuis juillet 2023 (DSA), subcode 3858081 sinon
     const startTime = new Date(Date.now() + 60_000).toISOString(); // +1min pour éviter "start_time in past"
-    const adset = await metaPost<MetaResource>(account, `${accountId}/adsets`, {
-      name: `${input.name} – Ensemble`,
-      campaign_id: campaign.id,
-      // Pas de daily_budget ni bid_strategy ici : ils sont au niveau Campaign (CBO)
-      billing_event: billingEvent,
-      optimization_goal: optimizationGoal,
-      // destination_type explicite pour OUTCOME_TRAFFIC (Meta exige depuis v21+)
-      destination_type: "WEBSITE",
-      targeting: {
-        geo_locations: { countries: input.countries ?? ["FR"] },
-        age_min: 18,
-        age_max: 65,
-      },
-      start_time: startTime,
-      status: "PAUSED",
-    });
+    const dsaBeneficiary = input.dsaBeneficiary ?? account.name;
+    const dsaPayor = input.dsaPayor ?? dsaBeneficiary;
+
+    const promotedObject: Record<string, unknown> = { page_id: pageId };
+    if (objective === "OUTCOME_LEADS" || objective === "OUTCOME_SALES") {
+      // Pixel explicite > auto-detect du 1er Pixel sur l'AdAccount
+      let pixelIdToUse = input.pixelId;
+      if (!pixelIdToUse) {
+        const pixels = await fetchPixelsForAdAccount(accountId, account.accessToken);
+        const firstPixel = pixels.ok && pixels.pixels[0] ? pixels.pixels[0] : null;
+        pixelIdToUse = firstPixel?.id;
+      }
+      if (!pixelIdToUse) {
+        return {
+          ok: false,
+          error:
+            "Aucun Pixel Meta détecté sur ce compte publicitaire. Pour les objectifs Leads/Ventes, configure un Pixel dans Meta Events Manager (ou choisis Notoriété/Trafic).",
+          resources,
+        };
+      }
+      promotedObject.pixel_id = pixelIdToUse;
+      promotedObject.custom_event_type =
+        objective === "OUTCOME_LEADS" ? "LEAD" : "PURCHASE";
+    }
+
+    // === Best practices Meta 2026 (toggles avec défaut ON) ===
+    const useAdvAudience = input.advantageAudience !== false;
+    const useAdvCreative = input.advantageCreative !== false;
+    const useMultiAdv = input.multiAdvertiserAds !== false;
+
+    // Targeting : âge/genre/pays (soft constraints quand Advantage+ Audience est ON)
+    // geoLocations riche prime sur countries (legacy)
+    const geoLocations: Record<string, unknown> = {};
+    if (input.geoLocations) {
+      const g = input.geoLocations;
+      if (g.countries && g.countries.length > 0) geoLocations.countries = g.countries;
+      if (g.regions && g.regions.length > 0) geoLocations.regions = g.regions;
+      if (g.cities && g.cities.length > 0) geoLocations.cities = g.cities;
+      if (g.zips && g.zips.length > 0) geoLocations.zips = g.zips;
+      if (g.custom_locations && g.custom_locations.length > 0)
+        geoLocations.custom_locations = g.custom_locations;
+    }
+    if (Object.keys(geoLocations).length === 0) {
+      geoLocations.countries = input.countries ?? ["FR"];
+    }
+    const targeting: Record<string, unknown> = {
+      geo_locations: geoLocations,
+      age_min: input.ageMin ?? 18,
+      age_max: input.ageMax ?? 65,
+    };
+    if (input.genders && input.genders.length > 0) targeting.genders = input.genders;
+    if (useAdvAudience) {
+      // Advantage+ Audience : l'IA explore au-delà du ciblage (best practice 2026, +CPR amélioré)
+      targeting.targeting_automation = { advantage_audience: 1 };
+    }
+
+    // Smart fallback : OFFSITE_CONVERSIONS exige des données Pixel récentes (LEAD/PURCHASE).
+    // Sur un nouveau Pixel sans data, Meta refuse (subcode 1870189). On retry alors avec
+    // LANDING_PAGE_VIEWS (universel) puis LINK_CLICKS en dernier recours.
+    //
+    // ⚠️ Chaque optimisation a son shape de promoted_object :
+    //   - OFFSITE_CONVERSIONS : page_id + pixel_id + custom_event_type
+    //   - LANDING_PAGE_VIEWS  : page_id + pixel_id (pas de custom_event_type, subcode 1885501)
+    //   - LINK_CLICKS         : page_id seul
+    const adaptPromotedObject = (optGoal: string): Record<string, unknown> => {
+      const adapted: Record<string, unknown> = { page_id: promotedObject.page_id };
+      if (optGoal === "OFFSITE_CONVERSIONS") {
+        if (promotedObject.pixel_id) adapted.pixel_id = promotedObject.pixel_id;
+        if (promotedObject.custom_event_type)
+          adapted.custom_event_type = promotedObject.custom_event_type;
+      } else if (optGoal === "LANDING_PAGE_VIEWS") {
+        if (promotedObject.pixel_id) adapted.pixel_id = promotedObject.pixel_id;
+        // pas de custom_event_type — LANDING_PAGE_VIEWS optimise sur PageView, pas LEAD/PURCHASE
+      }
+      // LINK_CLICKS : page_id seulement
+      return adapted;
+    };
+
+    const buildAdsetPayload = (optGoal: string, billing: string) => {
+      // Pour LINK_CLICKS (fallback ultime), on retire les options conversion-based :
+      // - targeting_automation.advantage_audience (exige data Pixel pour LEADS/SALES)
+      // - attribution_spec (sans sens sans tracking conversion)
+      const adsetTargeting = { ...targeting };
+      if (optGoal === "LINK_CLICKS" && adsetTargeting.targeting_automation) {
+        delete adsetTargeting.targeting_automation;
+      }
+
+      const payload: Record<string, unknown> = {
+        name: `${input.name} – Ensemble`,
+        campaign_id: campaign.id,
+        billing_event: billing,
+        optimization_goal: optGoal,
+        destination_type: "WEBSITE",
+        promoted_object: adaptPromotedObject(optGoal),
+        dsa_beneficiary: dsaBeneficiary,
+        dsa_payor: dsaPayor,
+        targeting: adsetTargeting,
+        start_time: startTime,
+        status: "PAUSED",
+      };
+      // attribution_spec : utile uniquement pour les optimisations conversion-based
+      // (OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS). Pas pour LINK_CLICKS pur.
+      if (optGoal !== "LINK_CLICKS") {
+        payload.attribution_spec = [
+          { event_type: "CLICK_THROUGH", window_days: 7 },
+          { event_type: "VIEW_THROUGH", window_days: 1 },
+        ];
+      }
+      return payload;
+    };
+
+    const isOptimizationError = (msg: string) =>
+      msg.includes("1870189") ||
+      msg.includes("1815143") ||
+      msg.includes("1885501") ||
+      msg.includes("1885014") ||
+      msg.includes("optimization_goal") ||
+      msg.includes("custom_event_type") ||
+      msg.includes("pixel") ||
+      msg.includes("conversion");
+
+    let adset: MetaResource;
+    try {
+      adset = await metaPost<MetaResource>(
+        account,
+        `${accountId}/adsets`,
+        buildAdsetPayload(optimizationGoal, billingEvent),
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Fallback 1 : LANDING_PAGE_VIEWS si OFFSITE_CONVERSIONS refusé (pas de data Pixel récente)
+      if (optimizationGoal === "OFFSITE_CONVERSIONS" && isOptimizationError(msg)) {
+        console.log(`[meta.pushCampaign] OFFSITE_CONVERSIONS refusé (${msg.slice(0, 100)}) → fallback LANDING_PAGE_VIEWS`);
+        try {
+          adset = await metaPost<MetaResource>(
+            account,
+            `${accountId}/adsets`,
+            buildAdsetPayload("LANDING_PAGE_VIEWS", "IMPRESSIONS"),
+          );
+        } catch (e2) {
+          const msg2 = e2 instanceof Error ? e2.message : String(e2);
+          if (isOptimizationError(msg2)) {
+            // Fallback 2 : LINK_CLICKS (sans Advantage+ Audience ni attribution_spec)
+            console.log(`[meta.pushCampaign] LANDING_PAGE_VIEWS refusé (${msg2.slice(0, 100)}) → fallback LINK_CLICKS`);
+            try {
+              adset = await metaPost<MetaResource>(
+                account,
+                `${accountId}/adsets`,
+                buildAdsetPayload("LINK_CLICKS", "IMPRESSIONS"),
+              );
+            } catch (e3) {
+              const msg3 = e3 instanceof Error ? e3.message : String(e3);
+              console.error(`[meta.pushCampaign] Toute la cascade a échoué : ${msg3.slice(0, 200)}`);
+              return {
+                ok: false,
+                error:
+                  "Cette campagne LEADS/SALES n'a pas pu être créée car le Pixel n'a pas encore reçu de données. Solutions : (1) bascule en objectif Notoriété ou Trafic dans la modale, ou (2) installe le Pixel Meta sur ton site de destination et attends quelques jours qu'il collecte des événements.",
+                resources,
+              };
+            }
+          } else {
+            throw e2;
+          }
+        }
+      } else {
+        throw e;
+      }
+    }
+
     resources.adset = adset.id;
 
-    // 3) AdCreative — exige un page_id (Facebook Page) pour les Link Ads
-    let pageId = (account.meta?.pageId as string | undefined) ?? undefined;
-    if (!pageId) pageId = (await getDefaultPageId(account)) ?? undefined;
-    if (!pageId) {
+    // 3) AdCreative — Link Ad (page_id fetché en étape 0)
+    //    Une image est OBLIGATOIRE pour les Link Ads Meta (pas de format texte seul).
+    //    Si absente : subcode 2446496 sur /adcreatives.
+    if (!input.imageUrl) {
       return {
         ok: false,
         error:
-          "Aucune Facebook Page accessible pour publier l'annonce. Connecte une page dans Meta Business Manager puis ré-OAuth.",
+          "Une image est requise pour publier l'annonce. Génère-la avec l'IA (onglet Builder → \"Générer visuel\") puis relance le push.",
         resources,
       };
     }
@@ -487,30 +713,103 @@ async function pushCampaign(
       link: finalUrl,
       message: primaryText,
       name: headline,
-      description,
       call_to_action: { type: mapCTA(input.cta) },
+      picture: input.imageUrl,
     };
-    // Si on a une image URL publique, Meta la télécharge et crée un image_hash en interne
-    if (input.imageUrl) {
-      linkData.picture = input.imageUrl;
+    // description optionnelle : on n'envoie pas de string vide (Meta rejette)
+    if (description) linkData.description = description;
+
+    // Instagram actor_id : auto-détecté depuis la Page FB pour ads cross-platform FB+IG
+    const instagramActorId =
+      input.instagramActorId ?? (await getInstagramActorId(pageId, account.accessToken));
+
+    const objectStorySpec: Record<string, unknown> = {
+      page_id: pageId,
+      link_data: linkData,
+    };
+    if (instagramActorId) objectStorySpec.instagram_actor_id = instagramActorId;
+
+    const creativePayload: Record<string, unknown> = {
+      name: `${input.name} – Créa`,
+      object_story_spec: objectStorySpec,
+    };
+
+    if (useAdvCreative) {
+      // Advantage+ Creative : Meta améliore titre/image/texte (+14% CPR moyen vs static)
+      // Garder uniquement les features documentées en snake_case (Marketing API v22+).
+      // ⚠️ Pas de translate_text ici (champ inventé) — la valeur valide est TEXT_OVERLAY_TRANSLATION
+      // en UPPERCASE mais elle n'est pas universelle ; on s'en passe.
+      creativePayload.degrees_of_freedom_spec = {
+        creative_features_spec: {
+          standard_enhancements: { enroll_status: "OPT_IN" },
+          image_brightness_and_contrast: { enroll_status: "OPT_IN" },
+          image_uncrop: { enroll_status: "OPT_IN" },
+          image_touchups: { enroll_status: "OPT_IN" },
+          text_optimizations: { enroll_status: "OPT_IN" },
+        },
+      };
     }
 
-    const creative = await metaPost<MetaResource>(account, `${accountId}/adcreatives`, {
-      name: `${input.name} – Créa`,
-      object_story_spec: {
-        page_id: pageId,
-        link_data: linkData,
-      },
-    });
+    // Tracking specs : injecte le Pixel pour mesurer les conversions (Creative + Ad)
+    let trackingSpecs: Array<Record<string, unknown>> | undefined;
+    if (objective === "OUTCOME_LEADS" || objective === "OUTCOME_SALES") {
+      const pixelId = promotedObject.pixel_id as string | undefined;
+      const eventType = promotedObject.custom_event_type as string | undefined;
+      if (pixelId && eventType) {
+        trackingSpecs = [{ "action.type": ["offsite_conversion"], fb_pixel: [pixelId] }];
+        creativePayload.tracking_specs = trackingSpecs;
+      }
+    }
+
+    // Fallback : Meta refuse souvent degrees_of_freedom_spec (changements API fréquents).
+    // À la 1re erreur, on retry sans Advantage+ Creative. Si ça échoue encore, on remonte.
+    let creative: MetaResource;
+    try {
+      creative = await metaPost<MetaResource>(
+        account,
+        `${accountId}/adcreatives`,
+        creativePayload,
+      );
+    } catch (eCreative) {
+      const msg = eCreative instanceof Error ? eCreative.message : String(eCreative);
+      if (creativePayload.degrees_of_freedom_spec) {
+        console.log(
+          `[meta.pushCampaign] AdCreative refusé (${msg.slice(0, 120)}) → retry sans Advantage+ Creative`,
+        );
+        const fallbackPayload = { ...creativePayload };
+        delete fallbackPayload.degrees_of_freedom_spec;
+        try {
+          creative = await metaPost<MetaResource>(
+            account,
+            `${accountId}/adcreatives`,
+            fallbackPayload,
+          );
+        } catch (eCreative2) {
+          console.error(
+            `[meta.pushCampaign] AdCreative refusé même sans Advantage+ Creative`,
+          );
+          throw eCreative2;
+        }
+      } else {
+        throw eCreative;
+      }
+    }
     resources.creative = creative.id;
 
-    // 4) Ad
-    const ad = await metaPost<MetaResource>(account, `${accountId}/ads`, {
+    // 4) Ad — avec multi-advertiser ads + tracking_specs hérités du Creative
+    const adPayload: Record<string, unknown> = {
       name: `${input.name} – Annonce`,
       adset_id: adset.id,
       creative: { creative_id: creative.id },
       status: "PAUSED",
-    });
+    };
+    if (trackingSpecs) adPayload.tracking_specs = trackingSpecs;
+    if (useMultiAdv) {
+      // Multi-advertiser ads : Meta peut afficher ta pub dans des unités combinées (scale 2026)
+      adPayload.multi_advertiser_ads = { has_opted_in_being_shown: true };
+    }
+
+    const ad = await metaPost<MetaResource>(account, `${accountId}/ads`, adPayload);
     resources.ad = ad.id;
 
     // Lien direct vers la campagne dans Meta Ads Manager

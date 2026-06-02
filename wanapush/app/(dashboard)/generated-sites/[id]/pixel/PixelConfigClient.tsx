@@ -266,7 +266,7 @@ export function PixelConfigClient({ siteId, slug, adAccounts, initialPixel }: Pr
               Génère-le dans <strong>Meta Events Manager → Paramètres → Conversions API → Générer un access token</strong>.
               <br />
               <a
-                href="https://www.facebook.com/events_manager2/list/pixel"
+                href="https://business.facebook.com/events_manager"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-brand-700 underline"

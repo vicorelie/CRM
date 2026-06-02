@@ -33,6 +33,51 @@ const inputSchema = z.object({
   cta: z.string().max(40).optional(),
   audienceDescription: z.string().max(2000).optional(),
   imageUrl: z.url().max(2048).optional(),
+  // === Best practices Meta 2026 ===
+  ageMin: z.coerce.number().int().min(13).max(65).optional(),
+  ageMax: z.coerce.number().int().min(13).max(65).optional(),
+  genders: z.array(z.union([z.literal(1), z.literal(2)])).max(2).optional(),
+  instagramActorId: z.string().max(64).optional(),
+  advantageAudience: z.boolean().optional(),
+  advantageCreative: z.boolean().optional(),
+  multiAdvertiserAds: z.boolean().optional(),
+  pixelId: z.string().max(64).optional(),
+  // Ciblage géographique riche Meta (cities/regions/zips/custom_locations + radius)
+  geoLocations: z
+    .object({
+      countries: z.array(z.string().length(2)).max(30).optional(),
+      regions: z
+        .array(z.object({ key: z.string() }))
+        .max(50)
+        .optional(),
+      cities: z
+        .array(
+          z.object({
+            key: z.string(),
+            radius: z.number().min(1).max(80).optional(),
+            distance_unit: z.enum(["kilometer", "mile"]).optional(),
+          }),
+        )
+        .max(50)
+        .optional(),
+      zips: z
+        .array(z.object({ key: z.string() }))
+        .max(50)
+        .optional(),
+      custom_locations: z
+        .array(
+          z.object({
+            latitude: z.number(),
+            longitude: z.number(),
+            radius: z.number().min(1).max(80),
+            distance_unit: z.enum(["kilometer", "mile"]).optional(),
+            name: z.string().optional(),
+          }),
+        )
+        .max(50)
+        .optional(),
+    })
+    .optional(),
 });
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -74,9 +119,25 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       { status: 501 },
     );
 
+  // Hydrate les inputs avec ce qui a été saisi dans le Builder (results) — l'objective et
+  // l'audience saisis là-bas doivent piloter le push, pas être perdus.
+  const r = (campaign.results ?? {}) as Record<string, unknown>;
+  const variantOne = Array.isArray(r.variants) && r.variants[0]
+    ? (r.variants[0] as { copy?: Record<string, string> }).copy ?? {}
+    : {};
+  const builderDefaults: Partial<PushCampaignInput> = {
+    campaignType: typeof r.objective === "string" ? r.objective : undefined,
+    audienceDescription: typeof r.audience === "string" ? r.audience : undefined,
+    primaryText: variantOne.primary_text,
+    headlines: variantOne.headline ? [variantOne.headline] : undefined,
+    descriptions: variantOne.description ? [variantOne.description] : undefined,
+    cta: variantOne.cta,
+  };
+
   const input: PushCampaignInput = {
     name: campaign.name,
-    ...parsed.data,
+    ...builderDefaults,
+    ...parsed.data, // parsed.data prime — l'user peut surcharger via la modale push
   };
   const result = await conn.pushCampaign(toAdAccountInfo(fresh), input);
   if (!result.ok) {
