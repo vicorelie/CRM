@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import {
   AdPlatform,
   CampaignObjective,
@@ -1203,7 +1203,7 @@ export function CampaignsList({ refreshKey }: Props) {
           {FILTERS.map((f) => (
             <button
               key={f.id}
-              onClick={() => setFilter(f.id)}
+              onClick={() => startTransition(() => setFilter(f.id))}
               className={`text-xs px-3 py-1.5 rounded-full border ${
                 filter === f.id
                   ? "border-brand bg-brand/15 text-brand-700"

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseSiteMeta } from "@/lib/generated-site-schema";
 
 export const runtime = "nodejs";
 
@@ -16,16 +17,11 @@ async function checkOwnership(submissionId: string, userEmail: string) {
   if (!submission) return null;
 
   // Vérifier que le siteSlug appartient à l'utilisateur connecté
-  type SiteMeta = { siteSlug?: string | null };
-  const owned = await prisma.generatedSite.findFirst({
-    where: { user: { email: userEmail } },
-    select: { meta: true },
-  });
   const sites = await prisma.generatedSite.findMany({
     where: { user: { email: userEmail } },
     select: { meta: true },
   });
-  const slugs = sites.map((s) => ((s.meta ?? {}) as SiteMeta).siteSlug).filter(Boolean);
+  const slugs = sites.map((s) => parseSiteMeta(s.meta).siteSlug).filter(Boolean);
   if (!slugs.includes(submission.siteSlug)) return null;
   return submission;
 }

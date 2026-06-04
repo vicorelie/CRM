@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseSiteBrief, parseSiteMeta } from "@/lib/generated-site-schema";
 
 export const runtime = "nodejs";
 
@@ -22,14 +23,11 @@ export async function GET(req: Request) {
     select: { id: true, brief: true, meta: true },
   });
 
-  type SiteMeta = { siteSlug?: string | null; framework?: string };
-  type SiteBrief = { brandName?: string };
-
   // Map siteSlug → { siteId, brandName } pour les sites possédés par l'utilisateur
   const ownedSlugs = new Map<string, { siteId: string; brandName: string }>();
   for (const s of userSites) {
-    const meta = (s.meta ?? {}) as SiteMeta;
-    const brief = (s.brief ?? {}) as SiteBrief;
+    const meta = parseSiteMeta(s.meta);
+    const brief = parseSiteBrief(s.brief);
     if (meta.siteSlug) {
       ownedSlugs.set(meta.siteSlug, { siteId: s.id, brandName: brief.brandName ?? "Sans nom" });
     }
