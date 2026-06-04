@@ -145,6 +145,23 @@ export const facebookConfig: PlatformWizardConfig = {
         },
       ],
     },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de Page Facebook ?",
+        en: "No Facebook Page yet?",
+      },
+      body: {
+        fr: "Meta n'autorise pas WanaPush à créer une Page à votre place (anti-spam). Créez-la vous-même en 3 minutes — ensuite, revenez sur cet écran et cliquez sur « Se connecter avec Facebook ».",
+        en: "Meta doesn't allow WanaPush to create a Page on your behalf (anti-spam). Create it yourself in 3 minutes — then come back to this screen and click 'Sign in with Facebook'.",
+      },
+      ctaLabel: {
+        fr: "Créer ma Page Facebook",
+        en: "Create my Facebook Page",
+      },
+      ctaUrl: "https://www.facebook.com/pages/create",
+      // Si l'erreur OAuth contient un de ces mots, on met le hint en avant.
+      errorMarkers: ["Aucune Page Facebook", "No Facebook Page"],
+    },
   },
 
   success: {

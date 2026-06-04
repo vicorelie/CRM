@@ -89,6 +89,20 @@ export type ConnectStepConfig = {
    * où le flow provider exige des actions non-intuitives (ex. Meta Login for Business
    * qui demande de cliquer "Modifier les paramètres" pour sélectionner les pages). */
   flowTip?: { title: LocalizedString; steps: LocalizedString[] };
+  /** Carte "Pas encore de page/compte ?" affichée sous le bouton OAuth.
+   * Pour Facebook : redirige vers facebook.com/pages/create.
+   * Pour les autres plateformes qui ne permettent pas la création par API,
+   * c'est ici qu'on aide l'utilisateur à créer son asset.
+   * Aussi mise en avant si l'OAuth retourne une erreur "0 page" connue. */
+  noPageHint?: {
+    title: LocalizedString;
+    body: LocalizedString;
+    ctaLabel: LocalizedString;
+    ctaUrl: string;
+    /** Si l'OAuth callback contient un de ces substrings dans `error=…`, on
+     * affiche le hint en grand (avec bordure rouge) au-dessus du bouton OAuth. */
+    errorMarkers?: string[];
+  };
 };
 
 export type SuccessStepConfig = {

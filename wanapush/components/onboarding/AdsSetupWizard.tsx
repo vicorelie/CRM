@@ -94,6 +94,12 @@ export function AdsSetupWizard({ cfg }: { cfg: PlatformWizardConfig }) {
   ];
 
   const oauthError = params.get("error");
+  // Détecte si l'erreur OAuth matche un des marqueurs "pas de page" : si oui,
+  // on remplace le banner générique par un appel à l'action « créer une page ».
+  const noPageHint = cfg.connect.noPageHint;
+  const matchesNoPage =
+    !!oauthError &&
+    !!noPageHint?.errorMarkers?.some((m) => oauthError.includes(m));
 
   return (
     <Wizard
@@ -111,9 +117,40 @@ export function AdsSetupWizard({ cfg }: { cfg: PlatformWizardConfig }) {
         }
       }}
     >
-      {oauthError && index === CONNECT_INDEX && (
+      {oauthError && index === CONNECT_INDEX && !matchesNoPage && (
         <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/5 p-4 text-sm text-red-300">
           ⚠ {oauthError}
+        </div>
+      )}
+      {matchesNoPage && noPageHint && index === CONNECT_INDEX && (
+        <div className="mb-6 rounded-2xl border-2 border-amber-300 bg-amber-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-3xl" aria-hidden>📄</span>
+            <div className="flex-1 space-y-3">
+              <div>
+                <h3 className="text-base font-semibold text-amber-900">
+                  {L(noPageHint.title)}
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                  {L(noPageHint.body)}
+                </p>
+              </div>
+              <details className="text-xs text-amber-700">
+                <summary className="cursor-pointer hover:text-amber-900">
+                  Voir le message technique de Meta
+                </summary>
+                <p className="mt-2 font-mono">{oauthError}</p>
+              </details>
+              <a
+                href={noPageHint.ctaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600"
+              >
+                {L(noPageHint.ctaLabel)} <span aria-hidden>↗</span>
+              </a>
+            </div>
+          </div>
         </div>
       )}
       <PlatformWizardStep

@@ -195,6 +195,30 @@ export function ConnectStep({
         </button>
       </div>
 
+      {cfg.noPageHint && (
+        <div className="rounded-2xl border border-zinc-200 bg-white/60 p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl" aria-hidden>📄</span>
+            <div className="flex-1 space-y-2">
+              <h4 className="text-sm font-semibold text-zinc-900">
+                {L(cfg.noPageHint.title)}
+              </h4>
+              <p className="text-sm leading-relaxed text-zinc-600">
+                {L(cfg.noPageHint.body)}
+              </p>
+              <a
+                href={cfg.noPageHint.ctaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+              >
+                {L(cfg.noPageHint.ctaLabel)} <span aria-hidden>↗</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <p className="text-xs text-zinc-500">{L(cfg.cancelHint)}</p>
     </StepShell>
   );
