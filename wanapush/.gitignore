@@ -38,6 +38,10 @@ next-env.d.ts
 
 /app/generated/prisma
 
+# Third-party skills clonés depuis GitHub avec leur propre .git/
+# (à transformer en submodule plus tard si on les utilise vraiment).
+/skills
+
 # Runtime artefacts — généré au build/runtime, pas du code source.
 # Sites Vite/React produits par lib/site-extraction.ts (servis par nginx
 # depuis /preview/<slug>/). ~1 GB, à reconstruire quand on régénère.
