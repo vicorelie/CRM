@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { AdPlatform } from "@prisma/client";
 import { getAdsConnector, saveAdAccount, SUPPORTED_AD_PLATFORMS } from "@/lib/ads";
 import { verifyState } from "@/lib/social/state";
 
@@ -33,9 +32,9 @@ export async function GET(req: Request, { params }: Params) {
   const v = verifyState(state);
   if (!v) return back("State invalide ou expiré", false);
 
-  const platform = params.platform.toUpperCase() as AdPlatform;
-  if (!SUPPORTED_AD_PLATFORMS.includes(platform))
-    return back(`Plateforme inconnue ${platform}`, false, v.returnTo);
+  const candidate = params.platform.toUpperCase();
+  const platform = SUPPORTED_AD_PLATFORMS.find((p) => p === candidate);
+  if (!platform) return back(`Plateforme inconnue ${candidate}`, false, v.returnTo);
   if (v.platform !== `ADS_${platform}`)
     return back("State ne correspond pas à la plateforme", false, v.returnTo);
 

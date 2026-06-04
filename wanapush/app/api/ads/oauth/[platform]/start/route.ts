@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { AdPlatform } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import {
   adPlatformConfigured,
@@ -27,10 +26,11 @@ export async function GET(req: Request, { params }: Params) {
       new URL("/login", process.env.NEXTAUTH_URL ?? "http://localhost"),
     );
   }
-  const platform = params.platform.toUpperCase() as AdPlatform;
-  if (!SUPPORTED_AD_PLATFORMS.includes(platform)) {
+  const candidate = params.platform.toUpperCase();
+  const platform = SUPPORTED_AD_PLATFORMS.find((p) => p === candidate);
+  if (!platform) {
     return NextResponse.json(
-      { error: `Plateforme non supportée : ${platform}` },
+      { error: `Plateforme non supportée : ${candidate}` },
       { status: 400 },
     );
   }

@@ -1,0 +1,9 @@
+# Backup quotidien WanaPush DB à 3h du matin.
+# À installer : sudo cp scripts/wanapush-backup.cron /etc/cron.d/wanapush-backup
+# (puis vérifier les permissions : root:root 644)
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=root
+
+0 3 * * * root /var/www/wanapush/scripts/backup-db.sh

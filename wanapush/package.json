@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "sh -c 'tsx --test lib/**/__tests__/*.test.ts'",
+    "test": "sh -c 'tsx --test lib/__tests__/*.test.ts lib/**/__tests__/*.test.ts'",
     "test:capi": "sh -c 'tsx --test lib/capi/__tests__/*.test.ts'"
   },
   "dependencies": {
