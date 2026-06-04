@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -61,5 +62,6 @@ export async function POST(req: Request, { params }: Params) {
       enabled: input.enabled !== false,
     },
   });
+  revalidatePath(`/shop/${siteSlug}/taxes`);
   return NextResponse.json({ tax });
 }

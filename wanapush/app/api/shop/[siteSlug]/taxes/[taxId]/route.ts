@@ -2,6 +2,7 @@
 // DELETE /api/shop/[siteSlug]/taxes/[taxId]
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -46,6 +47,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const data: Record<string, unknown> = { ...parsed.data };
   if (typeof data.country === "string") data.country = data.country.toUpperCase();
   const tax = await prisma.taxRate.update({ where: { id: taxId }, data });
+  revalidatePath(`/shop/${siteSlug}/taxes`);
   return NextResponse.json({ tax });
 }
 
@@ -56,5 +58,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   const o = await owned(session.user.email, siteSlug, taxId);
   if (!o) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   await prisma.taxRate.delete({ where: { id: taxId } });
+  revalidatePath(`/shop/${siteSlug}/taxes`);
   return NextResponse.json({ ok: true });
 }

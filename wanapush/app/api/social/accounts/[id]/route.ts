@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,5 +19,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   });
   if (!acc) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   await prisma.socialAccount.delete({ where: { id: acc.id } });
+  revalidatePath("/social");
   return NextResponse.json({ ok: true });
 }

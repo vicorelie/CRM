@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -71,6 +72,7 @@ export async function POST(req: Request) {
       },
     });
 
+    revalidatePath("/leads");
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[forms/submit] unexpected error:", e);

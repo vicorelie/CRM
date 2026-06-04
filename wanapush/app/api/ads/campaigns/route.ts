@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -134,5 +135,6 @@ export async function POST(req: Request) {
     },
   });
 
+  revalidatePath("/ads");
   return NextResponse.json({ campaign });
 }

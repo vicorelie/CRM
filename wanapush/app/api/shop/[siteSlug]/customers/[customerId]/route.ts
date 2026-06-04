@@ -1,6 +1,7 @@
 // GET/PATCH/DELETE /api/shop/[siteSlug]/customers/[customerId]
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -74,6 +75,8 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   const updated = await prisma.customer.update({ where: { id: customerId }, data: update });
+  revalidatePath(`/shop/${siteSlug}/customers`);
+  revalidatePath(`/shop/${siteSlug}/customers/${customerId}`);
   return NextResponse.json({
     customer: {
       ...updated,
@@ -92,5 +95,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (!data) return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
 
   await prisma.customer.delete({ where: { id: customerId } });
+  revalidatePath(`/shop/${siteSlug}/customers`);
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@
 // POST /api/shop/[siteSlug]/options       → crée une nouvelle option { name, values[] }
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -94,6 +95,7 @@ export async function POST(req: Request, { params }: Params) {
       position: (lastPos?.position ?? -1) + 1,
     },
   });
+  revalidatePath(`/shop/${siteSlug}/options`);
   return NextResponse.json({
     option: {
       id: option.id,

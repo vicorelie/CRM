@@ -2,6 +2,7 @@
 // DELETE /api/shop/[siteSlug]/discounts/[discountId] → suppression
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -52,6 +53,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if (typeof data.startsAt === "string") data.startsAt = new Date(data.startsAt);
   if (typeof data.endsAt === "string") data.endsAt = new Date(data.endsAt);
   const discount = await prisma.discount.update({ where: { id: discountId }, data });
+  revalidatePath(`/shop/${siteSlug}/discounts`);
   return NextResponse.json({ discount });
 }
 
@@ -62,5 +64,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   const o = await owned(session.user.email, siteSlug, discountId);
   if (!o) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   await prisma.discount.delete({ where: { id: discountId } });
+  revalidatePath(`/shop/${siteSlug}/discounts`);
   return NextResponse.json({ ok: true });
 }

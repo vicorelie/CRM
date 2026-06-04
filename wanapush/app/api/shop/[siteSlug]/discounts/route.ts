@@ -2,6 +2,7 @@
 // POST /api/shop/[siteSlug]/discounts → crée
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -84,5 +85,6 @@ export async function POST(req: Request, { params }: Params) {
     data: { shopId: shop.id, action: "discount.create", resource: discount.id, details: { code } },
   });
 
+  revalidatePath(`/shop/${siteSlug}/discounts`);
   return NextResponse.json({ discount });
 }

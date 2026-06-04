@@ -2,6 +2,7 @@
 // DELETE /api/shop/[siteSlug]/shipping/zones/[zoneId]
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -45,6 +46,7 @@ export async function PATCH(req: Request, { params }: Params) {
     data.countries = (data.countries as string[]).map((c) => c.toUpperCase());
   }
   const zone = await prisma.shippingZone.update({ where: { id: zoneId }, data });
+  revalidatePath(`/shop/${siteSlug}/shipping`);
   return NextResponse.json({ zone });
 }
 
@@ -55,5 +57,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   const owned = await getOwned(session.user.email, siteSlug, zoneId);
   if (!owned) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   await prisma.shippingZone.delete({ where: { id: zoneId } });
+  revalidatePath(`/shop/${siteSlug}/shipping`);
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@
 // POST /api/shop/[siteSlug]/shipping/zones  → crée une zone
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -55,5 +56,6 @@ export async function POST(req: Request, { params }: Params) {
     },
     include: { methods: true },
   });
+  revalidatePath(`/shop/${siteSlug}/shipping`);
   return NextResponse.json({ zone });
 }

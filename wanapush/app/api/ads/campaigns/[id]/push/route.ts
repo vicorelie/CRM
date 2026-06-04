@@ -1,6 +1,7 @@
 // Push une campagne WanaPush DRAFT vers la plateforme native (Google Ads, Meta, etc.)
 // Crée la campagne en mode PAUSED par sécurité — l'user l'active manuellement.
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { ensureFreshAdAccount, getAdsConnector, toAdAccountInfo } from "@/lib/ads";
@@ -182,5 +183,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     },
   });
 
+  revalidatePath("/ads");
   return NextResponse.json({ campaign: updated, externalUrl: result.externalUrl });
 }

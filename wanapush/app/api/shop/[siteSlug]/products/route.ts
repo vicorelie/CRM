@@ -2,6 +2,7 @@
 // POST /api/shop/[siteSlug]/products  → crée un produit (avec variants/options/images)
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -253,5 +254,6 @@ export async function POST(req: Request, { params }: Params) {
     data: { shopId: shop.id, action: "product.create", resource: product.id, details: { title: product.title } },
   });
 
+  revalidatePath(`/shop/${siteSlug}/products`);
   return NextResponse.json({ product });
 }

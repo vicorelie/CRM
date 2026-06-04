@@ -2,6 +2,7 @@
 // DELETE /api/shop/[siteSlug]/categories/[categoryId]  → delete (cascade children + product links)
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -50,6 +51,7 @@ export async function PATCH(req: Request, { params }: Params) {
   await prisma.auditLog.create({
     data: { shopId: owned.shop.id, action: "category.update", resource: cat.id, details: { fields: Object.keys(data) } },
   });
+  revalidatePath(`/shop/${siteSlug}/categories`);
   return NextResponse.json({ category: cat });
 }
 
@@ -64,5 +66,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   await prisma.auditLog.create({
     data: { shopId: owned.shop.id, action: "category.delete", resource: categoryId, details: { name: owned.cat.name } },
   });
+  revalidatePath(`/shop/${siteSlug}/categories`);
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@
 // POST /api/shop/[siteSlug]/categories  → crée une catégorie
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -76,5 +77,6 @@ export async function POST(req: Request, { params }: Params) {
     data: { shopId: shop.id, action: "category.create", resource: cat.id, details: { name: cat.name } },
   });
 
+  revalidatePath(`/shop/${siteSlug}/categories`);
   return NextResponse.json({ category: cat });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -51,6 +52,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     where: { id },
     data: { read: parsed.data.read ?? true },
   });
+  revalidatePath("/leads");
   return NextResponse.json({ ok: true, read: updated.read });
 }
 
@@ -66,5 +68,6 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     return NextResponse.json({ error: "Soumission introuvable" }, { status: 404 });
   }
   await prisma.formSubmission.delete({ where: { id } });
+  revalidatePath("/leads");
   return NextResponse.json({ ok: true });
 }

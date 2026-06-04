@@ -3,6 +3,7 @@
 // DELETE /api/shop/[siteSlug]/products/[productId]  → suppression
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -277,6 +278,8 @@ export async function PATCH(req: Request, { params }: Params) {
       tags: true,
     },
   });
+  revalidatePath(`/shop/${siteSlug}/products`);
+  revalidatePath(`/shop/${siteSlug}/products/${productId}`);
   return NextResponse.json({ product: updated });
 }
 
@@ -294,5 +297,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   await prisma.auditLog.create({
     data: { shopId: shop.id, action: "product.delete", resource: product.id, details: { title: product.title } },
   });
+  revalidatePath(`/shop/${siteSlug}/products`);
   return NextResponse.json({ ok: true });
 }

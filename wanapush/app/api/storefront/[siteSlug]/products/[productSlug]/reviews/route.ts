@@ -2,6 +2,7 @@
 // POST /api/storefront/[siteSlug]/products/[productSlug]/reviews → soumet (PENDING)
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { readCustomerCookie } from "@/lib/customer-auth";
@@ -100,5 +101,6 @@ export async function POST(req: Request, { params }: Params) {
     },
   });
 
+  revalidatePath(`/shop/${siteSlug}/reviews`);
   return NextResponse.json({ ok: true, reviewId: review.id });
 }

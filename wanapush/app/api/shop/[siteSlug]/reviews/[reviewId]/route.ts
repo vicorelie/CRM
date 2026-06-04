@@ -2,6 +2,7 @@
 // DELETE /api/shop/[siteSlug]/reviews/[reviewId] → supprime
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -47,6 +48,7 @@ export async function PATCH(req: Request, { params }: Params) {
     if (input.reply) data.repliedAt = new Date();
   }
   const review = await prisma.review.update({ where: { id: reviewId }, data });
+  revalidatePath(`/shop/${siteSlug}/reviews`);
   return NextResponse.json({ review });
 }
 
@@ -57,5 +59,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   const o = await owned(session.user.email, siteSlug, reviewId);
   if (!o) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   await prisma.review.delete({ where: { id: reviewId } });
+  revalidatePath(`/shop/${siteSlug}/reviews`);
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@
 // DELETE → suppression
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -51,6 +52,7 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   const data: Record<string, unknown> = { ...parsed.data };
   const method = await prisma.shippingMethod.update({ where: { id: methodId }, data });
+  revalidatePath(`/shop/${siteSlug}/shipping`);
   return NextResponse.json({ method });
 }
 
@@ -61,5 +63,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   const o = await owned(session.user.email, siteSlug, methodId);
   if (!o) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   await prisma.shippingMethod.delete({ where: { id: methodId } });
+  revalidatePath(`/shop/${siteSlug}/shipping`);
   return NextResponse.json({ ok: true });
 }

@@ -11,6 +11,7 @@
 //   - capiAccessToken chiffré via lib/crypto avant stockage
 
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
@@ -194,6 +195,7 @@ export async function PUT(
     },
   });
 
+  revalidatePath(`/generated-sites/${params.id}/pixel`);
   return NextResponse.json({ pixel });
 }
 
@@ -214,5 +216,6 @@ export async function DELETE(
   if (!site) return NextResponse.json({ error: "site introuvable" }, { status: 404 });
 
   await prisma.sitePixel.deleteMany({ where: { generatedSiteId: site.id } });
+  revalidatePath(`/generated-sites/${params.id}/pixel`);
   return NextResponse.json({ ok: true });
 }

@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -153,6 +154,7 @@ export async function PATCH(req: Request, { params }: Params) {
     },
   });
 
+  revalidatePath(`/shop/${siteSlug}`);
   return NextResponse.json({
     shop: {
       ...updated,

@@ -2,6 +2,7 @@
 // DELETE /api/shop/[siteSlug]/options/[optionId] → supprime l'option
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -66,6 +67,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if (parsed.data.position != null) data.position = parsed.data.position;
 
   const updated = await prisma.shopOption.update({ where: { id: optionId }, data });
+  revalidatePath(`/shop/${siteSlug}/options`);
   return NextResponse.json({
     option: {
       id: updated.id,
@@ -88,5 +90,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (!owned) return NextResponse.json({ error: "Option introuvable" }, { status: 404 });
 
   await prisma.shopOption.delete({ where: { id: optionId } });
+  revalidatePath(`/shop/${siteSlug}/options`);
   return NextResponse.json({ ok: true });
 }
