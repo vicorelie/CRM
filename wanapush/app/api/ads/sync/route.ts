@@ -30,6 +30,9 @@ export async function POST(req: Request) {
     ? { id: parsed.data.accountId, user: { email: session.user.email } }
     : { user: { email: session.user.email } };
 
+  // ⚠️ Pas de `select` ici : on a besoin de tous les champs (accessToken, refreshToken,
+  // tokenExpiresAt, meta, ...) pour appeler syncAccount() côté serveur. Les comptes ne
+  // sont JAMAIS renvoyés au client — la réponse ne contient que { accountId, platform, ... }.
   const accounts = await prisma.adAccount.findMany({ where });
   if (accounts.length === 0)
     return NextResponse.json({ error: "Aucun compte pub à synchroniser" }, { status: 404 });
