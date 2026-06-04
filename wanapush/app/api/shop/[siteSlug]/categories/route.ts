@@ -62,19 +62,21 @@ export async function POST(req: Request, { params }: Params) {
     n++; slug = `${baseSlug}-${n}`;
   }
 
-  const cat = await prisma.category.create({
-    data: {
-      shopId: shop.id,
-      slug,
-      name: input.name,
-      description: input.description ?? null,
-      imageUrl: input.imageUrl || null,
-      parentId: input.parentId ?? null,
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: { shopId: shop.id, action: "category.create", resource: cat.id, details: { name: cat.name } },
+  const cat = await prisma.$transaction(async (tx) => {
+    const created = await tx.category.create({
+      data: {
+        shopId: shop.id,
+        slug,
+        name: input.name,
+        description: input.description ?? null,
+        imageUrl: input.imageUrl || null,
+        parentId: input.parentId ?? null,
+      },
+    });
+    await tx.auditLog.create({
+      data: { shopId: shop.id, action: "category.create", resource: created.id, details: { name: created.name } },
+    });
+    return created;
   });
 
   revalidatePath(`/shop/${siteSlug}/categories`);

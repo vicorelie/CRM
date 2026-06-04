@@ -63,26 +63,28 @@ export async function POST(req: Request, { params }: Params) {
   const exist = await prisma.discount.findFirst({ where: { shopId: shop.id, code } });
   if (exist) return NextResponse.json({ error: "Code déjà utilisé" }, { status: 409 });
 
-  const discount = await prisma.discount.create({
-    data: {
-      shopId: shop.id,
-      code,
-      description: input.description ?? null,
-      type: input.type,
-      value: input.value,
-      minSubtotal: input.minSubtotal ?? null,
-      minQuantity: input.minQuantity ?? null,
-      firstOrderOnly: input.firstOrderOnly ?? false,
-      oncePerCustomer: input.oncePerCustomer ?? false,
-      usageLimit: input.usageLimit ?? null,
-      startsAt: input.startsAt ? new Date(input.startsAt) : null,
-      endsAt: input.endsAt ? new Date(input.endsAt) : null,
-      enabled: input.enabled !== false,
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: { shopId: shop.id, action: "discount.create", resource: discount.id, details: { code } },
+  const discount = await prisma.$transaction(async (tx) => {
+    const created = await tx.discount.create({
+      data: {
+        shopId: shop.id,
+        code,
+        description: input.description ?? null,
+        type: input.type,
+        value: input.value,
+        minSubtotal: input.minSubtotal ?? null,
+        minQuantity: input.minQuantity ?? null,
+        firstOrderOnly: input.firstOrderOnly ?? false,
+        oncePerCustomer: input.oncePerCustomer ?? false,
+        usageLimit: input.usageLimit ?? null,
+        startsAt: input.startsAt ? new Date(input.startsAt) : null,
+        endsAt: input.endsAt ? new Date(input.endsAt) : null,
+        enabled: input.enabled !== false,
+      },
+    });
+    await tx.auditLog.create({
+      data: { shopId: shop.id, action: "discount.create", resource: created.id, details: { code } },
+    });
+    return created;
   });
 
   revalidatePath(`/shop/${siteSlug}/discounts`);

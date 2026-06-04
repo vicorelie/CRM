@@ -153,106 +153,119 @@ export async function POST(req: Request, { params }: Params) {
           },
         ];
 
-  const product = await prisma.product.create({
-    data: {
-      shopId: shop.id,
-      slug,
-      title: body.title.trim(),
-      description: body.description ?? null,
-      excerpt: body.excerpt ?? null,
-      status: body.status ?? "DRAFT",
-      productType: body.productType ?? "PHYSICAL",
-      vendor: body.vendor ?? null,
-      featured: body.featured ?? false,
-      metaTitle: body.metaTitle ?? null,
-      metaDescription: body.metaDescription ?? null,
-      publishedAt: body.status === "ACTIVE" ? new Date() : null,
-      images: {
-        create: (body.images ?? []).map((img, i) => ({
-          url: img.url,
-          alt: img.alt ?? null,
-          position: i,
-        })),
-      },
-      options: { create: optionsCreate },
-      tags: {
-        create: (body.tags ?? []).map((tag) => ({ tag: tag.toLowerCase() })),
-      },
-      categories: body.categoryIds
-        ? { create: body.categoryIds.map((categoryId) => ({ categoryId })) }
-        : undefined,
-    },
-    include: {
-      options: { include: { values: true } },
-      images: true,
-    },
-  });
-
-  // Crée les variantes APRÈS (besoin des optionValueIds générés)
-  for (let i = 0; i < variantsToCreate.length; i++) {
-    const v = variantsToCreate[i];
-    const ovIds: string[] = [];
-    if (v.optionValues) {
-      for (const ov of v.optionValues) {
-        const opt = product.options.find((o) => o.name === ov.optionName);
-        const val = opt?.values.find((vv) => vv.value === ov.value);
-        if (val) ovIds.push(val.id);
-      }
-    }
-    const variantTitle =
-      v.optionValues && v.optionValues.length > 0
-        ? v.optionValues.map((ov) => ov.value).join(" / ")
-        : "Default";
-
-    // Résout imageIndex (de body.images) → ProductImage.id (par position)
-    let imageId: string | null = null;
-    if (typeof v.imageIndex === "number" && v.imageIndex >= 0) {
-      const img = product.images.find((im) => im.position === v.imageIndex);
-      if (img) imageId = img.id;
-    }
-
-    const variant = await prisma.productVariant.create({
-      data: {
-        productId: product.id,
-        title: variantTitle,
-        sku: v.sku ?? null,
-        barcode: v.barcode ?? null,
-        price: v.price,
-        compareAt: v.compareAt ?? null,
-        cost: v.cost ?? null,
-        weight: v.weight ?? null,
-        requiresShipping: v.requiresShipping ?? true,
-        imageId,
-        position: i,
-        optionValues: {
-          create: ovIds.map((optionValueId) => ({ optionValueId })),
-        },
-      },
-    });
-
-    // Stock initial dans la location par défaut (créée si absente)
-    if (typeof v.stock === "number") {
-      let defaultLoc = await prisma.stockLocation.findFirst({
-        where: { shopId: shop.id, isDefault: true },
-      });
-      if (!defaultLoc) {
-        defaultLoc = await prisma.stockLocation.create({
-          data: { shopId: shop.id, name: "Stock principal", isDefault: true },
-        });
-      }
-      await prisma.stockLevel.create({
+  // Atomique : product + variantes + stock + audit en un seul $transaction.
+  // Sans ça, un crash entre la création du product et celle des variantes
+  // laissait un produit fantôme sans variantes (panier impossible).
+  const product = await prisma.$transaction(
+    async (tx) => {
+      const created = await tx.product.create({
         data: {
-          variantId: variant.id,
-          locationId: defaultLoc.id,
-          quantity: v.stock,
+          shopId: shop.id,
+          slug,
+          title: body.title.trim(),
+          description: body.description ?? null,
+          excerpt: body.excerpt ?? null,
+          status: body.status ?? "DRAFT",
+          productType: body.productType ?? "PHYSICAL",
+          vendor: body.vendor ?? null,
+          featured: body.featured ?? false,
+          metaTitle: body.metaTitle ?? null,
+          metaDescription: body.metaDescription ?? null,
+          publishedAt: body.status === "ACTIVE" ? new Date() : null,
+          images: {
+            create: (body.images ?? []).map((img, i) => ({
+              url: img.url,
+              alt: img.alt ?? null,
+              position: i,
+            })),
+          },
+          options: { create: optionsCreate },
+          tags: {
+            create: (body.tags ?? []).map((tag) => ({ tag: tag.toLowerCase() })),
+          },
+          categories: body.categoryIds
+            ? { create: body.categoryIds.map((categoryId) => ({ categoryId })) }
+            : undefined,
+        },
+        include: {
+          options: { include: { values: true } },
+          images: true,
         },
       });
-    }
-  }
 
-  await prisma.auditLog.create({
-    data: { shopId: shop.id, action: "product.create", resource: product.id, details: { title: product.title } },
-  });
+      // Cherché une seule fois avant la boucle (au lieu de 1 fois par variante).
+      let defaultLoc = await tx.stockLocation.findFirst({
+        where: { shopId: shop.id, isDefault: true },
+        select: { id: true },
+      });
+
+      // Crée les variantes APRÈS (besoin des optionValueIds générés)
+      for (let i = 0; i < variantsToCreate.length; i++) {
+        const v = variantsToCreate[i];
+        const ovIds: string[] = [];
+        if (v.optionValues) {
+          for (const ov of v.optionValues) {
+            const opt = created.options.find((o) => o.name === ov.optionName);
+            const val = opt?.values.find((vv) => vv.value === ov.value);
+            if (val) ovIds.push(val.id);
+          }
+        }
+        const variantTitle =
+          v.optionValues && v.optionValues.length > 0
+            ? v.optionValues.map((ov) => ov.value).join(" / ")
+            : "Default";
+
+        // Résout imageIndex (de body.images) → ProductImage.id (par position)
+        let imageId: string | null = null;
+        if (typeof v.imageIndex === "number" && v.imageIndex >= 0) {
+          const img = created.images.find((im) => im.position === v.imageIndex);
+          if (img) imageId = img.id;
+        }
+
+        const variant = await tx.productVariant.create({
+          data: {
+            productId: created.id,
+            title: variantTitle,
+            sku: v.sku ?? null,
+            barcode: v.barcode ?? null,
+            price: v.price,
+            compareAt: v.compareAt ?? null,
+            cost: v.cost ?? null,
+            weight: v.weight ?? null,
+            requiresShipping: v.requiresShipping ?? true,
+            imageId,
+            position: i,
+            optionValues: {
+              create: ovIds.map((optionValueId) => ({ optionValueId })),
+            },
+          },
+        });
+
+        if (typeof v.stock === "number") {
+          if (!defaultLoc) {
+            defaultLoc = await tx.stockLocation.create({
+              data: { shopId: shop.id, name: "Stock principal", isDefault: true },
+              select: { id: true },
+            });
+          }
+          await tx.stockLevel.create({
+            data: {
+              variantId: variant.id,
+              locationId: defaultLoc.id,
+              quantity: v.stock,
+            },
+          });
+        }
+      }
+
+      await tx.auditLog.create({
+        data: { shopId: shop.id, action: "product.create", resource: created.id, details: { title: created.title } },
+      });
+
+      return created;
+    },
+    { timeout: 30_000 },
+  );
 
   revalidatePath(`/shop/${siteSlug}/products`);
   return NextResponse.json({ product });

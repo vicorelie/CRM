@@ -47,10 +47,12 @@ export async function PATCH(req: Request, { params }: Params) {
   // Empêche d'être son propre parent (boucle)
   if (data.parentId === categoryId) return NextResponse.json({ error: "Parent invalide" }, { status: 400 });
 
-  const cat = await prisma.category.update({ where: { id: categoryId }, data });
-  await prisma.auditLog.create({
-    data: { shopId: owned.shop.id, action: "category.update", resource: cat.id, details: { fields: Object.keys(data) } },
-  });
+  const [cat] = await prisma.$transaction([
+    prisma.category.update({ where: { id: categoryId }, data }),
+    prisma.auditLog.create({
+      data: { shopId: owned.shop.id, action: "category.update", resource: categoryId, details: { fields: Object.keys(data) } },
+    }),
+  ]);
   revalidatePath(`/shop/${siteSlug}/categories`);
   return NextResponse.json({ category: cat });
 }
@@ -62,10 +64,12 @@ export async function DELETE(_req: Request, { params }: Params) {
   const owned = await getOwned(session.user.email, siteSlug, categoryId);
   if (!owned) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  await prisma.category.delete({ where: { id: categoryId } });
-  await prisma.auditLog.create({
-    data: { shopId: owned.shop.id, action: "category.delete", resource: categoryId, details: { name: owned.cat.name } },
-  });
+  await prisma.$transaction([
+    prisma.category.delete({ where: { id: categoryId } }),
+    prisma.auditLog.create({
+      data: { shopId: owned.shop.id, action: "category.delete", resource: categoryId, details: { name: owned.cat.name } },
+    }),
+  ]);
   revalidatePath(`/shop/${siteSlug}/categories`);
   return NextResponse.json({ ok: true });
 }

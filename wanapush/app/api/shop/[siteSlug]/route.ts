@@ -140,19 +140,19 @@ export async function PATCH(req: Request, { params }: Params) {
     delete data.paypalSecret;
   }
 
-  const updated = await prisma.shop.update({
-    where: { id: shop.id },
-    data,
-  });
-
-  // Audit log
-  await prisma.auditLog.create({
-    data: {
-      shopId: shop.id,
-      action: "shop.update",
-      details: { changedFields: Object.keys(data) },
-    },
-  });
+  const [updated] = await prisma.$transaction([
+    prisma.shop.update({
+      where: { id: shop.id },
+      data,
+    }),
+    prisma.auditLog.create({
+      data: {
+        shopId: shop.id,
+        action: "shop.update",
+        details: { changedFields: Object.keys(data) },
+      },
+    }),
+  ]);
 
   revalidatePath(`/shop/${siteSlug}`);
   return NextResponse.json({
