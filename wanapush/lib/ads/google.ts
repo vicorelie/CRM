@@ -12,6 +12,9 @@ import type {
   AdAccountInfo,
   AdsConnector,
   CampaignSync,
+  ConversionAction,
+  ConversionActionInput,
+  ConversionCategory,
   DailyMetrics,
   PushCampaignInput,
   PushCampaignResult,
@@ -480,6 +483,23 @@ async function pushCampaign(
         });
       }
 
+      // 5bis) Negative keywords au niveau campagne (anti-gaspillage budget).
+      // CampaignCriterion avec `negative: true` filtre toute la campagne, peu
+      // importe l'AdGroup. À préférer aux AdGroup negatives qui dupliquent le
+      // travail si on a plusieurs AdGroups.
+      const negKw = (input.negativeKeywords ?? []).slice(0, 5000); // limit Google
+      if (negKw.length > 0) {
+        await mutate(account, customerId, "campaignCriteria", {
+          operations: negKw.map((k) => ({
+            create: {
+              campaign: campRes.resourceName,
+              negative: true,
+              keyword: { text: k.text, matchType: k.matchType },
+            },
+          })),
+        });
+      }
+
       // 6) Responsive Search Ad
       const headlines = (input.headlines ?? []).slice(0, 15).filter((h) => h && h.length <= 30);
       const descriptions = (input.descriptions ?? []).slice(0, 4).filter((d) => d && d.length <= 90);
@@ -502,6 +522,101 @@ async function pushCampaign(
           ],
         });
       }
+
+      // 7) Asset Extensions (sitelinks, callouts, structured snippets).
+      // 2 étapes : créer les Assets, puis les lier à la Campaign via
+      // CampaignAsset avec field_type adapté. +10-30% CTR en moyenne.
+      const assetOps: Array<Record<string, unknown>> = [];
+      const assetMeta: Array<{ type: "SITELINK" | "CALLOUT" | "STRUCTURED_SNIPPET" }> = [];
+
+      for (const sl of (input.sitelinks ?? []).slice(0, 20)) {
+        const slAsset: Record<string, unknown> = {
+          linkText: sl.linkText.slice(0, 25),
+          finalUrls: [sl.finalUrl],
+        };
+        if (sl.description1) slAsset.description1 = sl.description1.slice(0, 35);
+        if (sl.description2) slAsset.description2 = sl.description2.slice(0, 35);
+        assetOps.push({ create: { sitelinkAsset: slAsset } });
+        assetMeta.push({ type: "SITELINK" });
+      }
+
+      for (const co of (input.callouts ?? []).slice(0, 20)) {
+        assetOps.push({
+          create: { calloutAsset: { calloutText: co.slice(0, 25) } },
+        });
+        assetMeta.push({ type: "CALLOUT" });
+      }
+
+      for (const ss of (input.structuredSnippets ?? []).slice(0, 10)) {
+        assetOps.push({
+          create: {
+            structuredSnippetAsset: {
+              header: ss.header,
+              values: ss.values.slice(0, 10),
+            },
+          },
+        });
+        assetMeta.push({ type: "STRUCTURED_SNIPPET" });
+      }
+
+      if (assetOps.length > 0) {
+        // Création des Assets (batch)
+        const { devToken } = appCreds();
+        const r = await fetch(
+          `${GOOGLE_ADS_API}/customers/${customerId}/assets:mutate`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${account.accessToken}`,
+              "developer-token": devToken,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ operations: assetOps }),
+          },
+        );
+        const j = (await r.json()) as {
+          results?: Array<{ resourceName: string }>;
+          error?: { message?: string };
+        };
+        if (j.error) throw new Error(`Assets mutate: ${j.error.message}`);
+        const assetResources = j.results ?? [];
+
+        // Liens Asset → Campaign via CampaignAsset
+        if (assetResources.length > 0) {
+          const linkOps = assetResources.map((a, i) => ({
+            create: {
+              campaign: campRes.resourceName,
+              asset: a.resourceName,
+              fieldType: assetMeta[i].type,
+            },
+          }));
+          await mutate(account, customerId, "campaignAssets", {
+            operations: linkOps,
+          });
+        }
+      }
+    }
+
+    // 8) Lier la campagne aux ConversionActions pour débloquer smart bidding.
+    // Sans selectiveOptimization, TARGET_CPA et TARGET_ROAS optimisent sur le
+    // pool de conversions par défaut du compte — peu prédictif si le compte a
+    // plusieurs goals. Avec selectiveOptimization, on dit "cette campagne se
+    // mesure sur CES conversions précises".
+    if ((input.conversionActionIds ?? []).length > 0) {
+      const convResources = input.conversionActionIds!.map(
+        (id) => `customers/${customerId}/conversionActions/${id}`,
+      );
+      await mutate(account, customerId, "campaigns", {
+        operations: [
+          {
+            update: {
+              resourceName: campRes.resourceName,
+              selectiveOptimization: { conversionActions: convResources },
+            },
+            updateMask: "selectiveOptimization",
+          },
+        ],
+      });
     }
 
     return {
@@ -519,6 +634,162 @@ async function pushCampaign(
   }
 }
 
+// ─── Conversion tracking ──────────────────────────────────────────────────
+// Création + lecture des ConversionActions Google Ads. La création retourne
+// l'ID + le snippet à coller sur le site du client (global_site_tag + event
+// snippet). Sans ces ConversionActions, les bidding strategies smart (TARGET_CPA
+// et TARGET_ROAS) ne peuvent pas fonctionner — elles ont besoin d'historique
+// pour apprendre. C'est LE prérequis #1 du smart bidding 2026.
+
+const CATEGORY_MAP: Record<ConversionCategory, string> = {
+  PURCHASE: "PURCHASE",
+  LEAD: "LEAD",
+  SIGN_UP: "SIGNUP",
+  BOOK_APPOINTMENT: "BOOK_APPOINTMENT",
+  REQUEST_QUOTE: "REQUEST_QUOTE",
+  GET_DIRECTIONS: "GET_DIRECTIONS",
+  OUTBOUND_CLICK: "OUTBOUND_CLICK",
+  CONTACT: "CONTACT",
+  PAGE_VIEW: "PAGE_VIEW",
+  DEFAULT: "DEFAULT",
+};
+
+function parseConversionRow(
+  r: Record<string, unknown>,
+  resourceName: string,
+): ConversionAction {
+  const c = (r.conversionAction as Record<string, unknown>) ?? {};
+  const valueSettings = (c.valueSettings as Record<string, unknown>) ?? {};
+  const snippets =
+    ((c.tagSnippets as Array<Record<string, unknown>>) ?? []).find(
+      (s) => (s.type as string) === "WEBPAGE",
+    ) ?? {};
+
+  // GAQL renvoie metrics.all_conversions et segments.conversion_action_name
+  // si on les sélectionne — sinon undefined. On parse defensively.
+  const metrics = (r.metrics as Record<string, unknown>) ?? {};
+
+  return {
+    id: String(c.id ?? resourceName.split("/").pop() ?? ""),
+    resourceName,
+    name: String(c.name ?? ""),
+    category: String(c.category ?? ""),
+    type: String(c.type ?? ""),
+    status: String(c.status ?? ""),
+    globalSiteTag: snippets.globalSiteTag as string | undefined,
+    eventSnippet: snippets.eventSnippet as string | undefined,
+    conversionCount:
+      metrics.allConversions !== undefined
+        ? Number(metrics.allConversions)
+        : undefined,
+    // valueSettings absent par défaut sur le retour GAQL — c'est ok.
+    lastConversionAt: undefined,
+  };
+}
+
+async function listConversionActions(
+  account: AdAccountInfo,
+): Promise<ConversionAction[]> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+  const rows = await gaqlQuery(
+    account,
+    customerId,
+    `SELECT
+       conversion_action.id,
+       conversion_action.resource_name,
+       conversion_action.name,
+       conversion_action.category,
+       conversion_action.type,
+       conversion_action.status,
+       conversion_action.tag_snippets
+     FROM conversion_action
+     WHERE conversion_action.status != 'REMOVED'
+     ORDER BY conversion_action.id DESC
+     LIMIT 100`,
+  );
+  return rows.map((r) => {
+    const c = (r.conversionAction as Record<string, unknown>) ?? {};
+    return parseConversionRow(r, String(c.resourceName ?? ""));
+  });
+}
+
+async function getConversionAction(
+  account: AdAccountInfo,
+  id: string,
+): Promise<ConversionAction | null> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+  const rows = await gaqlQuery(
+    account,
+    customerId,
+    `SELECT
+       conversion_action.id,
+       conversion_action.resource_name,
+       conversion_action.name,
+       conversion_action.category,
+       conversion_action.type,
+       conversion_action.status,
+       conversion_action.tag_snippets
+     FROM conversion_action
+     WHERE conversion_action.id = ${Number(id)}
+     LIMIT 1`,
+  );
+  if (rows.length === 0) return null;
+  const c = (rows[0].conversionAction as Record<string, unknown>) ?? {};
+  return parseConversionRow(rows[0], String(c.resourceName ?? ""));
+}
+
+async function createConversionAction(
+  account: AdAccountInfo,
+  input: ConversionActionInput,
+): Promise<ConversionAction> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+
+  // Construction du payload — `type: WEBPAGE` = tracking via gtag/event snippet.
+  // Pour offline / app conversions, ce serait UPLOAD_CALLS, UPLOAD_CLICKS, etc.
+  // — pas couvert pour l'instant (rare en MVP).
+  const body: Record<string, unknown> = {
+    name: input.name,
+    type: "WEBPAGE",
+    category: CATEGORY_MAP[input.category] ?? "DEFAULT",
+    status: "ENABLED",
+    // ONE_PER_CLICK = compte 1 conversion max par clic (typique LEAD/SIGN_UP).
+    // Pour PURCHASE, utiliser MANY_PER_CLICK (multi-achats sur même session).
+    countingType:
+      input.category === "PURCHASE" ? "MANY_PER_CLICK" : "ONE_PER_CLICK",
+    clickThroughLookbackWindowDays: input.clickThroughLookbackWindowDays ?? 30,
+    viewThroughLookbackWindowDays: input.viewThroughLookbackWindowDays ?? 1,
+    includeInConversionsMetric: true,
+    includeInClientAccountConversionsMetric: true,
+  };
+  if (input.defaultValue !== undefined) {
+    body.valueSettings = {
+      defaultValue: input.defaultValue,
+      defaultCurrencyCode:
+        input.defaultCurrencyCode ?? account.currency ?? "EUR",
+      alwaysUseDefaultValue: input.alwaysUseDefaultValue ?? false,
+    };
+  }
+
+  const res = await mutate(account, customerId, "conversionActions", {
+    operations: [{ create: body }],
+  });
+  const id = res.resourceName.split("/").pop() ?? "";
+
+  // L'event_snippet n'est pas retourné par la mutate — il faut GET pour le
+  // récupérer après création. Retry 1 fois si Google met du temps à propager.
+  let action = await getConversionAction(account, id);
+  if (!action || (!action.globalSiteTag && !action.eventSnippet)) {
+    await new Promise((r) => setTimeout(r, 1500));
+    action = await getConversionAction(account, id);
+  }
+  if (!action) {
+    throw new Error(
+      `ConversionAction créée (${id}) mais introuvable au refetch — réessayez dans 30s.`,
+    );
+  }
+  return action;
+}
+
 export const googleAdsConnector: AdsConnector = {
   platform: "GOOGLE_ADS",
   authorizeUrl,
@@ -527,4 +798,7 @@ export const googleAdsConnector: AdsConnector = {
   listCampaigns,
   fetchMetrics,
   pushCampaign,
+  createConversionAction,
+  listConversionActions,
+  getConversionAction,
 };

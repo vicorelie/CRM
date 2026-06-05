@@ -70,6 +70,27 @@ export type PushCampaignInput = {
   };
   /** Mots-clés pour Search/Display */
   keywords?: Array<{ text: string; matchType: "BROAD" | "PHRASE" | "EXACT" }>;
+  /** Mots-clés à exclure (negative keywords) — Search uniquement. Anti-gaspillage
+   * budget : "gratuit", "emploi", "tutoriel" si on vend du service payant. */
+  negativeKeywords?: Array<{ text: string; matchType: "BROAD" | "PHRASE" | "EXACT" }>;
+  /** Sitelinks (Google Asset Extensions) — 4-6 recommandés. Affichés sous l'annonce
+   * Search, +10-20% CTR typique. linkText max 25 chars, descriptions max 35 chars. */
+  sitelinks?: Array<{
+    linkText: string;
+    finalUrl: string;
+    description1?: string;
+    description2?: string;
+  }>;
+  /** Callouts (Google Asset Extensions) — 4-10 phrases courtes (max 25 chars chacune).
+   * Ex: "Livraison gratuite", "Devis 24h", "10 ans d'expertise". */
+  callouts?: string[];
+  /** Structured snippets (Google) — listes structurées sous l'annonce.
+   * Headers parmi : "Services", "Brands", "Types", "Models", "Featured hotels"…
+   * 3-10 values max. */
+  structuredSnippets?: Array<{ header: string; values: string[] }>;
+  /** ID(s) de ConversionAction(s) à lier à la campagne — débloque smart bidding.
+   * Sans ça, TARGET_CPA et TARGET_ROAS ne peuvent pas fonctionner. */
+  conversionActionIds?: string[];
   /** Headlines (3-15 pour Google RSA, 1-5 pour Meta) */
   headlines?: string[];
   /** Descriptions (2-4 pour Google RSA, 1 pour Meta) */
@@ -114,6 +135,65 @@ export type PushCampaignResult = {
   error?: string;
 };
 
+// ─── Conversion tracking ────────────────────────────────────────────────
+// Spec Google Ads ConversionAction. Mappable côté Meta vers Pixel custom events
+// + CAPI. Pour l'instant supporté uniquement par Google côté push (Meta a son
+// propre flow CAPI via lib/capi).
+
+/** Catégorie business d'une conversion — détermine la valeur stratégique côté
+ * smart bidding (PURCHASE > LEAD > PAGE_VIEW). */
+export type ConversionCategory =
+  | "PURCHASE"             // Achat e-commerce
+  | "LEAD"                 // Formulaire / appel / contact
+  | "SIGN_UP"              // Inscription / newsletter
+  | "BOOK_APPOINTMENT"     // RDV / réservation
+  | "REQUEST_QUOTE"        // Demande de devis
+  | "GET_DIRECTIONS"       // Itinéraire vers point de vente
+  | "OUTBOUND_CLICK"       // Clic sortant (affiliation)
+  | "CONTACT"              // Clic email / téléphone
+  | "PAGE_VIEW"            // Vue de page clé (download brochure, etc.)
+  | "DEFAULT";             // Catch-all
+
+export type ConversionActionInput = {
+  /** Nom interne (affiché dans Google Ads UI + WanaPush) */
+  name: string;
+  /** Catégorie business — pondère le smart bidding */
+  category: ConversionCategory;
+  /** Valeur monétaire par défaut. Si vide, la conversion compte sans valeur
+   * (ne marche pas pour TARGET_ROAS — il faut une valeur). */
+  defaultValue?: number;
+  /** Devise (sinon devise du compte) */
+  defaultCurrencyCode?: string;
+  /** Toujours utiliser la valeur par défaut ? Sinon, on lit la valeur envoyée
+   * dans le gtag('event', ...) — recommandé pour e-commerce avec paniers
+   * variables. */
+  alwaysUseDefaultValue?: boolean;
+  /** Fenêtre d'attribution clic (1-90 jours, défaut 30) */
+  clickThroughLookbackWindowDays?: number;
+  /** Fenêtre d'attribution view (1-30 jours, défaut 1) */
+  viewThroughLookbackWindowDays?: number;
+};
+
+export type ConversionAction = {
+  /** ID interne Google Ads (utilisable dans conversionActionIds) */
+  id: string;
+  /** Resource name complet : customers/123/conversionActions/456 */
+  resourceName: string;
+  name: string;
+  category: string;
+  type: string;
+  status: string;
+  /** Tag à coller sur le site du client (global_site_tag) — chargé une fois
+   * dans <head>. Retourné par getConversionAction(). */
+  globalSiteTag?: string;
+  /** Event snippet — collé sur la page de remerciement / confirmation. */
+  eventSnippet?: string;
+  /** Nombre de conversions enregistrées (pour status display). */
+  conversionCount?: number;
+  /** Dernière conversion reçue (pour debug "ça track ou pas ?"). */
+  lastConversionAt?: Date;
+};
+
 /** Contrat minimal d'un connecteur Ad Manager */
 export type AdsConnector = {
   platform: AdPlatform;
@@ -137,6 +217,18 @@ export type AdsConnector = {
     account: AdAccountInfo,
     input: PushCampaignInput,
   ): Promise<PushCampaignResult>;
+  /** Crée une ConversionAction + retourne son ID + son snippet à coller. */
+  createConversionAction?(
+    account: AdAccountInfo,
+    input: ConversionActionInput,
+  ): Promise<ConversionAction>;
+  /** Liste les ConversionActions du compte (pour wizard "lier au smart bidding") */
+  listConversionActions?(account: AdAccountInfo): Promise<ConversionAction[]>;
+  /** Récupère le snippet d'une ConversionAction existante. */
+  getConversionAction?(
+    account: AdAccountInfo,
+    id: string,
+  ): Promise<ConversionAction | null>;
 };
 
 export const PLATFORM_LABEL: Record<AdPlatform, string> = {
