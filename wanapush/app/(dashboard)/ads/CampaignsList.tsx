@@ -41,6 +41,20 @@ const FILTERS: Array<{ id: "ALL" | AdPlatform; label: string }> = [
   { id: "LINKEDIN_ADS", label: "LinkedIn" },
 ];
 
+// Parse une textarea de negative keywords (un par ligne) en array Google Ads.
+// Par défaut, on utilise PHRASE match (couvre le cas commun "ne jamais matcher
+// cette phrase exacte" sans la rigidité d'EXACT).
+function parseNegativeKeywords(
+  text: string,
+): Array<{ text: string; matchType: "BROAD" | "PHRASE" | "EXACT" }> {
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && l.length <= 80)
+    .slice(0, 200) // pragmatique : 200 negative kw suffisent en MVP
+    .map((t) => ({ text: t, matchType: "PHRASE" as const }));
+}
+
 export function CampaignsList({ refreshKey }: Props) {
   const [campaigns, setCampaigns] = useState<CampaignRich[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +145,10 @@ export function CampaignsList({ refreshKey }: Props) {
       expandText: false,
       expandTargeting: false,
       expandAdvanced: false,
+      expandGoogle: false,
+      negativeKeywordsText: "",
+      selectedConversionActionId: null,
+      availableConversionActions: [],
     });
     if (firstMeta?.id) {
       fetchPixelInBg(firstMeta.id);
@@ -217,6 +235,10 @@ export function CampaignsList({ refreshKey }: Props) {
       expandText: true,
       expandTargeting: false,
       expandAdvanced: false,
+      expandGoogle: c.type === "GOOGLE_ADS",
+      negativeKeywordsText: "",
+      selectedConversionActionId: null,
+      availableConversionActions: [],
     });
     // Fetch Pixel + destinations en background
     if (c.adAccount?.id) {
@@ -486,6 +508,28 @@ export function CampaignsList({ refreshKey }: Props) {
     setPushModal((p) => (p ? { ...p, ...patch } : null));
   }
 
+  // Charge la liste des ConversionActions Google Ads pour un compte donné.
+  // Appelé quand l'user passe en TARGET_CPA/TARGET_ROAS (smart bidding) et
+  // qu'on doit lui proposer une conversion à lier — sinon le bidding optimise
+  // sur le pool global du compte (moins prédictif).
+  async function loadConversionsForAccount(adAccountId: string) {
+    try {
+      const r = await fetch(`/api/ads/accounts/${adAccountId}/conversions`);
+      if (!r.ok) return;
+      const j = (await r.json()) as {
+        conversions?: Array<{
+          id: string;
+          name: string;
+          category: string;
+          status: string;
+        }>;
+      };
+      patchModal({ availableConversionActions: j.conversions ?? [] });
+    } catch {
+      // silencieux — la dropdown sera vide
+    }
+  }
+
   async function modalUpload() {
     const file = await pickImageFile();
     if (!file) return;
@@ -749,6 +793,13 @@ export function CampaignsList({ refreshKey }: Props) {
           ...(pushModal.description.trim() ? { descriptions: [pushModal.description.trim().slice(0, 30)] } : {}),
           ...(pushModal.cta ? { cta: pushModal.cta } : {}),
           ...(imageUrl ? { imageUrl } : {}),
+          // ─── Google Ads spécifiques ─────────────────────────────────
+          ...(parseNegativeKeywords(pushModal.negativeKeywordsText).length > 0
+            ? { negativeKeywords: parseNegativeKeywords(pushModal.negativeKeywordsText) }
+            : {}),
+          ...(pushModal.selectedConversionActionId
+            ? { conversionActionIds: [pushModal.selectedConversionActionId] }
+            : {}),
         }),
       });
       const j = await res.json();
@@ -918,6 +969,7 @@ export function CampaignsList({ refreshKey }: Props) {
           onVerifyExternalPixel={verifyExternalPixel}
           onSaveDraft={modalSaveDraft}
           onGenerateVariants={modalGenerateVariants}
+          onLoadConversions={loadConversionsForAccount}
         />
       )}
 

@@ -1,6 +1,17 @@
 "use client";
+import { useEffect } from "react";
 import { OBJECTIVE_LABEL, PLATFORM_META } from "../types";
 import type { AdPlatform, CampaignObjective } from "../types";
+
+// Count utility — mirror du parseNegativeKeywords côté push (CampaignsList).
+// On évite l'import pour ne pas créer de dépendance cyclique avec le parent.
+function parseNegativeKeywordsCount(text: string): number {
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && l.length <= 80)
+    .slice(0, 200).length;
+}
 import type {
   AdAccountChoice,
   AvailablePixel,
@@ -34,6 +45,7 @@ export function PushModal({
   onVerifyExternalPixel,
   onSaveDraft,
   onGenerateVariants,
+  onLoadConversions,
 }: {
   state: PushModalState;
   patch: (p: Partial<PushModalState>) => void;
@@ -52,6 +64,7 @@ export function PushModal({
   onVerifyExternalPixel: () => void;
   onSaveDraft: () => void;
   onGenerateVariants: () => void;
+  onLoadConversions: (adAccountId: string) => Promise<void>;
 }) {
   const {
     mode,
@@ -94,9 +107,23 @@ export function PushModal({
     expandText,
     expandTargeting,
     expandAdvanced,
+    negativeKeywordsText,
+    selectedConversionActionId,
+    availableConversionActions,
   } = state;
   const isCreate = mode === "create";
-  const isMeta = (isCreate ? briefPlatform : c.type) === "META_ADS";
+  const platform: AdPlatform = isCreate ? briefPlatform : c.type;
+  const isMeta = platform === "META_ADS";
+  const isGoogle = platform === "GOOGLE_ADS";
+
+  // Charge les ConversionActions dès qu'on entre dans le mode Google Ads avec
+  // un compte sélectionné. Idempotent : la fonction parent setera l'array dans
+  // le state, on évite de refetch si déjà chargé.
+  useEffect(() => {
+    if (isGoogle && briefAdAccountId && availableConversionActions.length === 0) {
+      onLoadConversions(briefAdAccountId);
+    }
+  }, [isGoogle, briefAdAccountId, availableConversionActions.length, onLoadConversions]);
   const busy = busyAction !== null;
   const needsPixel = PIXEL_REQUIRED_OBJECTIVES.includes(objective);
 
@@ -931,6 +958,97 @@ export function PushModal({
                 </>
               )}
             </div>
+          )}
+
+          {/* ─── Section Google Ads spécifique ───────────────────────── */}
+          {isGoogle && (
+            <Section
+              title="🎯 Smart Bidding & Tracking (Google Ads)"
+              expanded={state.expandGoogle}
+              onToggle={() => patch({ expandGoogle: !state.expandGoogle })}
+            >
+              <div className="space-y-5 px-4 py-4">
+                {/* Conversion linking */}
+                <div>
+                  <label className="block text-sm font-semibold text-zinc-900 mb-2">
+                    Lier à une conversion (débloque smart bidding)
+                  </label>
+                  {availableConversionActions.length === 0 ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                      Aucune conversion configurée sur ce compte Google Ads.
+                      Sans tracking, TARGET_CPA et TARGET_ROAS ne peuvent pas
+                      fonctionner.{" "}
+                      <a
+                        href={`/ads/accounts/${briefAdAccountId}/conversions`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold underline hover:text-amber-700"
+                      >
+                        Configurer le tracking ↗
+                      </a>
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        value={selectedConversionActionId ?? ""}
+                        onChange={(e) =>
+                          patch({
+                            selectedConversionActionId: e.target.value || null,
+                          })
+                        }
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                      >
+                        <option value="">
+                          Aucune (optimise sur le pool global du compte)
+                        </option>
+                        {availableConversionActions
+                          .filter((ca) => ca.status === "ENABLED")
+                          .map((ca) => (
+                            <option key={ca.id} value={ca.id}>
+                              {ca.name} ({ca.category})
+                            </option>
+                          ))}
+                      </select>
+                      <p className="mt-1.5 text-xs text-zinc-500">
+                        Avec une conversion liée, le bidding s'optimise{" "}
+                        <strong>uniquement</strong> sur ce goal — plus prédictif
+                        que d'utiliser tout l'historique du compte.
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Negative keywords */}
+                <div>
+                  <label className="block text-sm font-semibold text-zinc-900 mb-2">
+                    Mots-clés négatifs (anti-gaspillage)
+                  </label>
+                  <textarea
+                    value={negativeKeywordsText}
+                    onChange={(e) =>
+                      patch({ negativeKeywordsText: e.target.value })
+                    }
+                    rows={5}
+                    placeholder={`gratuit\nemploi\ntutoriel\nstage`}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-mono focus:border-brand focus:outline-none"
+                  />
+                  <p className="mt-1.5 text-xs text-zinc-500">
+                    Un mot-clé par ligne. Match type{" "}
+                    <code className="bg-zinc-100 px-1 rounded">PHRASE</code>.
+                    Exclut les recherches qui contiennent ce groupe de mots.
+                    Anti-gaspillage budget sur des intents non-acheteurs
+                    ("gratuit", "tutoriel", "emploi" si vous vendez du service
+                    payant).
+                  </p>
+                  {parseNegativeKeywordsCount(negativeKeywordsText) > 0 && (
+                    <p className="mt-1 text-xs text-emerald-700 font-semibold">
+                      {parseNegativeKeywordsCount(negativeKeywordsText)}{" "}
+                      mot(s)-clé(s) seront ajoutés à la campagne
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Section>
           )}
         </div>
 

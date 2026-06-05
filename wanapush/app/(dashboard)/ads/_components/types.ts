@@ -161,4 +161,19 @@ export type PushModalState = {
   expandText: boolean;
   expandTargeting: boolean;
   expandAdvanced: boolean;
+  /** Section "Smart Bidding & Tracking" Google Ads — affichée uniquement si
+   * platform === GOOGLE_ADS. */
+  expandGoogle: boolean;
+  // ─── Google Ads spécifiques ──────────────────────────────────────────
+  /** Mots-clés négatifs (Search) — un par ligne dans le textarea, parsé
+   * lors du push. Anti-gaspillage budget : "gratuit", "emploi", "tutoriel"
+   * si on vend un service payant. */
+  negativeKeywordsText: string;
+  /** Sélection d'une ConversionAction Google Ads pour selectiveOptimization.
+   * Sans ça, smart bidding optimise sur le pool global du compte (moins
+   * prédictif si plusieurs goals coexistent). */
+  selectedConversionActionId: string | null;
+  /** Cache des conversions disponibles (chargées au passage en
+   * TARGET_CPA / TARGET_ROAS — exigent du tracking pour fonctionner). */
+  availableConversionActions: Array<{ id: string; name: string; category: string; status: string }>;
 };

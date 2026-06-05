@@ -28,6 +28,41 @@ const inputSchema = z.object({
     )
     .max(50)
     .optional(),
+  /** Negative keywords (Google Search) — anti-gaspillage budget. */
+  negativeKeywords: z
+    .array(
+      z.object({
+        text: z.string().trim().min(1).max(80),
+        matchType: z.enum(["BROAD", "PHRASE", "EXACT"]),
+      }),
+    )
+    .max(5000)
+    .optional(),
+  /** Sitelinks (Google asset extensions) */
+  sitelinks: z
+    .array(
+      z.object({
+        linkText: z.string().trim().min(1).max(25),
+        finalUrl: z.url().max(2048),
+        description1: z.string().trim().max(35).optional(),
+        description2: z.string().trim().max(35).optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
+  callouts: z.array(z.string().trim().min(1).max(25)).max(20).optional(),
+  structuredSnippets: z
+    .array(
+      z.object({
+        header: z.string().trim().min(1).max(40),
+        values: z.array(z.string().trim().min(1).max(25)).min(3).max(10),
+      }),
+    )
+    .max(10)
+    .optional(),
+  /** ConversionAction IDs Google Ads à lier (selectiveOptimization). Sans ça,
+   * TARGET_CPA / TARGET_ROAS optimisent sur le pool global du compte. */
+  conversionActionIds: z.array(z.string().regex(/^\d+$/)).max(20).optional(),
   headlines: z.array(z.string().max(30)).max(15).optional(),
   descriptions: z.array(z.string().max(90)).max(4).optional(),
   primaryText: z.string().max(2000).optional(),
@@ -167,9 +202,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       targeting: {
         countries: parsed.data.countries ?? [],
         keywords: parsed.data.keywords ?? [],
+        negativeKeywords: parsed.data.negativeKeywords ?? [],
         finalUrl: parsed.data.finalUrl,
         biddingStrategy: parsed.data.biddingStrategy,
         biddingTarget: parsed.data.biddingTarget,
+        conversionActionIds: parsed.data.conversionActionIds ?? [],
+        sitelinks: parsed.data.sitelinks ?? [],
+        callouts: parsed.data.callouts ?? [],
+        structuredSnippets: parsed.data.structuredSnippets ?? [],
         headlines: parsed.data.headlines ?? [],
         descriptions: parsed.data.descriptions ?? [],
       } as never,
