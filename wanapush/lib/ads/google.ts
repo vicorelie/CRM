@@ -367,10 +367,316 @@ async function mutate(
   return { resourceName: results[0].resourceName, raw: j };
 }
 
+// ─── Batched mutate (Performance Max) ───────────────────────────────────
+// Pour PMax, Google exige UNE seule requête atomique qui crée Budget + Campaign
+// + AssetGroup + Assets + AssetGroupAssets ensemble, en se référant via des
+// resourceNames TEMPORAIRES négatifs (-1, -2, -3, …).
+// Doc : https://developers.google.com/google-ads/api/samples/add-performance-max-campaign
+
+type MutateOperation = Record<string, unknown>;
+
+async function googleAdsMutateBatch(
+  account: AdAccountInfo,
+  customerId: string,
+  operations: MutateOperation[],
+): Promise<Array<Record<string, unknown>>> {
+  const { devToken } = appCreds();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${account.accessToken}`,
+    "developer-token": devToken,
+    "Content-Type": "application/json",
+  };
+  const loginCustomerId = account.meta?.loginCustomerId as string | undefined;
+  if (loginCustomerId) headers["login-customer-id"] = loginCustomerId;
+
+  const r = await fetch(
+    `${GOOGLE_ADS_API}/customers/${customerId}/googleAds:mutate`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mutateOperations: operations }),
+    },
+  );
+  const text = await r.text();
+  if (!r.ok) {
+    // Format détaillé errors[].errorCode + location pour debug PMax
+    let detail = text.slice(0, 800);
+    try {
+      const j = JSON.parse(text) as {
+        error?: {
+          message?: string;
+          details?: Array<{
+            errors?: Array<{
+              errorCode?: Record<string, string>;
+              message?: string;
+              location?: { fieldPathElements?: Array<{ fieldName?: string; index?: number }> };
+            }>;
+          }>;
+        };
+      };
+      const errs = j.error?.details?.[0]?.errors ?? [];
+      if (errs.length > 0) {
+        detail = errs
+          .map((e) => {
+            const code = Object.values(e.errorCode ?? {})[0];
+            const path = (e.location?.fieldPathElements ?? [])
+              .map((p) => `${p.fieldName}${p.index !== undefined ? `[${p.index}]` : ""}`)
+              .join(".");
+            return `${code} on ${path}: ${e.message}`;
+          })
+          .join(" | ");
+      } else if (j.error?.message) {
+        detail = j.error.message;
+      }
+    } catch {
+      // garde le brut
+    }
+    throw new Error(`googleAds:mutate ${r.status}: ${detail}`);
+  }
+  const j = JSON.parse(text) as {
+    mutateOperationResponses?: Array<Record<string, unknown>>;
+  };
+  return j.mutateOperationResponses ?? [];
+}
+
+/** Push une campagne Performance Max. Crée tout en une requête atomique :
+ *  Budget + Campaign + CampaignCriteria (geo) + Assets (text) + AssetGroup
+ *  + AssetGroupAssets. Images doivent être ajoutées séparément côté Google
+ *  Ads UI (upload binaire complexe à exposer dans un wizard) — la campagne
+ *  reste PAUSED tant que l'user n'a pas ajouté au moins 1 image.
+ */
+async function pushPmaxCampaign(
+  account: AdAccountInfo,
+  input: PushCampaignInput,
+): Promise<PushCampaignResult> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+  const resources: Record<string, string> = {};
+
+  try {
+    // Resource names temporaires (négatifs, propres à la requête)
+    const TMP = {
+      budget: `customers/${customerId}/campaignBudgets/-1`,
+      campaign: `customers/${customerId}/campaigns/-2`,
+      assetGroup: `customers/${customerId}/assetGroups/-3`,
+    };
+
+    // Bidding strategy : MAXIMIZE_CONVERSIONS par défaut (recommandé pendant la
+    // learning phase 4-6 semaines), TARGET_CPA / TARGET_ROAS sinon.
+    const biddingStrategy = (input.biddingStrategy ?? "MAXIMIZE_CONVERSIONS").toUpperCase();
+    const campaignBody: Record<string, unknown> = {
+      resourceName: TMP.campaign,
+      name: input.name,
+      advertisingChannelType: "PERFORMANCE_MAX",
+      status: "PAUSED",
+      campaignBudget: TMP.budget,
+      startDate: fmtDate(new Date()),
+      containsEuPoliticalAdvertising: "DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING",
+      // PMax peut bénéficier des asset extensions de la marque (logo, business
+      // name, etc.) si on active brandGuidelinesEnabled — pas obligatoire.
+    };
+    if (biddingStrategy === "MAXIMIZE_CONVERSIONS") {
+      campaignBody.maximizeConversions = {};
+      if (input.biddingTarget !== undefined) {
+        campaignBody.maximizeConversions = {
+          targetCpaMicros: String(Math.round(input.biddingTarget * 1_000_000)),
+        };
+      }
+    } else if (biddingStrategy === "TARGET_ROAS" && input.biddingTarget) {
+      campaignBody.maximizeConversionValue = { targetRoas: input.biddingTarget };
+    } else if (biddingStrategy === "TARGET_CPA" && input.biddingTarget) {
+      campaignBody.maximizeConversions = {
+        targetCpaMicros: String(Math.round(input.biddingTarget * 1_000_000)),
+      };
+    } else {
+      // PMax n'accepte pas MANUAL_CPC. Fallback safe.
+      campaignBody.maximizeConversions = {};
+    }
+    // Selective optimization si conversions spécifiées
+    if ((input.conversionActionIds ?? []).length > 0) {
+      campaignBody.selectiveOptimization = {
+        conversionActions: input.conversionActionIds!.map(
+          (id) => `customers/${customerId}/conversionActions/${id}`,
+        ),
+      };
+    }
+
+    // Construction des opérations dans l'ordre exigé par Google :
+    const ops: MutateOperation[] = [];
+    let tmpIdx = -4;
+
+    // 1) Budget
+    ops.push({
+      campaignBudgetOperation: {
+        create: {
+          resourceName: TMP.budget,
+          name: `${input.name} – budget`,
+          amountMicros: String(Math.round(input.dailyBudget * 1_000_000)),
+          deliveryMethod: "STANDARD",
+          explicitlyShared: false,
+        },
+      },
+    });
+
+    // 2) Campagne
+    ops.push({ campaignOperation: { create: campaignBody } });
+
+    // 3) Geo targeting (CampaignCriterion)
+    for (const c of input.countries ?? []) {
+      const geo = GEO_TARGETS[c.toUpperCase()];
+      if (!geo) continue;
+      ops.push({
+        campaignCriterionOperation: {
+          create: {
+            campaign: TMP.campaign,
+            location: { geoTargetConstant: geo },
+            negative: false,
+          },
+        },
+      });
+    }
+
+    // 4) Text Assets + 5) liens AssetGroupAsset.
+    // PMax exige minimum :
+    //   - 3 HEADLINE (30 chars max)
+    //   - 1 LONG_HEADLINE (90 chars max)
+    //   - 2 DESCRIPTION (90 chars max)
+    //   - 1 BUSINESS_NAME (25 chars max)
+    //   - 1 image MARKETING_IMAGE + 1 SQUARE_MARKETING_IMAGE + 1 LOGO
+    // Les 4 premiers sont gérés ici. Les 3 images sont à uploader manuellement
+    // côté Google Ads UI (PMax requires images, mais la campagne PAUSED peut
+    // être créée sans — Google laisse user-friendly l'ajout d'images).
+
+    const addTextAsset = (text: string, fieldType: string) => {
+      const tmp = `customers/${customerId}/assets/${tmpIdx--}`;
+      ops.push({
+        assetOperation: {
+          create: { resourceName: tmp, textAsset: { text } },
+        },
+      });
+      ops.push({
+        assetGroupAssetOperation: {
+          create: {
+            assetGroup: `customers/${customerId}/assetGroups/-3`,
+            asset: tmp,
+            fieldType,
+          },
+        },
+      });
+    };
+
+    // 4a) AssetGroup (créé AVANT ses assets via resourceName tmp — Google gère
+    //     les forward refs grâce aux temp IDs négatifs)
+    const finalUrls = input.finalUrl ? [input.finalUrl] : [];
+    if (finalUrls.length === 0) {
+      throw new Error("finalUrl requis pour Performance Max");
+    }
+    ops.push({
+      assetGroupOperation: {
+        create: {
+          resourceName: TMP.assetGroup,
+          name: `${input.name} – Asset Group 1`,
+          campaign: TMP.campaign,
+          finalUrls,
+          finalMobileUrls: finalUrls,
+          status: "PAUSED",
+        },
+      },
+    });
+
+    // 4b) Headlines (3-15, max 30 chars)
+    const headlines = (input.headlines ?? [])
+      .filter((h) => h && h.length <= 30)
+      .slice(0, 15);
+    if (headlines.length < 3) {
+      throw new Error(
+        `Performance Max exige au moins 3 headlines ≤ 30 chars (reçu ${headlines.length}).`,
+      );
+    }
+    for (const h of headlines) addTextAsset(h, "HEADLINE");
+
+    // 4c) Long headlines (1-5, max 90 chars) — réutilise la primaryText si
+    // descriptive, sinon utilise les descriptions longues comme proxy.
+    const longHeadlines = [
+      input.primaryText,
+      ...(input.descriptions ?? []),
+    ]
+      .filter((t): t is string => !!t && t.length > 30 && t.length <= 90)
+      .slice(0, 5);
+    if (longHeadlines.length === 0) {
+      // PMax exige ≥1 long headline. On reprend la 1ère headline + un suffixe
+      // pour atteindre > 30 chars (rare cas où aucune description longue).
+      const fallback = (headlines[0] + " – " + (input.name ?? "")).slice(0, 90);
+      if (fallback.length > 30) addTextAsset(fallback, "LONG_HEADLINE");
+      else throw new Error("Pas de long headline candidate (> 30 chars).");
+    } else {
+      for (const lh of longHeadlines) addTextAsset(lh, "LONG_HEADLINE");
+    }
+
+    // 4d) Descriptions (2-5, max 90 chars)
+    const descriptions = (input.descriptions ?? [])
+      .filter((d) => d && d.length <= 90)
+      .slice(0, 5);
+    if (descriptions.length < 2) {
+      throw new Error(
+        `Performance Max exige au moins 2 descriptions ≤ 90 chars (reçu ${descriptions.length}).`,
+      );
+    }
+    for (const d of descriptions) addTextAsset(d, "DESCRIPTION");
+
+    // 4e) Business name (≤25 chars). On utilise dsaBeneficiary ou le nom de la
+    // campagne tronqué — l'user pourra le corriger côté UI Google.
+    const businessName = (input.dsaBeneficiary ?? input.name).slice(0, 25);
+    addTextAsset(businessName, "BUSINESS_NAME");
+
+    // 4f) Call-to-action (CTA) — optionnel mais recommandé pour le format
+    // Discovery. Pris depuis input.cta s'il est dans la liste autorisée Google
+    // (LEARN_MORE, SHOP_NOW, ...) — sinon ignoré.
+    // [skip pour MVP, Google met une CTA par défaut]
+
+    // Note : PMax peut prendre AssetGroupSignals (audience hints, search themes)
+    // pour aider l'IA Google. Pas exposé en input pour l'instant — sera Sprint 5
+    // (Audience signals + Customer Match).
+
+    // Exécution atomique
+    const responses = await googleAdsMutateBatch(account, customerId, ops);
+
+    // Le campaignOperation est la 2ème op → on récupère son resourceName final
+    const campaignResp = responses[1] as { campaignResult?: { resourceName?: string } };
+    const finalCampaignResource = campaignResp.campaignResult?.resourceName ?? TMP.campaign;
+    const campaignId = finalCampaignResource.split("/").pop() ?? "";
+    resources.campaign = finalCampaignResource;
+    resources.budget = (responses[0] as { campaignBudgetResult?: { resourceName?: string } })
+      .campaignBudgetResult?.resourceName ?? TMP.budget;
+
+    return {
+      ok: true,
+      externalId: campaignId,
+      externalUrl: `https://ads.google.com/aw/campaigns?campaignId=${campaignId}`,
+      resources,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : String(e),
+      resources,
+    };
+  }
+}
+
+// Helper format date partagé
+function fmtDate(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
 async function pushCampaign(
   account: AdAccountInfo,
   input: PushCampaignInput,
 ): Promise<PushCampaignResult> {
+  // Branch Performance Max — flow atomique avec resourceNames temporaires.
+  if ((input.campaignType ?? "SEARCH").toUpperCase() === "PERFORMANCE_MAX") {
+    return pushPmaxCampaign(account, input);
+  }
+
   const customerId = (account.meta?.customerId as string) ?? "";
   const resources: Record<string, string> = {};
 
@@ -394,16 +700,14 @@ async function pushCampaign(
     // 2) Campagne (PAUSED par sécurité)
     const channelType = (input.campaignType ?? "SEARCH").toUpperCase();
     const biddingStrategy = (input.biddingStrategy ?? "MANUAL_CPC").toUpperCase();
-    // Google exige un format yyyy-MM-dd pour start_date
-    const today = new Date();
-    const fmtDate = (d: Date) =>
-      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    // Google exige un format yyyy-MM-dd pour start_date — helper fmtDate plus
+    // bas dans le fichier (partagé avec PMax).
     const campaignBody: Record<string, unknown> = {
       name: input.name,
       advertisingChannelType: channelType,
       status: "PAUSED",
       campaignBudget: budgetRes.resourceName,
-      startDate: fmtDate(today),
+      startDate: fmtDate(new Date()),
       // Champ obligatoire depuis 2025 (EU Digital Services Act, déclaration politique)
       containsEuPoliticalAdvertising: "DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING",
       networkSettings:
