@@ -5,7 +5,8 @@
 // - Demande un Developer Token (à demander à Google, peut prendre des semaines en mode prod)
 // - OAuth via Google Cloud Console
 // - Header obligatoire `developer-token` sur chaque requête
-// - URL : https://googleads.googleapis.com/v18/customers/{customerId}/...
+// - URL : https://googleads.googleapis.com/{vN}/customers/{customerId}/...
+//   (vN = constante GOOGLE_ADS_API plus bas — migrer ici à chaque sunset)
 // - Scope: https://www.googleapis.com/auth/adwords
 import type {
   AdAccountInfo,
@@ -33,7 +34,12 @@ const GEO_TARGETS: Record<string, string> = {
 };
 
 const SCOPES = ["https://www.googleapis.com/auth/adwords"];
-const GOOGLE_ADS_API = "https://googleads.googleapis.com/v20";
+// v20 sunsets 2026-06-10. v24 = avril 2026 release, supportée jusqu'à mi-2027.
+// Champs core (campaign, campaign_budget, ad_group, ad_group_ad, segments,
+// metrics) inchangés. Breaking changes v24 (video ad required fields,
+// video_brand_safety, ShareablePreviewService partial failure) ne touchent
+// pas nos endpoints SEARCH + RSA + CPC/CPA/ROAS.
+const GOOGLE_ADS_API = "https://googleads.googleapis.com/v24";
 
 function appCreds() {
   const id = process.env.GOOGLE_ADS_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID;
