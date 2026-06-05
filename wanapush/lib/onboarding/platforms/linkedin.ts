@@ -128,6 +128,22 @@ export const linkedinConfig: PlatformWizardConfig = {
       fr: "Vous pourrez révoquer l'accès depuis Paramètres → Confidentialité → Autres applications.",
       en: "You can revoke access from Settings → Privacy → Third-party apps.",
     },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de Page Entreprise LinkedIn ?",
+        en: "No LinkedIn Company Page yet?",
+      },
+      body: {
+        fr: "Publier sur votre profil perso fonctionne sans Page, mais pour gagner en sérieux B2B et activer les LinkedIn Ads plus tard, créez une Page Entreprise (gratuit, 5 min). Il vous faut un nom d'entreprise et idéalement un site web — sans URL valide, LinkedIn peut refuser la création.",
+        en: "Posting from your personal profile works without a Page, but to gain B2B credibility and unlock LinkedIn Ads later, create a Company Page (free, 5 min). You'll need a company name and ideally a website — without a valid URL, LinkedIn may reject creation.",
+      },
+      ctaLabel: {
+        fr: "Créer ma Page Entreprise LinkedIn",
+        en: "Create my LinkedIn Company Page",
+      },
+      ctaUrl: "https://www.linkedin.com/company/setup/new/",
+      errorMarkers: ["no company page", "aucune page entreprise"],
+    },
   },
 
   success: {

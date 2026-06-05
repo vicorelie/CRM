@@ -129,6 +129,42 @@ export const youtubeConfig: PlatformWizardConfig = {
       fr: "Vous pourrez révoquer l'accès depuis myaccount.google.com → Sécurité → Apps tierces ayant accès.",
       en: "You can revoke access from myaccount.google.com → Security → Third-party apps with account access.",
     },
+    flowTip: {
+      title: {
+        fr: "Lors de la connexion Google, choisissez bien votre chaîne :",
+        en: "When signing in with Google, pick the right channel:",
+      },
+      steps: [
+        {
+          fr: "Si Google affiche **plusieurs comptes**, choisissez celui qui possède votre chaîne YouTube (= votre Compte de marque / Brand Account).",
+          en: "If Google shows **multiple accounts**, pick the one that owns your YouTube channel (= your Brand Account).",
+        },
+        {
+          fr: "À l'écran « Choisir une chaîne », cliquez sur la chaîne de votre business (PAS votre chaîne perso si elle est différente).",
+          en: "On the 'Choose a channel' screen, click your business channel (NOT your personal channel if different).",
+        },
+        {
+          fr: "Si vous gérez plusieurs chaînes : refaites une connexion pour chaque (WanaPush stocke chacune indépendamment).",
+          en: "If you manage multiple channels: re-run the connection for each (WanaPush stores them independently).",
+        },
+      ],
+    },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de chaîne YouTube ?",
+        en: "No YouTube channel yet?",
+      },
+      body: {
+        fr: "Avec votre compte Google, créez une chaîne en 30 secondes : allez sur youtube.com → cliquez sur votre avatar (en haut à droite) → « Créer une chaîne » → choisissez **Utiliser un nom personnalisé** (= Brand Account, recommandé pour un business). Une vérification SMS peut être demandée pour les vidéos > 15 min ou les miniatures custom.",
+        en: "With your Google account, create a channel in 30 seconds: go to youtube.com → click your avatar (top right) → 'Create a channel' → choose **Use a custom name** (= Brand Account, recommended for business). A phone verification may be required for videos > 15 min or custom thumbnails.",
+      },
+      ctaLabel: {
+        fr: "Créer ma chaîne YouTube",
+        en: "Create my YouTube channel",
+      },
+      ctaUrl: "https://www.youtube.com/create_channel",
+      errorMarkers: ["no channel", "aucune chaîne", "channel not found"],
+    },
   },
 
   success: {

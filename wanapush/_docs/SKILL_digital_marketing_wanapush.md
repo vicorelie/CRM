@@ -205,12 +205,36 @@ X/TWITTER : Threads + opinions tranchées. Fréquence élevée. Engagement > Fol
 Meta Ads      : 300€/mois minimum (idéal 1000€+ pour sortir de la learning phase)
                 ⚠️ Advantage+ Audience exige conversion data — sinon retomber sur
                 AWARENESS/TRAFFIC pour les premiers tests
+                🆕 Advantage+ Shopping Campaigns (2026) = équivalent PMax côté Meta,
+                budget min 30€/jour (900€/mois) pour que l'algo apprenne
 Google Search : 500€/mois minimum (CPC en hausse 2026, prévoir 800€+ niches concurrentielles)
-TikTok Ads    : 300€/mois minimum, Spark Ads (boost de contenus existants) toujours
-                + performant que les ads from scratch
-LinkedIn Ads  : 1000€/mois minimum (CPC élevé mais ultra-qualifié B2B).
-                🆕 Document Ads (PDF) en 2026 = nouveau format premium B2B
+                Smart bidding TARGET_CPA → respecter la règle "tCPA × 10 = budget jour"
+                  ex: cible CPA 30€ → budget MINIMUM 300€/jour pour TARGET_CPA
+Google PMax   : 100€/jour minimum (3000€/mois) — Google ne lance pas la learning
+                phase sous ce seuil. Préférer MAXIMIZE_CONVERSIONS pendant 4-6 semaines
+                avant de passer en TARGET_ROAS.
+Google Demand Gen : 100€/jour minimum (idem PMax). +40% de conversions vs Discovery
+                quand ≥3 des 4 best practices appliquées (Audiences, Bidding,
+                Creative, Data — cf Google Drop février 2026).
+TikTok Ads    : 300€/mois minimum
+                  Spark Ads (boost vidéos existantes) : 200€+/mois OK
+                  Créatif from-scratch : 500€+/mois recommandé (tests A/B nécessaires)
+LinkedIn Ads  : 1000€/mois minimum (CPC élevé mais ultra-qualifié B2B)
+                🆕 Document Ads (PDF carrousels) en 2026 = nouveau format premium B2B
+                  → 800€/mois suffit car CTR x2-3 vs Sponsored Content classique
+Google Shopping : 500€/mois minimum + coût feed Merchant Center (gratuit pour <100 SKU)
 ```
+
+**Règles de pouce smart bidding (Google) — juin 2026** :
+- **< 2 000$/mois OU < 15 conv/mois** → MANUAL_CPC (control, pas de learning risquée)
+- **2 000-10 000$/mois ET 15-50 conv/mois** → MAXIMIZE_CONVERSIONS (4-6 semaines)
+- **> 10 000$/mois ET > 50 conv/mois** → TARGET_CPA ou TARGET_ROAS (smart bidding mature)
+- Toujours fixer le **tCPA / tROAS initial 10-20 % moins agressif** que la perf historique
+
+**Budget par objectif** :
+- Lead Gen B2B : focus LinkedIn + Google Search + Meta retargeting (CPA cible 50-200€)
+- E-commerce ROAS : Google PMax + Meta Advantage+ Shopping + TikTok Spark (ROAS cible 3-5x)
+- Brand Awareness : YouTube + Meta Reach + Demand Gen (CPM cible 5-15€, pas de CPA)
 
 ---
 

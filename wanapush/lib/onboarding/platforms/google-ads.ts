@@ -224,6 +224,38 @@ export const googleAdsConfig: PlatformWizardConfig = {
       fr: "Vous pourrez révoquer cette autorisation à tout moment depuis myaccount.google.com → Sécurité.",
       en: "You can revoke this authorization any time from myaccount.google.com → Security.",
     },
+    flowTip: {
+      title: {
+        fr: "À l'écran Google « Choisir un compte », attention :",
+        en: "On the Google 'Choose an account' screen, be careful:",
+      },
+      steps: [
+        {
+          fr: "Sélectionnez le **compte Google qui possède** votre compte Google Ads (souvent celui que vous utilisez pour ads.google.com).",
+          en: "Select the **Google account that owns** your Google Ads account (often the one you use for ads.google.com).",
+        },
+        {
+          fr: "Si vous utilisez un MCC (manager) avec plusieurs comptes liés, connectez le compte MCC — vous verrez ensuite tous ses comptes enfants.",
+          en: "If you use a MCC (manager) with linked sub-accounts, connect the MCC — you'll then see all child accounts.",
+        },
+      ],
+    },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de compte Google Ads ?",
+        en: "No Google Ads account yet?",
+      },
+      body: {
+        fr: "Créez-le en 5 minutes sur ads.google.com → cliquez « Commencer » → choisissez le mode **Expert** (PAS Smart Mode qui limite les fonctionnalités API). Vous devrez renseigner une carte bancaire (aucun débit tant que vous ne lancez pas de campagne) et choisir votre fuseau horaire + devise — ces deux choix sont **définitifs**, choisissez bien.",
+        en: "Create it in 5 minutes on ads.google.com → click 'Start now' → pick **Expert Mode** (NOT Smart Mode, which restricts API features). You'll enter a credit card (no charge until you launch a campaign) and pick your timezone + currency — these two choices are **permanent**, choose carefully.",
+      },
+      ctaLabel: {
+        fr: "Créer mon compte Google Ads",
+        en: "Create my Google Ads account",
+      },
+      ctaUrl: "https://ads.google.com/intl/fr_fr/start/",
+      errorMarkers: ["Aucun compte Google Ads", "No Google Ads", "no_ads_account"],
+    },
   },
 
   success: {

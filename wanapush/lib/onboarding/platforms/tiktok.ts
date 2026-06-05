@@ -124,6 +124,22 @@ export const tiktokConfig: PlatformWizardConfig = {
       fr: "Vous pourrez révoquer l'accès depuis les paramètres TikTok → Sécurité → Gérer les apps.",
       en: "You can revoke access from TikTok settings → Security → Manage apps.",
     },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de compte Business TikTok ?",
+        en: "No TikTok Business account yet?",
+      },
+      body: {
+        fr: "Un compte perso fonctionne, mais le compte **Business** (gratuit) débloque les analytics détaillées, le scheduling natif et la TikTok Ads connection. Ouvrez l'app TikTok → Profil → ⋮ (en haut à droite) → Paramètres et confidentialité → Compte → Passer à un compte pro → choisissez Business. Pas besoin de créer un nouveau compte.",
+        en: "A personal account works, but the **Business** account (free) unlocks detailed analytics, native scheduling, and TikTok Ads connection. Open TikTok app → Profile → ⋮ (top right) → Settings and privacy → Account → Switch to Pro Account → choose Business. No need to create a new account.",
+      },
+      ctaLabel: {
+        fr: "Voir le guide TikTok Business",
+        en: "See TikTok Business guide",
+      },
+      ctaUrl: "https://www.tiktok.com/business/",
+      errorMarkers: ["no tiktok account", "aucun compte tiktok"],
+    },
   },
 
   success: {

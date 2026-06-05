@@ -225,6 +225,22 @@ export const tiktokAdsConfig: PlatformWizardConfig = {
       fr: "Vous pouvez révoquer l'accès à tout moment dans les paramètres de votre Business Center.",
       en: "You can revoke access any time in your Business Center settings.",
     },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de TikTok Business Center ?",
+        en: "No TikTok Business Center yet?",
+      },
+      body: {
+        fr: "TikTok Ads exige un **Business Center** (gratuit) puis un **Ad Account** dedans. Allez sur business.tiktok.com → « S'inscrire » → renseignez nom d'entreprise + email pro + secteur. Validation TikTok sous 24-48h (vérifient que vous n'êtes pas dans un secteur banni : crypto, armes, contenus pour adultes, etc.). Ensuite créez un Ad Account avec votre devise + fuseau horaire.",
+        en: "TikTok Ads requires a **Business Center** (free) and an **Ad Account** inside it. Go to business.tiktok.com → 'Sign up' → enter business name + work email + industry. TikTok review within 24-48h (they check you're not in a banned vertical: crypto, weapons, adult content, etc.). Then create an Ad Account with your currency + timezone.",
+      },
+      ctaLabel: {
+        fr: "Créer mon TikTok Business Center",
+        en: "Create my TikTok Business Center",
+      },
+      ctaUrl: "https://business.tiktok.com/",
+      errorMarkers: ["No ad account", "Aucun ad account", "no_business_center"],
+    },
   },
 
   success: {

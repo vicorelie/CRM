@@ -322,6 +322,22 @@ export const metaAdsConfig: PlatformWizardConfig = {
         },
       ],
     },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de Business Manager Meta ?",
+        en: "No Meta Business Manager yet?",
+      },
+      body: {
+        fr: "Meta exige un **Business Manager** (gratuit) pour héberger votre compte publicitaire. Créez-le en 5 minutes sur business.facebook.com, ajoutez votre Page Facebook (créée à l'étape Page), puis créez un **compte publicitaire** dans le BM avec votre fuseau horaire + devise. Sans ce setup, l'OAuth ne retournera aucun compte exploitable.",
+        en: "Meta requires a **Business Manager** (free) to host your ad account. Create one in 5 min on business.facebook.com, add your Facebook Page (created at the Page step), then create an **ad account** in the BM with your timezone + currency. Without this, OAuth will return no usable account.",
+      },
+      ctaLabel: {
+        fr: "Créer mon Business Manager",
+        en: "Create my Business Manager",
+      },
+      ctaUrl: "https://business.facebook.com/overview",
+      errorMarkers: ["Aucun compte publicitaire", "No ad account", "no_business_manager"],
+    },
   },
 
   success: {

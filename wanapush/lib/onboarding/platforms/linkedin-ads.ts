@@ -225,6 +225,38 @@ export const linkedinAdsConfig: PlatformWizardConfig = {
       fr: "Vous pourrez révoquer l'accès depuis vos paramètres LinkedIn → Confidentialité → Autres applications.",
       en: "You can revoke access from your LinkedIn settings → Privacy → Third-party apps.",
     },
+    flowTip: {
+      title: {
+        fr: "À l'écran LinkedIn de demande d'autorisation, attention :",
+        en: "On the LinkedIn authorization screen, be careful:",
+      },
+      steps: [
+        {
+          fr: "LinkedIn affiche les permissions une seule fois — relisez-les avant d'accepter.",
+          en: "LinkedIn shows the permissions only once — read them before accepting.",
+        },
+        {
+          fr: "Vous devez être **admin** de la Page Entreprise + avoir un rôle Campaign Manager (Account Manager / Campaign Manager / Creative Manager). Si vous ne voyez pas votre compte dans WanaPush ensuite, c'est qu'un autre admin LinkedIn doit vous accorder le rôle Campaign Manager.",
+          en: "You must be **admin** of the Company Page + have a Campaign Manager role (Account Manager / Campaign Manager / Creative Manager). If your account doesn't appear in WanaPush afterwards, another LinkedIn admin needs to grant you the Campaign Manager role.",
+        },
+      ],
+    },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de compte Campaign Manager LinkedIn ?",
+        en: "No LinkedIn Campaign Manager account yet?",
+      },
+      body: {
+        fr: "LinkedIn Ads exige un compte Campaign Manager + une Page Entreprise associée. Allez sur linkedin.com/campaignmanager → « Créer un compte » → liez votre Page Entreprise (créée à l'étape précédente). Ajoutez une carte bancaire valide (aucun débit avant lancement). LinkedIn vérifie l'URL de la Page → un site web actif est fortement recommandé pour éviter un rejet de compte.",
+        en: "LinkedIn Ads requires a Campaign Manager account + a linked Company Page. Go to linkedin.com/campaignmanager → 'Create account' → link your Company Page (created at the previous step). Add a valid credit card (no charge before launching). LinkedIn checks the Page URL → an active website is strongly recommended to avoid account rejection.",
+      },
+      ctaLabel: {
+        fr: "Ouvrir Campaign Manager",
+        en: "Open Campaign Manager",
+      },
+      ctaUrl: "https://www.linkedin.com/campaignmanager/accounts",
+      errorMarkers: ["Aucun compte Campaign Manager", "No campaign manager", "no_ad_account"],
+    },
   },
 
   success: {

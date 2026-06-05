@@ -199,6 +199,22 @@ export const instagramConfig: PlatformWizardConfig = {
         },
       ],
     },
+    noPageHint: {
+      title: {
+        fr: "Pas encore de compte Instagram Business ?",
+        en: "No Instagram Business account yet?",
+      },
+      body: {
+        fr: "Instagram exige un **compte Business** (gratuit) lié à une Page Facebook pour que WanaPush puisse publier. Si vous avez déjà un compte perso : ouvrez l'app Instagram → Paramètres → Compte → Passer à un compte professionnel → liez votre Page Facebook (créée à l'étape Facebook ci-dessus). Si vous n'avez aucun Instagram : créez-le sur instagram.com, puis basculez en Business.",
+        en: "Instagram requires a **Business account** (free) linked to a Facebook Page so WanaPush can publish. If you already have a personal account: open Instagram app → Settings → Account → Switch to Professional → link your Facebook Page (created at the Facebook step above). If you have no Instagram yet: create it on instagram.com, then switch to Business.",
+      },
+      ctaLabel: {
+        fr: "Ouvrir Instagram",
+        en: "Open Instagram",
+      },
+      ctaUrl: "https://www.instagram.com/accounts/emailsignup/",
+      errorMarkers: ["Aucun compte Instagram", "No Instagram", "instagram_business"],
+    },
   },
 
   success: {
