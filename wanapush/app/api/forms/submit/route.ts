@@ -5,8 +5,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import {
   parseClickIdsFromUrl,
+  parseTtclidFromUrl,
   triggerLeadConversionForFormSubmission,
   triggerLinkedInLeadForFormSubmission,
+  triggerTikTokLeadForFormSubmission,
 } from "@/lib/ads/enhanced-conversions-pipeline";
 
 export const runtime = "nodejs";
@@ -19,6 +21,8 @@ const SubmitSchema = z.object({
   pageUrl: z.string().optional(),
   /** LinkedIn First-Party Ads Tracking UUID (cookie `li_fat_id` du LinkedIn Insight Tag) */
   liFatId: z.string().max(255).optional(),
+  /** TikTok Click ID (cookie wp_ttclid persisté ou URL param) */
+  ttclid: z.string().max(255).optional(),
   // Honeypot — un bot remplit ce champ caché, on rejette silencieusement
   hp: z.string().optional(),
 });
@@ -74,6 +78,8 @@ export async function POST(req: Request) {
     const clickIds = parseClickIdsFromUrl(payload.pageUrl);
     // liFatId : cookie LinkedIn Insight Tag (déposé sur landing si LinkedIn Tag installé)
     const liFatId = payload.liFatId?.slice(0, 255) || null;
+    // ttclid : cookie wp_ttclid persisté OU URL param (TikTok valide 7j)
+    const ttclid = (payload.ttclid?.slice(0, 255) || parseTtclidFromUrl(payload.pageUrl)) ?? null;
 
     const submission = await prisma.formSubmission.create({
       data: {
@@ -87,15 +93,17 @@ export async function POST(req: Request) {
         gbraid: clickIds.gbraid ?? null,
         wbraid: clickIds.wbraid ?? null,
         liFatId,
+        ttclid,
         ecStatus:
           clickIds.gclid || clickIds.gbraid || clickIds.wbraid ? "PENDING" : null,
         liStatus: liFatId || email ? "PENDING" : null,
+        ttStatus: ttclid || email ? "PENDING" : null,
       },
     });
 
-    // Fire-and-forget : Google Enhanced Conversions + LinkedIn Conversions API
-    // en parallèle. Chacun gère son propre AdAccount + sa propre rule.
-    // Le résultat met à jour FormSubmission.{ec,li}Status (SENT/FAILED/SKIPPED).
+    // Fire-and-forget : Google EC + LinkedIn CAPI + TikTok Events API en parallèle.
+    // Chacun gère son propre AdAccount + résolution conversion rule/pixel.
+    // Le résultat met à jour FormSubmission.{ec,li,tt}Status (SENT/FAILED/SKIPPED).
     if (clickIds.gclid || clickIds.gbraid || clickIds.wbraid || email) {
       void triggerLeadConversionForFormSubmission(submission.id).catch((e) => {
         console.warn(`[forms/submit] Google EC trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
@@ -104,6 +112,11 @@ export async function POST(req: Request) {
     if (liFatId || email) {
       void triggerLinkedInLeadForFormSubmission(submission.id).catch((e) => {
         console.warn(`[forms/submit] LinkedIn CAPI trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
+      });
+    }
+    if (ttclid || email) {
+      void triggerTikTokLeadForFormSubmission(submission.id).catch((e) => {
+        console.warn(`[forms/submit] TikTok Events trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
       });
     }
 

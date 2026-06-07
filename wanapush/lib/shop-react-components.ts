@@ -446,6 +446,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const g = url.searchParams.get("gclid"); if (g) params.push(["gclid", g.slice(0, 255)]);
     const gb = url.searchParams.get("gbraid"); if (gb) params.push(["gbraid", gb.slice(0, 255)]);
     const wb = url.searchParams.get("wbraid"); if (wb) params.push(["wbraid", wb.slice(0, 255)]);
+    // ttclid : TikTok click ID dans l'URL (valide 7 jours côté plateforme).
+    // On le persiste 7 jours en cookie pour le multi-page tracking.
+    const ttclid = url.searchParams.get("ttclid")?.slice(0, 255) || undefined;
     // li_fat_id : déposé par le LinkedIn Insight Tag s'il est installé. On le
     // persiste aussi sous wp_li_fat_id (60-90j) au cas où.
     const liCookies = document.cookie.split("; ").reduce((acc, c) => {
@@ -453,13 +456,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, {} as Record<string, string>);
     const liFatId = liCookies.li_fat_id;
     const maxAge = 90 * 24 * 60 * 60; // 90 jours
+    const ttMaxAge = 7 * 24 * 60 * 60; // 7 jours (fenêtre TikTok)
     const secure = window.location.protocol === "https:" ? "; Secure" : "";
-    if (params.length === 0 && !liFatId) return;
+    if (params.length === 0 && !liFatId && !ttclid) return;
     for (const [k, v] of params) {
       document.cookie = "wp_" + k + "=" + encodeURIComponent(v) + "; max-age=" + maxAge + "; path=/; SameSite=Lax" + secure;
     }
     if (liFatId) {
       document.cookie = "wp_li_fat_id=" + encodeURIComponent(liFatId) + "; max-age=" + maxAge + "; path=/; SameSite=Lax" + secure;
+    }
+    if (ttclid) {
+      document.cookie = "wp_ttclid=" + encodeURIComponent(ttclid) + "; max-age=" + ttMaxAge + "; path=/; SameSite=Lax" + secure;
     }
   }, []);
 
@@ -1457,6 +1464,7 @@ export default function CartDrawer() {
       // est installé sur la page). On lit aussi notre persistance wp_li_fat_id
       // (au cas où le cookie original aurait été ré-écrit / supprimé).
       const liFatId = cookies.li_fat_id ?? cookies.wp_li_fat_id;
+      const ttclid = url.searchParams.get("ttclid") ?? cookies.wp_ttclid;
 
       const res = await fetch(API_BASE + "/checkout", {
         method: "POST",
@@ -1468,6 +1476,7 @@ export default function CartDrawer() {
           gbraid: gbraid || undefined,
           wbraid: wbraid || undefined,
           liFatId: liFatId || undefined,
+          ttclid: ttclid || undefined,
         }),
       });
       const data = await res.json();

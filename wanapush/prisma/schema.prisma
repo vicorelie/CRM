@@ -118,6 +118,8 @@ model FormSubmission {
   // LinkedIn First-Party Ads Tracking UUID (cookie li_fat_id déposé par le LinkedIn Insight Tag)
   // — utilisé pour upload conversion vers LinkedIn Conversions API
   liFatId String? @db.VarChar(255)
+  // TikTok Click ID (URL param `ttclid` au moment du clic sur l'ad TikTok)
+  ttclid  String? @db.VarChar(255)
   // Statut de l'upload Enhanced Conversions (PENDING → SENT → FAILED, NULL si pas d'AdAccount Google)
   ecStatus      EnhancedConversionStatus?
   ecSentAt      DateTime?
@@ -126,11 +128,16 @@ model FormSubmission {
   liStatus EnhancedConversionStatus?
   liSentAt DateTime?
   liError  String?                   @db.Text
+  // Statut TikTok Events API (en parallèle de Google EC + LinkedIn CAPI)
+  ttStatus EnhancedConversionStatus?
+  ttSentAt DateTime?
+  ttError  String?                   @db.Text
 
   @@index([siteSlug, createdAt])
   @@index([siteSlug, read])
   @@index([ecStatus])
   @@index([liStatus])
+  @@index([ttStatus])
 }
 
 enum EnhancedConversionStatus {
@@ -1089,12 +1096,17 @@ model Order {
   wbraid   String?                   @db.VarChar(255)
   // LinkedIn First-Party Ads Tracking UUID (cookie li_fat_id)
   liFatId  String?                   @db.VarChar(255)
+  // TikTok Click ID (URL param ttclid)
+  ttclid   String?                   @db.VarChar(255)
   ecStatus EnhancedConversionStatus?
   ecSentAt DateTime?
   ecError  String?                   @db.Text
   liStatus EnhancedConversionStatus?
   liSentAt DateTime?
   liError  String?                   @db.Text
+  ttStatus EnhancedConversionStatus?
+  ttSentAt DateTime?
+  ttError  String?                   @db.Text
 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -1116,6 +1128,7 @@ model Order {
   @@index([customerEmail])
   @@index([ecStatus])
   @@index([liStatus])
+  @@index([ttStatus])
 }
 
 model OrderItem {

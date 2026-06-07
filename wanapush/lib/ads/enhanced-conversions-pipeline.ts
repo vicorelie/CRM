@@ -28,6 +28,7 @@ import {
   streamConversionEvent,
   type LinkedInConversionType,
 } from "@/lib/ads/linkedin-conversions";
+import { trackTikTokEvent, type TikTokStandardEvent } from "@/lib/ads/tiktok-events";
 import type { AdAccountInfo } from "@/lib/ads/types";
 
 // ─── Parsing click identifiers depuis URL ────────────────────────────────────
@@ -60,6 +61,18 @@ export function extractClientIp(headers: Headers): string | undefined {
   if (fwd) return fwd;
   const real = headers.get("x-real-ip");
   return real ?? undefined;
+}
+
+/** Parse le ttclid TikTok depuis une URL (param ?ttclid=… présent quand l'user
+ *  arrive depuis une ad TikTok). Valide 7 jours côté plateforme. */
+export function parseTtclidFromUrl(url: string | undefined | null): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url, "https://wanapush.com");
+    return u.searchParams.get("ttclid")?.slice(0, 255) || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // ─── Helpers internes ────────────────────────────────────────────────────────
@@ -400,6 +413,190 @@ async function markOrderLinkedIn(
       liError: error?.slice(0, 1000) ?? null,
     },
   });
+}
+
+// ─── TikTok Events API : auto-résolution pixel + send ───────────────────────
+// Le token Events API est SÉPARÉ du token Marketing API (généré manuellement
+// dans Events Manager TikTok). On le stocke dans AdAccount.meta.tiktokPixel
+// = { code: "<pixelCode>", accessToken: "<token>" } (chiffré côté caller).
+
+type TikTokResolved = {
+  pixelCode: string;
+  accessToken: string;
+};
+
+/** Résout le pixel TikTok + token Events API depuis AdAccount.meta.
+ *  Retourne null si pas d'AdAccount TikTok CONNECTED ou pixel non configuré. */
+async function resolveTikTokPixel(userId: string): Promise<TikTokResolved | null> {
+  const adAccount = await prisma.adAccount.findFirst({
+    where: { userId, platform: "TIKTOK_ADS", status: "CONNECTED" },
+    select: { meta: true, accessToken: true },
+  });
+  if (!adAccount) return null;
+
+  const meta = (adAccount.meta as Record<string, unknown> | null) ?? {};
+  const tiktokPixel = meta.tiktokPixel as { code?: string; accessToken?: string } | undefined;
+  if (!tiktokPixel?.code) return null;
+
+  // accessToken : soit celui spécifique au pixel (recommandé, généré dans Events
+  // Manager), soit fallback sur le token Marketing API du compte (peut marcher
+  // pour certains setups récents avec scopes unifiés).
+  const accessToken = tiktokPixel.accessToken
+    ? decrypt(tiktokPixel.accessToken)
+    : decrypt(adAccount.accessToken);
+
+  return { pixelCode: tiktokPixel.code, accessToken };
+}
+
+async function markFormSubmissionTikTok(
+  id: string,
+  status: "SENT" | "FAILED" | "SKIPPED",
+  error?: string,
+): Promise<void> {
+  await prisma.formSubmission.update({
+    where: { id },
+    data: {
+      ttStatus: status,
+      ttSentAt: status === "SENT" ? new Date() : null,
+      ttError: error?.slice(0, 1000) ?? null,
+    },
+  });
+}
+
+/** Trigger TikTok conversion pour une FormSubmission (parallèle Google EC + LinkedIn).
+ *  Fire-and-forget. Maps `type` → eventName : contact → Contact, newsletter → Subscribe. */
+export async function triggerTikTokLeadForFormSubmission(
+  submissionId: string,
+): Promise<void> {
+  const submission = await prisma.formSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      siteSlug: true,
+      email: true,
+      data: true,
+      ttclid: true,
+      pageUrl: true,
+      createdAt: true,
+      type: true,
+    },
+  });
+  if (!submission) return;
+
+  // Pas de ttclid + pas d'email → match rate inutile, skip
+  if (!submission.ttclid && !submission.email) {
+    await markFormSubmissionTikTok(submissionId, "SKIPPED", "Ni ttclid ni email");
+    return;
+  }
+
+  const userId = await resolveUserIdFromSiteSlug(submission.siteSlug);
+  if (!userId) {
+    await markFormSubmissionTikTok(submissionId, "SKIPPED", `siteSlug "${submission.siteSlug}" sans user résolu`);
+    return;
+  }
+
+  const resolved = await resolveTikTokPixel(userId);
+  if (!resolved) {
+    await markFormSubmissionTikTok(submissionId, "SKIPPED", "Pas d'AdAccount TikTok CONNECTED ou pixel non configuré (AdAccount.meta.tiktokPixel)");
+    return;
+  }
+
+  const data = (submission.data as Record<string, unknown>) ?? {};
+  const phone = (data.phone ?? data.tel ?? data.telephone) as string | undefined;
+
+  const eventName: TikTokStandardEvent =
+    submission.type === "newsletter" ? "Subscribe" : "Contact";
+
+  try {
+    const result = await trackTikTokEvent({
+      pixelCode: resolved.pixelCode,
+      accessToken: resolved.accessToken,
+      eventName,
+      eventId: `form_${submission.id}`,
+      timestamp: submission.createdAt.toISOString(),
+      pageUrl: submission.pageUrl ?? "https://wanapush.com",
+      email: submission.email ?? undefined,
+      phone: typeof phone === "string" ? phone : undefined,
+      ttclid: submission.ttclid ?? undefined,
+    });
+    if (result.ok) {
+      await markFormSubmissionTikTok(submissionId, "SENT");
+    } else {
+      await markFormSubmissionTikTok(submissionId, "FAILED", result.message ?? `code ${result.code}`);
+    }
+  } catch (e) {
+    await markFormSubmissionTikTok(submissionId, "FAILED", (e instanceof Error ? e.message : String(e)).slice(0, 500));
+  }
+}
+
+async function markOrderTikTok(
+  id: string,
+  status: "SENT" | "FAILED" | "SKIPPED",
+  error?: string,
+): Promise<void> {
+  await prisma.order.update({
+    where: { id },
+    data: {
+      ttStatus: status,
+      ttSentAt: status === "SENT" ? new Date() : null,
+      ttError: error?.slice(0, 1000) ?? null,
+    },
+  });
+}
+
+/** Trigger TikTok conversion pour une Order Stripe payée (CompletePayment).
+ *  Fire-and-forget. */
+export async function triggerTikTokSaleForOrder(orderId: string): Promise<void> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      customerEmail: true,
+      customerPhone: true,
+      ttclid: true,
+      pageUrl: true,
+      total: true,
+      currency: true,
+      paidAt: true,
+      createdAt: true,
+      shop: { select: { userId: true, siteSlug: true } },
+    },
+  });
+  if (!order) return;
+
+  if (!order.ttclid && !order.customerEmail) {
+    await markOrderTikTok(orderId, "SKIPPED", "Ni ttclid ni customerEmail");
+    return;
+  }
+
+  const resolved = await resolveTikTokPixel(order.shop.userId);
+  if (!resolved) {
+    await markOrderTikTok(orderId, "SKIPPED", "Pas d'AdAccount TikTok CONNECTED ou pixel non configuré");
+    return;
+  }
+
+  try {
+    const result = await trackTikTokEvent({
+      pixelCode: resolved.pixelCode,
+      accessToken: resolved.accessToken,
+      eventName: "CompletePayment",
+      eventId: `order_${order.id}`,
+      timestamp: (order.paidAt ?? order.createdAt).toISOString(),
+      pageUrl: order.pageUrl ?? `https://${order.shop.siteSlug}.wanapush.com`,
+      email: order.customerEmail || undefined,
+      phone: order.customerPhone || undefined,
+      ttclid: order.ttclid ?? undefined,
+      value: Number(order.total),
+      currency: order.currency,
+    });
+    if (result.ok) {
+      await markOrderTikTok(orderId, "SENT");
+    } else {
+      await markOrderTikTok(orderId, "FAILED", result.message ?? `code ${result.code}`);
+    }
+  } catch (e) {
+    await markOrderTikTok(orderId, "FAILED", (e instanceof Error ? e.message : String(e)).slice(0, 500));
+  }
 }
 
 /** Trigger LinkedIn conversion pour une Order Stripe payée. Fire-and-forget. */

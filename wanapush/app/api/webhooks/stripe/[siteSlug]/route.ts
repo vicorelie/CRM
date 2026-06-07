@@ -182,14 +182,15 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
     customerId = customer.id;
   }
 
-  // Click identifiers Google Ads + liFatId LinkedIn propagés depuis le checkout
-  // via session.metadata → stockés sur l'Order pour upload Enhanced Conversions
-  // (Google) + Conversions API (LinkedIn) après commit
+  // Click identifiers Google + liFatId LinkedIn + ttclid TikTok propagés depuis
+  // le checkout via session.metadata → stockés sur l'Order pour upload des 3
+  // Conversions APIs server-side (Google Data Manager + LinkedIn + TikTok Events).
   const sessionMeta = (session.metadata ?? {}) as Record<string, string>;
   const gclid = sessionMeta.gclid?.slice(0, 255) || null;
   const gbraid = sessionMeta.gbraid?.slice(0, 255) || null;
   const wbraid = sessionMeta.wbraid?.slice(0, 255) || null;
   const liFatId = sessionMeta.liFatId?.slice(0, 255) || null;
+  const ttclid = sessionMeta.ttclid?.slice(0, 255) || null;
 
   const order = await prisma.order.create({
     data: {
@@ -222,8 +223,10 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
       gbraid,
       wbraid,
       liFatId,
+      ttclid,
       ecStatus: gclid || gbraid || wbraid ? "PENDING" : null,
       liStatus: liFatId || customerEmail ? "PENDING" : null,
+      ttStatus: ttclid || customerEmail ? "PENDING" : null,
       items: {
         create: cart.items.map((it) => ({
           variantId: it.variantId,
@@ -252,6 +255,12 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
     const { triggerLinkedInSaleForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
     void triggerLinkedInSaleForOrder(order.id).catch((e) => {
       console.warn(`[stripe-webhook] LinkedIn CAPI trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
+    });
+  }
+  if (ttclid || customerEmail) {
+    const { triggerTikTokSaleForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
+    void triggerTikTokSaleForOrder(order.id).catch((e) => {
+      console.warn(`[stripe-webhook] TikTok Events trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
     });
   }
 

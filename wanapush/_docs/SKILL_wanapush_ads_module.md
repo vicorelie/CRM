@@ -410,17 +410,34 @@ Module : `lib/ads/enhanced-conversions-pipeline.ts`
 - **Lead forms** : `parseClickIdsFromUrl(payload.pageUrl)` dans `POST /api/forms/submit`. L'URL `pageUrl` envoyée par la landing contient déjà `?gclid=...` (Google auto-tagging).
 - **Storefront e-commerce** : `CartProvider` (dans `cartContextFile()`) capture URL params au mount et écrit cookies `wp_gclid` / `wp_gbraid` / `wp_wbraid` (max-age 90 jours, SameSite=Lax, Secure HTTPS). `CartDrawer.startCheckout()` lit URL params ET cookies, envoie au `/api/storefront/[slug]/checkout` qui propage vers Stripe Checkout Session `metadata`.
 
-**Schéma DB** (migration `add_click_ids_enhanced_conversions`, 2026-06-07) :
-- `FormSubmission.{gclid, gbraid, wbraid, ecStatus, ecSentAt, ecError}`
-- `Order.{gclid, gbraid, wbraid, ecStatus, ecSentAt, ecError}`
+**Schéma DB** (migrations cumulées 2026-06-07) :
+- `FormSubmission.{gclid, gbraid, wbraid, liFatId, ttclid, ecStatus, ecSentAt, ecError, liStatus, liSentAt, liError, ttStatus, ttSentAt, ttError}`
+- `Order.{gclid, gbraid, wbraid, liFatId, ttclid, ecStatus, ecSentAt, ecError, liStatus, liSentAt, liError, ttStatus, ttSentAt, ttError}`
 - Enum `EnhancedConversionStatus` : `PENDING | SENT | FAILED | SKIPPED`
+- Index sur chaque `{ec,li,tt}Status` (cron retry rapide)
+
+**Triple pipeline cross-platform** : chaque event business déclenche en parallèle :
+1. `ecStatus` ← Google Data Manager API (gclid/gbraid/wbraid + PII)
+2. `liStatus` ← LinkedIn Conversions API (li_fat_id + SHA256_EMAIL + userInfo)
+3. `ttStatus` ← TikTok Events API (ttclid + PII hashées)
 
 **Hooks** :
-- `POST /api/forms/submit` : parse gclid de `pageUrl`, save, déclenche `triggerLeadConversionForFormSubmission` async
-- `POST /api/webhooks/stripe/[siteSlug]` : lit `session.metadata.gclid/gbraid/wbraid`, save sur Order, déclenche `triggerSaleConversionForOrder` async après `financialStatus: "PAID"`
-- `POST /api/storefront/[siteSlug]/checkout` : accepte `gclid/gbraid/wbraid` dans le body, les propage à `stripe.checkout.sessions.create` via `metadata`
+- `POST /api/forms/submit` : parse gclid de `pageUrl` + ttclid (URL OR cookie), save, déclenche les 3 triggers async en parallèle
+- `POST /api/webhooks/stripe/[siteSlug]` : lit `session.metadata.{gclid/gbraid/wbraid/liFatId/ttclid}`, save sur Order, déclenche les 3 triggers async après `financialStatus: "PAID"`
+- `POST /api/storefront/[siteSlug]/checkout` : accepte les 5 identifiants dans le body, les propage à `stripe.checkout.sessions.create` via `metadata`
 
-**Sans branchement** : les helpers retournent `SKIPPED` proprement (pas d'erreur). Le système est dégradé gracieusement si le user n'a pas connecté de compte Google Ads.
+**Capture côté storefront** (`CartProvider` dans `cartContextFile()`) :
+- URL params → cookies `wp_gclid`/`wp_gbraid`/`wp_wbraid` (90j), `wp_ttclid` (7j)
+- Cookie `li_fat_id` (LinkedIn Insight Tag natif) → mirroré sous `wp_li_fat_id` (90j)
+- `CartDrawer.startCheckout()` lit tous les cookies + URL params → POST checkout
+
+**Cron retry** : `POST/GET /api/ads/cron/retry-conversions` (auth `x-cron-secret`/`CRON_SECRET`)
+- Re-traite les `{ec,li,tt}Status = "FAILED"` créés >24h et <7j
+- 50 max par plateforme/type/run (garde-fou)
+- Fenêtres : Google/LinkedIn 7j, TikTok 6.5j (avant expiry 7j strict)
+- À schedule toutes les 6h en prod : `0 */6 * * *`
+
+**Sans branchement** : chaque helper retourne `SKIPPED` proprement (pas d'erreur). Le système est dégradé gracieusement si le user n'a pas connecté un AdAccount.
 
 ### Points critiques Google Ads
 
@@ -468,6 +485,34 @@ await batchTrackTikTokEvents({ pixelCode, accessToken, events: [...] });
 **Endpoint API WanaPush** : `POST /api/ads/tiktok/events`
 - Enrichissement auto : IP et User-Agent extraits des headers si non fournis
 - Résolution token : via `adAccountId` (DB) ou `TIKTOK_EVENTS_ACCESS_TOKEN` (.env)
+
+### 🤖 Branchement auto-pilote (TikTok Events API)
+
+Module : `enhanced-conversions-pipeline.ts` — fonctions `triggerTikTokLeadForFormSubmission` + `triggerTikTokSaleForOrder`.
+
+**Configuration AdAccount.meta** :
+```json
+{
+  "tiktokPixel": {
+    "code": "C1234567890ABCDEF",
+    "accessToken": "<chiffré AES-256-GCM>"
+  }
+}
+```
+- `code` : Pixel ID depuis Events Manager TikTok
+- `accessToken` : token Events API généré dans Events Manager (Settings > Generate Access Token). **SÉPARÉ du token Marketing API** (peut être identique sur certains setups récents avec scopes unifiés). Stocké chiffré côté caller via `lib/crypto.ts`.
+
+**Mapping eventName** :
+- FormSubmission type=`"newsletter"` → `Subscribe`
+- FormSubmission type=`"contact"` → `Contact`
+- Order Stripe payé → `CompletePayment` (+ `value` + `currency`)
+
+**Capture `ttclid`** :
+- URL param `?ttclid=...` au moment du clic ad TikTok (valide 7 jours côté plateforme)
+- Storefront : `CartProvider` persiste cookie `wp_ttclid` 7 jours (≃ window TikTok)
+- Form submit : `parseTtclidFromUrl(pageUrl)` OU payload.ttclid (cookie persisté)
+
+**Dégradé gracieux** : si `meta.tiktokPixel` absent → `ttStatus: "SKIPPED"` avec message explicite.
 
 ### Push flow (tiktok.ts `pushCampaign`)
 

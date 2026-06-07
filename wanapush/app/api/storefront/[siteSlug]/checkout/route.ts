@@ -19,6 +19,8 @@ const inputSchema = z.object({
   wbraid: z.string().trim().max(255).optional(),
   // LinkedIn First-Party Ads Tracking UUID (cookie `li_fat_id`)
   liFatId: z.string().trim().max(255).optional(),
+  // TikTok Click ID (cookie wp_ttclid ou URL param ttclid)
+  ttclid: z.string().trim().max(255).optional(),
 });
 
 type Params = { params: Promise<{ siteSlug: string }> };
@@ -164,6 +166,7 @@ export async function POST(req: Request, { params }: Params) {
         gbraid: body.gbraid ?? "",
         wbraid: body.wbraid ?? "",
         liFatId: body.liFatId ?? "",
+        ttclid: body.ttclid ?? "",
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
