@@ -1,5 +1,6 @@
 // Types partagés des connecteurs Ad Manager.
 import type { AdPlatform } from "@prisma/client";
+export type { AdPlatform };
 
 export type AdAccountInfo = {
   externalId: string;     // act_xxx (Meta), customers/123 (Google), advertiser_id (TikTok), urn:li:sponsoredAccount:x (LinkedIn)
@@ -91,6 +92,15 @@ export type PushCampaignInput = {
   /** ID(s) de ConversionAction(s) à lier à la campagne — débloque smart bidding.
    * Sans ça, TARGET_CPA et TARGET_ROAS ne peuvent pas fonctionner. */
   conversionActionIds?: string[];
+  /** Variantes copy A/B (index 0 = variante principale). Si plusieurs entrées,
+   * Meta crée un AdSet + Creative + Ad par variante sous la même Campaign CBO.
+   * Champs absents → fallback sur les champs copy racine (primaryText, headlines…). */
+  copyVariants?: Array<{
+    primaryText?: string;
+    headline?: string;
+    description?: string;
+    cta?: string;
+  }>;
   /** Headlines (3-15 pour Google RSA, 1-5 pour Meta) */
   headlines?: string[];
   /** Descriptions (2-4 pour Google RSA, 1 pour Meta) */
@@ -229,6 +239,18 @@ export type AdsConnector = {
     account: AdAccountInfo,
     id: string,
   ): Promise<ConversionAction | null>;
+  /** Pause ou réactive une campagne existante par son externalId. */
+  updateCampaignStatus?(
+    account: AdAccountInfo,
+    externalId: string,
+    status: "ACTIVE" | "PAUSED",
+  ): Promise<void>;
+  /** Modifie le budget journalier d'une campagne (en unité monétaire du compte, pas en micro). */
+  updateCampaignBudget?(
+    account: AdAccountInfo,
+    externalId: string,
+    dailyBudget: number,
+  ): Promise<void>;
 };
 
 export const PLATFORM_LABEL: Record<AdPlatform, string> = {

@@ -8,8 +8,8 @@ description: >
   app/(dashboard)/generated-sites/[id]/pixel/*, ou les modèles Prisma SitePixel
   et CapiEvent.
 license: proprietary
-version: 1.0
-last_reviewed: 2026-06-04
+version: 1.1
+last_reviewed: 2026-06-06
 ---
 
 # SKILL — WanaPush CAPI + Meta Pixel Module
@@ -199,20 +199,35 @@ Quand l'user travaille sur CAPI :
    (payload broken → fix code, pas retry).
 7. **Tests = filet de sécurité**. Toute modif sur `client.ts`, `hash.ts`,
    `enrich.ts`, `pixel-script.ts` → `npm test` AVANT de commit.
-8. **Match Quality Score** se vérifie dans Meta Events Manager. Cible ≥7/10.
-   Si <5, vérifier que fbp/fbc/IP/UA sont bien envoyés (check `enrich.ts`).
+8. **Event Match Quality (EMQ)** — cibles Meta 2026 par event type (source : Meta Events Manager + research juin 2026) :
+   - `PageView` → 6.5–7.5 (données limitées au load, normal)
+   - `Lead` → ≥8.0 (utilisateur engagé, souvent connu)
+   - `Purchase` → ≥8.8–9.3 (maximum data dispo à checkout)
+   - Score global <5 = problème → vérifier que `fbp`/`fbc`/IP/UA sont envoyés.
+   - Impact business : EMQ ≥8 = 15–25% meilleur CPA (données Meta 2026).
+   - **`fbp` et `fbc` JAMAIS hashés** — ce sont des identifiants Meta en clair, pas des PII.
 9. **`consentRequired=true`** = banner injecté + tracking bloqué tant qu'aucun
    choix. Pour la France, juridiquement requis.
 10. **`testEventCode`** : pour debug Meta Events Manager → Tests Events. Format
     `TEST12345`. Permet de voir les events sans polluer les vrais conversions.
 
+## 📈 Impact business du dual tracking (chiffres Meta 2026)
+
+| Métrique | Pixel seul | Pixel + CAPI |
+|----------|-----------|--------------|
+| Conversions attribuées | baseline | +8–19% |
+| Coût par acquisition | baseline | −12% |
+| Coût par résultat | baseline | −17.8% (donnée officielle Meta) |
+| Events manqués (iOS/adblockers) | ~50%+ perdus | récupérés côté serveur |
+
+→ En 2026, le Pixel seul manque +50% des conversions réelles (iOS privacy + ad blockers).
+→ `CAPI = filet de sécurité obligatoire` pour tout client Meta Ads sérieux.
+
 ## 📅 Maintenance & évolutions
 
-- **Conversions API spec** : à revoir tous les 6 mois (Meta publie des updates
-  trimestriels).
-- **Match Quality Score** : monitorer trimestriellement par client.
-- **Rate-limit Redis** : migrer quand on a plus de 1 instance Next.
-- **Retention GDPR** : la durée 90j/365j peut être tunée si requirements client
-  changent (avocat à consulter pour B2B vs B2C).
-- **Server-side Pixel JS** : Meta pousse vers Conversions API Gateway (proxy
-  Cloud) — à envisager si on a un client gros volume.
+- **Conversions API spec** : revoir tous les 6 mois (Meta publie des updates trimestriels).
+- **Graph API version** : code actuel sur `v22.0`. Meta v24.0 (avril 2026) + v25.0 sont disponibles. À migrer pour profiter des nouvelles features measurement.
+- **Event Match Quality** : monitorer trimestriellement par client dans Meta Events Manager.
+- **Rate-limit Redis** : migrer vers Upstash quand on a plus de 1 instance Next.
+- **Retention GDPR** : durée 90j/365j tuneable (consulter avocat B2B vs B2C).
+- **CAPI Gateway** : Meta pousse vers Conversions API Gateway (proxy Cloud) — envisager pour clients gros volume.

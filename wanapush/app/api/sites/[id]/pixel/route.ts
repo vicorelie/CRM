@@ -19,6 +19,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encrypt } from "@/lib/crypto";
 import { STANDARD_EVENTS } from "@/lib/capi/types";
+import { injectPixelIntoBuiltSite } from "@/lib/capi/inject-built-site";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -195,8 +196,14 @@ export async function PUT(
     },
   });
 
+  // Injecter le snippet dans le dist/index.html si le site est buildé
+  const injectResult = await injectPixelIntoBuiltSite(site.id, site.slug);
+  if (!injectResult.ok) {
+    console.error(`[sites/pixel PUT] inject failed for site ${site.id}:`, injectResult.reason);
+  }
+
   revalidatePath(`/generated-sites/${params.id}/pixel`);
-  return NextResponse.json({ pixel });
+  return NextResponse.json({ pixel, injected: injectResult.ok && injectResult.injected });
 }
 
 // ────────────────────────────────────────────────────────────────────────────

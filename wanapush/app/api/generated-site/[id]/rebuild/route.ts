@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseSiteBrief, parseSiteMeta } from "@/lib/generated-site-schema";
 import { extractAndBuildSite, isSiteBuilt, slugify } from "@/lib/site-extraction";
+import { injectPixelIntoBuiltSite } from "@/lib/capi/inject-built-site";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -51,15 +52,32 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
     return NextResponse.json({ error: result.error ?? "Build échoué" }, { status: 500 });
   }
 
-  // Mettre à jour le meta si le slug a changé ou si previewUrl n'était pas stocké
+  // Mettre à jour le meta + slug si changé ou manquant
   const previewUrl = `https://wanapush.com/preview/${siteSlug}/`;
-  if (meta.siteSlug !== siteSlug || meta.previewUrl !== previewUrl) {
+  const needsDbUpdate = meta.siteSlug !== siteSlug || meta.previewUrl !== previewUrl;
+  const currentSlug = (await prisma.generatedSite.findUnique({ where: { id: site.id }, select: { slug: true } }))?.slug;
+  if (needsDbUpdate || currentSlug !== siteSlug) {
     await prisma.generatedSite.update({
       where: { id: site.id },
-      data: { meta: { ...meta, siteSlug, previewUrl } as never },
+      data: {
+        slug: siteSlug,
+        meta: { ...meta, siteSlug, previewUrl } as never,
+      },
     });
   }
 
+  // Ré-injecter le Pixel + CAPI si configuré (le build Vite écrase dist/index.html)
+  const injectResult = await injectPixelIntoBuiltSite(site.id, siteSlug);
+  if (!injectResult.ok) {
+    console.error(`[rebuild] pixel inject failed for site ${site.id}:`, injectResult.reason);
+  }
+
   revalidatePath("/generated-sites");
-  return NextResponse.json({ ok: true, siteSlug, previewUrl, alreadyBuilt: await isSiteBuilt(siteSlug) });
+  return NextResponse.json({
+    ok: true,
+    siteSlug,
+    previewUrl,
+    alreadyBuilt: await isSiteBuilt(siteSlug),
+    pixelInjected: injectResult.ok && injectResult.injected,
+  });
 }

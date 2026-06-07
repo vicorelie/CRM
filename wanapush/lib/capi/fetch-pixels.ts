@@ -6,7 +6,7 @@
 // Le `adAccountId` est le `externalId` côté WanaPush (format "act_xxx").
 // Le `accessToken` est le user/system token déchiffré depuis AdAccount.accessToken.
 
-const META_GRAPH_VERSION = "v22.0";
+const META_GRAPH_VERSION = "v24.0";
 const META_GRAPH_BASE = "https://graph.facebook.com";
 
 export type MetaPixel = {

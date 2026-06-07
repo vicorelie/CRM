@@ -942,6 +942,7 @@ Génère UNIQUEMENT le JSON.`;
   const generated = await prisma.generatedSite.create({
     data: {
       userId: user.id,
+      slug: framework === "react" ? siteSlug : undefined,
       brief: { ...brief, theme, composition, siteType } as never,
       pages: renderedPages as never,
       meta: {

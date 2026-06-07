@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CampaignFromSiteModal } from "./_components/CampaignFromSiteModal";
 
 type GeneratedSiteListItem = {
   id: string;
@@ -17,6 +18,9 @@ type GeneratedSiteListItem = {
   homeTitle: string;
   siteSlug: string | null;
   previewUrl: string | null;
+  audience?: string | null;
+  tone?: string | null;
+  lang?: string | null;
 };
 
 function formatDate(iso: string): string {
@@ -34,6 +38,7 @@ export function GeneratedSitesClient() {
   const [sites, setSites] = useState<GeneratedSiteListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [launchSite, setLaunchSite] = useState<GeneratedSiteListItem | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -96,35 +101,50 @@ export function GeneratedSitesClient() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-500">
-          {sites.length} site{sites.length > 1 ? "s" : ""} généré
-          {sites.length > 1 ? "s" : ""}.
-        </p>
-        <Link
-          href="/generate"
-          className="rounded-lg bg-brand hover:bg-brand-400 transition-colors px-4 py-2 text-sm font-semibold text-white"
-        >
-          + Nouveau site
-        </Link>
-      </div>
+    <>
+      {launchSite && (
+        <CampaignFromSiteModal
+          site={launchSite}
+          onClose={() => setLaunchSite(null)}
+        />
+      )}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-zinc-500">
+            {sites.length} site{sites.length > 1 ? "s" : ""} généré
+            {sites.length > 1 ? "s" : ""}.
+          </p>
+          <Link
+            href="/generate"
+            className="rounded-lg bg-brand hover:bg-brand-400 transition-colors px-4 py-2 text-sm font-semibold text-white"
+          >
+            + Nouveau site
+          </Link>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sites.map((s) => (
-          <SiteCard key={s.id} site={s} onDelete={() => remove(s.id, s.brandName)} />
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sites.map((s) => (
+            <SiteCard
+              key={s.id}
+              site={s}
+              onDelete={() => remove(s.id, s.brandName)}
+              onLaunch={() => setLaunchSite(s)}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
 function SiteCard({
   site,
   onDelete,
+  onLaunch,
 }: {
   site: GeneratedSiteListItem;
   onDelete: () => void;
+  onLaunch: () => void;
 }) {
   const [rebuilding, setRebuilding] = useState(false);
 
@@ -298,6 +318,14 @@ function SiteCard({
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round"/><path d="M7 14l4-4 4 4 5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </Link>
           )}
+          <button
+            onClick={onLaunch}
+            className="text-xs rounded-lg border border-violet-200 hover:border-violet-400 hover:bg-violet-50 transition-colors px-3 py-2 text-violet-700 font-semibold inline-flex items-center gap-1"
+            title="Lancer une campagne publicitaire"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 10l-4 4 4 4M3 12h14M13 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Pub
+          </button>
           <button
             onClick={onDelete}
             className="text-xs rounded-lg border border-red-200 hover:border-red-500 hover:bg-red-50 transition-colors px-3 py-2 text-red-700"

@@ -14,8 +14,7 @@ import type {
   PushCampaignResult,
 } from "./types";
 
-const GRAPH = "https://graph.facebook.com/v21.0";
-const GRAPH_V22 = "https://graph.facebook.com/v22.0"; // pour les endpoints push (Marketing API 2026)
+const GRAPH = "https://graph.facebook.com/v24.0";
 
 const META_ADS_SCOPES = [
   "ads_management",
@@ -33,7 +32,7 @@ function appCreds() {
 
 function authorizeUrl(state: string, redirectUri: string): string {
   const { id } = appCreds();
-  const u = new URL("https://www.facebook.com/v21.0/dialog/oauth");
+  const u = new URL("https://www.facebook.com/v24.0/dialog/oauth");
   u.searchParams.set("client_id", id);
   u.searchParams.set("redirect_uri", redirectUri);
   u.searchParams.set("state", state);
@@ -213,7 +212,7 @@ async function fetchMetrics(
 // (l'utilisateur active manuellement après vérification).
 //
 // Best practices 2026 appliquées :
-//   - Objective system "Outcomes" (OUTCOME_TRAFFIC, OUTCOME_LEADS, etc.) v22.0+
+//   - Objective system "Outcomes" (OUTCOME_TRAFFIC, OUTCOME_LEADS, etc.) v17.0+
 //   - Advantage+ Audience activé par défaut (CPA -32% vs targeting manuel)
 //   - billing_event/optimization_goal alignés sur l'objective
 //   - Status PAUSED systématique → 0 risque de brûler du budget
@@ -222,7 +221,7 @@ type MetaError = { message?: string; code?: number; error_subcode?: number; fbtr
 type MetaResource = { id: string };
 
 /**
- * POST helper vers Meta Marketing API v22.0.
+ * POST helper vers Meta Marketing API v24.0.
  *
  * Encode le body en x-www-form-urlencoded (les objets JSON imbriqués sont
  * sérialisés en string JSON, c'est la convention Meta).
@@ -232,7 +231,7 @@ async function metaPost<T = MetaResource>(
   resource: string,
   body: Record<string, unknown>,
 ): Promise<T> {
-  const url = `${GRAPH_V22}/${resource}`;
+  const url = `${GRAPH}/${resource}`;
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries(body)) {
     if (v === undefined || v === null) continue;
@@ -419,7 +418,7 @@ function mapCTA(cta: string | undefined): string {
 async function getDefaultPageId(account: AdAccountInfo): Promise<string | null> {
   try {
     const r = await fetch(
-      `${GRAPH_V22}/me/accounts?limit=1&fields=id,name&access_token=${encodeURIComponent(account.accessToken)}`,
+      `${GRAPH}/me/accounts?limit=1&fields=id,name&access_token=${encodeURIComponent(account.accessToken)}`,
     );
     if (!r.ok) return null;
     const j = (await r.json()) as { data?: Array<{ id: string }> };
@@ -436,7 +435,7 @@ async function getInstagramActorId(
 ): Promise<string | null> {
   try {
     const r = await fetch(
-      `${GRAPH_V22}/${pageId}?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
+      `${GRAPH}/${pageId}?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
     );
     if (!r.ok) return null;
     const j = (await r.json()) as { instagram_business_account?: { id: string } };
@@ -599,7 +598,7 @@ async function pushCampaign(
       return adapted;
     };
 
-    const buildAdsetPayload = (optGoal: string, billing: string) => {
+    const buildAdsetPayload = (optGoal: string, billing: string, nameSuffix = "") => {
       // Pour LINK_CLICKS (fallback ultime), on retire les options conversion-based :
       // - targeting_automation.advantage_audience (exige data Pixel pour LEADS/SALES)
       // - attribution_spec (sans sens sans tracking conversion)
@@ -609,7 +608,7 @@ async function pushCampaign(
       }
 
       const payload: Record<string, unknown> = {
-        name: `${input.name} – Ensemble`,
+        name: `${input.name} – Ensemble${nameSuffix}`,
         campaign_id: campaign.id,
         billing_event: billing,
         optimization_goal: optGoal,
@@ -642,12 +641,21 @@ async function pushCampaign(
       msg.includes("pixel") ||
       msg.includes("conversion");
 
+    // En mode multi-variantes, les noms sont suffixés " A", " B", " C"
+    const isMultiVariant = (input.copyVariants?.length ?? 0) > 1;
+    const firstSuffix = isMultiVariant ? " A" : "";
+
+    // effectiveOptGoal / effectiveBilling capturent ce qui a vraiment fonctionné après la cascade.
+    // Utile pour les AdSets B, C… qui réutilisent le même optimization_goal sans re-tenter la cascade.
+    let effectiveOptGoal = optimizationGoal;
+    let effectiveBilling = billingEvent;
+
     let adset: MetaResource;
     try {
       adset = await metaPost<MetaResource>(
         account,
         `${accountId}/adsets`,
-        buildAdsetPayload(optimizationGoal, billingEvent),
+        buildAdsetPayload(optimizationGoal, billingEvent, firstSuffix),
       );
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -658,8 +666,10 @@ async function pushCampaign(
           adset = await metaPost<MetaResource>(
             account,
             `${accountId}/adsets`,
-            buildAdsetPayload("LANDING_PAGE_VIEWS", "IMPRESSIONS"),
+            buildAdsetPayload("LANDING_PAGE_VIEWS", "IMPRESSIONS", firstSuffix),
           );
+          effectiveOptGoal = "LANDING_PAGE_VIEWS";
+          effectiveBilling = "IMPRESSIONS";
         } catch (e2) {
           const msg2 = e2 instanceof Error ? e2.message : String(e2);
           if (isOptimizationError(msg2)) {
@@ -669,8 +679,10 @@ async function pushCampaign(
               adset = await metaPost<MetaResource>(
                 account,
                 `${accountId}/adsets`,
-                buildAdsetPayload("LINK_CLICKS", "IMPRESSIONS"),
+                buildAdsetPayload("LINK_CLICKS", "IMPRESSIONS", firstSuffix),
               );
+              effectiveOptGoal = "LINK_CLICKS";
+              effectiveBilling = "IMPRESSIONS";
             } catch (e3) {
               const msg3 = e3 instanceof Error ? e3.message : String(e3);
               console.error(`[meta.pushCampaign] Toute la cascade a échoué : ${msg3.slice(0, 200)}`);
@@ -690,7 +702,7 @@ async function pushCampaign(
       }
     }
 
-    resources.adset = adset.id;
+    resources[`adset${firstSuffix ? "_A" : ""}`] = adset.id;
 
     // 3) AdCreative — Link Ad (page_id fetché en étape 0)
     //    Une image est OBLIGATOIRE pour les Link Ads Meta (pas de format texte seul).
@@ -730,13 +742,13 @@ async function pushCampaign(
     if (instagramActorId) objectStorySpec.instagram_actor_id = instagramActorId;
 
     const creativePayload: Record<string, unknown> = {
-      name: `${input.name} – Créa`,
+      name: `${input.name} – Créa${firstSuffix}`,
       object_story_spec: objectStorySpec,
     };
 
     if (useAdvCreative) {
       // Advantage+ Creative : Meta améliore titre/image/texte (+14% CPR moyen vs static)
-      // Garder uniquement les features documentées en snake_case (Marketing API v22+).
+      // Garder uniquement les features documentées en snake_case (Marketing API v24+).
       // ⚠️ Pas de translate_text ici (champ inventé) — la valeur valide est TEXT_OVERLAY_TRANSLATION
       // en UPPERCASE mais elle n'est pas universelle ; on s'en passe.
       creativePayload.degrees_of_freedom_spec = {
@@ -794,11 +806,11 @@ async function pushCampaign(
         throw eCreative;
       }
     }
-    resources.creative = creative.id;
+    resources[`creative${firstSuffix ? "_A" : ""}`] = creative.id;
 
     // 4) Ad — avec multi-advertiser ads + tracking_specs hérités du Creative
     const adPayload: Record<string, unknown> = {
-      name: `${input.name} – Annonce`,
+      name: `${input.name} – Annonce${firstSuffix}`,
       adset_id: adset.id,
       creative: { creative_id: creative.id },
       status: "PAUSED",
@@ -810,7 +822,65 @@ async function pushCampaign(
     }
 
     const ad = await metaPost<MetaResource>(account, `${accountId}/ads`, adPayload);
-    resources.ad = ad.id;
+    resources[`ad${firstSuffix ? "_A" : ""}`] = ad.id;
+
+    // ─── Variantes B, C… (A/B test multi-AdSet) ─────────────────────────────────
+    // On réutilise effectiveOptGoal (déjà validé par la cascade ci-dessus).
+    // Les erreurs par variante sont loggées mais ne font pas échouer le push global.
+    if (isMultiVariant && input.copyVariants) {
+      for (let vi = 1; vi < input.copyVariants.length; vi++) {
+        const letter = String.fromCharCode(65 + vi); // B=66, C=67…
+        const vc = input.copyVariants[vi];
+        try {
+          const adsetN = await metaPost<MetaResource>(
+            account,
+            `${accountId}/adsets`,
+            buildAdsetPayload(effectiveOptGoal, effectiveBilling, ` ${letter}`),
+          );
+          resources[`adset_${letter}`] = adsetN.id;
+
+          const varHeadline = (vc.headline ?? input.headlines?.[0] ?? input.name).slice(0, 40);
+          const varDesc = (vc.description ?? input.descriptions?.[0] ?? "").slice(0, 30);
+          const varPrimary = (vc.primaryText ?? input.primaryText ?? varHeadline).slice(0, 125);
+
+          const varLinkData: Record<string, unknown> = {
+            link: finalUrl,
+            message: varPrimary,
+            name: varHeadline,
+            call_to_action: { type: mapCTA(vc.cta ?? input.cta) },
+            picture: input.imageUrl,
+          };
+          if (varDesc) varLinkData.description = varDesc;
+
+          const varStorySpec: Record<string, unknown> = { page_id: pageId, link_data: varLinkData };
+          if (instagramActorId) varStorySpec.instagram_actor_id = instagramActorId;
+
+          const varCreativePayload: Record<string, unknown> = {
+            name: `${input.name} – Créa ${letter}`,
+            object_story_spec: varStorySpec,
+            ...(trackingSpecs ? { tracking_specs: trackingSpecs } : {}),
+          };
+
+          const varCreative = await metaPost<MetaResource>(account, `${accountId}/adcreatives`, varCreativePayload);
+          resources[`creative_${letter}`] = varCreative.id;
+
+          const varAd = await metaPost<MetaResource>(account, `${accountId}/ads`, {
+            name: `${input.name} – Annonce ${letter}`,
+            adset_id: adsetN.id,
+            creative: { creative_id: varCreative.id },
+            status: "PAUSED",
+            ...(trackingSpecs ? { tracking_specs: trackingSpecs } : {}),
+            ...(useMultiAdv ? { multi_advertiser_ads: { has_opted_in_being_shown: true } } : {}),
+          });
+          resources[`ad_${letter}`] = varAd.id;
+
+          console.log(`[meta.pushCampaign] ✓ Variante ${letter} créée (adset=${adsetN.id})`);
+        } catch (eVar) {
+          const msgVar = eVar instanceof Error ? eVar.message : String(eVar);
+          console.error(`[meta.pushCampaign] Variante ${letter} échouée (${msgVar.slice(0, 150)}) — campagne principale OK`);
+        }
+      }
+    }
 
     // Lien direct vers la campagne dans Meta Ads Manager
     const acctNumber = accountId.replace(/^act_/, "");
@@ -831,6 +901,29 @@ async function pushCampaign(
   }
 }
 
+// ─── updateCampaignStatus ─────────────────────────────────────────────────────
+async function updateCampaignStatus(
+  account: AdAccountInfo,
+  externalId: string,
+  status: "ACTIVE" | "PAUSED",
+): Promise<void> {
+  const res = await metaPost<{ id: string }>(account, externalId, { status });
+  if (!res?.id) throw new Error(`Meta updateCampaignStatus failed for campaign ${externalId}`);
+}
+
+// ─── updateCampaignBudget ─────────────────────────────────────────────────────
+// Meta CBO : le budget journalier est en centimes (ex: 15.00 € → 1500).
+async function updateCampaignBudget(
+  account: AdAccountInfo,
+  externalId: string,
+  dailyBudget: number,
+): Promise<void> {
+  const budgetCents = Math.round(dailyBudget * 100);
+  if (budgetCents < 100) throw new Error(`Budget trop bas : minimum 1 € (reçu ${dailyBudget} €)`);
+  const res = await metaPost<{ id: string }>(account, externalId, { daily_budget: budgetCents });
+  if (!res?.id) throw new Error(`Meta updateCampaignBudget failed for campaign ${externalId}`);
+}
+
 /** Helpers exportés pour tests unit. */
 export const __pushTesting = { mapObjective, mapOptimizationGoal, mapBillingEvent, mapCTA };
 
@@ -841,4 +934,6 @@ export const metaAdsConnector: AdsConnector = {
   listCampaigns,
   fetchMetrics,
   pushCampaign,
+  updateCampaignStatus,
+  updateCampaignBudget,
 };

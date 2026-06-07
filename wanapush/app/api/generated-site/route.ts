@@ -50,6 +50,10 @@ export async function GET() {
       homeTitle: home?.title ?? "",
       siteSlug: meta.siteSlug ?? null,
       previewUrl: meta.previewUrl ?? null,
+      // Champs brief passthrough — utilisés par le modal "Lancer une campagne"
+      audience: (brief as Record<string, unknown>).audience as string | undefined ?? null,
+      tone: (brief as Record<string, unknown>).tone as string | undefined ?? null,
+      lang: (brief as Record<string, unknown>).lang as string | undefined ?? "fr",
     };
   });
 

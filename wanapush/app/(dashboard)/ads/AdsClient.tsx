@@ -4,9 +4,10 @@ import { useState } from "react";
 import { AccountsTab } from "./AccountsTab";
 import { AudiencesTab } from "./AudiencesTab";
 import { CampaignsList } from "./CampaignsList";
+import { PerformanceTab } from "./PerformanceTab";
 import { RoasOptimizer } from "./RoasOptimizer";
 
-type Tab = "accounts" | "campaigns" | "audiences" | "optimizer";
+type Tab = "accounts" | "campaigns" | "audiences" | "performance" | "optimizer";
 
 export function AdsClient() {
   const [tab, setTab] = useState<Tab>("accounts");
@@ -32,6 +33,9 @@ export function AdsClient() {
         <button onClick={() => setTab("audiences")} className={tabClass("audiences")}>
           🎯 Audiences
         </button>
+        <button onClick={() => setTab("performance")} className={tabClass("performance")}>
+          📊 Performance
+        </button>
         <button onClick={() => setTab("optimizer")} className={tabClass("optimizer")}>
           📈 Optimiseur ROAS
         </button>
@@ -40,6 +44,7 @@ export function AdsClient() {
       {tab === "accounts" && <AccountsTab onChange={() => setRefreshKey((k) => k + 1)} />}
       {tab === "campaigns" && <CampaignsList refreshKey={refreshKey} />}
       {tab === "audiences" && <AudiencesTab />}
+      {tab === "performance" && <PerformanceTab />}
       {tab === "optimizer" && <RoasOptimizer />}
     </div>
   );

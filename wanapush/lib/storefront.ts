@@ -17,7 +17,7 @@ export function storefrontScript(slug: string): string {
   if (window.__wpStorefrontLoaded) return;
   window.__wpStorefrontLoaded = true;
   var SLUG = ${JSON.stringify(slug)};
-  var API_BASE = "/wanapush/api/storefront/" + SLUG;
+  var API_BASE = "/api/storefront/" + SLUG;
 
   // ────────────────────────────────────────────────────────────────────
   // Session ID pour le panier anonyme

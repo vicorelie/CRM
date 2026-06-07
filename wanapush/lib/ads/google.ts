@@ -1094,6 +1094,66 @@ async function createConversionAction(
   return action;
 }
 
+// ─── updateCampaignStatus ─────────────────────────────────────────────────────
+async function updateCampaignStatus(
+  account: AdAccountInfo,
+  externalId: string,
+  status: "ACTIVE" | "PAUSED",
+): Promise<void> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+  if (!customerId) throw new Error("customerId manquant dans account.meta");
+  const googleStatus = status === "ACTIVE" ? "ENABLED" : "PAUSED";
+  await mutate(account, customerId, "campaigns", {
+    operations: [
+      {
+        update: {
+          resource_name: `customers/${customerId}/campaigns/${externalId}`,
+          status: googleStatus,
+        },
+        update_mask: { paths: ["status"] },
+      },
+    ],
+  });
+}
+
+// ─── updateCampaignBudget ─────────────────────────────────────────────────────
+// Étape 1 : retrouver le resourceName du CampaignBudget lié à la campagne.
+// Étape 2 : PATCH le budget (amount_micros = dailyBudget * 1_000_000).
+async function updateCampaignBudget(
+  account: AdAccountInfo,
+  externalId: string,
+  dailyBudget: number,
+): Promise<void> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+  if (!customerId) throw new Error("customerId manquant dans account.meta");
+  if (dailyBudget < 0.01) throw new Error(`Budget trop bas : minimum 0.01 (reçu ${dailyBudget})`);
+
+  // 1) Récupérer le budgetResourceName
+  const rows = await gaqlQuery(
+    account,
+    customerId,
+    `SELECT campaign.campaign_budget FROM campaign WHERE campaign.id = ${Number(externalId)}`,
+  );
+  const budgetResourceName = (rows[0]?.campaign as Record<string, string> | undefined)?.campaignBudget;
+  if (!budgetResourceName) {
+    throw new Error(`Budget introuvable pour la campagne Google Ads ${externalId}`);
+  }
+
+  // 2) Mettre à jour le montant (en micros)
+  const amountMicros = Math.round(dailyBudget * 1_000_000);
+  await mutate(account, customerId, "campaignBudgets", {
+    operations: [
+      {
+        update: {
+          resource_name: budgetResourceName,
+          amount_micros: amountMicros,
+        },
+        update_mask: { paths: ["amount_micros"] },
+      },
+    ],
+  });
+}
+
 export const googleAdsConnector: AdsConnector = {
   platform: "GOOGLE_ADS",
   authorizeUrl,
@@ -1105,4 +1165,6 @@ export const googleAdsConnector: AdsConnector = {
   createConversionAction,
   listConversionActions,
   getConversionAction,
+  updateCampaignStatus,
+  updateCampaignBudget,
 };

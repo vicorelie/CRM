@@ -176,4 +176,6 @@ export type PushModalState = {
   /** Cache des conversions disponibles (chargées au passage en
    * TARGET_CPA / TARGET_ROAS — exigent du tracking pour fonctionner). */
   availableConversionActions: Array<{ id: string; name: string; category: string; status: string }>;
+  /** Si true et variants.length >= 2 : pousse 1 AdSet par variante sous la même Campaign CBO (A/B test). */
+  pushAllVariants: boolean;
 };

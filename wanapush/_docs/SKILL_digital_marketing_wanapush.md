@@ -11,7 +11,7 @@ description: >
   conversion, landing page, e-réputation, campagne marketing, stratégie digitale, 
   présence en ligne, téléchargements d'app, Google Business, avis clients.
 license: proprietary
-version: 2.0
+version: 3.0
 ---
 
 # SKILL — WanaPush Digital Marketing Platform
@@ -375,6 +375,44 @@ NIVEAU 3 (Avancé) :
 - **Search Engine Journal** : actualités marketing digital
 - **HubSpot Blog** : inbound marketing et growth
 - **Neil Patel Blog** : SEO et growth hacking
+
+---
+
+---
+
+## 🤖 Positionnement WanaPush — Auto-pilote complet (OBLIGATOIRE à lire)
+
+> **Section critique** — détermine COMMENT raisonner quand le fondateur (Victor)
+> parle de campagnes ou de clients.
+
+### WanaPush n'est pas un outil, c'est un SaaS auto-pilote
+
+WanaPush promet à ses clients finaux (PME/auto-entrepreneurs) : **décris ton activité + objectif, on fait TOUT de A à Z**.
+
+1. Génération landing page → hébergement → Pixel Meta + CAPI auto-injectés
+2. Génération visuels IA + copywriting (A/B/C)
+3. Push campagne automatique via Meta/Google Marketing API
+4. Optimisation continue (rotation créatives, kill sous-perf, scale winners)
+
+### Règle d'or pour Claude
+
+Quand Victor demande une stratégie, une analyse, ou "comment faire X" :
+- ✅ **Toujours répondre niveau plateforme** : "quelles features construire dans WanaPush pour que SES clients finaux aient cette qualité ?"
+- ❌ **JAMAIS proposer un tutoriel manuel** sur comment faire soi-même sur Meta Ads / Google Ads / etc.
+- ❌ **JAMAIS demander son ICP, son budget, son secteur** — ce ne sont pas des questions pertinentes (il y aura des milliers d'ICP différents chez ses clients)
+
+**Exemple :** Victor dit "comment améliorer le ROAS des campagnes Meta ?" → réponse correcte = "quelles features ajouter au ROAS Optimizer de WanaPush pour que ses clients voient leur ROAS amélioré automatiquement". PAS une liste de tips Meta Ads à faire manuellement.
+
+**Exemple :** Victor dit "le client veut un site à 499€" → c'est un exemple d'offre client. La réponse = feature du Site Generator WanaPush pour que tous ses clients puissent créer cette offre, pas une analyse de son business à lui.
+
+### Différenciation marché 2026
+
+| Concurrent | Limite |
+|------------|--------|
+| Adcreative.ai, Pencil | Génèrent les créas, le client gère la campagne manuellement |
+| Hootsuite, Buffer | Scheduling social, pas de pub payante auto |
+| Jasper, Copy.ai | Copywriting IA, pas de push campagne |
+| **WanaPush** | **Cycle complet auto-piloté : site → pixel → visuel → copy → push → optimisation** |
 
 ---
 

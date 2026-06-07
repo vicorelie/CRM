@@ -470,6 +470,32 @@ export function PushModal({
                         );
                       })}
                     </div>
+
+                    {/* Toggle A/B test — Meta uniquement, visible quand >= 2 variantes */}
+                    {isMeta && (
+                      <button
+                        type="button"
+                        onClick={() => patch({ pushAllVariants: !state.pushAllVariants })}
+                        disabled={busy}
+                        className={`w-full flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition ${
+                          state.pushAllVariants
+                            ? "border-violet-400 bg-violet-50 text-violet-800"
+                            : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
+                        }`}
+                      >
+                        <div className="text-left">
+                          <div className="font-semibold text-xs">
+                            🧪 Pousser les {state.variants.length} variantes (A/B test)
+                          </div>
+                          <div className="text-[10px] text-zinc-500 mt-0.5">
+                            1 Campaign CBO · {state.variants.length} AdSets — Meta optimise automatiquement
+                          </div>
+                        </div>
+                        <div className={`ml-3 flex-shrink-0 w-9 h-5 rounded-full transition-colors ${state.pushAllVariants ? "bg-violet-500" : "bg-zinc-300"}`}>
+                          <div className={`mt-0.5 ml-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state.pushAllVariants ? "translate-x-4" : "translate-x-0"}`} />
+                        </div>
+                      </button>
+                    )}
                   </div>
                 )}
                 <div className="space-y-1.5">

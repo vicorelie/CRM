@@ -67,6 +67,18 @@ const inputSchema = z.object({
   descriptions: z.array(z.string().max(90)).max(4).optional(),
   primaryText: z.string().max(2000).optional(),
   cta: z.string().max(40).optional(),
+  /** Variantes A/B/C copy — si présentes et length > 1, Meta crée 1 AdSet par variante */
+  copyVariants: z
+    .array(
+      z.object({
+        primaryText: z.string().max(125).optional(),
+        headline: z.string().max(40).optional(),
+        description: z.string().max(30).optional(),
+        cta: z.string().max(40).optional(),
+      }),
+    )
+    .max(5)
+    .optional(),
   audienceDescription: z.string().max(2000).optional(),
   imageUrl: z.url().max(2048).optional(),
   // === Best practices Meta 2026 ===

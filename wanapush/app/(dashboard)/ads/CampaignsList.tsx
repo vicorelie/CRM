@@ -149,6 +149,7 @@ export function CampaignsList({ refreshKey }: Props) {
       negativeKeywordsText: "",
       selectedConversionActionId: null,
       availableConversionActions: [],
+      pushAllVariants: false,
     });
     if (firstMeta?.id) {
       fetchPixelInBg(firstMeta.id);
@@ -239,6 +240,7 @@ export function CampaignsList({ refreshKey }: Props) {
       negativeKeywordsText: "",
       selectedConversionActionId: null,
       availableConversionActions: [],
+      pushAllVariants: false,
     });
     // Fetch Pixel + destinations en background
     if (c.adAccount?.id) {
@@ -793,6 +795,17 @@ export function CampaignsList({ refreshKey }: Props) {
           ...(pushModal.description.trim() ? { descriptions: [pushModal.description.trim().slice(0, 30)] } : {}),
           ...(pushModal.cta ? { cta: pushModal.cta } : {}),
           ...(imageUrl ? { imageUrl } : {}),
+          // ─── A/B multi-AdSet (Meta uniquement) ───────────────────────
+          ...(pushModal.pushAllVariants && pushModal.variants.length > 1 && c.type === "META_ADS"
+            ? {
+                copyVariants: pushModal.variants.map((v) => ({
+                  primaryText: v.primary_text?.slice(0, 125),
+                  headline: v.headline?.slice(0, 40),
+                  description: v.description?.slice(0, 30),
+                  cta: v.cta,
+                })),
+              }
+            : {}),
           // ─── Google Ads spécifiques ─────────────────────────────────
           ...(parseNegativeKeywords(pushModal.negativeKeywordsText).length > 0
             ? { negativeKeywords: parseNegativeKeywords(pushModal.negativeKeywordsText) }

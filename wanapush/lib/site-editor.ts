@@ -9,7 +9,7 @@
 //
 // Persistence :
 //  - Les changements s'accumulent dans une Map en mémoire
-//  - Bouton "Sauvegarder" → POST /wanapush/api/sites/{slug}/edits → rebuild → refresh
+//  - Bouton "Sauvegarder" → POST /api/sites/{slug}/edits → rebuild → refresh
 //
 // Identification des éléments :
 //  - data-edit-section : identifiant de la section (type, ex "hero", "feature_split.0")
@@ -22,7 +22,7 @@ export function editorScript(slug: string): string {
   if (new URLSearchParams(location.search).get('edit') !== '1') return;
 
   const SLUG = ${JSON.stringify(slug)};
-  const API_URL = '/wanapush/api/sites/' + SLUG + '/edits';
+  const API_URL = '/api/sites/' + SLUG + '/edits';
 
   // Map<sectionType.fieldPath, newValue>
   const edits = new Map();
@@ -828,7 +828,7 @@ export function editorScript(slug: string): string {
       try {
         const fd = new FormData();
         fd.append('file', file);
-        const res = await fetch('/wanapush/api/sites/' + SLUG + '/upload-image', { method: 'POST', body: fd });
+        const res = await fetch('/api/sites/' + SLUG + '/upload-image', { method: 'POST', body: fd });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Upload échoué');
         input.value = data.url;
@@ -865,7 +865,7 @@ export function editorScript(slug: string): string {
       genBtn.disabled = true;
       okBtn.disabled = true;
       try {
-        const res = await fetch('/wanapush/api/sites/' + SLUG + '/generate-image', {
+        const res = await fetch('/api/sites/' + SLUG + '/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt }),
@@ -2507,7 +2507,7 @@ export function editorScript(slug: string): string {
   async function loadFormFieldLibrary() {
     if (FORM_FIELD_LIBRARY_CACHE) return { items: FORM_FIELD_LIBRARY_CACHE, categories: FORM_FIELD_CATEGORIES_CACHE };
     try {
-      const res = await fetch('/wanapush/api/form-field-library');
+      const res = await fetch('/api/form-field-library');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       FORM_FIELD_LIBRARY_CACHE = data.items || [];
@@ -2979,7 +2979,7 @@ export function editorScript(slug: string): string {
   async function loadElementLibrary() {
     if (ELEMENT_LIBRARY_CACHE) return { items: ELEMENT_LIBRARY_CACHE, categories: ELEMENT_CATEGORIES_CACHE };
     try {
-      const res = await fetch('/wanapush/api/element-library');
+      const res = await fetch('/api/element-library');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       ELEMENT_LIBRARY_CACHE = data.items || [];
@@ -3064,7 +3064,7 @@ export function editorScript(slug: string): string {
   async function loadSectionLibrary() {
     if (SECTION_LIBRARY_CACHE) return SECTION_LIBRARY_CACHE;
     try {
-      const res = await fetch('/wanapush/api/section-library');
+      const res = await fetch('/api/section-library');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       SECTION_LIBRARY_CACHE = data.items || [];

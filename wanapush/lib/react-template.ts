@@ -749,7 +749,7 @@ ${footerPageLinks}
               if (!email) return;
               const slug = ((import.meta.env.BASE_URL || "/").replace(/^\\/+|\\/+$/g, "").split("/").pop() || "unknown");
               try {
-                await fetch("/wanapush/api/forms/submit", {
+                await fetch("/api/forms/submit", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ siteSlug: slug, type: "newsletter", data: { email } }),
@@ -1727,7 +1727,7 @@ export default function FeatureSplit({ blocks }: Props) {
 function contactComponent(): string {
   return `import { useState, type FormEvent, type ReactNode } from "react";
 
-const FORMS_API = "/wanapush/api/forms/submit";
+const FORMS_API = "/api/forms/submit";
 function getSiteSlug(): string {
   const base = (import.meta.env.BASE_URL || "/").replace(/^\\/+|\\/+$/g, "");
   return base.split("/").pop() || "unknown";

@@ -1,4 +1,4 @@
-// Types pour Meta Conversions API (CAPI) — spec Graph API v22.0
+// Types pour Meta Conversions API (CAPI) — spec Graph API v24.0
 // Doc : https://developers.facebook.com/docs/marketing-api/conversions-api/parameters
 
 /**
@@ -161,7 +161,7 @@ export type ServerEvent = {
 };
 
 /**
- * Payload complet envoyé à `POST graph.facebook.com/v22.0/{pixelId}/events`.
+ * Payload complet envoyé à `POST graph.facebook.com/v24.0/{pixelId}/events`.
  */
 export type CapiPayload = {
   data: ServerEvent[];

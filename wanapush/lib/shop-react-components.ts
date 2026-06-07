@@ -7,7 +7,7 @@
 export function shopConfigFile(slug: string): string {
   return `// Auto-généré par WanaPush. Ne pas éditer.
 export const SHOP_SLUG = ${JSON.stringify(slug)};
-export const API_BASE = "/wanapush/api/storefront/" + SHOP_SLUG;
+export const API_BASE = "/api/storefront/" + SHOP_SLUG;
 
 export function getSessionId(): string {
   if (typeof window === "undefined") return "";

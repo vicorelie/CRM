@@ -361,21 +361,31 @@ model AdMetrics {
   @@index([date])
 }
 
-// Bibliothèque d'audiences réutilisables (text-based pour l'instant — Meta/Google
-// ont leurs propres audiences custom côté Ad Manager qu'on syncera plus tard).
 model AdAudience {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   userId      String
   name        String
-  description String   @db.Text
-  size        String? // estimation manuelle ou calculée ("~150k", "1M+")
+  description String          @db.Text
+  size        String? // estimation manuelle texte ("~150k", "1M+")
   tags        Json? // [string]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  // ─── Meta Custom Audience ─────────────────────────────────────────────────
+  type          AdAudienceType @default(MANUAL)
+  platform      String? // "META_ADS" | "GOOGLE_ADS" | null (text-only)
+  adAccountId   String? // act_XXXXX
+  externalId    String? // Meta custom audience ID (numericString)
+  config        Json? // règles pixel / liste clients / config lookalike
+  metaStatus    String? // READY | PROCESSING | FAILED (retourné par Meta)
+  estimatedSize Int? // taille estimée Meta (nombre)
+  syncedAt      DateTime? // dernière synchro avec la plateforme
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([platform, adAccountId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -414,6 +424,13 @@ enum Status {
   ACTIVE
   PAUSED
   COMPLETED
+}
+
+enum AdAudienceType {
+  MANUAL // bibliothèque texte, sans API plateforme
+  WEBSITE_TRAFFIC // pixel retargeting
+  CUSTOMER_LIST // upload liste clients (emails SHA256)
+  LOOKALIKE // lookalike depuis une source
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
