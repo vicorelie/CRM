@@ -21,6 +21,9 @@ const META_ADS_SCOPES = [
   "ads_read",
   "business_management",
   "pages_show_list",
+  // catalog_management : requis pour gérer le Product Catalog (DPA / Advantage+
+  // Catalog Ads). Permet POST /{catalog_id}/items_batch pour sync produits Shop.
+  "catalog_management",
 ];
 
 function appCreds() {

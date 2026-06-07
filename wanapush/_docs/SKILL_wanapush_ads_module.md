@@ -439,6 +439,60 @@ Module : `lib/ads/enhanced-conversions-pipeline.ts`
 
 **Sans branchement** : chaque helper retourne `SKIPPED` proprement (pas d'erreur). Le système est dégradé gracieusement si le user n'a pas connecté un AdAccount.
 
+### 📦 Product Feed Sync — Meta Catalog + Google Merchant API (DPA-ready)
+
+Module : `lib/ads/product-feed-sync.ts`. Sync les produits Prisma `Shop` vers les 2 plateformes de catalog en un seul appel, pour débloquer Meta Advantage+ Catalog Ads (DPA, ROAS 2-5× retargeting standard) et Google Shopping/PMax produits.
+
+**Pourquoi critique 2026** :
+- **Google Content API for Shopping sunset 18 août 2026** → migration vers Merchant API v1 (v1beta shutdown 28 fév 2026 déjà fait)
+- **Meta DPA / Advantage+ Catalog Ads** = format e-commerce avec le meilleur ROAS
+
+**API Meta Catalog Batch** : `POST https://graph.facebook.com/v25.0/{catalog_id}/items_batch`
+- Body : `{ access_token, item_type: "PRODUCT_ITEM", requests: [{method, retailer_id, data}], allow_upsert: true }`
+- Max 5000 requests/batch
+- `retailer_id` = `ProductVariant.id` (cuid) — pas besoin de cache d'IDs externes
+- Scope OAuth : `catalog_management` (ajouté à `META_ADS_SCOPES`)
+
+**API Google Merchant v1** : `POST https://merchantapi.googleapis.com/products/v1/accounts/{accountId}/productInputs:insert?dataSource=accounts/{accountId}/dataSources/{dataSourceId}`
+- Pas de batch natif → on appelle en série (rate limit élevé sur supplemental data sources)
+- `offerId` = `ProductVariant.id`
+- `contentLanguage` + `feedLabel` dérivés du `Shop.locale` (ex: "fr-FR" → `fr` + `FR`)
+- `price.amountMicros` en micros (`price * 1_000_000`)
+- Scope OAuth : `https://www.googleapis.com/auth/content` (ajouté à `SCOPES` Google)
+
+**Configuration AdAccount.meta requise** :
+```jsonc
+// Meta
+{ "metaCatalog": { "id": "1234567890" } }
+// Google
+{ "googleMerchant": { "accountId": "1234567", "dataSourceId": "9876543" } }
+```
+
+**Fonctions exportées** :
+- `syncProductCrossPlatform(productId, operation="UPDATE")` : sync 1 produit (toutes ses variantes) vers Meta + Google en parallèle. Best-effort par plateforme (un échec n'impacte pas l'autre). Retourne `{ productId, meta, google }` avec stats détaillées.
+- `syncAllShopProducts(shopId, operation="UPDATE")` : bulk sync de tous les produits `ACTIVE`. Fan-out 5 produits en // pour ne pas saturer.
+- `syncToMetaCatalog()` + `syncToGoogleMerchant()` : helpers bas niveau.
+
+**Endpoint API** : `POST /api/shop/[siteSlug]/products/sync-feeds`
+- Auth via `session.user.email` + vérif ownership Shop
+- Body : `{ operation?: "CREATE" | "UPDATE" | "DELETE" }` (défaut UPDATE — Meta/Google upsert)
+- Response : `{ total, summary: { meta: {ok, fail}, google: {ok, fail} }, results: [...] }`
+
+**Branchement incrémental** : appeler `syncProductCrossPlatform(productId)` depuis tes endpoints CRUD produit existants (fire-and-forget). Le sync individuel ≠ bulk endpoint.
+
+**Mapping Prisma → format externe** :
+- `Product.title` → `title`
+- `Product.description` → `description`
+- `Product.status === "ACTIVE"` → `in stock` / `out of stock`
+- `Product.vendor ?? Shop.name` → `brand`
+- `ProductVariant.price` → `price` (devise depuis `Shop.currency`)
+- `ProductVariant.compareAt > price` → `sale_price` (Meta) / `salePrice` (Google)
+- `ProductVariant.sku` → `gtin`
+- `Product.images[0].url` → `image_link`/`imageLink`
+- Link auto-construit : `https://wanapush.com/preview/{siteSlug}/products/{slug}`
+
+**Dégradé gracieux** : si `metaCatalog.id` ou `googleMerchant.{accountId,dataSourceId}` non configurés → erreur explicite dans `result.{meta,google}.error`, l'autre plateforme tourne normalement.
+
 ### Points critiques Google Ads
 
 | Situation | Solution |

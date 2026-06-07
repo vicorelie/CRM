@@ -40,11 +40,14 @@ const GEO_TARGETS: Record<string, string> = {
 // datamanager : Data Manager API (Enhanced Conversions for Leads + Offline Conversions).
 // REQUIS depuis juin 2026 — l'ancien uploadClickConversions est bloqué pour les
 // developer tokens qui n'ont pas envoyé de requête legacy entre janv-juin 2026.
-// Note : datamanager est un sensitive scope → Google OAuth verification requise
-// pour distribuer l'app en prod. Pendant dev/testing : pas bloquant.
+// content : Merchant API v1 (Product Feed sync vers Google Shopping/PMax).
+// Content API for Shopping sunset 18 août 2026 → migration v1 obligatoire.
+// Note : datamanager + content sont sensitive scopes → Google OAuth verification
+// requise pour distribuer l'app en prod. Pendant dev/testing : pas bloquant.
 const SCOPES = [
   "https://www.googleapis.com/auth/adwords",
   "https://www.googleapis.com/auth/datamanager",
+  "https://www.googleapis.com/auth/content",
 ];
 // v20 sunsets 2026-06-10. v24 = avril 2026 release, supportée jusqu'à mi-2027.
 // Champs core (campaign, campaign_budget, ad_group, ad_group_ad, segments,
