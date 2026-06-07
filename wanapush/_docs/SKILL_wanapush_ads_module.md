@@ -287,12 +287,66 @@ POST /campaign/budget/update/ { budget_list: [{ campaign_id: id, budget: amount 
 
 Utilisés par l'auto-optimizer (`lib/ads/auto-optimizer.ts`).
 
-## 🔵 LinkedIn — Sync only
+## 🔵 LinkedIn Ads — Push + Sync
 
-Connecteur LinkedIn fait uniquement :
-- `listCampaigns()` → sync statut + métriques depuis l'API
-- `fetchMetrics()` → snapshot quotidien dans `AdMetrics`
-- **Pas de `pushCampaign()`** — LinkedIn Marketing Solutions Partner requis
+### Push flow (linkedin.ts `pushCampaign`)
+
+```
+1. getOrCreateCampaignGroup()  → GET /rest/adAccounts/{id}/adCampaignGroups (liste)
+                                  ou POST si aucun groupe ACTIVE — LinkedIn exige un groupe
+2. POST /rest/adAccounts/{id}/adCampaigns  → Campaign DRAFT (type SPONSORED_UPDATES)
+3. uploadImageFromUrl()         → POST /rest/images?action=initializeUpload
+                                  puis PUT binaire sur uploadUrl retourné
+4. POST /rest/adAccounts/{id}/adCreatives → Creative DRAFT (SINGLE_IMAGE)
+```
+
+Tout est créé en **DRAFT**. L'image upload est optionnel (fallback creative texte seul).
+
+### Objectifs → costType
+
+| objectiveType | costType | unitCost défaut |
+|---|---|---|
+| WEBSITE_VISITS | CPC | 2.00 |
+| WEBSITE_CONVERSIONS | CPC | 2.00 |
+| LEAD_GENERATION | CPC | 2.00 |
+| BRAND_AWARENESS | CPM | 8.00 |
+| VIDEO_VIEWS | CPV | 0.05 |
+
+### Geo targeting — URN map statique
+
+LinkedIn ne supporte pas les codes ISO directement : il faut des `urn:li:geo:{id}`.
+
+```ts
+// Pays principaux embarqués dans linkedin.ts (GEO_URN)
+FR → urn:li:geo:105015875
+BE → urn:li:geo:100565514
+CH → urn:li:geo:106693272
+US → urn:li:geo:103644278
+// ... (voir linkedin.ts pour la liste complète)
+```
+
+Pour des pays non listés : appeler `/rest/adTargetingFacets/locations?q=typeahead&query={name}`.
+
+### Points critiques LinkedIn
+
+| Situation | Solution |
+|-----------|----------|
+| Scope `rw_ads` manquant | Utilisateurs connectés SANS `rw_ads` doivent se reconnecter (scope ajouté en juin 2026) |
+| Campaign Group obligatoire | `getOrCreateCampaignGroup()` gère ça automatiquement |
+| `x-restli-id` header | LinkedIn retourne l'ID créé dans ce header (pas dans le body JSON) |
+| PATCH format | Body : `{"patch": {"$set": {"field": "value"}}}` — format Restli |
+| Image specs | Max 5 MB, JPG/PNG. LinkedIn Images API initialise l'upload avant PUT binaire |
+| Token expire | LinkedIn refresh_token valide 60 jours — surveiller `tokenExpiresAt` |
+
+### `updateCampaignStatus` / `updateCampaignBudget`
+
+```ts
+PATCH /rest/adAccounts/{id}/adCampaigns/{campaignId}
+{ "patch": { "$set": { "status": "ACTIVE" | "PAUSED" } } }
+{ "patch": { "$set": { "dailyBudget": { "amount": "50.00", "currencyCode": "EUR" } } } }
+```
+
+Utilisés par l'auto-optimizer (`lib/ads/auto-optimizer.ts`).
 
 ## 🎛️ PushModal — 3 modes de destination
 
@@ -357,7 +411,7 @@ Bandeau totaux globaux en bas du tableau. Export CSV disponible.
 2. **Google Ads v24** : v20 sunset 2026-06-10 (déjà migré). RSA = 3+ headlines + 2+ desc. PMAX = batch atomique.
 3. **Pixel Meta + push** : objectifs LEADS/SALES EXIGENT `pixel_id` dans `promotedObject` → vérifier que `SitePixel.pixelId` ou `externalPixelId` est passé.
 4. **PushModal 3 modes** : wanapush_site (auto) > external_with_pixel (vérif) > external_no_pixel (notoriété).
-5. **TikTok** = push implémenté (Campaign→AdGroup→SINGLE_IMAGE Ad). `resolveLocationIds()` résout ISO→TikTok IDs. billing_event dépend de l'objectif. Standard API Approval requis en prod, Sandbox OK. **LinkedIn** = sync only.
+5. **TikTok** = push implémenté (Campaign→AdGroup→SINGLE_IMAGE). `resolveLocationIds()` résout ISO→TikTok numeric IDs. billing_event par objectif. Standard API Approval requis en prod. **LinkedIn** = push implémenté (CampaignGroup→Campaign→Images API→Creative DRAFT). Scope `rw_ads` requis + Marketing Developer Platform approval. `GEO_URN` map statique pour 16 pays.
 6. **Tokens chiffrés** : toujours via `lib/crypto.ts`. JAMAIS log/expose `accessToken`/`refreshToken`.
 7. **Refresh token Google** : auto via `ensureFreshAdAccount()` → appelle `refreshTokenFn()`. Meta : pas de refresh, token expire ~60j.
 8. **`auto-config`** : utilise `askAi()` de `lib/ai`, `maxDuration = 60s`, validation Zod stricte du output.
@@ -367,7 +421,7 @@ Bandeau totaux globaux en bas du tableau. Export CSV disponible.
 ## 📅 Roadmap Ads
 
 - **TikTok Standard API Approval** : soumettre demande sur business-api.tiktok.com (push fonctionne déjà côté code)
-- **LinkedIn push** : demander LinkedIn Marketing Solutions Partner
+- **LinkedIn push** : code prêt. Demander Marketing Developer Platform approval + scope `rw_ads` sur app LinkedIn
 - **Google PMAX complet** : assets image/vidéo upload via UI
 - **Meta Reels / Stories** : formats verticaux dans l'Ad creative
 - **TikTok vidéo ads** : uploader vidéo via `/file/video/ad/upload/` pour format principal TikTok
