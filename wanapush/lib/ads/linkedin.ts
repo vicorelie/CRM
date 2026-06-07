@@ -17,7 +17,8 @@ import type {
 const API = "https://api.linkedin.com";
 const LI_VERSION = "202605";
 // rw_ads ajouté pour push — nécessite Marketing Developer Platform approval.
-const SCOPES = ["r_ads", "r_ads_reporting", "rw_ads"];
+// rw_conversions ajouté pour Conversions API (CAPI server-side).
+const SCOPES = ["r_ads", "r_ads_reporting", "rw_ads", "rw_conversions"];
 
 function appCreds() {
   const id = process.env.LINKEDIN_ADS_CLIENT_ID ?? process.env.LINKEDIN_CLIENT_ID;

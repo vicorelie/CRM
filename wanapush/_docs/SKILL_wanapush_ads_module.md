@@ -232,6 +232,24 @@ Seuils (Meta Andromeda 2026 — dégradation en 5-7j, plus rapide qu'avant) :
 
 **Impact mesuré** (Meta officiel + études 2026) : **+16-22% ROAS** vs campagnes Standard quand CAPI bien configuré (ce qui est notre cas — module `lib/capi`).
 
+### Boost post existant (`object_story_id`)
+
+Mode alternatif à `object_story_spec` (creative from scratch). Permet de booster un post organique de la Page comme creative payant.
+
+**Trigger** : `input.boostPostId` au format `"{pageId}_{postId}"` (ex: `"1234567_9876543"`).
+
+**Comportement** :
+- AdCreative POST avec `object_story_id` au lieu de `object_story_spec` (Meta utilise le contenu du post organique tel quel — texte, image, lien, CTA)
+- `picture`/`imageUrl` non requis (le post organique contient déjà son visuel)
+- A/B multi-variant (`copyVariants`) **désactivé en boost mode** (un seul post réutilisé, pas de creative alternatif)
+- Instagram actor auto-detect skip (pas nécessaire)
+- `resources.boostPost` stocké pour traçabilité
+
+**Pourquoi pro 2026** :
+- Preuve sociale conservée : likes/comments/shares du post organique cumulent avec l'engagement payant → **+20-40% CTR** vs creative identique créé from scratch (sources agences PPC 2025-2026)
+- UX user simplifiée : "boost ce post" >>> "génère copy + visuel + creative"
+- Cohérence avec TikTok Spark Ads (pattern symétrique)
+
 ## 🟢 Google Ads — API v24
 
 > **v24 (avr 2026, patch v24.1 mai 2026). Sunset ~mai 2027. v20 sunsetté le 2026-06-10 ✓.**
@@ -486,6 +504,29 @@ Branche déclenchée par `campaignType` commençant par `"SMART_PLUS"` (ex: `"SM
 
 `bid_type: BID_TYPE_NO_BID` recommandé en Smart+ (laisser l'IA gérer le bid).
 
+### Spark Ads (boost contenu créateur organique)
+
+Branche dans `pushCampaign` quand `input.sparkAuthCode` + `input.sparkPostId` fournis.
+
+**Workflow** :
+1. **Code d'autorisation créateur** : le créateur génère un Auth Code dans son app TikTok (Ad Settings → Ad authorization → durée 7/30/60/180/365 jours). Tu reçois ce code via input.
+2. **Identity** : `POST /identity/create/` avec `identity_type: "AUTH_CODE"` + `auth_code` → retourne `identity_id`.
+3. **Ad** : `POST /ad/create/` avec `ad_format: "SPARK_ADS"`, `identity_type: "AUTH_CODE"`, `identity_id`, `tiktok_item_id` (= ID du post organique à booster).
+
+**Skip imageUrl/videoUrl** en mode Spark : le post organique du créateur fait office de creative entièrement.
+
+**Pourquoi pro 2026** :
+- Engagement organique conservé : likes/comments/shares vont au compte du créateur (et restent visibles)
+- CTR documenté **+134%** vs in-feed ads classiques SINGLE_VIDEO froides (sources Status/Insense)
+- Completion rate +30%, conversion rate +30%
+- C'est le standard creator-led ads 2026 (B2C + B2B grandissant)
+
+**Identity types** (TikTok Marketing API v1.3) :
+- `AUTH_CODE` (créateur via Spark Code) — celui qu'on utilise
+- `TT_USER` (compte advertiser lié)
+- `BC_AUTH_TT` (via Business Center)
+- `CUSTOMIZED_USER` (en phase-out)
+
 ### Objectifs → billing_event
 
 | objective_type | optimization_goal | billing_event |
@@ -565,11 +606,59 @@ Pour des pays non listés : appeler `/rest/adTargetingFacets/locations?q=typeahe
 |-----------|----------|
 | `LinkedIn-Version` header | Constante `LI_VERSION = "202605"`. LinkedIn sunset les versions ~12 mois après release (rolling). **Mettre à jour chaque année.** |
 | Scope `rw_ads` manquant | Utilisateurs connectés SANS `rw_ads` doivent se reconnecter (scope ajouté en juin 2026) |
+| Scope `rw_conversions` (NEW) | Requis pour Conversions API server-side. Ajouté à `SCOPES` en juin 2026 — comptes legacy doivent re-OAuth. |
 | Campaign Group obligatoire | `getOrCreateCampaignGroup()` gère ça automatiquement |
 | `x-restli-id` header | LinkedIn retourne l'ID créé dans ce header (pas dans le body JSON) |
 | PATCH format | Body : `{"patch": {"$set": {"field": "value"}}}` — format Restli |
 | Image specs | Max 5 MB, JPG/PNG. LinkedIn Images API initialise l'upload avant PUT binaire |
 | Token expire | LinkedIn refresh_token valide 60 jours — surveiller `tokenExpiresAt` |
+
+### 🔴 LinkedIn Conversions API (CAPI server-side)
+
+**Module** : `lib/ads/linkedin-conversions.ts`. Stream les conversions B2B server-side pour optimiser le delivery sur les leads convertissants (cookieless + iOS Safari ITP) et débloquer `optimizationTargetType: MAX_QUALIFIED_LEAD` (depuis 202602) qui pousse le budget vers les leads que le CRM marque qualifiés.
+
+**Workflow** (auto-pilote via `enhanced-conversions-pipeline.ts`) :
+1. Lazy-create de la conversion rule au premier event : `POST /rest/conversions?autoAssociationType=ALL_CAMPAIGNS` avec `conversionMethod: "CONVERSIONS_API"`, `type: LEAD`/`PURCHASE`/`QUALIFIED_LEAD`/etc., attribution window 90j/30j. Cache l'URN `urn:lla:llaPartnerConversion:{id}` dans `AdAccount.meta.linkedinConversionRules[type]`.
+2. Stream events : `POST /rest/conversionEvents` (single) ou avec header `X-RestLi-Method: BATCH_CREATE` (jusqu'à 5000).
+
+**Headers obligatoires** :
+- `Authorization: Bearer <token>`
+- `Content-Type: application/json`
+- `X-Restli-Protocol-Version: 2.0.0`
+- `Linkedin-Version: 202605`
+
+**Identifiants supportés** (envoyer le maximum dispo, ↑ match rate) :
+- `SHA256_EMAIL` (lowercase + trim, pas de Gmail dot-stripping spécifique LinkedIn)
+- `LINKEDIN_FIRST_PARTY_ADS_TRACKING_UUID` (= cookie `li_fat_id` déposé par Insight Tag)
+- `PLAINTEXT_IP_ADDRESS` (en clair, non hashée)
+- `GOOGLE_AID` / `IDFA` (mobile ad IDs)
+- `userInfo` : `firstName`, `lastName`, `title`, `companyName`, `countryCode` (boost match rate enrichi)
+- `externalIds` : ID interne CRM/DB (match secondaire)
+
+**Capture `li_fat_id`** :
+- Storefront : `CartProvider` lit le cookie `li_fat_id` (déposé par le LinkedIn Insight Tag) au mount et le persiste sous `wp_li_fat_id` (90 jours). `CartDrawer.startCheckout()` lit les 2 cookies et envoie au checkout.
+- Forms : `pageUrl`/`payload.liFatId` envoyés par la landing → DB.
+
+**Hooks pipeline** (`lib/ads/enhanced-conversions-pipeline.ts`) :
+- `triggerLinkedInLeadForFormSubmission(submissionId)` : appelé en // de Google EC depuis `POST /api/forms/submit`
+- `triggerLinkedInSaleForOrder(orderId)` : appelé en // de Google EC depuis `POST /api/webhooks/stripe/[siteSlug]` quand `financialStatus = PAID`
+- Auto-résolution AdAccount LinkedIn CONNECTED du user (via siteSlug → userId) + lazy-create conversion rule
+
+**Schéma DB** (migration `add_linkedin_capi_tracking`) :
+- `FormSubmission.{liFatId, liStatus, liSentAt, liError}`
+- `Order.{liFatId, liStatus, liSentAt, liError}`
+- `AdAccount.meta.linkedinConversionRules` : cache `{ "LEAD": "urn:lla:...", "PURCHASE": "urn:lla:..." }`
+
+**Limites** :
+- 600 req/min, 500k/jour par token (rate limits)
+- 90 jours window (`conversionHappenedAt` doit être <90j)
+- Batch tout-ou-rien : 1 record invalide → toute la batch rejetée
+
+**Erreurs typiques** :
+- 400 `INVALID_CONVERSION_TIME_FIELD_VALUE` → timestamp >90j ou futur
+- 400 `INVALID_USER_IDENTIFICATION_FIELD_VALUE` → aucun identifier match valide
+- 401 `EMPTY_ACCESS_TOKEN` → token expiré, refresh
+- 403 `USER_NOT_AUTHORIZED` → manque rôle `CAMPAIGN_MANAGER` ou scope `rw_conversions`
 
 ### `updateCampaignStatus` / `updateCampaignBudget`
 

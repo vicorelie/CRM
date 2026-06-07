@@ -115,14 +115,22 @@ model FormSubmission {
   gclid  String? @db.VarChar(255)
   gbraid String? @db.VarChar(255)
   wbraid String? @db.VarChar(255)
+  // LinkedIn First-Party Ads Tracking UUID (cookie li_fat_id déposé par le LinkedIn Insight Tag)
+  // — utilisé pour upload conversion vers LinkedIn Conversions API
+  liFatId String? @db.VarChar(255)
   // Statut de l'upload Enhanced Conversions (PENDING → SENT → FAILED, NULL si pas d'AdAccount Google)
   ecStatus      EnhancedConversionStatus?
   ecSentAt      DateTime?
   ecError       String?                   @db.Text
+  // Statut LinkedIn Conversions API (en parallèle de Google EC)
+  liStatus EnhancedConversionStatus?
+  liSentAt DateTime?
+  liError  String?                   @db.Text
 
   @@index([siteSlug, createdAt])
   @@index([siteSlug, read])
   @@index([ecStatus])
+  @@index([liStatus])
 }
 
 enum EnhancedConversionStatus {
@@ -1079,9 +1087,14 @@ model Order {
   gclid    String?                   @db.VarChar(255)
   gbraid   String?                   @db.VarChar(255)
   wbraid   String?                   @db.VarChar(255)
+  // LinkedIn First-Party Ads Tracking UUID (cookie li_fat_id)
+  liFatId  String?                   @db.VarChar(255)
   ecStatus EnhancedConversionStatus?
   ecSentAt DateTime?
   ecError  String?                   @db.Text
+  liStatus EnhancedConversionStatus?
+  liSentAt DateTime?
+  liError  String?                   @db.Text
 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -1102,6 +1115,7 @@ model Order {
   @@index([shopId, createdAt])
   @@index([customerEmail])
   @@index([ecStatus])
+  @@index([liStatus])
 }
 
 model OrderItem {

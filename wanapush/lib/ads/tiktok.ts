@@ -382,10 +382,38 @@ async function uploadVideoFromUrl(
   return videoId;
 }
 
+// ─── Identity API (Spark Ads) ────────────────────────────────────────────────
+// Crée une Identity à partir d'un code d'autorisation créateur. Permet de
+// booster un post organique TikTok du créateur (likes/comments/follows
+// restent sur le compte créateur — Branded Content authentique).
+// Doc : https://github.com/tiktok/tiktok-business-api-sdk → IdentityApi
+async function createSparkIdentity(
+  account: AdAccountInfo,
+  advertiserId: string,
+  authCode: string,
+): Promise<string> {
+  const data = await tiktokPost<{ identity_id: string }>(
+    account,
+    "/identity/create/",
+    {
+      advertiser_id: advertiserId,
+      identity_type: "AUTH_CODE",
+      auth_code: authCode,
+    },
+  );
+  if (!data.identity_id) {
+    throw new Error("TikTok identity/create/ : identity_id absent dans la réponse");
+  }
+  return data.identity_id;
+}
+
 // ─── pushCampaign ─────────────────────────────────────────────────────────────
 // Crée Campaign → AdGroup → Ad tout en DISABLE (PAUSED).
-// Format d'annonce auto-détecté : SINGLE_VIDEO si videoUrl fourni (avec image
-// optionnelle comme miniature), sinon SINGLE_IMAGE si imageUrl, sinon texte seul.
+// Format d'annonce auto-détecté :
+//   1. SPARK_ADS si sparkAuthCode + sparkPostId fournis (boost post organique)
+//   2. SINGLE_VIDEO si videoUrl fourni (avec image optionnelle comme miniature)
+//   3. SINGLE_IMAGE si imageUrl
+//   4. texte seul sinon
 // Nécessite Standard API Approval — fonctionne en mode Sandbox sur comptes test.
 async function pushCampaign(
   account: AdAccountInfo,
@@ -446,9 +474,24 @@ async function pushCampaign(
     resources.adgroup = adgroupId;
     console.log(`[tiktok.pushCampaign] AdGroup créé : ${adgroupId}`);
 
-    // 3a. Image upload (miniature pour vidéo, ou visuel principal pour SINGLE_IMAGE)
+    // 3a. Spark Ads : si authCode + postId fournis, crée l'Identity et zappe les
+    // uploads image/vidéo (le post organique sert de creative).
+    // Engagement (likes/comments) reste sur le post du créateur → +134% CTR mesuré.
+    let sparkIdentityId: string | undefined;
+    if (input.sparkAuthCode && input.sparkPostId) {
+      try {
+        sparkIdentityId = await createSparkIdentity(account, advertiserId, input.sparkAuthCode);
+        resources.identity = sparkIdentityId;
+        console.log(`[tiktok.pushCampaign] Spark identity créée : ${sparkIdentityId}`);
+      } catch (idErr) {
+        const msg = idErr instanceof Error ? idErr.message : String(idErr);
+        console.warn(`[tiktok.pushCampaign] Spark identity échouée (${msg.slice(0, 100)}) — fallback creative classique`);
+      }
+    }
+
+    // 3b. Image upload (miniature pour vidéo, ou visuel principal pour SINGLE_IMAGE)
     let imageId: string | undefined;
-    if (input.imageUrl) {
+    if (!sparkIdentityId && input.imageUrl) {
       try {
         imageId = await uploadImageFromUrl(account, advertiserId, input.imageUrl);
         resources.image = imageId;
@@ -459,9 +502,9 @@ async function pushCampaign(
       }
     }
 
-    // 3b. Video upload (active SINGLE_VIDEO si succès)
+    // 3c. Video upload (active SINGLE_VIDEO si succès)
     let videoId: string | undefined;
-    if (input.videoUrl) {
+    if (!sparkIdentityId && input.videoUrl) {
       try {
         videoId = await uploadVideoFromUrl(account, advertiserId, input.videoUrl);
         resources.video = videoId;
@@ -486,7 +529,13 @@ async function pushCampaign(
       landing_page_url: finalUrl,
       operation_status: "DISABLE",
     };
-    if (videoId) {
+    if (sparkIdentityId && input.sparkPostId) {
+      // Spark Ads : utilise post organique comme creative
+      adPayload.ad_format = "SPARK_ADS";
+      adPayload.identity_type = "AUTH_CODE";
+      adPayload.identity_id = sparkIdentityId;
+      adPayload.tiktok_item_id = input.sparkPostId;
+    } else if (videoId) {
       adPayload.video_id = videoId;
       adPayload.ad_format = "SINGLE_VIDEO";
       // Miniature optionnelle (sinon TikTok extrait auto un frame)

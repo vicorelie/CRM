@@ -768,47 +768,66 @@ async function pushCampaign(
 
     resources[`adset${firstSuffix ? "_A" : ""}`] = adset.id;
 
-    // 3) AdCreative — Link Ad (page_id fetché en étape 0)
-    //    Une image est OBLIGATOIRE pour les Link Ads Meta (pas de format texte seul).
-    //    Si absente : subcode 2446496 sur /adcreatives.
-    if (!input.imageUrl) {
-      return {
-        ok: false,
-        error:
-          "Une image est requise pour publier l'annonce. Génère-la avec l'IA (onglet Builder → \"Générer visuel\") puis relance le push.",
-        resources,
-      };
-    }
-
+    // 3) AdCreative — 2 modes possibles :
+    //    A) BOOST POST EXISTANT : `object_story_id: "{page_id}_{post_id}"` réutilise
+    //       un post organique de la Page. Avantage : preuve sociale conservée (likes,
+    //       comments du post original cumulent avec l'engagement payant). +20-40% CTR
+    //       vs creative identique créé from scratch. UX user simplifiée.
+    //    B) CREATIVE FROM SCRATCH : `object_story_spec` avec link_data. Une image est
+    //       OBLIGATOIRE pour les Link Ads Meta (pas de format texte seul). Si absente :
+    //       subcode 2446496 sur /adcreatives.
     const finalUrl = input.finalUrl ?? "https://wanapush.com";
     const headline = (input.headlines?.[0] ?? input.name).slice(0, 40);
     const description = (input.descriptions?.[0] ?? "").slice(0, 30);
     const primaryText = (input.primaryText ?? headline).slice(0, 125);
 
-    const linkData: Record<string, unknown> = {
-      link: finalUrl,
-      message: primaryText,
-      name: headline,
-      call_to_action: { type: mapCTA(input.cta) },
-      picture: input.imageUrl,
-    };
-    // description optionnelle : on n'envoie pas de string vide (Meta rejette)
-    if (description) linkData.description = description;
+    const useBoostExistingPost = !!input.boostPostId;
+
+    if (!useBoostExistingPost && !input.imageUrl) {
+      return {
+        ok: false,
+        error:
+          "Une image est requise pour publier l'annonce (ou utilise boostPostId pour booster un post existant). Génère-la avec l'IA (onglet Builder → \"Générer visuel\") puis relance le push.",
+        resources,
+      };
+    }
 
     // Instagram actor_id : auto-détecté depuis la Page FB pour ads cross-platform FB+IG
-    const instagramActorId =
-      input.instagramActorId ?? (await getInstagramActorId(pageId, account.accessToken));
-
-    const objectStorySpec: Record<string, unknown> = {
-      page_id: pageId,
-      link_data: linkData,
-    };
-    if (instagramActorId) objectStorySpec.instagram_actor_id = instagramActorId;
+    // Utilisé par le creative principal ET les variantes A/B (object_story_spec).
+    // Non requis en mode boost existing post (object_story_id réutilise le post tel quel).
+    const instagramActorId = useBoostExistingPost
+      ? undefined
+      : (input.instagramActorId ?? (await getInstagramActorId(pageId, account.accessToken)));
 
     const creativePayload: Record<string, unknown> = {
       name: `${input.name} – Créa${firstSuffix}`,
-      object_story_spec: objectStorySpec,
     };
+
+    if (useBoostExistingPost) {
+      // Mode A : boost post existant. Format attendu : "{pageId}_{postId}".
+      // Pas de link_data — Meta utilise le contenu du post organique tel quel.
+      creativePayload.object_story_id = input.boostPostId;
+      resources.boostPost = input.boostPostId!;
+    } else {
+      // Mode B : creative from scratch via object_story_spec.
+      const linkData: Record<string, unknown> = {
+        link: finalUrl,
+        message: primaryText,
+        name: headline,
+        call_to_action: { type: mapCTA(input.cta) },
+        picture: input.imageUrl,
+      };
+      // description optionnelle : on n'envoie pas de string vide (Meta rejette)
+      if (description) linkData.description = description;
+
+      const objectStorySpec: Record<string, unknown> = {
+        page_id: pageId,
+        link_data: linkData,
+      };
+      if (instagramActorId) objectStorySpec.instagram_actor_id = instagramActorId;
+
+      creativePayload.object_story_spec = objectStorySpec;
+    }
 
     if (useAdvCreative) {
       // Advantage+ Creative : Meta améliore titre/image/texte (+14% CPR moyen vs static)
@@ -891,7 +910,8 @@ async function pushCampaign(
     // ─── Variantes B, C… (A/B test multi-AdSet) ─────────────────────────────────
     // On réutilise effectiveOptGoal (déjà validé par la cascade ci-dessus).
     // Les erreurs par variante sont loggées mais ne font pas échouer le push global.
-    if (isMultiVariant && input.copyVariants) {
+    // Note : boostPostId réutilise UN post existant → A/B multi-variant désactivé en boost mode.
+    if (isMultiVariant && input.copyVariants && !useBoostExistingPost) {
       for (let vi = 1; vi < input.copyVariants.length; vi++) {
         const letter = String.fromCharCode(65 + vi); // B=66, C=67…
         const vc = input.copyVariants[vi];

@@ -17,6 +17,8 @@ const inputSchema = z.object({
   gclid: z.string().trim().max(255).optional(),
   gbraid: z.string().trim().max(255).optional(),
   wbraid: z.string().trim().max(255).optional(),
+  // LinkedIn First-Party Ads Tracking UUID (cookie `li_fat_id`)
+  liFatId: z.string().trim().max(255).optional(),
 });
 
 type Params = { params: Promise<{ siteSlug: string }> };
@@ -156,11 +158,12 @@ export async function POST(req: Request, { params }: Params) {
         shopId: shop.id,
         siteSlug,
         discountCode: cart.discountCode ?? "",
-        // Click identifiers propagés au webhook → stockés sur Order pour
-        // l'upload Enhanced Conversions Google Ads après paiement.
+        // Click identifiers propagés au webhook → stockés sur Order pour upload
+        // Enhanced Conversions Google Ads + LinkedIn CAPI après paiement.
         gclid: body.gclid ?? "",
         gbraid: body.gbraid ?? "",
         wbraid: body.wbraid ?? "",
+        liFatId: body.liFatId ?? "",
       },
       success_url: successUrl,
       cancel_url: cancelUrl,

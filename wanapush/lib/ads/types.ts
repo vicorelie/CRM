@@ -124,6 +124,17 @@ export type PushCampaignInput = {
     url: string;
     type: "MARKETING" | "SQUARE" | "LOGO";
   }>;
+  /** TikTok Spark Ads : code d'autorisation généré par le créateur dans l'app TikTok
+   * (Ad Settings → Ad authorization). Durée 7/30/60/180/365 jours. Combiné avec
+   * `sparkPostId`, transforme un post organique en Spark Ad (engagement organique
+   * conservé : likes/comments restent sur le post du créateur). */
+  sparkAuthCode?: string;
+  /** TikTok Spark Ads : ID du post organique à booster (`tiktok_item_id`). */
+  sparkPostId?: string;
+  /** Meta boost existing post : object_story_id format "pageId_postId" (ex: "1234_5678").
+   * Si fourni, le creative Meta utilise ce post organique au lieu de générer un creative
+   * from scratch. Préserve l'engagement social (likes/comments du post original). */
+  boostPostId?: string;
   /** DSA — nom du bénéficiaire (Meta UE, requis depuis juillet 2023). Fallback : nom du AdAccount. */
   dsaBeneficiary?: string;
   /** DSA — nom du payeur (Meta UE, requis depuis juillet 2023). Fallback : dsaBeneficiary. */

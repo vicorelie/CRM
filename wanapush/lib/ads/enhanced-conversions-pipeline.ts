@@ -23,6 +23,11 @@ import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
 import { uploadConversionEvents } from "@/lib/ads/google-data-manager";
 import { googleAdsConnector } from "@/lib/ads/google";
+import {
+  createConversionRule,
+  streamConversionEvent,
+  type LinkedInConversionType,
+} from "@/lib/ads/linkedin-conversions";
 import type { AdAccountInfo } from "@/lib/ads/types";
 
 // ─── Parsing click identifiers depuis URL ────────────────────────────────────
@@ -47,6 +52,14 @@ export function parseClickIdsFromUrl(url: string | undefined | null): {
   } catch {
     return {};
   }
+}
+
+/** Extrait l'IP du client depuis les headers (utilisée comme PLAINTEXT_IP_ADDRESS LinkedIn) */
+export function extractClientIp(headers: Headers): string | undefined {
+  const fwd = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (fwd) return fwd;
+  const real = headers.get("x-real-ip");
+  return real ?? undefined;
 }
 
 // ─── Helpers internes ────────────────────────────────────────────────────────
@@ -224,6 +237,218 @@ async function markFormSubmissionStatus(
       ecError: error?.slice(0, 1000) ?? null,
     },
   });
+}
+
+// ─── LinkedIn CAPI : auto-résolution conversion rule + stream ────────────────
+
+type LinkedInResolved = {
+  account: AdAccountInfo;
+  conversionUrn: string;
+  adAccountDbId: string;
+};
+
+/** Résout (ou crée) la conversion rule LinkedIn appropriée pour un user + type.
+ *  Cache l'URN dans AdAccount.meta.linkedinConversionRules[type] pour réutilisation.
+ *  Retourne null si pas d'AdAccount LinkedIn CONNECTED. */
+async function resolveLinkedInAccount(
+  userId: string,
+  conversionType: LinkedInConversionType,
+): Promise<LinkedInResolved | null> {
+  const adAccount = await prisma.adAccount.findFirst({
+    where: { userId, platform: "LINKEDIN_ADS", status: "CONNECTED" },
+    select: {
+      id: true,
+      externalId: true,
+      accessToken: true,
+      refreshToken: true,
+      tokenExpiresAt: true,
+      meta: true,
+    },
+  });
+  if (!adAccount) return null;
+
+  const accountInfo: AdAccountInfo = {
+    externalId: adAccount.externalId,
+    accessToken: decrypt(adAccount.accessToken),
+    refreshToken: adAccount.refreshToken ? decrypt(adAccount.refreshToken) : undefined,
+    tokenExpiresAt: adAccount.tokenExpiresAt ?? undefined,
+    meta: (adAccount.meta as Record<string, unknown>) ?? {},
+  };
+
+  // Cache local : meta.linkedinConversionRules = { LEAD: "urn:lla:...", PURCHASE: "urn:lla:..." }
+  const meta = (adAccount.meta as Record<string, unknown>) ?? {};
+  const cached = (meta.linkedinConversionRules as Record<string, string> | undefined) ?? {};
+  const cachedUrn = cached[conversionType];
+  if (cachedUrn) {
+    return { account: accountInfo, conversionUrn: cachedUrn, adAccountDbId: adAccount.id };
+  }
+
+  // Auto-création : 1 rule par type, associée à toutes les campagnes actives
+  try {
+    const rule = await createConversionRule(accountInfo, {
+      name: `WanaPush ${conversionType} (auto)`,
+      accountUrn: adAccount.externalId, // déjà au format urn:li:sponsoredAccount:...
+      type: conversionType,
+      postClickAttributionWindowSize: 90,
+      viewThroughAttributionWindowSize: 30,
+      autoAssociateAllCampaigns: true,
+    });
+    // Met à jour le cache dans AdAccount.meta
+    const newCached = { ...cached, [conversionType]: rule.urn };
+    await prisma.adAccount.update({
+      where: { id: adAccount.id },
+      data: { meta: { ...meta, linkedinConversionRules: newCached } as never },
+    });
+    return { account: accountInfo, conversionUrn: rule.urn, adAccountDbId: adAccount.id };
+  } catch (e) {
+    console.warn(`[ec-pipeline] LinkedIn createConversionRule failed: ${e instanceof Error ? e.message : e}`);
+    return null;
+  }
+}
+
+async function markFormSubmissionLinkedIn(
+  id: string,
+  status: "SENT" | "FAILED" | "SKIPPED",
+  error?: string,
+): Promise<void> {
+  await prisma.formSubmission.update({
+    where: { id },
+    data: {
+      liStatus: status,
+      liSentAt: status === "SENT" ? new Date() : null,
+      liError: error?.slice(0, 1000) ?? null,
+    },
+  });
+}
+
+/** Trigger LinkedIn conversion pour une FormSubmission (parallèle à Google EC).
+ *  Fire-and-forget — met à jour FormSubmission.liStatus à la fin. */
+export async function triggerLinkedInLeadForFormSubmission(
+  submissionId: string,
+): Promise<void> {
+  const submission = await prisma.formSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      siteSlug: true,
+      email: true,
+      data: true,
+      liFatId: true,
+      createdAt: true,
+    },
+  });
+  if (!submission) return;
+
+  // Pas de match identifier suffisant → skip (LinkedIn rejette sans SHA256_EMAIL/liFatId/IP/name)
+  if (!submission.email && !submission.liFatId) {
+    await markFormSubmissionLinkedIn(submissionId, "SKIPPED", "Ni email ni liFatId");
+    return;
+  }
+
+  const userId = await resolveUserIdFromSiteSlug(submission.siteSlug);
+  if (!userId) {
+    await markFormSubmissionLinkedIn(submissionId, "SKIPPED", `siteSlug "${submission.siteSlug}" sans user résolu`);
+    return;
+  }
+
+  const resolved = await resolveLinkedInAccount(userId, "LEAD");
+  if (!resolved) {
+    await markFormSubmissionLinkedIn(submissionId, "SKIPPED", "Pas d'AdAccount LinkedIn CONNECTED ou création rule échouée");
+    return;
+  }
+
+  const data = (submission.data as Record<string, unknown>) ?? {};
+  const firstName = (data.firstName ?? data.first_name ?? data.prenom) as string | undefined;
+  const lastName = (data.lastName ?? data.last_name ?? data.nom) as string | undefined;
+  const companyName = (data.company ?? data.companyName ?? data.entreprise) as string | undefined;
+  const title = (data.title ?? data.jobTitle ?? data.poste) as string | undefined;
+
+  try {
+    const result = await streamConversionEvent(resolved.account, resolved.conversionUrn, {
+      conversionHappenedAt: submission.createdAt.getTime(),
+      eventId: `form_${submission.id}`,
+      user: {
+        email: submission.email ?? undefined,
+        liFatId: submission.liFatId ?? undefined,
+        firstName: typeof firstName === "string" ? firstName : undefined,
+        lastName: typeof lastName === "string" ? lastName : undefined,
+        companyName: typeof companyName === "string" ? companyName : undefined,
+        title: typeof title === "string" ? title : undefined,
+        externalId: submission.id,
+      },
+    });
+    if (result.ok) {
+      await markFormSubmissionLinkedIn(submissionId, "SENT");
+    } else {
+      await markFormSubmissionLinkedIn(submissionId, "FAILED", result.error);
+    }
+  } catch (e) {
+    await markFormSubmissionLinkedIn(submissionId, "FAILED", (e instanceof Error ? e.message : String(e)).slice(0, 500));
+  }
+}
+
+async function markOrderLinkedIn(
+  id: string,
+  status: "SENT" | "FAILED" | "SKIPPED",
+  error?: string,
+): Promise<void> {
+  await prisma.order.update({
+    where: { id },
+    data: {
+      liStatus: status,
+      liSentAt: status === "SENT" ? new Date() : null,
+      liError: error?.slice(0, 1000) ?? null,
+    },
+  });
+}
+
+/** Trigger LinkedIn conversion pour une Order Stripe payée. Fire-and-forget. */
+export async function triggerLinkedInSaleForOrder(orderId: string): Promise<void> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      customerEmail: true,
+      liFatId: true,
+      total: true,
+      currency: true,
+      paidAt: true,
+      createdAt: true,
+      shop: { select: { userId: true } },
+    },
+  });
+  if (!order) return;
+
+  if (!order.customerEmail && !order.liFatId) {
+    await markOrderLinkedIn(orderId, "SKIPPED", "Ni customerEmail ni liFatId");
+    return;
+  }
+
+  const resolved = await resolveLinkedInAccount(order.shop.userId, "PURCHASE");
+  if (!resolved) {
+    await markOrderLinkedIn(orderId, "SKIPPED", "Pas d'AdAccount LinkedIn CONNECTED ou création rule échouée");
+    return;
+  }
+
+  try {
+    const result = await streamConversionEvent(resolved.account, resolved.conversionUrn, {
+      conversionHappenedAt: (order.paidAt ?? order.createdAt).getTime(),
+      eventId: `order_${order.id}`,
+      value: { amount: Number(order.total), currencyCode: order.currency },
+      user: {
+        email: order.customerEmail || undefined,
+        liFatId: order.liFatId ?? undefined,
+        externalId: order.id,
+      },
+    });
+    if (result.ok) {
+      await markOrderLinkedIn(orderId, "SENT");
+    } else {
+      await markOrderLinkedIn(orderId, "FAILED", result.error);
+    }
+  } catch (e) {
+    await markOrderLinkedIn(orderId, "FAILED", (e instanceof Error ? e.message : String(e)).slice(0, 500));
+  }
 }
 
 // ─── Trigger pour Sale (Order Stripe payé) ──────────────────────────────────

@@ -182,12 +182,14 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
     customerId = customer.id;
   }
 
-  // Click identifiers Google Ads propagés depuis le checkout via session.metadata
-  // → stockés sur l'Order pour upload Enhanced Conversions après commit
+  // Click identifiers Google Ads + liFatId LinkedIn propagés depuis le checkout
+  // via session.metadata → stockés sur l'Order pour upload Enhanced Conversions
+  // (Google) + Conversions API (LinkedIn) après commit
   const sessionMeta = (session.metadata ?? {}) as Record<string, string>;
   const gclid = sessionMeta.gclid?.slice(0, 255) || null;
   const gbraid = sessionMeta.gbraid?.slice(0, 255) || null;
   const wbraid = sessionMeta.wbraid?.slice(0, 255) || null;
+  const liFatId = sessionMeta.liFatId?.slice(0, 255) || null;
 
   const order = await prisma.order.create({
     data: {
@@ -219,7 +221,9 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
       gclid,
       gbraid,
       wbraid,
+      liFatId,
       ecStatus: gclid || gbraid || wbraid ? "PENDING" : null,
+      liStatus: liFatId || customerEmail ? "PENDING" : null,
       items: {
         create: cart.items.map((it) => ({
           variantId: it.variantId,
@@ -236,12 +240,18 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
     },
   });
 
-  // Fire-and-forget : upload Enhanced Conversion vers Google Ads Data Manager API
-  // si un click identifier OU un email est présent. Pas bloquant pour le webhook.
+  // Fire-and-forget : upload conversions vers Google (Data Manager API) +
+  // LinkedIn (Conversions API) en parallèle. Pas bloquant pour le webhook.
   if (gclid || gbraid || wbraid || customerEmail) {
     const { triggerSaleConversionForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
     void triggerSaleConversionForOrder(order.id).catch((e) => {
-      console.warn(`[stripe-webhook] EC trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
+      console.warn(`[stripe-webhook] Google EC trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
+    });
+  }
+  if (liFatId || customerEmail) {
+    const { triggerLinkedInSaleForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
+    void triggerLinkedInSaleForOrder(order.id).catch((e) => {
+      console.warn(`[stripe-webhook] LinkedIn CAPI trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
     });
   }
 

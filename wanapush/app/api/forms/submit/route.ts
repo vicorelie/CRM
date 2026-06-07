@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import {
   parseClickIdsFromUrl,
   triggerLeadConversionForFormSubmission,
+  triggerLinkedInLeadForFormSubmission,
 } from "@/lib/ads/enhanced-conversions-pipeline";
 
 export const runtime = "nodejs";
@@ -16,6 +17,8 @@ const SubmitSchema = z.object({
   type: z.enum(["contact", "newsletter"]),
   data: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
   pageUrl: z.string().optional(),
+  /** LinkedIn First-Party Ads Tracking UUID (cookie `li_fat_id` du LinkedIn Insight Tag) */
+  liFatId: z.string().max(255).optional(),
   // Honeypot — un bot remplit ce champ caché, on rejette silencieusement
   hp: z.string().optional(),
 });
@@ -69,6 +72,8 @@ export async function POST(req: Request) {
     // (le lien Google Ad → landing page conserve ?gclid=... dans l'URL).
     // Stockés en DB pour upload Enhanced Conversions via Data Manager API.
     const clickIds = parseClickIdsFromUrl(payload.pageUrl);
+    // liFatId : cookie LinkedIn Insight Tag (déposé sur landing si LinkedIn Tag installé)
+    const liFatId = payload.liFatId?.slice(0, 255) || null;
 
     const submission = await prisma.formSubmission.create({
       data: {
@@ -81,17 +86,24 @@ export async function POST(req: Request) {
         gclid: clickIds.gclid ?? null,
         gbraid: clickIds.gbraid ?? null,
         wbraid: clickIds.wbraid ?? null,
+        liFatId,
         ecStatus:
           clickIds.gclid || clickIds.gbraid || clickIds.wbraid ? "PENDING" : null,
+        liStatus: liFatId || email ? "PENDING" : null,
       },
     });
 
-    // Fire-and-forget : upload Enhanced Conversion vers Google Ads si gclid présent
-    // + AdAccount Google connecté + ConversionAction LEAD. Le résultat met à jour
-    // FormSubmission.ecStatus (SENT/FAILED/SKIPPED) — pas bloquant pour la réponse.
+    // Fire-and-forget : Google Enhanced Conversions + LinkedIn Conversions API
+    // en parallèle. Chacun gère son propre AdAccount + sa propre rule.
+    // Le résultat met à jour FormSubmission.{ec,li}Status (SENT/FAILED/SKIPPED).
     if (clickIds.gclid || clickIds.gbraid || clickIds.wbraid || email) {
       void triggerLeadConversionForFormSubmission(submission.id).catch((e) => {
-        console.warn(`[forms/submit] EC trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
+        console.warn(`[forms/submit] Google EC trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
+      });
+    }
+    if (liFatId || email) {
+      void triggerLinkedInLeadForFormSubmission(submission.id).catch((e) => {
+        console.warn(`[forms/submit] LinkedIn CAPI trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
       });
     }
 
