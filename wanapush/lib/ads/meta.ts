@@ -476,38 +476,102 @@ async function pushCampaign(
     }
 
     // 1) Campaign — Outcomes (v22+) avec CBO (daily_budget au niveau Campaign, obligatoire 2025+)
+    //
+    // ⚠️ Marketing API v25 (fév 2026) : structure unifiée Advantage+.
+    // - smart_promotion_type SUPPRIMÉ depuis v25 (était utilisé pour signaler ASC/AAC en v24)
+    // - existing_customer_budget_percentage SUPPRIMÉ (remplacé par 2 AdSets + Custom Audiences)
+    // - NOUVEAU : advantage_state writable au niveau Campaign :
+    //     "ADVANTAGE_PLUS_SALES" pour OUTCOME_SALES (e-commerce / ASC)
+    //     "ADVANTAGE_PLUS_LEADS" pour OUTCOME_LEADS (lead gen / AAC)
+    //     omis pour AWARENESS/TRAFFIC (campagnes classiques)
+    // - Advantage+ Audience : `targeting_automation.advantage_audience: 1` au AdSet (déjà fait)
+    // - Advantage+ Placements : NE PAS envoyer `publisher_platforms` au AdSet (implicite)
+    // - Advantage+ Creative : `degrees_of_freedom_spec` au AdCreative (déjà fait)
+    // - Advantage+ Budget : `bid_strategy` + `daily_budget` au niveau Campaign (déjà fait, CBO)
+    //
+    // Impact mesuré (Meta officiel + études 2026) : +16-22% ROAS vs campagnes Standard.
     const objective = mapObjective(input.campaignType);
-    let campaign: MetaResource;
-    try {
-      campaign = await metaPost<MetaResource>(account, `${accountId}/campaigns`, {
+
+    // Mapping objective → advantage_state (Advantage+ unifié v25)
+    const advantageState =
+      objective === "OUTCOME_SALES" ? "ADVANTAGE_PLUS_SALES"
+        : objective === "OUTCOME_LEADS" ? "ADVANTAGE_PLUS_LEADS"
+        : null;
+
+    const buildCampaignBody = (
+      obj: string,
+      withAdvantageState: boolean,
+    ): Record<string, unknown> => {
+      const body: Record<string, unknown> = {
         name: input.name,
-        objective,
+        objective: obj,
         status: "PAUSED",
         special_ad_categories: ["NONE"],
         buying_type: "AUCTION",
         // CBO 2025+ : daily_budget en cents + bid_strategy au niveau Campaign
         daily_budget: Math.round(input.dailyBudget * 100),
         bid_strategy: "LOWEST_COST_WITHOUT_CAP",
-      });
+      };
+      if (withAdvantageState && advantageState) {
+        body.advantage_state = advantageState;
+      }
+      return body;
+    };
+
+    let campaign: MetaResource;
+    try {
+      campaign = await metaPost<MetaResource>(
+        account,
+        `${accountId}/campaigns`,
+        buildCampaignBody(objective, true),
+      );
+      if (advantageState) {
+        resources.advantageState = advantageState;
+      }
     } catch (e1) {
       const msg1 = e1 instanceof Error ? e1.message : String(e1);
       console.error(`[meta.pushCampaign] Erreur campaign Outcomes : ${msg1}`);
 
-      // Si ce n'est pas un problème d'objective rejeté, on remonte
-      const isObjectiveRejected = msg1.includes("Invalid Objective") || msg1.includes("objective is invalid");
-      if (!isObjectiveRejected) throw e1;
+      // Si Meta refuse advantage_state (compte trop neuf, pas éligible ASC/AAC, etc.),
+      // retry sans pour rester fonctionnel. Le compte garde Advantage+ Audience/Creative
+      // au niveau AdSet (next steps) — la campagne tourne juste sans le label unifié ASC/AAC.
+      const isAdvantageStateRejected =
+        advantageState !== null &&
+        (msg1.includes("advantage_state") ||
+          msg1.includes("ADVANTAGE_PLUS") ||
+          msg1.includes("not eligible"));
+      if (isAdvantageStateRejected) {
+        console.log(`[meta.pushCampaign] advantage_state=${advantageState} refusé → retry sans ce flag`);
+        try {
+          campaign = await metaPost<MetaResource>(
+            account,
+            `${accountId}/campaigns`,
+            buildCampaignBody(objective, false),
+          );
+        } catch (e2) {
+          const msg2 = e2 instanceof Error ? e2.message : String(e2);
+          const isObjectiveRejected = msg2.includes("Invalid Objective") || msg2.includes("objective is invalid");
+          if (!isObjectiveRejected) throw e2;
+          console.log(`[meta.pushCampaign] Outcome ${objective} refusé → fallback legacy`);
+          const legacyObjective = mapLegacyObjective(input.campaignType);
+          campaign = await metaPost<MetaResource>(
+            account,
+            `${accountId}/campaigns`,
+            buildCampaignBody(legacyObjective, false),
+          );
+        }
+      } else {
+        const isObjectiveRejected = msg1.includes("Invalid Objective") || msg1.includes("objective is invalid");
+        if (!isObjectiveRejected) throw e1;
 
-      // Fallback rare : compte legacy qui refuse Outcomes (peu probable en 2026 mais on garde)
-      console.log(`[meta.pushCampaign] Outcome ${objective} refusé → fallback legacy`);
-      const legacyObjective = mapLegacyObjective(input.campaignType);
-      campaign = await metaPost<MetaResource>(account, `${accountId}/campaigns`, {
-        name: input.name,
-        objective: legacyObjective,
-        status: "PAUSED",
-        special_ad_categories: ["NONE"],
-        buying_type: "AUCTION",
-        daily_budget: Math.round(input.dailyBudget * 100),
-      });
+        console.log(`[meta.pushCampaign] Outcome ${objective} refusé → fallback legacy`);
+        const legacyObjective = mapLegacyObjective(input.campaignType);
+        campaign = await metaPost<MetaResource>(
+          account,
+          `${accountId}/campaigns`,
+          buildCampaignBody(legacyObjective, false),
+        );
+      }
     }
     resources.campaign = campaign.id;
 

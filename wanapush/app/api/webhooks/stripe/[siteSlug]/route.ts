@@ -182,6 +182,13 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
     customerId = customer.id;
   }
 
+  // Click identifiers Google Ads propagés depuis le checkout via session.metadata
+  // → stockés sur l'Order pour upload Enhanced Conversions après commit
+  const sessionMeta = (session.metadata ?? {}) as Record<string, string>;
+  const gclid = sessionMeta.gclid?.slice(0, 255) || null;
+  const gbraid = sessionMeta.gbraid?.slice(0, 255) || null;
+  const wbraid = sessionMeta.wbraid?.slice(0, 255) || null;
+
   const order = await prisma.order.create({
     data: {
       shopId,
@@ -209,6 +216,10 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
           ? null
           : session.shipping_cost.shipping_rate.display_name ?? null
         : null,
+      gclid,
+      gbraid,
+      wbraid,
+      ecStatus: gclid || gbraid || wbraid ? "PENDING" : null,
       items: {
         create: cart.items.map((it) => ({
           variantId: it.variantId,
@@ -224,6 +235,15 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
       },
     },
   });
+
+  // Fire-and-forget : upload Enhanced Conversion vers Google Ads Data Manager API
+  // si un click identifier OU un email est présent. Pas bloquant pour le webhook.
+  if (gclid || gbraid || wbraid || customerEmail) {
+    const { triggerSaleConversionForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
+    void triggerSaleConversionForOrder(order.id).catch((e) => {
+      console.warn(`[stripe-webhook] EC trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
+    });
+  }
 
   // Marque le panier COMPLETED + vide pour repartir d'un panier vide
   await prisma.cart.update({

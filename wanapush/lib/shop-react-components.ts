@@ -435,6 +435,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Capture Google click identifiers depuis l'URL au premier load et persiste
+  // 90 jours dans des cookies first-party (fenêtre d'attribution Google Ads pour
+  // offline conversions). Permet un suivi multi-page : l'user peut arriver depuis
+  // un ad sur une catégorie, naviguer, puis acheter — le gclid suit.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const params: Array<["gclid" | "gbraid" | "wbraid", string]> = [];
+    const g = url.searchParams.get("gclid"); if (g) params.push(["gclid", g.slice(0, 255)]);
+    const gb = url.searchParams.get("gbraid"); if (gb) params.push(["gbraid", gb.slice(0, 255)]);
+    const wb = url.searchParams.get("wbraid"); if (wb) params.push(["wbraid", wb.slice(0, 255)]);
+    if (params.length === 0) return;
+    const maxAge = 90 * 24 * 60 * 60; // 90 jours
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    for (const [k, v] of params) {
+      document.cookie = "wp_" + k + "=" + encodeURIComponent(v) + "; max-age=" + maxAge + "; path=/; SameSite=Lax" + secure;
+    }
+  }, []);
+
   const addToCart = useCallback(async (variantId: string, quantity = 1) => {
     try {
       const res = await fetch(API_BASE + "/cart", {
@@ -1412,10 +1431,30 @@ export default function CartDrawer() {
     setCheckoutLoading(true);
     setCheckoutError(null);
     try {
+      // Capture Google click identifiers depuis URL OU cookie wp_gclid (60-90j).
+      // L'utilisateur peut être arrivé sur une page produit puis cliqué sur le panier
+      // depuis une autre page — d'où la persistance cookie.
+      const url = new URL(window.location.href);
+      const cookies = Object.fromEntries(
+        document.cookie.split("; ").filter(Boolean).map((c) => {
+          const idx = c.indexOf("=");
+          return [c.slice(0, idx), decodeURIComponent(c.slice(idx + 1))];
+        }),
+      );
+      const gclid = url.searchParams.get("gclid") ?? cookies.wp_gclid;
+      const gbraid = url.searchParams.get("gbraid") ?? cookies.wp_gbraid;
+      const wbraid = url.searchParams.get("wbraid") ?? cookies.wp_wbraid;
+
       const res = await fetch(API_BASE + "/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: getSessionId(), email: email || undefined }),
+        body: JSON.stringify({
+          sessionId: getSessionId(),
+          email: email || undefined,
+          gclid: gclid || undefined,
+          gbraid: gbraid || undefined,
+          wbraid: wbraid || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {

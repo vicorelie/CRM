@@ -3,6 +3,10 @@ import { revalidatePath } from "next/cache";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import {
+  parseClickIdsFromUrl,
+  triggerLeadConversionForFormSubmission,
+} from "@/lib/ads/enhanced-conversions-pipeline";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -61,7 +65,12 @@ export async function POST(req: Request) {
 
     const email = extractEmail(payload.data);
 
-    await prisma.formSubmission.create({
+    // Parse Google click identifiers depuis l'URL de la page d'origine
+    // (le lien Google Ad → landing page conserve ?gclid=... dans l'URL).
+    // Stockés en DB pour upload Enhanced Conversions via Data Manager API.
+    const clickIds = parseClickIdsFromUrl(payload.pageUrl);
+
+    const submission = await prisma.formSubmission.create({
       data: {
         siteSlug: payload.siteSlug,
         type: payload.type,
@@ -69,8 +78,22 @@ export async function POST(req: Request) {
         email,
         pageUrl: payload.pageUrl?.slice(0, 500) ?? null,
         ipHash,
+        gclid: clickIds.gclid ?? null,
+        gbraid: clickIds.gbraid ?? null,
+        wbraid: clickIds.wbraid ?? null,
+        ecStatus:
+          clickIds.gclid || clickIds.gbraid || clickIds.wbraid ? "PENDING" : null,
       },
     });
+
+    // Fire-and-forget : upload Enhanced Conversion vers Google Ads si gclid présent
+    // + AdAccount Google connecté + ConversionAction LEAD. Le résultat met à jour
+    // FormSubmission.ecStatus (SENT/FAILED/SKIPPED) — pas bloquant pour la réponse.
+    if (clickIds.gclid || clickIds.gbraid || clickIds.wbraid || email) {
+      void triggerLeadConversionForFormSubmission(submission.id).catch((e) => {
+        console.warn(`[forms/submit] EC trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
+      });
+    }
 
     revalidatePath("/leads");
     return NextResponse.json({ ok: true });

@@ -209,9 +209,28 @@ Seuils (Meta Andromeda 2026 — dégradation en 5-7j, plus rapide qu'avant) :
 
 ### Advantage+ (best practices 2026)
 
-- **Advantage+ Audience** (`targeting_automation: { advantage_audience: 1 }`) : -32% CPA vs targeting manuel. Activé par défaut. Les critères âge/genre/pays restent des **suggestions** (Meta peut dépasser).
-- **Advantage+ Creative** (`use_page_actor_override: true`) : +14% CPR moyen. Désactivable via `input.advantageCreative = false`.
-- **Advantage+ Placements** : non encore implémenté (Meta gère déjà via `publisher_platforms` absent = tout).
+- **Advantage+ Audience** (`targeting_automation: { advantage_audience: 1 }` au AdSet) : -32% CPA vs targeting manuel. Activé par défaut. Les critères âge/genre/pays restent des **suggestions** (Meta peut dépasser).
+- **Advantage+ Creative** (`degrees_of_freedom_spec` au AdCreative) : +14% CPR moyen. Désactivable via `input.advantageCreative = false`. Fallback automatique sans ce flag si Meta refuse.
+- **Advantage+ Placements** : implicite — on N'ENVOIE PAS `publisher_platforms` au AdSet (= Meta utilise toutes les surfaces). Restriction de placement casse Advantage+ et coûte en performance.
+- **Advantage+ Budget** : CBO via `daily_budget` + `bid_strategy: "LOWEST_COST_WITHOUT_CAP"` au niveau Campaign (déjà en place).
+
+### Advantage+ unifié v25 (Fév 2026 — campagnes ASC/AAC)
+
+> **Breaking change** : depuis Marketing API v25.0, le flag `smart_promotion_type` (qui servait à créer ASC/AAC en v24) est **supprimé en write**. La nouvelle approche : passer `advantage_state` au niveau Campaign avec les valeurs `ADVANTAGE_PLUS_SALES` (e-commerce/ASC) ou `ADVANTAGE_PLUS_LEADS` (lead gen/AAC). Le champ `existing_customer_budget_percentage` est aussi supprimé (utiliser 2 AdSets avec Custom Audiences).
+
+**Implémentation `lib/ads/meta.ts`** :
+- Mapping `objective → advantageState` :
+  - `OUTCOME_SALES` → `ADVANTAGE_PLUS_SALES`
+  - `OUTCOME_LEADS` → `ADVANTAGE_PLUS_LEADS`
+  - autres → omis (campagne classique)
+- Helper interne `buildCampaignBody(objective, withAdvantageState)` réutilisé pour la création + les retries
+- Cascade try/catch :
+  1. Tentative avec `advantage_state`
+  2. Si refusé (compte non éligible ASC/AAC, message contenant `advantage_state` ou `ADVANTAGE_PLUS` ou `not eligible`) → retry sans le flag
+  3. Si Outcome rejeté → fallback `mapLegacyObjective` (rare, comptes legacy)
+- Sur succès avec `advantage_state` : stocké dans `resources.advantageState`
+
+**Impact mesuré** (Meta officiel + études 2026) : **+16-22% ROAS** vs campagnes Standard quand CAPI bien configuré (ce qui est notre cas — module `lib/capi`).
 
 ## 🟢 Google Ads — API v24
 
@@ -353,6 +372,37 @@ Authorization: Bearer <accessToken (scope datamanager)>
 - `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT` → user n'a pas le scope `datamanager`, déclencher re-OAuth
 - `400 INVALID_ARGUMENT` → payload mal formé (timestamp futur, PII non hashée, etc.)
 - `404 NOT_FOUND` → `conversionActionId` n'existe pas sur ce customerId
+
+### 🤖 Pipeline auto-pilote Enhanced Conversions
+
+Module : `lib/ads/enhanced-conversions-pipeline.ts`
+
+**Fonctions exportées** :
+- `parseClickIdsFromUrl(url)` → `{ gclid?, gbraid?, wbraid? }` — parse les click identifiers depuis une URL
+- `triggerLeadConversionForFormSubmission(submissionId)` — fire-and-forget, upload Lead
+- `triggerSaleConversionForOrder(orderId)` — fire-and-forget, upload Sale
+
+**Résolution auto AdAccount + ConversionAction** :
+1. Trouve l'AdAccount Google CONNECTED du user (via `userId` résolu depuis `siteSlug` → `GeneratedSite` ou `Shop`)
+2. Liste les `ConversionActions` du compte
+3. Prend la 1ère ENABLED de la category demandée (LEAD pour form, PURCHASE pour Order)
+4. Si manque AdAccount OU ConversionAction → `ecStatus: "SKIPPED"`
+
+**Capture gclid côté landing/storefront** :
+- **Lead forms** : `parseClickIdsFromUrl(payload.pageUrl)` dans `POST /api/forms/submit`. L'URL `pageUrl` envoyée par la landing contient déjà `?gclid=...` (Google auto-tagging).
+- **Storefront e-commerce** : `CartProvider` (dans `cartContextFile()`) capture URL params au mount et écrit cookies `wp_gclid` / `wp_gbraid` / `wp_wbraid` (max-age 90 jours, SameSite=Lax, Secure HTTPS). `CartDrawer.startCheckout()` lit URL params ET cookies, envoie au `/api/storefront/[slug]/checkout` qui propage vers Stripe Checkout Session `metadata`.
+
+**Schéma DB** (migration `add_click_ids_enhanced_conversions`, 2026-06-07) :
+- `FormSubmission.{gclid, gbraid, wbraid, ecStatus, ecSentAt, ecError}`
+- `Order.{gclid, gbraid, wbraid, ecStatus, ecSentAt, ecError}`
+- Enum `EnhancedConversionStatus` : `PENDING | SENT | FAILED | SKIPPED`
+
+**Hooks** :
+- `POST /api/forms/submit` : parse gclid de `pageUrl`, save, déclenche `triggerLeadConversionForFormSubmission` async
+- `POST /api/webhooks/stripe/[siteSlug]` : lit `session.metadata.gclid/gbraid/wbraid`, save sur Order, déclenche `triggerSaleConversionForOrder` async après `financialStatus: "PAID"`
+- `POST /api/storefront/[siteSlug]/checkout` : accepte `gclid/gbraid/wbraid` dans le body, les propage à `stripe.checkout.sessions.create` via `metadata`
+
+**Sans branchement** : les helpers retournent `SKIPPED` proprement (pas d'erreur). Le système est dégradé gracieusement si le user n'a pas connecté de compte Google Ads.
 
 ### Points critiques Google Ads
 

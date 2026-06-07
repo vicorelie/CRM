@@ -12,6 +12,11 @@ export const runtime = "nodejs";
 const inputSchema = z.object({
   sessionId: z.string().trim().min(1).max(128),
   email: z.email().trim().toLowerCase().max(255).optional(),
+  // Click identifiers Google Ads — captés côté storefront depuis l'URL de la
+  // landing page (?gclid=…) et propagés au checkout pour Enhanced Conversions.
+  gclid: z.string().trim().max(255).optional(),
+  gbraid: z.string().trim().max(255).optional(),
+  wbraid: z.string().trim().max(255).optional(),
 });
 
 type Params = { params: Promise<{ siteSlug: string }> };
@@ -151,6 +156,11 @@ export async function POST(req: Request, { params }: Params) {
         shopId: shop.id,
         siteSlug,
         discountCode: cart.discountCode ?? "",
+        // Click identifiers propagés au webhook → stockés sur Order pour
+        // l'upload Enhanced Conversions Google Ads après paiement.
+        gclid: body.gclid ?? "",
+        gbraid: body.gbraid ?? "",
+        wbraid: body.wbraid ?? "",
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
