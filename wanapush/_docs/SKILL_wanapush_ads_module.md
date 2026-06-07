@@ -237,6 +237,37 @@ Flow :
 - Assets : headlines (≥3, ≤30 chars), descriptions (≥2, ≤90 chars), finalUrl obligatoire
 - `selective_optimization` si `conversionActionIds` fournis
 
+### AI Max for Search (`input.enableAiMax`)
+
+- Active l'IA Google qui génère/teste automatiquement variantes de titres, descriptions, URLs
+- Activé après création campagne via `aiMaxSetting.enableAiMax: true` + `updateMask: "aiMaxSetting.enableAiMax"`
+- **Coexiste avec RSA** (compatible, n'écrase pas les assets manuels)
+- Remplace progressivement Dynamic Search Ads (DSA sunset sept 2026)
+- **Best practice 2026** : activer dès qu'on a >100 conversions/mois (l'IA a besoin d'historique)
+- Non-bloquant : si AI Max échoue (compte trop neuf, feature non disponible), campagne reste fonctionnelle
+
+### Demand Gen (`pushDemandGenCampaign`)
+
+Successeur de Discovery Ads (sunset déc 2026). Couvre YouTube Shorts/in-stream, Google Discover, Gmail.
+
+Flow :
+1. Budget non-shared (`explicitlyShared: false`) — Demand Gen rejette les budgets partagés
+2. Campaign `advertisingChannelType: "DEMAND_GEN"` + bidding (MAXIMIZE_CONVERSIONS par défaut)
+3. CampaignCriterion geo (si `countries` fournis)
+4. AdGroup `type: "DEMAND_GEN_MULTI_ASSET_AD"` + `demandGenAdGroupSettings.channelControls.channelStrategy: "ALL_CHANNELS"`
+5. **Best-effort** : upload Image Assets (MARKETING, SQUARE, LOGO) puis création `demandGenMultiAssetAd` si assets minimum réunis
+
+Assets minimum pour créer l'annonce automatiquement :
+- 3+ titres ≤ 40 chars
+- 2+ descriptions ≤ 90 chars
+- 1 image MARKETING (1.91:1) + 1 SQUARE (1:1)
+- LOGO optionnel
+- `finalUrl` obligatoire
+
+Sinon : campagne créée PAUSED sans annonce (`resources.adHint` indique ce qui manque).
+
+Branche déclenchée par `campaignType === "DEMAND_GEN"` (ou `"DISCOVERY"` pour rétrocompat).
+
 ### Conversion Tracking
 
 ```ts
@@ -305,11 +336,34 @@ await batchTrackTikTokEvents({ pixelCode, accessToken, events: [...] });
 1. POST /campaign/create/  → objective_type, BUDGET_MODE_DAY, status=DISABLE
 2. resolveLocationIds()    → GET /tool/region/ pour mapper ISO → TikTok location_id
 3. POST /adgroup/create/   → placement AUTOMATIC, optimization_goal, billing_event
-4. uploadImageFromUrl()    → POST /file/image/ad/upload/ avec upload_type=UPLOAD_BY_URL
-5. POST /ad/create/        → SINGLE_IMAGE, ad_text, call_to_action, landing_page_url, status=DISABLE
+4a. uploadImageFromUrl()   → POST /file/image/ad/upload/ avec upload_type=UPLOAD_BY_URL (si input.imageUrl)
+4b. uploadVideoFromUrl()   → POST /file/video/ad/upload/ avec upload_type=UPLOAD_BY_URL (si input.videoUrl)
+5. POST /ad/create/        → ad_format auto-détecté : SINGLE_VIDEO si videoId, sinon SINGLE_IMAGE si imageId, sinon texte
+                              ad_text, call_to_action, landing_page_url, status=DISABLE
 ```
 
-Tout est créé en **DISABLE** (TikTok = PAUSED). L'image upload est facultatif (fallback annonce sans visuel si échec).
+Tout est créé en **DISABLE** (TikTok = PAUSED). Image + vidéo sont best-effort (annonce texte seule si échec des deux).
+
+Pour SINGLE_VIDEO : `image_ids` reste optionnel — TikTok extrait auto un frame en miniature, mais on peut passer un `imageId` pour surcharger.
+
+**Vidéo specs** : 9:16 (1080×1920 recommandé), 5-60s, MP4/MOV, max 500 MB.
+
+### Push flow Smart+ (tiktok.ts `pushSmartPlusCampaign`)
+
+Smart+ = équivalent TikTok du Meta Advantage+ ou Google PMax. L'IA TikTok gère ciblage + créatifs + bid automatiquement.
+
+Branche déclenchée par `campaignType` commençant par `"SMART_PLUS"` (ex: `"SMART_PLUS_CONVERSIONS"`).
+
+```
+1. POST /smart_plus/campaign/create/  → request_id (UUID) OBLIGATOIRE pour idempotence
+2. POST /smart_plus/adgroup/create/   → targeting_spec.location uniquement, le reste géré par l'IA
+3. uploadImage / uploadVideo          → best-effort (Smart+ peut accepter plusieurs créatifs)
+4. POST /smart_plus/ad/create/        → creative_list[] (A/B testing géré par l'IA)
+```
+
+**Critique** : utiliser `/smart_plus/` namespace dédié — l'ancien flag `is_smart_performance_campaign` sur l'endpoint standard a été déprécié 2026-03-31.
+
+`bid_type: BID_TYPE_NO_BID` recommandé en Smart+ (laisser l'IA gérer le bid).
 
 ### Objectifs → billing_event
 

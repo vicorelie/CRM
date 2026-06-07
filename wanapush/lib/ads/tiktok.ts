@@ -5,6 +5,7 @@
 // - Créer une app sur https://business-api.tiktok.com/portal
 // - Demander Standard API Approval (l'app passe en Sandbox tant que pas approuvée)
 // - Scopes : ads management, reporting
+import { randomUUID } from "crypto";
 import type {
   AdAccountInfo,
   AdsConnector,
@@ -342,13 +343,60 @@ async function uploadImageFromUrl(
   return j.data.image_id;
 }
 
+// ─── Video upload (URL → TikTok Creative Library) ────────────────────────────
+// TikTok exige une vidéo verticale 9:16 (1080×1920 recommandé), 5-60s,
+// max 500 MB, MP4/MOV. La miniature `poster` est extraite automatiquement
+// mais peut être surchargée via `image_ids` côté Ad.
+async function uploadVideoFromUrl(
+  account: AdAccountInfo,
+  advertiserId: string,
+  videoUrl: string,
+): Promise<string> {
+  const r = await fetch(`${API}/file/video/ad/upload/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Token": account.accessToken,
+    },
+    body: JSON.stringify({
+      advertiser_id: advertiserId,
+      upload_type: "UPLOAD_BY_URL",
+      video_url: videoUrl,
+    }),
+  });
+  const j = (await r.json()) as {
+    code?: number;
+    message?: string;
+    data?: { video_id?: string } | Array<{ video_id?: string }>;
+  };
+  if (j.code !== 0) {
+    throw new Error(`TikTok video upload error ${j.code}: ${j.message ?? "code != 0"}`);
+  }
+  // L'API retourne soit { video_id } soit [{ video_id }] selon la version
+  const videoId = Array.isArray(j.data)
+    ? j.data[0]?.video_id
+    : j.data?.video_id;
+  if (!videoId) {
+    throw new Error(`TikTok video upload: video_id absent dans la réponse`);
+  }
+  return videoId;
+}
+
 // ─── pushCampaign ─────────────────────────────────────────────────────────────
-// Crée Campaign → AdGroup → Ad (SINGLE_IMAGE) tout en DISABLE (PAUSED).
+// Crée Campaign → AdGroup → Ad tout en DISABLE (PAUSED).
+// Format d'annonce auto-détecté : SINGLE_VIDEO si videoUrl fourni (avec image
+// optionnelle comme miniature), sinon SINGLE_IMAGE si imageUrl, sinon texte seul.
 // Nécessite Standard API Approval — fonctionne en mode Sandbox sur comptes test.
 async function pushCampaign(
   account: AdAccountInfo,
   input: PushCampaignInput,
 ): Promise<PushCampaignResult> {
+  // Branch Smart+ : namespace dédié /smart_plus/ avec request_id obligatoire.
+  // Remplace l'ancien flag is_smart_performance_campaign déprécié 2026-03-31.
+  if ((input.campaignType ?? "").toUpperCase().startsWith("SMART_PLUS")) {
+    return pushSmartPlusCampaign(account, input);
+  }
+
   const advertiserId = (account.meta?.advertiserId as string) ?? account.externalId;
   const resources: Record<string, string> = {};
 
@@ -398,7 +446,7 @@ async function pushCampaign(
     resources.adgroup = adgroupId;
     console.log(`[tiktok.pushCampaign] AdGroup créé : ${adgroupId}`);
 
-    // 3. Image upload
+    // 3a. Image upload (miniature pour vidéo, ou visuel principal pour SINGLE_IMAGE)
     let imageId: string | undefined;
     if (input.imageUrl) {
       try {
@@ -408,6 +456,19 @@ async function pushCampaign(
       } catch (imgErr) {
         const msg = imgErr instanceof Error ? imgErr.message : String(imgErr);
         console.warn(`[tiktok.pushCampaign] Image upload échouée (${msg.slice(0, 100)}) — annonce sans visuel`);
+      }
+    }
+
+    // 3b. Video upload (active SINGLE_VIDEO si succès)
+    let videoId: string | undefined;
+    if (input.videoUrl) {
+      try {
+        videoId = await uploadVideoFromUrl(account, advertiserId, input.videoUrl);
+        resources.video = videoId;
+        console.log(`[tiktok.pushCampaign] Vidéo uploadée : ${videoId}`);
+      } catch (vidErr) {
+        const msg = vidErr instanceof Error ? vidErr.message : String(vidErr);
+        console.warn(`[tiktok.pushCampaign] Vidéo upload échouée (${msg.slice(0, 100)}) — fallback SINGLE_IMAGE`);
       }
     }
 
@@ -425,7 +486,12 @@ async function pushCampaign(
       landing_page_url: finalUrl,
       operation_status: "DISABLE",
     };
-    if (imageId) {
+    if (videoId) {
+      adPayload.video_id = videoId;
+      adPayload.ad_format = "SINGLE_VIDEO";
+      // Miniature optionnelle (sinon TikTok extrait auto un frame)
+      if (imageId) adPayload.image_ids = [imageId];
+    } else if (imageId) {
       adPayload.image_ids = [imageId];
       adPayload.ad_format = "SINGLE_IMAGE";
     }
@@ -443,6 +509,137 @@ async function pushCampaign(
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error(`[tiktok.pushCampaign] Échec : ${error}`);
+    return { ok: false, error, resources };
+  }
+}
+
+// ─── pushSmartPlusCampaign ────────────────────────────────────────────────────
+// Smart+ (anciennement Performance Campaign) = équivalent TikTok du Meta
+// Advantage+ ou du Google PMax : l'IA TikTok gère ciblage + créatifs + bid.
+// Doc : https://business-api.tiktok.com/portal/docs?id=1740572838487553
+//
+// Important :
+// - Namespace `/smart_plus/` dédié (PAS le flag is_smart_performance_campaign
+//   qui a été déprécié 2026-03-31)
+// - `request_id` (UUID) obligatoire au niveau Campaign pour idempotence
+// - `bid_type: NO_BID` recommandé pour le mode auto (laisser l'IA gérer)
+async function pushSmartPlusCampaign(
+  account: AdAccountInfo,
+  input: PushCampaignInput,
+): Promise<PushCampaignResult> {
+  const advertiserId = (account.meta?.advertiserId as string) ?? account.externalId;
+  const resources: Record<string, string> = {};
+  // request_id sert d'idempotency key : TikTok refuse une 2ème création identique
+  // dans la même fenêtre (utile en cas de retry réseau).
+  const requestId = randomUUID();
+
+  try {
+    // Extrait l'objectif sans le préfixe SMART_PLUS_
+    const rawType = (input.campaignType ?? "")
+      .toUpperCase()
+      .replace(/^SMART_PLUS_/, "");
+    const objective = mapObjective(rawType || "CONVERSIONS");
+
+    // 1. Campaign Smart+
+    const campaignData = await tiktokPost<{ campaign_id: string }>(
+      account,
+      "/smart_plus/campaign/create/",
+      {
+        advertiser_id: advertiserId,
+        campaign_name: input.name,
+        objective_type: objective,
+        budget_mode: "BUDGET_MODE_DAY",
+        budget: input.dailyBudget,
+        request_id: requestId,
+        operation_status: "DISABLE",
+      },
+    );
+    const campaignId = campaignData.campaign_id;
+    resources.campaign = campaignId;
+    console.log(`[tiktok.pushSmartPlusCampaign] Campaign créée : ${campaignId}`);
+
+    // 2. AdGroup Smart+ (ciblage géo obligatoire, le reste géré par l'IA)
+    const countries = input.geoLocations?.countries ?? input.countries ?? ["FR"];
+    const locationIds = await resolveLocationIds(account, advertiserId, countries, objective);
+    const adgroupData = await tiktokPost<{ adgroup_id: string }>(
+      account,
+      "/smart_plus/adgroup/create/",
+      {
+        advertiser_id: advertiserId,
+        campaign_id: campaignId,
+        adgroup_name: `${input.name} – SP Groupe`,
+        budget_mode: "BUDGET_MODE_DAY",
+        budget: input.dailyBudget,
+        schedule_type: "SCHEDULE_FROM_NOW",
+        optimization_goal: mapOptGoal(objective),
+        billing_event: mapBillingEvent(objective),
+        bid_type: "BID_TYPE_NO_BID",
+        operation_status: "DISABLE",
+        targeting_spec: {
+          location: locationIds,
+        },
+      },
+    );
+    const adgroupId = adgroupData.adgroup_id;
+    resources.adgroup = adgroupId;
+    console.log(`[tiktok.pushSmartPlusCampaign] AdGroup créé : ${adgroupId}`);
+
+    // 3. Assets (image et/ou vidéo, best-effort)
+    let imageId: string | undefined;
+    let videoId: string | undefined;
+    if (input.imageUrl) {
+      try {
+        imageId = await uploadImageFromUrl(account, advertiserId, input.imageUrl);
+        resources.image = imageId;
+      } catch (e) {
+        console.warn(`[tiktok.pushSmartPlusCampaign] Image upload échouée: ${e instanceof Error ? e.message : e}`);
+      }
+    }
+    if (input.videoUrl) {
+      try {
+        videoId = await uploadVideoFromUrl(account, advertiserId, input.videoUrl);
+        resources.video = videoId;
+      } catch (e) {
+        console.warn(`[tiktok.pushSmartPlusCampaign] Vidéo upload échouée: ${e instanceof Error ? e.message : e}`);
+      }
+    }
+
+    // 4. Ad Smart+ (creative_list[] — Smart+ peut accepter plusieurs créatifs
+    // pour A/B testing automatique par l'IA)
+    const adText = (input.primaryText ?? input.headlines?.[0] ?? input.name).slice(0, 100);
+    const creative: Record<string, unknown> = {
+      ad_name: `${input.name} – SP Annonce`,
+      ad_text: adText,
+      call_to_action: mapCTA(input.cta),
+      landing_page_url: input.finalUrl ?? "",
+    };
+    if (videoId) {
+      creative.video_id = videoId;
+      creative.ad_format = "SINGLE_VIDEO";
+      if (imageId) creative.image_ids = [imageId];
+    } else if (imageId) {
+      creative.image_ids = [imageId];
+      creative.ad_format = "SINGLE_IMAGE";
+    }
+
+    const adData = await tiktokPost<{ ad_ids?: string[] }>(
+      account,
+      "/smart_plus/ad/create/",
+      {
+        advertiser_id: advertiserId,
+        adgroup_id: adgroupId,
+        operation_status: "DISABLE",
+        creative_list: [creative],
+      },
+    );
+    if (adData.ad_ids?.[0]) resources.ad = adData.ad_ids[0];
+    console.log(`[tiktok.pushSmartPlusCampaign] Ad créée : ${adData.ad_ids?.[0] ?? "?"}`);
+
+    const externalUrl = `https://ads.tiktok.com/i18n/perf/campaign?aadvid=${advertiserId}`;
+    return { ok: true, externalId: campaignId, externalUrl, resources };
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
+    console.error(`[tiktok.pushSmartPlusCampaign] Échec : ${error}`);
     return { ok: false, error, resources };
   }
 }

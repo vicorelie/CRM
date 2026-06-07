@@ -113,6 +113,17 @@ export type PushCampaignInput = {
   audienceDescription?: string;
   /** URL publique de l'image creative (Meta télécharge depuis là si fourni) */
   imageUrl?: string;
+  /** URL publique d'une vidéo (TikTok SINGLE_VIDEO, Demand Gen video asset) */
+  videoUrl?: string;
+  /** Google AI Max for Search — laisse l'IA Google générer des variantes d'assets.
+   * Compatible avec RSA existant. Efficace seulement avec historique de conversions. */
+  enableAiMax?: boolean;
+  /** Assets visuels pour Google Demand Gen (requis pour activer l'annonce).
+   * MARKETING = 1.91:1, SQUARE = 1:1, LOGO = carré. */
+  demandGenImages?: Array<{
+    url: string;
+    type: "MARKETING" | "SQUARE" | "LOGO";
+  }>;
   /** DSA — nom du bénéficiaire (Meta UE, requis depuis juillet 2023). Fallback : nom du AdAccount. */
   dsaBeneficiary?: string;
   /** DSA — nom du payeur (Meta UE, requis depuis juillet 2023). Fallback : dsaBeneficiary. */

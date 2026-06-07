@@ -694,9 +694,15 @@ async function pushCampaign(
   account: AdAccountInfo,
   input: PushCampaignInput,
 ): Promise<PushCampaignResult> {
+  const type = (input.campaignType ?? "SEARCH").toUpperCase();
   // Branch Performance Max — flow atomique avec resourceNames temporaires.
-  if ((input.campaignType ?? "SEARCH").toUpperCase() === "PERFORMANCE_MAX") {
+  if (type === "PERFORMANCE_MAX") {
     return pushPmaxCampaign(account, input);
+  }
+  // Branch Demand Gen — remplace Discovery campaigns (sunset déc 2026).
+  // Couvre YouTube Shorts/in-stream, Gmail, Google Discover.
+  if (type === "DEMAND_GEN" || type === "DISCOVERY") {
+    return pushDemandGenCampaign(account, input);
   }
 
   const customerId = (account.meta?.customerId as string) ?? "";
@@ -943,6 +949,216 @@ async function pushCampaign(
           },
         ],
       });
+    }
+
+    // 9) Google AI Max for Search — l'IA Google génère et teste automatiquement
+    // des variantes de titres, descriptions et URLs en plus du RSA existant.
+    // Remplace progressivement Dynamic Search Ads (sunset sept 2026). Compatible
+    // avec RSA (coexiste). Best practice 2026 : activer dès qu'on a >100 conv./mois.
+    if (channelType === "SEARCH" && input.enableAiMax) {
+      try {
+        await mutate(account, customerId, "campaigns", {
+          operations: [
+            {
+              update: {
+                resourceName: campRes.resourceName,
+                aiMaxSetting: { enableAiMax: true },
+              },
+              updateMask: "aiMaxSetting.enableAiMax",
+            },
+          ],
+        });
+        resources.aiMax = "enabled";
+      } catch (aiMaxErr) {
+        // Non-bloquant : la campagne reste fonctionnelle sans AI Max
+        console.warn(
+          `[google.pushCampaign] AI Max non activé (non-bloquant) : ${aiMaxErr instanceof Error ? aiMaxErr.message : aiMaxErr}`,
+        );
+      }
+    }
+
+    return {
+      ok: true,
+      externalId: campaignId,
+      externalUrl: `https://ads.google.com/aw/campaigns?campaignId=${campaignId}`,
+      resources,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : String(e),
+      resources,
+    };
+  }
+}
+
+// ─── Demand Gen ──────────────────────────────────────────────────────────────
+// Demand Gen = successeur de Discovery Ads (sunset déc 2026). Couvre YouTube
+// (Shorts, in-stream), Google Discover, Gmail. Format multi-asset (3-5 titres,
+// 2-5 descriptions, marketing image 1.91:1, square image 1:1, logo carré).
+// Doc : https://developers.google.com/google-ads/api/docs/campaigns/create-demand-gen
+//
+// Stratégie : Budget non-shared + Campaign DEMAND_GEN + Geo + AdGroup DG +
+// (optionnel) Asset image uploads + Ad demandGenMultiAssetAd.
+// Si les images ne sont pas fournies, la campagne reste PAUSED sans Ad — l'user
+// doit ajouter l'annonce manuellement dans Google Ads UI.
+async function pushDemandGenCampaign(
+  account: AdAccountInfo,
+  input: PushCampaignInput,
+): Promise<PushCampaignResult> {
+  const customerId = (account.meta?.customerId as string) ?? "";
+  const resources: Record<string, string> = {};
+
+  try {
+    // 1) Budget (Demand Gen exige explicitlyShared=false — pas de budget partagé)
+    const budgetRes = await mutate(account, customerId, "campaignBudgets", {
+      operations: [
+        {
+          create: {
+            name: `${input.name} – budget DG`,
+            amountMicros: String(Math.round(input.dailyBudget * 1_000_000)),
+            deliveryMethod: "STANDARD",
+            explicitlyShared: false,
+          },
+        },
+      ],
+    });
+    resources.budget = budgetRes.resourceName;
+
+    // 2) Campaign DEMAND_GEN
+    const biddingStrategy = (input.biddingStrategy ?? "MAXIMIZE_CONVERSIONS").toUpperCase();
+    const campaignBody: Record<string, unknown> = {
+      name: input.name,
+      advertisingChannelType: "DEMAND_GEN",
+      status: "PAUSED",
+      campaignBudget: budgetRes.resourceName,
+      startDate: fmtDate(new Date()),
+      containsEuPoliticalAdvertising: "DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING",
+    };
+    if (biddingStrategy === "TARGET_CPA" && input.biddingTarget) {
+      campaignBody.targetCpa = {
+        targetCpaMicros: String(Math.round(input.biddingTarget * 1_000_000)),
+      };
+    } else if (biddingStrategy === "TARGET_ROAS" && input.biddingTarget) {
+      campaignBody.maximizeConversionValue = { targetRoas: input.biddingTarget };
+    } else {
+      campaignBody.maximizeConversions = {};
+    }
+
+    const campRes = await mutate(account, customerId, "campaigns", {
+      operations: [{ create: campaignBody }],
+    });
+    resources.campaign = campRes.resourceName;
+    const campaignId = campRes.resourceName.split("/").pop()!;
+
+    // 3) Geo targeting
+    const countries = input.countries ?? input.geoLocations?.countries ?? [];
+    if (countries.length > 0) {
+      const geoOps = countries
+        .filter((c) => GEO_TARGETS[c.toUpperCase()])
+        .map((c) => ({
+          create: {
+            campaign: campRes.resourceName,
+            location: { geoTargetConstant: GEO_TARGETS[c.toUpperCase()] },
+          },
+        }));
+      if (geoOps.length > 0) {
+        await mutate(account, customerId, "campaignCriteria", { operations: geoOps });
+      }
+    }
+
+    // 4) AdGroup Demand Gen
+    const agRes = await mutate(account, customerId, "adGroups", {
+      operations: [
+        {
+          create: {
+            name: `${input.name} – DG Groupe`,
+            campaign: campRes.resourceName,
+            type: "DEMAND_GEN_MULTI_ASSET_AD",
+            status: "ENABLED",
+            demandGenAdGroupSettings: {
+              channelControls: { channelStrategy: "ALL_CHANNELS" },
+            },
+          },
+        },
+      ],
+    });
+    resources.adGroup = agRes.resourceName;
+
+    // 5) Image assets + Ad (best-effort — sans images la campagne PAUSED reste utilisable)
+    const images = input.demandGenImages ?? [];
+    const marketingUrls = images.filter((i) => i.type === "MARKETING").map((i) => i.url);
+    const squareUrls = images.filter((i) => i.type === "SQUARE").map((i) => i.url);
+    const logoUrls = images.filter((i) => i.type === "LOGO").map((i) => i.url);
+    // Fallback : si pas d'images explicites mais imageUrl générique → la traite comme MARKETING
+    if (marketingUrls.length === 0 && input.imageUrl) marketingUrls.push(input.imageUrl);
+
+    const headlines = (input.headlines ?? [])
+      .filter((h) => h && h.length <= 40)
+      .slice(0, 5);
+    const descriptions = (input.descriptions ?? [])
+      .filter((d) => d && d.length <= 90)
+      .slice(0, 5);
+    const businessName = (input.dsaBeneficiary ?? input.name).slice(0, 25);
+
+    const hasMinAssets =
+      headlines.length >= 3 &&
+      descriptions.length >= 2 &&
+      marketingUrls.length >= 1 &&
+      squareUrls.length >= 1 &&
+      !!input.finalUrl;
+
+    if (hasMinAssets) {
+      try {
+        const uploadImageAsset = async (url: string): Promise<string> => {
+          const res = await mutate(account, customerId, "assets", {
+            operations: [
+              { create: { imageAsset: { fullSizeImageUrl: url } } },
+            ],
+          });
+          return res.resourceName;
+        };
+
+        // Upload en parallèle (max 3 images)
+        const [marketingRn, squareRn, logoRn] = await Promise.all([
+          uploadImageAsset(marketingUrls[0]),
+          uploadImageAsset(squareUrls[0]),
+          logoUrls.length > 0 ? uploadImageAsset(logoUrls[0]) : Promise.resolve(null),
+        ]);
+
+        const demandGenAd: Record<string, unknown> = {
+          headlines: headlines.map((text) => ({ text })),
+          descriptions: descriptions.map((text) => ({ text })),
+          businessName,
+          marketingImages: [{ asset: marketingRn }],
+          squareMarketingImages: [{ asset: squareRn }],
+        };
+        if (logoRn) demandGenAd.logoImages = [{ asset: logoRn }];
+
+        await mutate(account, customerId, "adGroupAds", {
+          operations: [
+            {
+              create: {
+                adGroup: agRes.resourceName,
+                status: "ENABLED",
+                ad: {
+                  finalUrls: [input.finalUrl!],
+                  demandGenMultiAssetAd: demandGenAd,
+                },
+              },
+            },
+          ],
+        });
+        resources.ad = "created";
+      } catch (adErr) {
+        console.warn(
+          `[google.pushDemandGenCampaign] Ad non créée (non-bloquant) : ${adErr instanceof Error ? adErr.message : adErr}`,
+        );
+        resources.adHint = "Ajouter l'annonce manuellement dans Google Ads UI";
+      }
+    } else {
+      resources.adHint =
+        "Annonce non créée — il manque 3+ titres, 2+ descriptions, 1 image MARKETING + 1 SQUARE + finalUrl";
     }
 
     return {

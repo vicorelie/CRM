@@ -55,12 +55,17 @@ function parseNegativeKeywords(
     .map((t) => ({ text: t, matchType: "PHRASE" as const }));
 }
 
+type FatigueLevel = "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN";
+
 export function CampaignsList({ refreshKey }: Props) {
   const [campaigns, setCampaigns] = useState<CampaignRich[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | AdPlatform>("ALL");
   const [pushModal, setPushModal] = useState<PushModalState | null>(null);
+  // Map campaignId → niveau de fatigue créative (Meta uniquement).
+  // Calculé en arrière-plan après le load principal des campagnes — fire-and-forget.
+  const [fatigueMap, setFatigueMap] = useState<Record<string, FatigueLevel>>({});
 
   async function openCreateWizard() {
     // Fetch les AdAccounts dispo
@@ -839,7 +844,32 @@ export function CampaignsList({ refreshKey }: Props) {
         setError(json.error ?? "Échec chargement");
         return;
       }
-      setCampaigns(json.campaigns ?? []);
+      const camps: CampaignRich[] = json.campaigns ?? [];
+      setCampaigns(camps);
+
+      // Fatigue créative Meta — fire-and-forget, max 8 campagnes en parallèle
+      // pour éviter de saturer la Graph API. Seules les campagnes ACTIVE
+      // connectées sont pertinentes (les PAUSED n'accumulent pas de fréquence).
+      const metaActive = camps.filter(
+        (c) => c.type === "META_ADS" && c.externalId && c.status === "ACTIVE",
+      );
+      if (metaActive.length > 0) {
+        setFatigueMap({});
+        void Promise.allSettled(
+          metaActive.slice(0, 8).map(async (c) => {
+            try {
+              const fr = await fetch(`/api/ads/campaigns/${c.id}/fatigue`);
+              if (!fr.ok) return;
+              const fj = (await fr.json()) as { level?: FatigueLevel };
+              if (fj.level) {
+                setFatigueMap((prev) => ({ ...prev, [c.id]: fj.level! }));
+              }
+            } catch {
+              // silencieux — fatigue est un nice-to-have
+            }
+          }),
+        );
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur réseau");
     }
@@ -1065,6 +1095,22 @@ export function CampaignsList({ refreshKey }: Props) {
                         {c.externalId && (
                           <span className="text-[10px] uppercase rounded-full border border-emerald-500/40 bg-emerald-50 text-emerald-700 px-2 py-0.5">
                             🔗 connecté
+                          </span>
+                        )}
+                        {fatigueMap[c.id] === "MEDIUM" && (
+                          <span
+                            className="text-[10px] uppercase rounded-full border border-amber-500/40 bg-amber-50 text-amber-700 px-2 py-0.5 font-medium"
+                            title="Fatigue créative modérée — surveiller fréquence (2.5-4.0)"
+                          >
+                            🎨 fatigue
+                          </span>
+                        )}
+                        {fatigueMap[c.id] === "HIGH" && (
+                          <span
+                            className="text-[10px] uppercase rounded-full border border-red-500/40 bg-red-50 text-red-700 px-2 py-0.5 font-medium"
+                            title="Fatigue créative élevée — renouveler les visuels d'urgence (frequency ≥ 4.0)"
+                          >
+                            🎨 fatigue !
                           </span>
                         )}
                       </div>
