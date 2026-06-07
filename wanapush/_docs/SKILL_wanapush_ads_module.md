@@ -16,7 +16,7 @@ last_reviewed: 2026-06-06
 # SKILL — WanaPush Ads Module
 
 > Module Ads : connecteurs pub pour Meta, Google, TikTok, LinkedIn.
-> Meta Ads = push E2E production. Google Ads = push Search + Pmax v24. TikTok = push + sync (Standard API Approval requis en prod). LinkedIn = sync readonly.
+> Meta Ads v25 = push E2E production + Creative Fatigue. Google Ads v24 = push Search + Pmax (negative kw PMax inclus). TikTok v1.3 = push + sync + Events API serveur. LinkedIn v202605 = push + sync.
 
 ## 🧭 Quand l'invoquer
 
@@ -42,11 +42,13 @@ lib/ads/
                           sans Advantage+ si erreur #1885543
   google.ts (1108 l)   ← Google Ads API v24 (GOOGLE_ADS_API). Search + PMAX,
                           Conversion Tracking, negative keywords, batch mutate
-  tiktok.ts (~380 l)   ← TikTok Ads API v1.3. Push (Campaign→AdGroup→Ad) + sync + metrics.
-                          SINGLE_IMAGE. resolveLocationIds() via /tool/region/. billingEvent
-                          per objective (CPC/OCPM/CPM). Nécessite Standard API Approval en prod.
-  linkedin.ts (230 l)  ← LinkedIn Marketing API v2. Sync + metrics. Pas de push.
-  sync.ts (133 l)      ← syncAdAccount(accountId) : refresh + listCampaigns +
+  tiktok.ts (~390 l)       ← TikTok Ads API v1.3. Push (Campaign→AdGroup→Ad) + sync + metrics.
+                              SINGLE_IMAGE. resolveLocationIds() via /tool/region/. billingEvent
+                              per objective (CPC/OCPM/CPM). Nécessite Standard API Approval en prod.
+  tiktok-events.ts (~210 l) ← TikTok Events API (CAPI côté serveur). trackTikTokEvent(),
+                              batchTrackTikTokEvents(). Hash SHA-256 PII. Dédup sur event_id.
+  linkedin.ts (560 l)       ← LinkedIn Marketing API v202605. Push + sync.
+  sync.ts (133 l)            ← syncAdAccount(accountId) : refresh + listCampaigns +
                           upsert Campaign + fetchMetrics + upsert AdMetrics
 
 app/(dashboard)/ads/
@@ -168,8 +170,27 @@ model AdAudience {
 | Advantage+ Audience bug LANDING_PAGE_VIEWS | Erreur #1885501 → retry sans `custom_event_type` |
 | Advantage+ Creative erreur | Erreur #1885543 → retry sans `use_page_actor_override` |
 | CBO 2025+ | `daily_budget` et `bid_strategy` UNIQUEMENT au niveau Campaign, PAS AdSet |
-| GRAPH_V22 | Mutations push utilisent `v22.0`. Lecture metrics utilise `v21.0`. |
+| **Version API** | `GRAPH = "https://graph.facebook.com/v25.0"` (sorti fév 2026). Mettre à jour tous les 6 mois. |
 | Token Meta | Long-lived ~60j, **pas de refresh token** → surveiller `tokenExpiresAt`, alerter user |
+| Attribution windows supprimées (jan 2026) | `7-day view` et `28-day view` SUPPRIMÉS par Meta. Utiliser `7-day click + 1-day view` uniquement. |
+
+### Creative Fatigue (Meta)
+
+```ts
+// lib/ads/meta.ts
+const report = await getCreativeFatigue(account, campaignExternalId);
+// report.level: "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN"
+// report.frequency7d: nombre moyen de fois que la pub a été vue sur 7j
+// report.recommendation: string lisible par l'utilisateur
+```
+
+Seuils (Meta Andromeda 2026 — dégradation en 5-7j, plus rapide qu'avant) :
+- `< 2.5/semaine` → LOW → pas d'action
+- `2.5–4.0` → MEDIUM → préparer de nouveaux visuels cette semaine
+- `≥ 4.0` → HIGH → renouveler immédiatement
+
+**Auto-optimizer** : action `REFRESH_CREATIVE` déclenchée automatiquement pour les campagnes Meta en MEDIUM/HIGH.
+**API endpoint** : `GET /api/ads/campaigns/[id]/fatigue` → retourne `CreativeFatigueReport`.
 
 ### `mapObjective` (v17 Outcomes)
 
@@ -194,7 +215,7 @@ model AdAudience {
 
 ## 🟢 Google Ads — API v24
 
-> **⚠️ v20 sunset le 2026-06-10. Migrer avant cette date. Déjà sur v24.**
+> **v24 (avr 2026, patch v24.1 mai 2026). Sunset ~mai 2027. v20 sunsetté le 2026-06-10 ✓.**
 
 ```ts
 const GOOGLE_ADS_API = "https://googleads.googleapis.com/v24";
@@ -240,8 +261,43 @@ createConversionAction(account, { name, category, type, countingType }): Promise
 | Refresh token | `refreshTokenFn()` auto via `lib/ads/google.ts`. Token stocké chiffré. |
 | RSA headlines | Min 3, min 2 descriptions — sinon `RESPONSIVE_SEARCH_AD_ASSETS_INVALID` |
 | PMAX assets | Status PAUSED par défaut → activer manuellement dans Google Ads |
+| **PMax negative keywords** | Supportés depuis jan 2025 via `campaignCriterionOperation` (EXACT/PHRASE/BROAD). Implémenté dans `pushPmaxCampaign` via `input.negativeKeywords`. 2ème mutate après le batch principal. |
+| Smart Bidding PMax | `MAXIMIZE_CONVERSIONS` par défaut (learning phase). Ajouter `targetCpaMicros` pour Target CPA, ou `maximizeConversionValue.targetRoas` pour Target ROAS. |
 
-## 🟡 TikTok Ads — Push + Sync
+## 🟡 TikTok Ads — Push + Sync + Events API
+
+### TikTok Events API (CAPI côté serveur)
+
+Équivalent de la Meta Conversions API pour TikTok. Impact mesuré : **+19% événements capturés, -15% CPA**.
+
+```ts
+// lib/ads/tiktok-events.ts
+import { trackTikTokEvent, batchTrackTikTokEvents } from "@/lib/ads/tiktok-events";
+
+// Événement unique
+await trackTikTokEvent({
+  pixelCode: "XXXXX",
+  accessToken: decryptedToken,
+  eventName: "CompletePayment",
+  eventId: "evt_unique_uuid",  // MÊME ID que dans le Pixel browser pour dédup
+  pageUrl: "https://...",
+  email: "user@example.com",  // hashé SHA-256 automatiquement
+  phone: "+33612345678",       // hashé SHA-256 automatiquement
+  value: 49.99,
+  currency: "EUR",
+});
+
+// Batch (jusqu'à 1000 événements)
+await batchTrackTikTokEvents({ pixelCode, accessToken, events: [...] });
+```
+
+**Déduplication** : TikTok fusionne Pixel browser + Events API sur `event_id` identique (fenêtre 48h). Toujours passer le même `event_id` dans les deux.
+
+**PII hashing** : email et phone envoyés en clair → hashés SHA-256 (lowercase + trim) avant envoi. Ne jamais pré-hasher côté client avant de passer à `trackTikTokEvent`.
+
+**Endpoint API WanaPush** : `POST /api/ads/tiktok/events`
+- Enrichissement auto : IP et User-Agent extraits des headers si non fournis
+- Résolution token : via `adAccountId` (DB) ou `TIKTOK_EVENTS_ACCESS_TOKEN` (.env)
 
 ### Push flow (tiktok.ts `pushCampaign`)
 

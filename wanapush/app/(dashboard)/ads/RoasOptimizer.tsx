@@ -35,6 +35,7 @@ const ACTION_META: Record<OptimizationSuggestion["action"], { label: string; col
   PAUSE: { label: "Pause", color: "bg-rose-500/15 text-rose-600 border-rose-200", emoji: "⏸" },
   SCALE: { label: "Scale +30%", color: "bg-emerald-500/15 text-emerald-700 border-emerald-200", emoji: "🚀" },
   REDUCE_BUDGET: { label: "Réduire budget", color: "bg-amber-500/15 text-amber-700 border-amber-200", emoji: "📉" },
+  REFRESH_CREATIVE: { label: "Renouveler créatif", color: "bg-purple-500/15 text-purple-700 border-purple-200", emoji: "🎨" },
   WATCH: { label: "Surveillance", color: "bg-sky-500/15 text-sky-700 border-sky-200", emoji: "👁" },
   INSUFFICIENT_DATA: { label: "Données insuffisantes", color: "bg-zinc-100 text-zinc-500 border-zinc-200", emoji: "⏳" },
 };

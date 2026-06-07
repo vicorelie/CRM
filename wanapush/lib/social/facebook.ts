@@ -10,7 +10,7 @@ import type {
   SocialConnector,
 } from "./types";
 
-const GRAPH = "https://graph.facebook.com/v24.0";
+const GRAPH = "https://graph.facebook.com/v25.0";
 
 function appCreds() {
   const id = process.env.META_APP_ID;
@@ -36,7 +36,7 @@ const FB_SCOPES = [
 export function fbAuthorizeUrl(state: string, redirectUri: string): string {
   const { id } = appCreds();
   const configId = process.env.META_LOGIN_CONFIG_ID;
-  const u = new URL("https://www.facebook.com/v24.0/dialog/oauth");
+  const u = new URL("https://www.facebook.com/v25.0/dialog/oauth");
   u.searchParams.set("client_id", id);
   u.searchParams.set("redirect_uri", redirectUri);
   u.searchParams.set("state", state);

@@ -14,7 +14,7 @@ import type {
   PushCampaignResult,
 } from "./types";
 
-const GRAPH = "https://graph.facebook.com/v24.0";
+const GRAPH = "https://graph.facebook.com/v25.0";
 
 const META_ADS_SCOPES = [
   "ads_management",
@@ -32,7 +32,7 @@ function appCreds() {
 
 function authorizeUrl(state: string, redirectUri: string): string {
   const { id } = appCreds();
-  const u = new URL("https://www.facebook.com/v24.0/dialog/oauth");
+  const u = new URL("https://www.facebook.com/v25.0/dialog/oauth");
   u.searchParams.set("client_id", id);
   u.searchParams.set("redirect_uri", redirectUri);
   u.searchParams.set("state", state);
@@ -221,7 +221,7 @@ type MetaError = { message?: string; code?: number; error_subcode?: number; fbtr
 type MetaResource = { id: string };
 
 /**
- * POST helper vers Meta Marketing API v24.0.
+ * POST helper vers Meta Marketing API v25+.0.
  *
  * Encode le body en x-www-form-urlencoded (les objets JSON imbriqués sont
  * sérialisés en string JSON, c'est la convention Meta).
@@ -748,7 +748,7 @@ async function pushCampaign(
 
     if (useAdvCreative) {
       // Advantage+ Creative : Meta améliore titre/image/texte (+14% CPR moyen vs static)
-      // Garder uniquement les features documentées en snake_case (Marketing API v24+).
+      // Garder uniquement les features documentées en snake_case (Marketing API v25++).
       // ⚠️ Pas de translate_text ici (champ inventé) — la valeur valide est TEXT_OVERLAY_TRANSLATION
       // en UPPERCASE mais elle n'est pas universelle ; on s'en passe.
       creativePayload.degrees_of_freedom_spec = {
@@ -922,6 +922,88 @@ async function updateCampaignBudget(
   if (budgetCents < 100) throw new Error(`Budget trop bas : minimum 1 € (reçu ${dailyBudget} €)`);
   const res = await metaPost<{ id: string }>(account, externalId, { daily_budget: budgetCents });
   if (!res?.id) throw new Error(`Meta updateCampaignBudget failed for campaign ${externalId}`);
+}
+
+// ─── Creative Fatigue ─────────────────────────────────────────────────────────
+// Appelle l'Insights API pour détecter l'essoufflement créatif sur 7 jours.
+// Seuils (recommandations Meta 2026) :
+//   < 2.5  → LOW    (pas d'action nécessaire)
+//   2.5–4.0 → MEDIUM (préparer de nouveaux visuels cette semaine)
+//   ≥ 4.0  → HIGH   (renouveler maintenant — Meta dégrade les perfs en 5-7j)
+export type CreativeFatigueLevel = "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN";
+
+export interface CreativeFatigueReport {
+  level: CreativeFatigueLevel;
+  frequency7d: number | null;
+  cpm7d: number | null;
+  ctr7d: number | null;
+  spend7d: number;
+  impressions7d: number;
+  recommendation: string;
+}
+
+export async function getCreativeFatigue(
+  account: AdAccountInfo,
+  campaignExternalId: string,
+): Promise<CreativeFatigueReport> {
+  const params = new URLSearchParams({
+    fields: "frequency,cpm,ctr,spend,impressions,reach",
+    date_preset: "last_7d",
+    level: "campaign",
+    access_token: account.accessToken,
+  });
+  const r = await fetch(
+    `${GRAPH}/${campaignExternalId}/insights?${params.toString()}`,
+  );
+  const j = (await r.json()) as {
+    data?: Array<{
+      frequency?: string;
+      cpm?: string;
+      ctr?: string;
+      spend?: string;
+      impressions?: string;
+      reach?: string;
+    }>;
+    error?: { message?: string };
+  };
+
+  if (j.error || !j.data?.[0]) {
+    return {
+      level: "UNKNOWN",
+      frequency7d: null,
+      cpm7d: null,
+      ctr7d: null,
+      spend7d: 0,
+      impressions7d: 0,
+      recommendation: j.error?.message ?? "Pas de données disponibles pour cette campagne.",
+    };
+  }
+
+  const d = j.data[0];
+  const freq = d.frequency ? Number(d.frequency) : null;
+  const cpm = d.cpm ? Number(d.cpm) : null;
+  const ctr = d.ctr ? Number(d.ctr) : null;
+  const spend = d.spend ? Number(d.spend) : 0;
+  const impressions = d.impressions ? Number(d.impressions) : 0;
+
+  let level: CreativeFatigueLevel = "LOW";
+  let recommendation = "";
+
+  if (freq === null) {
+    level = "UNKNOWN";
+    recommendation = "Fréquence non disponible — vérifier que la campagne est active.";
+  } else if (freq >= 4.0) {
+    level = "HIGH";
+    recommendation = `Fréquence de ${freq.toFixed(1)} sur 7j — CRITIQUE. Renouveler les visuels immédiatement. Meta dégrade les performances en 5-7j à cette fréquence.`;
+  } else if (freq >= 2.5) {
+    level = "MEDIUM";
+    recommendation = `Fréquence de ${freq.toFixed(1)} sur 7j — ATTENTION. Préparer de nouveaux visuels cette semaine pour éviter la saturation.`;
+  } else {
+    level = "LOW";
+    recommendation = `Fréquence de ${freq.toFixed(1)} sur 7j — OK. Pas d'action nécessaire.`;
+  }
+
+  return { level, frequency7d: freq, cpm7d: cpm, ctr7d: ctr, spend7d: spend, impressions7d: impressions, recommendation };
 }
 
 /** Helpers exportés pour tests unit. */

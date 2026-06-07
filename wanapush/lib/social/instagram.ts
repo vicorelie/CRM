@@ -9,7 +9,7 @@ import type {
   SocialConnector,
 } from "./types";
 
-const GRAPH = "https://graph.instagram.com/v24.0";
+const GRAPH = "https://graph.instagram.com/v25.0";
 // Scopes alignés sur l'URL officielle générée par le dashboard Meta (sub-app WanaPush-IG).
 const SCOPES = [
   "instagram_business_basic",

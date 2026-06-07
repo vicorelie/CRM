@@ -648,6 +648,28 @@ async function pushPmaxCampaign(
     resources.budget = (responses[0] as { campaignBudgetResult?: { resourceName?: string } })
       .campaignBudgetResult?.resourceName ?? TMP.budget;
 
+    // Negative keywords au niveau campagne (supportés en PMax depuis jan 2025).
+    // Appel séparé après le batch principal car le resourceName final est requis.
+    // PMax accepte EXACT, PHRASE et BROAD — on cible EXACT par défaut pour les
+    // nouvelles campagnes (contrôle maximum, pas de gaspillage budget).
+    const negKw = (input.negativeKeywords ?? []).slice(0, 5000);
+    if (negKw.length > 0) {
+      try {
+        await mutate(account, customerId, "campaignCriteria", {
+          operations: negKw.map((k) => ({
+            create: {
+              campaign: finalCampaignResource,
+              negative: true,
+              keyword: { text: k.text, matchType: k.matchType ?? "EXACT" },
+            },
+          })),
+        });
+        resources.negativeKeywords = String(negKw.length);
+      } catch (negErr) {
+        console.warn(`[google.pushPmaxCampaign] Negative keywords non ajoutés (non-bloquant) : ${negErr instanceof Error ? negErr.message : negErr}`);
+      }
+    }
+
     return {
       ok: true,
       externalId: campaignId,

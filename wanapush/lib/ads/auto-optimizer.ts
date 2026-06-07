@@ -16,6 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdsConnector, ensureFreshAdAccount } from "@/lib/ads/index";
 import type { AdPlatform } from "@/lib/ads/types";
 import { decrypt } from "@/lib/crypto";
+import { getCreativeFatigue, type CreativeFatigueReport } from "@/lib/ads/meta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ export type OptimizationAction =
   | "PAUSE"
   | "SCALE"
   | "REDUCE_BUDGET"
+  | "REFRESH_CREATIVE"
   | "WATCH"
   | "INSUFFICIENT_DATA";
 
@@ -52,6 +54,8 @@ export type OptimizationSuggestion = {
   /** true si l'action a été appliquée (mode non-dry-run) */
   applied: boolean;
   appliedError?: string;
+  /** Rapport de fatigue créative (Meta uniquement, si disponible) */
+  fatigueReport?: CreativeFatigueReport;
 };
 
 export type OptimizationThresholds = {
@@ -177,6 +181,29 @@ export async function analyzeCampaign(
     suggestion.reason = `ROAS de ${fmtRoas(roas)} avec ${metrics.conversions} conversions sur ${thresholds.windowDays}j — winner. Budget journalier proposé : ${fmtEur(current)} → ${fmtEur(scaled)} (+${Math.round((thresholds.scaleFactor - 1) * 100)}%).`;
     suggestion.newDailyBudget = scaled;
     return suggestion;
+  }
+
+  // REFRESH_CREATIVE — fatigue créative détectée sur Meta (fréquence trop haute)
+  // Ne s'applique qu'aux campagnes META_ADS avec un externalId valide.
+  if (platform === "META_ADS" && campaign.adAccount) {
+    try {
+      const accountInfo = {
+        ...campaign.adAccount,
+        accessToken: decrypt(campaign.adAccount.accessToken),
+        refreshToken: campaign.adAccount.refreshToken
+          ? decrypt(campaign.adAccount.refreshToken)
+          : undefined,
+      };
+      const fatigue = await getCreativeFatigue(accountInfo as never, campaign.externalId!);
+      suggestion.fatigueReport = fatigue;
+      if (fatigue.level === "HIGH" || fatigue.level === "MEDIUM") {
+        suggestion.action = "REFRESH_CREATIVE";
+        suggestion.reason = fatigue.recommendation;
+        return suggestion;
+      }
+    } catch {
+      // Fatigue check non bloquant — continuer avec WATCH si erreur
+    }
   }
 
   // WATCH — performances acceptables, pas d'action

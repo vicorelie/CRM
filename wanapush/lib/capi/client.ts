@@ -1,6 +1,6 @@
 // Client HTTP vers Meta Conversions API (CAPI).
 //
-// Endpoint : POST https://graph.facebook.com/v24.0/<pixelId>/events
+// Endpoint : POST https://graph.facebook.com/v25.0/<pixelId>/events
 // Auth : access_token query param OU header (on utilise query param comme la doc Meta)
 // Body : { data: ServerEvent[], test_event_code?, partner_agent? }
 //
@@ -11,7 +11,7 @@
 
 import type { CapiPayload, CapiResponse, ServerEvent } from "./types";
 
-const META_GRAPH_VERSION = "v24.0";
+const META_GRAPH_VERSION = "v25.0";
 const META_GRAPH_BASE = "https://graph.facebook.com";
 
 /** Identifiant partenaire envoyé à Meta — utile pour le support et reporting. */

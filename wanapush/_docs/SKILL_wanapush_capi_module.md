@@ -226,7 +226,7 @@ Quand l'user travaille sur CAPI :
 ## 📅 Maintenance & évolutions
 
 - **Conversions API spec** : revoir tous les 6 mois (Meta publie des updates trimestriels).
-- **Graph API version** : code actuel sur `v22.0`. Meta v24.0 (avril 2026) + v25.0 sont disponibles. À migrer pour profiter des nouvelles features measurement.
+- **Graph API version** : code sur `v25.0` (migré juin 2026 — sorti fév 2026). Prochaine version v26.0 prévue sept 2026.
 - **Event Match Quality** : monitorer trimestriellement par client dans Meta Events Manager.
 - **Rate-limit Redis** : migrer vers Upstash quand on a plus de 1 instance Next.
 - **Retention GDPR** : durée 90j/365j tuneable (consulter avocat B2B vs B2C).
