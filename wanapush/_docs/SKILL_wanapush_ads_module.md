@@ -260,7 +260,7 @@ Tout est créé en **DISABLE** (TikTok = PAUSED). L'image upload est facultatif 
 | objective_type | optimization_goal | billing_event |
 |---|---|---|
 | TRAFFIC | CLICK | CPC |
-| CONVERSIONS | CONVERT | OCPM |
+| WEB_CONVERSIONS | CONVERT | OCPM |
 | LEAD_GENERATION | LEAD | OCPM |
 | REACH | REACH | CPM |
 | VIDEO_VIEWS | VIDEO_VIEW | CPM |
@@ -269,7 +269,8 @@ Tout est créé en **DISABLE** (TikTok = PAUSED). L'image upload est facultatif 
 
 | Situation | Solution |
 |-----------|----------|
-| `location_ids` ≠ ISO codes | `resolveLocationIds()` appelle `/tool/region/` → fallback ISO si échec API |
+| `location` (adgroup standard) ≠ ISO codes | `resolveLocationIds()` appelle `/tool/region/?advertiser_id=...&placements=...&objective_type=...` → retourne numeric IDs. Fallback ISO si échec. **⚠️ `location_ids` = réservé aux adgroups R&F seulement** |
+| objective_type | `WEB_CONVERSIONS` (pas `CONVERSIONS`) pour website conversions. `mapObjective()` gère la conversion. |
 | Standard API Approval | En Sandbox : fonctionne sur comptes test TikTok Ads Manager. En prod : demander approval sur business-api.tiktok.com |
 | Image specs | 1080×1080 ou 1200×628, JPG/PNG, max 500 KB recommandé |
 | `BID_TYPE_NO_BID` | = "Lowest Cost" (volume max sans bid cap) — idéal nouvelles campagnes sans historique |
@@ -331,6 +332,7 @@ Pour des pays non listés : appeler `/rest/adTargetingFacets/locations?q=typeahe
 
 | Situation | Solution |
 |-----------|----------|
+| `LinkedIn-Version` header | Constante `LI_VERSION = "202605"`. LinkedIn sunset les versions ~12 mois après release (rolling). **Mettre à jour chaque année.** |
 | Scope `rw_ads` manquant | Utilisateurs connectés SANS `rw_ads` doivent se reconnecter (scope ajouté en juin 2026) |
 | Campaign Group obligatoire | `getOrCreateCampaignGroup()` gère ça automatiquement |
 | `x-restli-id` header | LinkedIn retourne l'ID créé dans ce header (pas dans le body JSON) |
