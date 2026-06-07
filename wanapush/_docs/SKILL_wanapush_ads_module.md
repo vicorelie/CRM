@@ -283,6 +283,77 @@ createConversionAction(account, { name, category, type, countingType }): Promise
 
 `ConversionAction.category` : `PAGE_VIEW`, `PURCHASE`, `SIGNUP`, `LEAD`, `SUBMIT_LEAD_FORM`, `BOOK_APPOINTMENT`, `CONTACT`, `DOWNLOAD`
 
+### 🔴 Enhanced Conversions for Leads via Data Manager API (CRITIQUE 2026-06-15)
+
+**Module `lib/ads/google-data-manager.ts`** + endpoint `POST /api/ads/google/enhanced-conversions/upload`.
+
+**Pourquoi c'est critique** :
+- Ancien endpoint `customers/{id}/conversionUploadService:uploadClickConversions` BLOQUÉ depuis **15 juin 2026** pour les developer tokens qui n'ont pas envoyé de requête legacy entre janv-juin 2026.
+- Tous les nouveaux comptes WanaPush DOIVENT passer par Data Manager API.
+- Sans ça : upload offline conversions impossible → ROAS Smart Bidding mal calibré.
+
+**Endpoint Data Manager API** :
+```
+POST https://datamanager.googleapis.com/v1/events:ingest
+Authorization: Bearer <accessToken (scope datamanager)>
+```
+
+**Scopes OAuth** (déjà ajoutés à `SCOPES` dans `lib/ads/google.ts`) :
+- `https://www.googleapis.com/auth/adwords` (push + GAQL)
+- `https://www.googleapis.com/auth/datamanager` (Data Manager — **SENSITIVE**, Google OAuth verification requise pour la prod)
+
+**Format hash PII** : SHA-256 (HEX) sur valeur normalisée :
+- Email : lowercase + trim (Gmail : retire les `.` avant `@` et `+suffix`)
+- Phone : E.164 (`+33612345678`, retire espaces/séparateurs)
+- Nom : lowercase + trim + retire diacritiques (é→e) + retire chars non-alpha
+- Country/postal : NON hashés (envoyés en clair dans `address.regionCode` / `address.postalCode`)
+
+**Body Data Manager** :
+```json
+{
+  "destinations": [{
+    "operatingAccount": { "accountType": "GOOGLE_ADS", "accountId": "1234567890" },
+    "loginAccount": { "accountType": "GOOGLE_ADS", "accountId": "1234567890" },
+    "productDestinationId": "<conversionActionId>"
+  }],
+  "encoding": "HEX",
+  "events": [{
+    "eventTimestamp": "2026-06-07T15:07:01Z",
+    "transactionId": "<id unique>",
+    "eventSource": "WEB",
+    "conversionValue": 49.99,
+    "currency": "EUR",
+    "adIdentifiers": { "gclid": "..." },
+    "userData": { "userIdentifiers": [{ "emailAddress": "<SHA256-hex>", "phoneNumber": "...", "address": { ... } }] }
+  }],
+  "validateOnly": false
+}
+```
+
+**Limites** :
+- Max **2000 events** par requête (batch côté caller si nécessaire)
+- Au moins 1 identifiant par event : `gclid`/`gbraid`/`wbraid` OU PII (`email`/`phone`/`name`)
+- `transactionId` unique pour dédup (réutiliser l'ID de la conversion en DB)
+
+**API WanaPush** : `POST /api/ads/google/enhanced-conversions/upload`
+- Auth via `session.user.email`
+- Body : `{ adAccountId, conversionActionId, events: [...], validateOnly? }`
+- Hash PII server-side via `buildUserIdentifier()` — NE JAMAIS pré-hasher côté client
+- Retourne `{ ok, uploaded, errors? }` (partial failure possible)
+
+**Impact mesuré** (sources Google + études 2026) :
+- +5 à +15% conversions captées (post-cookie attribution)
+- -8 à -12% CPA observé sur Smart Bidding (l'IA Google a plus de signal)
+
+**Cas d'usage WanaPush** :
+- Lead form : stocker `gclid` à l'arrivée, upload la conversion quand le lead devient client en CRM
+- E-commerce : enrichir la conversion server-side avec PII hashée
+
+**Erreurs typiques** :
+- `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT` → user n'a pas le scope `datamanager`, déclencher re-OAuth
+- `400 INVALID_ARGUMENT` → payload mal formé (timestamp futur, PII non hashée, etc.)
+- `404 NOT_FOUND` → `conversionActionId` n'existe pas sur ce customerId
+
 ### Points critiques Google Ads
 
 | Situation | Solution |
