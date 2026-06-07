@@ -27,6 +27,24 @@ import {
   currencySymbol,
 } from "./utils";
 
+// Pays courants pour le ciblage TikTok / LinkedIn (ISO codes)
+const COMMON_COUNTRIES = [
+  { code: "FR", label: "🇫🇷 France" },
+  { code: "BE", label: "🇧🇪 Belgique" },
+  { code: "CH", label: "🇨🇭 Suisse" },
+  { code: "LU", label: "🇱🇺 Luxembourg" },
+  { code: "MA", label: "🇲🇦 Maroc" },
+  { code: "SN", label: "🇸🇳 Sénégal" },
+  { code: "US", label: "🇺🇸 États-Unis" },
+  { code: "GB", label: "🇬🇧 Royaume-Uni" },
+  { code: "DE", label: "🇩🇪 Allemagne" },
+  { code: "ES", label: "🇪🇸 Espagne" },
+  { code: "IT", label: "🇮🇹 Italie" },
+  { code: "NL", label: "🇳🇱 Pays-Bas" },
+  { code: "CA", label: "🇨🇦 Canada" },
+  { code: "AU", label: "🇦🇺 Australie" },
+];
+
 export function PushModal({
   state,
   patch,
@@ -115,6 +133,8 @@ export function PushModal({
   const platform: AdPlatform = isCreate ? briefPlatform : c.type;
   const isMeta = platform === "META_ADS";
   const isGoogle = platform === "GOOGLE_ADS";
+  const isTikTok = platform === "TIKTOK_ADS";
+  const isLinkedIn = platform === "LINKEDIN_ADS";
 
   // Charge les ConversionActions dès qu'on entre dans le mode Google Ads avec
   // un compte sélectionné. Idempotent : la fonction parent setera l'array dans
@@ -428,18 +448,25 @@ export function PushModal({
             )}
           </div>
 
-          {isMeta && (
+          {(isMeta || isTikTok || isLinkedIn) && (
             <Section
               title="Texte de l'annonce"
-              hint={state.variants.length > 1
-                ? `${state.variants.length} variantes IA dispo — choisis ou édite`
-                : "Pré-rempli depuis ton builder si dispo"}
+              hint={
+                isMeta && state.variants.length > 1
+                  ? `${state.variants.length} variantes IA dispo — choisis ou édite`
+                  : isTikTok
+                  ? "ad_text ≤100 · titre ≤100 · PAUSED par défaut"
+                  : isLinkedIn
+                  ? "headline ≤150 · body ≤600 · Creative DRAFT"
+                  : "Pré-rempli depuis ton builder si dispo"
+              }
               expanded={expandText}
               onToggle={() => patch({ expandText: !expandText })}
               disabled={busy}
             >
               <div className="space-y-3">
-                {state.variants.length > 1 && (
+                {/* A/B variants — Meta uniquement */}
+                {isMeta && state.variants.length > 1 && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase text-zinc-500">
                       Variantes A/B/C
@@ -470,78 +497,104 @@ export function PushModal({
                         );
                       })}
                     </div>
-
-                    {/* Toggle A/B test — Meta uniquement, visible quand >= 2 variantes */}
-                    {isMeta && (
-                      <button
-                        type="button"
-                        onClick={() => patch({ pushAllVariants: !state.pushAllVariants })}
-                        disabled={busy}
-                        className={`w-full flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition ${
-                          state.pushAllVariants
-                            ? "border-violet-400 bg-violet-50 text-violet-800"
-                            : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
-                        }`}
-                      >
-                        <div className="text-left">
-                          <div className="font-semibold text-xs">
-                            🧪 Pousser les {state.variants.length} variantes (A/B test)
-                          </div>
-                          <div className="text-[10px] text-zinc-500 mt-0.5">
-                            1 Campaign CBO · {state.variants.length} AdSets — Meta optimise automatiquement
-                          </div>
+                    <button
+                      type="button"
+                      onClick={() => patch({ pushAllVariants: !state.pushAllVariants })}
+                      disabled={busy}
+                      className={`w-full flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition ${
+                        state.pushAllVariants
+                          ? "border-violet-400 bg-violet-50 text-violet-800"
+                          : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
+                      }`}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-xs">
+                          🧪 Pousser les {state.variants.length} variantes (A/B test)
                         </div>
-                        <div className={`ml-3 flex-shrink-0 w-9 h-5 rounded-full transition-colors ${state.pushAllVariants ? "bg-violet-500" : "bg-zinc-300"}`}>
-                          <div className={`mt-0.5 ml-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state.pushAllVariants ? "translate-x-4" : "translate-x-0"}`} />
+                        <div className="text-[10px] text-zinc-500 mt-0.5">
+                          1 Campaign CBO · {state.variants.length} AdSets — Meta optimise automatiquement
                         </div>
-                      </button>
-                    )}
+                      </div>
+                      <div className={`ml-3 flex-shrink-0 w-9 h-5 rounded-full transition-colors ${state.pushAllVariants ? "bg-violet-500" : "bg-zinc-300"}`}>
+                        <div className={`mt-0.5 ml-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state.pushAllVariants ? "translate-x-4" : "translate-x-0"}`} />
+                      </div>
+                    </button>
                   </div>
                 )}
+
+                {/* Texte principal / Body */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase text-zinc-500 flex justify-between">
-                    <span>Texte principal</span>
-                    <span className="text-zinc-400 font-normal">{primaryText.length}/125</span>
+                    <span>{isLinkedIn ? "Corps du texte" : "Texte principal"}</span>
+                    <span className="text-zinc-400 font-normal">
+                      {primaryText.length}/{isLinkedIn ? 600 : isTikTok ? 100 : 125}
+                    </span>
                   </label>
                   <textarea
                     value={primaryText}
-                    onChange={(e) => patch({ primaryText: e.target.value.slice(0, 125) })}
+                    onChange={(e) =>
+                      patch({ primaryText: e.target.value.slice(0, isLinkedIn ? 600 : isTikTok ? 100 : 125) })
+                    }
                     disabled={busy}
-                    rows={2}
-                    placeholder="Le hook qui apparaît au-dessus de l'image..."
+                    rows={isLinkedIn ? 3 : 2}
+                    placeholder={
+                      isTikTok
+                        ? "Texte accrocheur dans le fil TikTok…"
+                        : isLinkedIn
+                        ? "Corps du message LinkedIn (visible dans le fil pro)…"
+                        : "Le hook qui apparaît au-dessus de l'image..."
+                    }
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none resize-none"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+
+                <div className={`grid gap-3 ${isMeta || isLinkedIn ? "grid-cols-2" : "grid-cols-1"}`}>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase text-zinc-500 flex justify-between">
                       <span>Titre</span>
-                      <span className="text-zinc-400 font-normal">{headline.length}/40</span>
+                      <span className="text-zinc-400 font-normal">
+                        {headline.length}/{isLinkedIn ? 150 : isTikTok ? 100 : 40}
+                      </span>
                     </label>
                     <input
                       type="text"
                       value={headline}
-                      onChange={(e) => patch({ headline: e.target.value.slice(0, 40) })}
+                      onChange={(e) =>
+                        patch({ headline: e.target.value.slice(0, isLinkedIn ? 150 : isTikTok ? 100 : 40) })
+                      }
                       disabled={busy}
-                      placeholder="Sous l'image"
+                      placeholder={
+                        isTikTok
+                          ? "Titre de l'annonce TikTok"
+                          : isLinkedIn
+                          ? "Titre LinkedIn (affiché en gras)"
+                          : "Sous l'image"
+                      }
                       className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase text-zinc-500 flex justify-between">
-                      <span>Description</span>
-                      <span className="text-zinc-400 font-normal">{description.length}/30</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={description}
-                      onChange={(e) => patch({ description: e.target.value.slice(0, 30) })}
-                      disabled={busy}
-                      placeholder="Optionnel"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
-                    />
-                  </div>
+                  {(isMeta || isLinkedIn) && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase text-zinc-500 flex justify-between">
+                        <span>Description</span>
+                        <span className="text-zinc-400 font-normal">
+                          {description.length}/{isMeta ? 30 : 200}
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={description}
+                        onChange={(e) =>
+                          patch({ description: e.target.value.slice(0, isMeta ? 30 : 200) })
+                        }
+                        disabled={busy}
+                        placeholder="Optionnel"
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                      />
+                    </div>
+                  )}
                 </div>
+
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase text-zinc-500">CTA</label>
                   <select
@@ -739,6 +792,51 @@ export function PushModal({
                     })}
                   </div>
                 </div>
+              </div>
+            </Section>
+          )}
+
+          {/* Ciblage pays simplifié — TikTok & LinkedIn */}
+          {(isTikTok || isLinkedIn) && (
+            <Section
+              title="🌍 Pays ciblés"
+              hint={isTikTok ? "ISO → TikTok location_id résolu automatiquement" : "ISO → urn:li:geo résolu automatiquement"}
+              expanded={expandTargeting}
+              onToggle={() => patch({ expandTargeting: !expandTargeting })}
+              disabled={busy}
+            >
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {COMMON_COUNTRIES.map(({ code, label }) => {
+                    const active = geoTargets.some((g) => g.type === "country" && g.key === code);
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          if (active) {
+                            patch({ geoTargets: geoTargets.filter((g) => !(g.type === "country" && g.key === code)) });
+                          } else {
+                            patch({ geoTargets: [...geoTargets, { key: code, label, type: "country" as const }] });
+                          }
+                        }}
+                        className={`text-xs rounded-full border px-3 py-1.5 transition ${
+                          active
+                            ? "border-brand bg-brand/15 text-brand-700 font-semibold"
+                            : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {geoTargets.filter((g) => g.type === "country").length === 0 && (
+                  <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                    Aucun pays sélectionné — par défaut 🇫🇷 France
+                  </p>
+                )}
               </div>
             </Section>
           )}
