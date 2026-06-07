@@ -16,8 +16,7 @@ last_reviewed: 2026-06-06
 # SKILL — WanaPush Ads Module
 
 > Module Ads : connecteurs pub pour Meta, Google, TikTok, LinkedIn.
-> Meta Ads = push E2E production. Google Ads = push Search + Pmax foundation.
-> TikTok / LinkedIn = sync KPIs readonly.
+> Meta Ads = push E2E production. Google Ads = push Search + Pmax v24. TikTok = push + sync (Standard API Approval requis en prod). LinkedIn = sync readonly.
 
 ## 🧭 Quand l'invoquer
 
@@ -43,7 +42,9 @@ lib/ads/
                           sans Advantage+ si erreur #1885543
   google.ts (1108 l)   ← Google Ads API v24 (GOOGLE_ADS_API). Search + PMAX,
                           Conversion Tracking, negative keywords, batch mutate
-  tiktok.ts (201 l)    ← TikTok Ads API v1.3. Sync + metrics. Pas de push.
+  tiktok.ts (~380 l)   ← TikTok Ads API v1.3. Push (Campaign→AdGroup→Ad) + sync + metrics.
+                          SINGLE_IMAGE. resolveLocationIds() via /tool/region/. billingEvent
+                          per objective (CPC/OCPM/CPM). Nécessite Standard API Approval en prod.
   linkedin.ts (230 l)  ← LinkedIn Marketing API v2. Sync + metrics. Pas de push.
   sync.ts (133 l)      ← syncAdAccount(accountId) : refresh + listCampaigns +
                           upsert Campaign + fetchMetrics + upsert AdMetrics
@@ -240,12 +241,58 @@ createConversionAction(account, { name, category, type, countingType }): Promise
 | RSA headlines | Min 3, min 2 descriptions — sinon `RESPONSIVE_SEARCH_AD_ASSETS_INVALID` |
 | PMAX assets | Status PAUSED par défaut → activer manuellement dans Google Ads |
 
-## 🟡 TikTok / LinkedIn — Sync only
+## 🟡 TikTok Ads — Push + Sync
 
-Ces deux connecteurs font uniquement :
+### Push flow (tiktok.ts `pushCampaign`)
+
+```
+1. POST /campaign/create/  → objective_type, BUDGET_MODE_DAY, status=DISABLE
+2. resolveLocationIds()    → GET /tool/region/ pour mapper ISO → TikTok location_id
+3. POST /adgroup/create/   → placement AUTOMATIC, optimization_goal, billing_event
+4. uploadImageFromUrl()    → POST /file/image/ad/upload/ avec upload_type=UPLOAD_BY_URL
+5. POST /ad/create/        → SINGLE_IMAGE, ad_text, call_to_action, landing_page_url, status=DISABLE
+```
+
+Tout est créé en **DISABLE** (TikTok = PAUSED). L'image upload est facultatif (fallback annonce sans visuel si échec).
+
+### Objectifs → billing_event
+
+| objective_type | optimization_goal | billing_event |
+|---|---|---|
+| TRAFFIC | CLICK | CPC |
+| CONVERSIONS | CONVERT | OCPM |
+| LEAD_GENERATION | LEAD | OCPM |
+| REACH | REACH | CPM |
+| VIDEO_VIEWS | VIDEO_VIEW | CPM |
+
+### Points critiques TikTok
+
+| Situation | Solution |
+|-----------|----------|
+| `location_ids` ≠ ISO codes | `resolveLocationIds()` appelle `/tool/region/` → fallback ISO si échec API |
+| Standard API Approval | En Sandbox : fonctionne sur comptes test TikTok Ads Manager. En prod : demander approval sur business-api.tiktok.com |
+| Image specs | 1080×1080 ou 1200×628, JPG/PNG, max 500 KB recommandé |
+| `BID_TYPE_NO_BID` | = "Lowest Cost" (volume max sans bid cap) — idéal nouvelles campagnes sans historique |
+| Token TikTok | Pas de refresh token → expire. Surveiller `tokenExpiresAt` |
+
+### `updateCampaignStatus` / `updateCampaignBudget`
+
+```ts
+// Pause / activation
+POST /campaign/status/update/ { campaign_ids: [id], operation_status: "ENABLE"|"DISABLE" }
+
+// Budget
+POST /campaign/budget/update/ { budget_list: [{ campaign_id: id, budget: amount }] }
+```
+
+Utilisés par l'auto-optimizer (`lib/ads/auto-optimizer.ts`).
+
+## 🔵 LinkedIn — Sync only
+
+Connecteur LinkedIn fait uniquement :
 - `listCampaigns()` → sync statut + métriques depuis l'API
 - `fetchMetrics()` → snapshot quotidien dans `AdMetrics`
-- **Pas de `pushCampaign()`** — à implémenter (review TikTok for Business + LinkedIn Marketing API Partner requis)
+- **Pas de `pushCampaign()`** — LinkedIn Marketing Solutions Partner requis
 
 ## 🎛️ PushModal — 3 modes de destination
 
@@ -310,7 +357,7 @@ Bandeau totaux globaux en bas du tableau. Export CSV disponible.
 2. **Google Ads v24** : v20 sunset 2026-06-10 (déjà migré). RSA = 3+ headlines + 2+ desc. PMAX = batch atomique.
 3. **Pixel Meta + push** : objectifs LEADS/SALES EXIGENT `pixel_id` dans `promotedObject` → vérifier que `SitePixel.pixelId` ou `externalPixelId` est passé.
 4. **PushModal 3 modes** : wanapush_site (auto) > external_with_pixel (vérif) > external_no_pixel (notoriété).
-5. **TikTok / LinkedIn** = sync only. Pas de push. Leur implémentation nécessite un accès Partner.
+5. **TikTok** = push implémenté (Campaign→AdGroup→SINGLE_IMAGE Ad). `resolveLocationIds()` résout ISO→TikTok IDs. billing_event dépend de l'objectif. Standard API Approval requis en prod, Sandbox OK. **LinkedIn** = sync only.
 6. **Tokens chiffrés** : toujours via `lib/crypto.ts`. JAMAIS log/expose `accessToken`/`refreshToken`.
 7. **Refresh token Google** : auto via `ensureFreshAdAccount()` → appelle `refreshTokenFn()`. Meta : pas de refresh, token expire ~60j.
 8. **`auto-config`** : utilise `askAi()` de `lib/ai`, `maxDuration = 60s`, validation Zod stricte du output.
@@ -319,12 +366,12 @@ Bandeau totaux globaux en bas du tableau. Export CSV disponible.
 
 ## 📅 Roadmap Ads
 
-- **TikTok push** : demander access TikTok for Business Marketing API
+- **TikTok Standard API Approval** : soumettre demande sur business-api.tiktok.com (push fonctionne déjà côté code)
 - **LinkedIn push** : demander LinkedIn Marketing Solutions Partner
 - **Google PMAX complet** : assets image/vidéo upload via UI
 - **Meta Reels / Stories** : formats verticaux dans l'Ad creative
-- **A/B test multi-AdSet** : split budget sur variants créatifs
-- **Custom Audiences** : sync audiences WanaPush vers Meta/Google Custom Audiences
+- **TikTok vidéo ads** : uploader vidéo via `/file/video/ad/upload/` pour format principal TikTok
+- **TikTok Smart+ campaigns** : `is_smart_performance_campaign: true` — IA TikTok gère ciblage + créatif
 
 **Sources vérifiées 2026-06-06** :
 - Meta Marketing API v22 (developers.facebook.com/docs/marketing-api)
