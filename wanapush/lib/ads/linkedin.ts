@@ -15,7 +15,7 @@ import type {
 } from "./types";
 
 const API = "https://api.linkedin.com";
-const LI_VERSION = "202410";
+const LI_VERSION = "202605";
 // rw_ads ajouté pour push — nécessite Marketing Developer Platform approval.
 const SCOPES = ["r_ads", "r_ads_reporting", "rw_ads"];
 
@@ -113,7 +113,7 @@ async function exchangeCode(
       headers: {
         Authorization: `Bearer ${tok.access_token}`,
         "X-Restli-Protocol-Version": "2.0.0",
-        "LinkedIn-Version": "202410",
+        "LinkedIn-Version": LI_VERSION,
       },
     },
   );
@@ -179,7 +179,7 @@ async function listCampaigns(account: AdAccountInfo): Promise<CampaignSync[]> {
       headers: {
         Authorization: `Bearer ${account.accessToken}`,
         "X-Restli-Protocol-Version": "2.0.0",
-        "LinkedIn-Version": "202410",
+        "LinkedIn-Version": LI_VERSION,
       },
     },
   );
@@ -232,7 +232,7 @@ async function fetchMetrics(
     headers: {
       Authorization: `Bearer ${account.accessToken}`,
       "X-Restli-Protocol-Version": "2.0.0",
-      "LinkedIn-Version": "202410",
+      "LinkedIn-Version": LI_VERSION,
     },
   });
   const j = (await r.json()) as {

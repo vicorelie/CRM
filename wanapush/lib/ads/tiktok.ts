@@ -224,7 +224,7 @@ function mapObjective(campaignType: string | undefined): string {
     case "CONVERSIONS":
     case "OUTCOME_SALES":
     case "OUTCOME_TRAFFIC":
-      return "CONVERSIONS";
+      return "WEB_CONVERSIONS";
     case "REACH":
       return "REACH";
     case "LEAD_GENERATION":
@@ -239,7 +239,7 @@ function mapObjective(campaignType: string | undefined): string {
 
 function mapOptGoal(objective: string): string {
   switch (objective) {
-    case "CONVERSIONS": return "CONVERT";
+    case "WEB_CONVERSIONS": return "CONVERT";
     case "LEAD_GENERATION": return "LEAD";
     case "VIDEO_VIEWS": return "VIDEO_VIEW";
     case "REACH": return "REACH";
@@ -252,7 +252,7 @@ function mapOptGoal(objective: string): string {
 // CPM pour reach/video (awareness).
 function mapBillingEvent(objective: string): string {
   switch (objective) {
-    case "CONVERSIONS":
+    case "WEB_CONVERSIONS":
     case "LEAD_GENERATION": return "OCPM";
     case "REACH":
     case "VIDEO_VIEWS": return "CPM";
@@ -384,7 +384,7 @@ async function pushCampaign(
         campaign_id: campaignId,
         adgroup_name: `${input.name} – Groupe`,
         placement_type: "PLACEMENT_TYPE_AUTOMATIC",
-        location_ids: locationIds,
+        location: locationIds,
         budget_mode: "BUDGET_MODE_DAY",
         budget: input.dailyBudget,
         schedule_type: "SCHEDULE_FROM_NOW",
