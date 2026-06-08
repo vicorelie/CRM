@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const MODULES = [
+  { name: "Cockpit", emoji: "🎛️", href: "/cockpit", hint: "Vue d'ensemble + Copilot IA" },
   { name: "Mes sites", emoji: "🔌", href: "/sites", hint: "Connecter un site" },
   { name: "Générer un site", emoji: "🎨", href: "/generate", hint: "Builder IA" },
   { name: "Sites générés", emoji: "🗂", href: "/generated-sites", hint: "Bibliothèque" },

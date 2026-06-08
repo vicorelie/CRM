@@ -1,0 +1,448 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
+import type { AnalyticsOverview } from "@/lib/analytics/aggregators";
+import type { Anomaly } from "@/lib/analytics/anomalies";
+
+type Props = {
+  firstName: string;
+  days: number;
+  overview: AnalyticsOverview;
+  anomalies: Anomaly[];
+};
+
+const SEVERITY_STYLE: Record<Anomaly["severity"], string> = {
+  CRITICAL: "border-rose-200 bg-rose-50 text-rose-900",
+  WARNING: "border-amber-200 bg-amber-50 text-amber-900",
+  INFO: "border-yellow-200 bg-yellow-50 text-yellow-900",
+};
+
+const SEVERITY_EMOJI: Record<Anomaly["severity"], string> = {
+  CRITICAL: "🔴",
+  WARNING: "🟠",
+  INFO: "🟡",
+};
+
+export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+  const [dismissedAnomalies, setDismissedAnomalies] = useState<Set<string>>(new Set());
+
+  function changeDays(newDays: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("days", String(newDays));
+    startTransition(() => {
+      router.replace(`/cockpit?${params.toString()}`);
+    });
+  }
+
+  const visibleAnomalies = anomalies.filter((a, i) => !dismissedAnomalies.has(`${a.type}_${i}`));
+  const criticalCount = visibleAnomalies.filter((a) => a.severity === "CRITICAL").length;
+
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-10">
+      {/* Header avec période selector */}
+      <header className="mb-8 flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-widest text-brand-700">Cockpit</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+            Bonjour {firstName}.
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            Vue d&apos;ensemble de ton business sur les {days} derniers jours.
+          </p>
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-white p-1">
+          {[7, 30, 90].map((d) => (
+            <button
+              key={d}
+              onClick={() => changeDays(d)}
+              disabled={isPending}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                days === d
+                  ? "bg-brand-700 text-white"
+                  : "text-zinc-600 hover:bg-zinc-100"
+              } disabled:opacity-50`}
+            >
+              {d}j
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* Anomalies banner (si présentes) */}
+      {visibleAnomalies.length > 0 && (
+        <section className="mb-8 space-y-2">
+          {visibleAnomalies.slice(0, 3).map((a, i) => {
+            const key = `${a.type}_${i}`;
+            return (
+              <div
+                key={key}
+                className={`flex items-start gap-3 rounded-xl border p-4 ${SEVERITY_STYLE[a.severity]}`}
+              >
+                <span className="text-lg" aria-hidden>{SEVERITY_EMOJI[a.severity]}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold uppercase tracking-wide">
+                    {a.severity} · {a.type.replace(/_/g, " ").toLowerCase()}
+                  </div>
+                  <div className="mt-1 text-sm">{a.message}</div>
+                </div>
+                <button
+                  onClick={() =>
+                    setDismissedAnomalies((s) => {
+                      const next = new Set(s);
+                      next.add(key);
+                      return next;
+                    })
+                  }
+                  className="text-zinc-500 hover:text-zinc-900"
+                  aria-label="Masquer"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+          {visibleAnomalies.length > 3 && (
+            <p className="text-xs text-zinc-500">
+              + {visibleAnomalies.length - 3} autre{visibleAnomalies.length - 3 > 1 ? "s" : ""} anomalie{visibleAnomalies.length - 3 > 1 ? "s" : ""}
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Unit Economics (cards header) */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Unit Economics
+        </h2>
+        <UnitEconomicsCards ue={overview.unitEconomics} />
+      </section>
+
+      {/* KPI grid : 5 modules cards cliquables */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Modules
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <AdsCard ads={overview.ads} />
+          <LeadsCard leads={overview.leads} />
+          <ShopCard shop={overview.shop} />
+          <EmailCard email={overview.email} />
+          <GbpCard gbp={overview.gbp} />
+          <CopilotCard criticalCount={criticalCount} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ─── Helpers format ────────────────────────────────────────────────────────
+
+function fmtMoney(n: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+function fmtNum(n: number): string {
+  return new Intl.NumberFormat("fr-FR").format(Math.round(n));
+}
+
+function fmtPct(n: number): string {
+  return `${(n * 100).toFixed(1)}%`;
+}
+
+// ─── Unit Economics cards (header style) ───────────────────────────────────
+
+function UnitEconomicsCards({ ue }: { ue: AnalyticsOverview["unitEconomics"] }) {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <Kpi
+        label="CAC"
+        value={ue.cac !== null ? fmtMoney(ue.cac) : "—"}
+        hint="Coût d'acquisition client"
+      />
+      <Kpi
+        label="LTV"
+        value={ue.ltv !== null ? fmtMoney(ue.ltv) : "—"}
+        hint="Valeur vie client"
+      />
+      <Kpi
+        label="LTV / CAC"
+        value={
+          ue.ltvCacRatio !== null
+            ? `${ue.ltvCacRatio.toFixed(2)}:1`
+            : "—"
+        }
+        hint={ue.ltvCacRatio !== null ? (ue.ltvCacRatio >= 3 ? "✓ Cible 3:1" : "⚠ Sous cible 3:1") : ""}
+        accent={ue.ltvCacRatio !== null ? (ue.ltvCacRatio >= 3 ? "good" : "warn") : "neutral"}
+      />
+      <Kpi
+        label="Lead Velocity"
+        value={
+          ue.leadVelocityRate !== null
+            ? `${ue.leadVelocityRate >= 0 ? "▲ +" : "▼ "}${(Math.abs(ue.leadVelocityRate) * 100).toFixed(0)}%`
+            : "—"
+        }
+        hint="vs période précédente"
+        accent={ue.leadVelocityRate !== null ? (ue.leadVelocityRate >= 0 ? "good" : "warn") : "neutral"}
+      />
+    </div>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  hint,
+  accent = "neutral",
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  accent?: "good" | "warn" | "neutral";
+}) {
+  const accentColor =
+    accent === "good"
+      ? "text-emerald-700"
+      : accent === "warn"
+        ? "text-amber-700"
+        : "text-zinc-900";
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+        {label}
+      </p>
+      <p className={`mt-1 text-2xl font-bold ${accentColor}`}>{value}</p>
+      {hint && <p className="mt-1 text-[11px] text-zinc-500">{hint}</p>}
+    </div>
+  );
+}
+
+// ─── Module cards (cliquables, lien vers le module) ────────────────────────
+
+function ModuleCard({
+  href,
+  emoji,
+  title,
+  empty,
+  children,
+}: {
+  href: string;
+  emoji: string;
+  title: string;
+  empty?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group block rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:border-brand-300 hover:shadow-sm"
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-xl" aria-hidden>
+          {emoji}
+        </span>
+        <h3 className="font-semibold text-zinc-950">{title}</h3>
+        <span className="ml-auto text-xs text-zinc-400 group-hover:text-brand-700">→</span>
+      </div>
+      {empty ? (
+        <p className="text-sm text-zinc-500">{empty}</p>
+      ) : (
+        <div className="space-y-1.5 text-sm">{children}</div>
+      )}
+    </Link>
+  );
+}
+
+function MetricLine({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "good" | "warn";
+}) {
+  const color =
+    accent === "good"
+      ? "text-emerald-700"
+      : accent === "warn"
+        ? "text-amber-700"
+        : "text-zinc-900";
+  return (
+    <div className="flex items-baseline justify-between">
+      <span className="text-zinc-500">{label}</span>
+      <span className={`font-mono font-semibold ${color}`}>{value}</span>
+    </div>
+  );
+}
+
+function AdsCard({ ads }: { ads: AnalyticsOverview["ads"] }) {
+  if (ads.totalSpend === 0) {
+    return (
+      <ModuleCard
+        href="/ads"
+        emoji="🎯"
+        title="Publicité"
+        empty="Pas encore de campagnes actives. Connecte un compte pub."
+      />
+    );
+  }
+  const topPlat = ads.byPlatform[0];
+  return (
+    <ModuleCard href="/ads" emoji="🎯" title="Publicité">
+      <MetricLine label="Dépense" value={fmtMoney(ads.totalSpend)} />
+      <MetricLine
+        label="ROAS"
+        value={`${ads.roas.toFixed(2)}x`}
+        accent={ads.roas >= 2 ? "good" : ads.roas < 1 ? "warn" : undefined}
+      />
+      <MetricLine label="Revenue" value={fmtMoney(ads.totalRevenue)} />
+      {topPlat && (
+        <MetricLine
+          label="Top"
+          value={`${topPlat.platform.replace("_ADS", "")} ${topPlat.roas.toFixed(2)}x`}
+        />
+      )}
+    </ModuleCard>
+  );
+}
+
+function LeadsCard({ leads }: { leads: AnalyticsOverview["leads"] }) {
+  if (leads.total === 0) {
+    return (
+      <ModuleCard
+        href="/leads"
+        emoji="🧲"
+        title="Leads"
+        empty="Aucun lead capturé. Active les formulaires sur tes sites."
+      />
+    );
+  }
+  return (
+    <ModuleCard href="/leads" emoji="🧲" title="Leads">
+      <MetricLine label="Total" value={fmtNum(leads.total)} />
+      <MetricLine
+        label="🔥 HOT / 🌡 WARM"
+        value={`${leads.byTemperature.HOT} / ${leads.byTemperature.WARM}`}
+        accent={leads.byTemperature.HOT > 0 ? "good" : undefined}
+      />
+      <MetricLine
+        label="Score moyen"
+        value={leads.averageScore !== null ? `${leads.averageScore.toFixed(0)}/100` : "—"}
+      />
+      <MetricLine label="Conversion" value={fmtPct(leads.conversionRate)} />
+    </ModuleCard>
+  );
+}
+
+function ShopCard({ shop }: { shop: AnalyticsOverview["shop"] }) {
+  if (shop.paidOrders === 0) {
+    return (
+      <ModuleCard
+        href="/shop"
+        emoji="🛍️"
+        title="Boutique"
+        empty="Pas encore de ventes. Configure Stripe sur ta boutique."
+      />
+    );
+  }
+  return (
+    <ModuleCard href="/shop" emoji="🛍️" title="Boutique">
+      <MetricLine label="CA brut" value={fmtMoney(shop.totalRevenue)} />
+      <MetricLine label="CA net" value={fmtMoney(shop.netRevenue)} />
+      <MetricLine label="Commandes" value={fmtNum(shop.paidOrders)} />
+      <MetricLine label="Panier moyen" value={fmtMoney(shop.averageOrderValue)} />
+    </ModuleCard>
+  );
+}
+
+function EmailCard({ email }: { email: AnalyticsOverview["email"] }) {
+  if (email.campaignsSent === 0) {
+    return (
+      <ModuleCard
+        href="/email"
+        emoji="✉️"
+        title="Email"
+        empty="Aucune campagne envoyée. Crée ta première newsletter."
+      />
+    );
+  }
+  return (
+    <ModuleCard href="/email" emoji="✉️" title="Email">
+      <MetricLine label="Campagnes" value={fmtNum(email.campaignsSent)} />
+      <MetricLine label="Destinataires" value={fmtNum(email.totalDelivered)} />
+      <MetricLine
+        label="Ouverture"
+        value={fmtPct(email.openRate)}
+        accent={email.openRate >= 0.2 ? "good" : email.openRate < 0.1 ? "warn" : undefined}
+      />
+      <MetricLine
+        label="Clic"
+        value={fmtPct(email.clickRate)}
+        accent={email.clickRate >= 0.02 ? "good" : undefined}
+      />
+    </ModuleCard>
+  );
+}
+
+function GbpCard({ gbp }: { gbp: AnalyticsOverview["gbp"] }) {
+  if (gbp.totalImpressions === 0 && gbp.totalReviews === 0) {
+    return (
+      <ModuleCard
+        href="/gbp"
+        emoji="📍"
+        title="Google Business"
+        empty="Pas connecté. Branche ta fiche Google Business Profile."
+      />
+    );
+  }
+  return (
+    <ModuleCard href="/gbp" emoji="📍" title="Google Business">
+      <MetricLine label="Impressions" value={fmtNum(gbp.totalImpressions)} />
+      <MetricLine label="Site → clics" value={fmtNum(gbp.websiteClicks)} />
+      <MetricLine label="Appels" value={fmtNum(gbp.callClicks)} />
+      {gbp.averageRating !== null && (
+        <MetricLine
+          label="Note"
+          value={`${gbp.averageRating.toFixed(1)}★ (${fmtNum(gbp.totalReviews)})`}
+        />
+      )}
+    </ModuleCard>
+  );
+}
+
+function CopilotCard({ criticalCount }: { criticalCount: number }) {
+  return (
+    <button
+      onClick={() => {
+        // Trigger l'ouverture du drawer (event custom écouté par CopilotDrawer)
+        window.dispatchEvent(new CustomEvent("wp:open-copilot"));
+      }}
+      className="group rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 text-left transition-all hover:border-brand-400 hover:shadow-md"
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-xl" aria-hidden>🤖</span>
+        <h3 className="font-semibold text-zinc-950">Copilot IA</h3>
+        {criticalCount > 0 && (
+          <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
+            {criticalCount}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-zinc-600">
+        Pose une question sur ton business. L&apos;IA exploite tes vraies données pour répondre.
+      </p>
+      <p className="mt-3 text-xs font-medium text-brand-700 group-hover:underline">
+        Ouvrir le chat →
+      </p>
+    </button>
+  );
+}
