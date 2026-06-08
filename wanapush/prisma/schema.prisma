@@ -78,6 +78,8 @@ model User {
   adAccounts      AdAccount[]
   adAudiences     AdAudience[]
   audienceSyncs   AudienceSync[]
+  emailContacts   EmailContact[]
+  emailCampaigns  EmailCampaign[]
   shops           Shop[]
 }
 
@@ -1530,4 +1532,135 @@ enum CapiStatus {
   SENT
   FAILED
   RETRIED
+}
+
+
+// ─── Email Marketing Module ──────────────────────────────────────────────────
+// Module marketing email (newsletters, broadcasts, sequences, transactionnels
+// non-Shop). Provider : Resend (clé partagée RESEND_API_KEY).
+// Distinct du module Shop email transactionnel (lib/shop-email.ts).
+
+model EmailContact {
+  id             String              @id @default(cuid())
+  userId         String
+  email          String
+  firstName      String?
+  lastName       String?
+  /** Tags libres : ["client", "newsletter", "vip", ...] — JSON array of strings */
+  tags           Json?
+  /** Champs custom additionnels : { jobTitle, company, plan, lastPurchaseAt, ... } */
+  attributes     Json?
+  /** Provenance : "shop:order:{shopId}" | "forms:newsletter:{siteSlug}" | "import:csv:{batchId}" | "manual" */
+  source         String?             @db.VarChar(255)
+  status         EmailContactStatus  @default(ACTIVE)
+  /** RGPD : timestamp consentement (double-opt-in confirmé OU import CSV avec attestation) */
+  consentedAt    DateTime?
+  unsubscribedAt DateTime?
+  /** Date du dernier engagement (open ou click) — pour segmentation "inactifs depuis X jours" */
+  lastEngagedAt  DateTime?
+  /** Bounce permanent → status BOUNCED, raison stockée pour debug */
+  bounceReason   String?             @db.Text
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sends EmailSend[]
+
+  @@unique([userId, email])
+  @@index([userId, status])
+  @@index([userId, source])
+}
+
+enum EmailContactStatus {
+  ACTIVE
+  PENDING // double-opt-in en attente
+  UNSUBSCRIBED
+  BOUNCED // hard bounce permanent
+  COMPLAINED // marqué spam (Resend webhook spam_complaint)
+}
+
+model EmailCampaign {
+  id           String         @id @default(cuid())
+  userId       String
+  name         String
+  subject      String         @db.VarChar(255)
+  preheader    String?        @db.VarChar(255)
+  fromName     String         @db.VarChar(100)
+  fromEmail    String         @db.VarChar(255)
+  replyTo      String?        @db.VarChar(255)
+  /** Body en markdown (source). Le HTML est rendu à l'envoi pour avoir les
+   *  derniers helpers (unsub link, tracking pixels désactivés MPP-safe...) */
+  bodyMarkdown String         @db.MediumText
+  /** Snapshot du HTML rendu au moment de l'envoi (pour archive + analytics) */
+  bodyHtmlSnapshot String?    @db.MediumText
+  /** Critères de segmentation appliqués au moment de l'envoi (status, tags, etc.) */
+  segmentJson  Json?
+  status       EmailCampaignStatus @default(DRAFT)
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  /** Compteurs agrégés (mis à jour par webhooks Resend) :
+   *  { recipients, delivered, opens, uniqueOpens, clicks, uniqueClicks, bounces, complaints, unsubscribes } */
+  stats        Json?
+  /** A/B test : si défini, 2ème variante de subject. La gagnante est envoyée au reste après N% sample. */
+  abVariantSubject String?    @db.VarChar(255)
+  abSamplePercent  Int?       // 10/20/30 typiquement
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sends EmailSend[]
+
+  @@index([userId, status])
+  @@index([userId, sentAt])
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model EmailSend {
+  id            String          @id @default(cuid())
+  campaignId    String?
+  contactId     String
+  /** A/B variant : "A" (subject principal) ou "B" (abVariantSubject) */
+  abVariant     String?         @db.VarChar(1)
+  /** ID Resend pour matcher les webhooks events */
+  resendId      String?         @db.VarChar(64)
+  status        EmailSendStatus @default(QUEUED)
+  /** Compteurs locaux (incrémentés à chaque event Resend) — pour campaign-level
+   *  on agrège dans EmailCampaign.stats par UPDATE atomique. */
+  openCount     Int             @default(0)
+  clickCount    Int             @default(0)
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  firstOpenedAt DateTime?
+  firstClickedAt DateTime?
+  bouncedAt     DateTime?
+  unsubscribedAt DateTime?
+  errorMessage  String?         @db.Text
+  createdAt     DateTime        @default(now())
+
+  campaign EmailCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contact  EmailContact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, status])
+  @@index([contactId])
+  @@index([resendId])
+}
+
+enum EmailSendStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  UNSUBSCRIBED
+  FAILED
 }

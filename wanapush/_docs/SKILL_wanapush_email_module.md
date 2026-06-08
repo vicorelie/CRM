@@ -11,11 +11,43 @@ version: 0.1
 last_reviewed: 2026-06-04
 ---
 
-# SKILL — WanaPush Email Module (STUB + base Resend existante)
+# SKILL — WanaPush Email Module
 
-> ⚠️ **État juin 2026** : module marketing non implémenté (UI stub 17 lignes).
-> Base : `lib/shop-email.ts` (147 lignes) gère les emails transactionnels de
-> commande via Resend → réutilisable pour le marketing.
+> **État 2026-06-08 : MVP backend complet shippé.** Schema Prisma + lib/email/
+> + 5 endpoints API. UI dashboard reste à brancher (squelette ModulePage existant).
+> Base transactionnelle Shop (`lib/shop-email.ts`) reste séparée pour les
+> emails de commande.
+
+## 🎯 Backend MVP (shippé 2026-06-08)
+
+**Modèles Prisma** :
+- `EmailContact` : userId, email, firstName/lastName, tags JSON, attributes JSON, source, status (ACTIVE/PENDING/UNSUBSCRIBED/BOUNCED/COMPLAINED), consentedAt, unsubscribedAt, lastEngagedAt, bounceReason. Unique (userId, email).
+- `EmailCampaign` : userId, name, subject, preheader, fromName, fromEmail, replyTo, bodyMarkdown, bodyHtmlSnapshot, segmentJson, status (DRAFT/SCHEDULED/SENDING/SENT/FAILED/CANCELLED), scheduledAt, sentAt, stats JSON, A/B (abVariantSubject + abSamplePercent).
+- `EmailSend` : campaignId, contactId, abVariant, resendId (cache pour webhooks), status (QUEUED→SENT→DELIVERED→OPENED/CLICKED/BOUNCED/COMPLAINED), openCount, clickCount, firstOpenedAt, firstClickedAt, etc.
+
+**Module core** (`lib/email/`) :
+- `index.ts` : `sendEmail(input)`, `sendBatch(inputs[100])`, `sendCampaign(campaignId)` (orchestrator full broadcast avec chunk 100, EmailSend pre-created pour token unsub unique). `renderMarkdownToHtml()` + `wrapHtmlTemplate()` avec footer RGPD obligatoire (adresse postale + lien unsub manuel).
+- `unsubscribe.ts` : `genUnsubToken(contactId, sendId?)` + `verifyUnsubToken(token)` HMAC-SHA256 stateless (pas de DB lookup pour valider). `buildUnsubHeaders()` retourne `List-Unsubscribe: <mailto:>, <https:>` + `List-Unsubscribe-Post: List-Unsubscribe=One-Click` — RFC 8058 compliant (Gmail/Yahoo exigent depuis fév 2024, Apple Mail aussi).
+- `webhooks.ts` : `verifyResendSignature(rawBody, headers, secret)` HMAC-SHA256 Svix avec anti-replay 5min. Supporte plusieurs sigs séparées par espace (rotation). `applyResendEvent(event)` update EmailSend + EmailContact status (hard bounce → BOUNCED, complaint → COMPLAINED + désabo auto) + agrège `EmailCampaign.stats` (recipients, delivered, opens/uniqueOpens, clicks/uniqueClicks, bounces, complaints, unsubscribes).
+
+**Endpoints API** :
+- `POST/GET /api/email/contacts` : CRUD basique + pagination cursor.
+- `POST /api/email/contacts/import` : bulk import 10k max, CSV (header `email,firstName,lastName,tags`) ou array JSON. `assumeConsent: true` → ACTIVE direct, sinon PENDING (double-opt-in séparé).
+- `POST/GET /api/email/campaigns` : create DRAFT/SCHEDULED + list.
+- `POST /api/email/campaigns/[id]/send` : déclenche `sendCampaign()`. Refuse si déjà SENT/SENDING.
+- `GET/POST /api/email/unsubscribe/[token]` : POST = RFC 8058 one-click (Gmail/Yahoo). GET = lien footer (page HTML de confirmation).
+- `POST /api/email/webhooks/resend` : Svix-signed (`RESEND_WEBHOOK_SECRET`). Reçoit `email.sent/delivered/opened/clicked/bounced/complained/failed`.
+
+**Variables d'env requises** :
+- `RESEND_API_KEY` : déjà présent (Shop transactionnel)
+- `RESEND_WEBHOOK_SECRET` : à configurer Resend Dashboard > Webhooks > Signing secret (whsec_...)
+- `NEXTAUTH_SECRET` : réutilisé pour HMAC tokens unsub
+- `NEXT_PUBLIC_BASE_URL` : pour construire URLs unsub absolues
+- `EMAIL_FROM_DEFAULT` (optionnel) : email mailto: dans List-Unsubscribe, défaut `noreply@wanapush.com`
+
+⚠️ **Base** : `lib/shop-email.ts` (147 lignes) gère les emails transactionnels de
+commande via Resend → laisser tranquille. Le nouveau module `lib/email/` est
+séparé pour le marketing.
 
 ## 🧭 Quand l'invoquer
 
