@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { detectAnomalies } from "@/lib/analytics/anomalies";
 import { sendCriticalAnomalyAlert } from "@/lib/analytics/digest";
+import { sendAnomalyAlertToSlack } from "@/lib/notifications/slack";
 
 export const runtime = "nodejs";
 export const maxDuration = 600;
@@ -43,11 +44,14 @@ async function tick() {
   const totals = { CRITICAL: 0, WARNING: 0, INFO: 0 };
   const errors: Array<{ userId: string; error: string }> = [];
 
+  let slackSent = 0;
+  let slackSkipped = 0;
   for (const user of users) {
     try {
       const anomalies = await detectAnomalies(user.id);
       for (const a of anomalies) totals[a.severity]++;
 
+      // Email alert
       const result = await sendCriticalAnomalyAlert(user.email, user.name ?? "fondateur·rice", anomalies);
       if (result.skipped) skipped++;
       else if (result.ok) sent++;
@@ -55,13 +59,22 @@ async function tick() {
         failed++;
         errors.push({ userId: user.id, error: result.error ?? "unknown" });
       }
+
+      // Slack alert (best-effort, en parallèle de l'email)
+      try {
+        const slackResult = await sendAnomalyAlertToSlack(user.id, anomalies);
+        if (slackResult.skipped) slackSkipped++;
+        else slackSent += slackResult.sent;
+      } catch (e) {
+        console.warn(`[daily-anomalies] Slack send failed for ${user.id}: ${e instanceof Error ? e.message : e}`);
+      }
     } catch (e) {
       failed++;
       errors.push({ userId: user.id, error: e instanceof Error ? e.message : String(e) });
     }
   }
 
-  return { processed: users.length, sent, skipped, failed, totalsBySeverity: totals, errors: errors.slice(0, 10) };
+  return { processed: users.length, sent, skipped, failed, slackSent, slackSkipped, totalsBySeverity: totals, errors: errors.slice(0, 10) };
 }
 
 export async function POST(req: Request) {

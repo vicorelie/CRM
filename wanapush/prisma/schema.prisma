@@ -83,6 +83,7 @@ model User {
   gbpAccounts     GbpAccount[]
   leadWebhooks    LeadWebhook[]
   copilotConversations CopilotConversation[]
+  slackIntegrations    SlackIntegration[]
   shops           Shop[]
 }
 
@@ -1966,4 +1967,31 @@ enum CopilotRole {
   USER
   ASSISTANT
   TOOL
+}
+
+// ─── Slack Integration (notifications + futur slash commands) ───────────────
+model SlackIntegration {
+  id           String   @id @default(cuid())
+  userId       String
+  /** Nom convivial (ex: "#general", "#alerts-marketing") */
+  name         String   @db.VarChar(100)
+  /** URL incoming webhook Slack — CHIFFRÉE AES-256-GCM (URL = secret pour Slack) */
+  webhookUrl   String   @db.Text
+  /** Channel name cache (depuis settings Slack — affichage UI) */
+  channelName  String?  @db.VarChar(100)
+  /** Toggles d'envoi */
+  receiveAnomalyAlerts Boolean @default(true)
+  receiveWeeklyDigest  Boolean @default(true)
+  enabled      Boolean  @default(true)
+  /** Stats */
+  totalSent    Int      @default(0)
+  totalFails   Int      @default(0)
+  lastSentAt   DateTime?
+  lastError    String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
 }

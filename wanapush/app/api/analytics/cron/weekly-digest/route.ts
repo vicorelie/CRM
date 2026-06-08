@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { getOverview, defaultRange } from "@/lib/analytics/aggregators";
 import { detectAnomalies } from "@/lib/analytics/anomalies";
 import { sendWeeklyDigest } from "@/lib/analytics/digest";
+import { sendWeeklyDigestToSlack } from "@/lib/notifications/slack";
 
 export const runtime = "nodejs";
 export const maxDuration = 600;
@@ -48,6 +49,8 @@ async function tick() {
   let sent = 0;
   let skipped = 0;
   let failed = 0;
+  let slackSent = 0;
+  let slackSkipped = 0;
   const errors: Array<{ userId: string; error: string }> = [];
 
   for (const user of users) {
@@ -56,6 +59,8 @@ async function tick() {
         getOverview(user.id, range),
         detectAnomalies(user.id),
       ]);
+
+      // Email digest
       const result = await sendWeeklyDigest(user.email, user.name ?? "fondateur·rice", overview, anomalies);
       if (result.skipped) skipped++;
       else if (result.ok) sent++;
@@ -63,13 +68,24 @@ async function tick() {
         failed++;
         errors.push({ userId: user.id, error: result.error ?? "unknown" });
       }
+
+      // Slack digest (best-effort, en parallèle)
+      try {
+        const slackResult = await sendWeeklyDigestToSlack(
+          user.id, user.name ?? "fondateur·rice", 7, overview, anomalies,
+        );
+        if (slackResult.skipped) slackSkipped++;
+        else slackSent += slackResult.sent;
+      } catch (e) {
+        console.warn(`[weekly-digest] Slack send failed for ${user.id}: ${e instanceof Error ? e.message : e}`);
+      }
     } catch (e) {
       failed++;
       errors.push({ userId: user.id, error: e instanceof Error ? e.message : String(e) });
     }
   }
 
-  return { processed: users.length, sent, skipped, failed, errors: errors.slice(0, 10) };
+  return { processed: users.length, sent, skipped, failed, slackSent, slackSkipped, errors: errors.slice(0, 10) };
 }
 
 export async function POST(req: Request) {
