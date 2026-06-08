@@ -493,6 +493,62 @@ Module : `lib/ads/product-feed-sync.ts`. Sync les produits Prisma `Shop` vers le
 
 **Dégradé gracieux** : si `metaCatalog.id` ou `googleMerchant.{accountId,dataSourceId}` non configurés → erreur explicite dans `result.{meta,google}.error`, l'autre plateforme tourne normalement.
 
+### 🎯 Audience Sync auto-pilote — Custom Audiences cross-platform (LLA-ready)
+
+Module : `lib/ads/audience-sync.ts`. Push les Customers Shop + Leads FormSubmission comme Custom Audiences sur **Meta + LinkedIn + TikTok en parallèle**, puis crée auto les Lookalike Audiences (LLA) Meta depuis les seeds.
+
+**Pourquoi critique 2026** :
+- Advantage+ Audience (Meta) a besoin d'un seed first-party data — sans seed, l'algo tourne à vide
+- **LLA 1% sur seed Customers : -38% CPA** mesuré vs interest targeting
+- **LLA Value-Based : +20-35% ROAS** mesuré
+- Match rate >75% avec email+phone+name+country (vs 40-70% email seul)
+
+**Endpoints** :
+- Meta : `POST /v25.0/{audience_id}/users` avec `payload.schema = ["EMAIL_SHA256", "PHONE_SHA256", "FN", "LN", "COUNTRY"]` + `data`. Création : `POST /act_{id}/customaudiences` avec `subtype: CUSTOM` ou `LOOKALIKE` (avec `lookalike_spec`).
+- LinkedIn : `POST /v2/dmpSegments` (créer segment) + `POST /v2/dmpSegments/{id}/users` avec header `X-RestLi-Method: BATCH_CREATE`. Streaming après attente 5s. Seul `SHA256_EMAIL` supporté (PII enrichie ignorée). `sourcePlatform` ENUM requis (var d'env `LINKEDIN_DMP_SOURCE_PLATFORM`, défaut "WANAPUSH" — à activer par LinkedIn partner team pour prod).
+- TikTok : `POST /dmp/custom_audience/file/upload/` (multipart/form-data avec CSV "EMAIL_SHA256\\nhash1\\nhash2...") → file_id, puis `POST /dmp/custom_audience/create/` avec `calculate_type: FIRST_SHA256`. TikTok ne supporte PAS l'ajout incrémental → re-créer l'audience pour update (audience par snapshot).
+
+**Scopes OAuth** :
+- Meta : `ads_management` + `business_management` (déjà dans META_ADS_SCOPES)
+- LinkedIn : `rw_dmp_segments` ajouté (audiences program separate, demander à LinkedIn partner team)
+- TikTok : token Marketing API existant suffit
+
+**Normalisation PII (avant SHA-256 HEX)** :
+- Email : lowercase + trim
+- Phone : retire tout sauf digits (pas de "+", format brut pour Meta)
+- Nom : lowercase + sans diacritiques (é→e) + retire non-alpha
+- Country : ISO alpha-2 lowercase (Meta) / uppercase (LinkedIn/TikTok)
+
+**Schéma DB** (migration `add_audience_sync`) — modèle `AudienceSync` :
+- 1 row par `(userId, platform, source, name)` — UNIQUE
+- `externalId` cache l'ID retourné par la plateforme → réutilise audience existante on re-sync (ne re-crée pas)
+- `source` : CUSTOMERS | LEADS | LOOKALIKE
+- `seedSyncId` : si LOOKALIKE, référence vers le seed CUSTOMERS/LEADS
+- `lookalikeRatio` + `countryCode` : params Meta LLA
+- `status` : PENDING → SYNCED / FAILED
+- Index sur status pour cron refresh
+
+**Fonctions exportées** :
+- `syncMembersToAudience(userId, platform, source, name, members, options)` : push UNE audience sur UNE plateforme. Réutilise via cache. Retourne `{ platform, ok, audienceId, synced, error? }`.
+- `syncMembersCrossPlatform(userId, source, name, members, options)` : fan-out Meta+LinkedIn+TikTok en parallèle.
+- `syncShopCustomersToAudiences(shopId)` : pull tous les Customers Shop (max 50k) + fan-out cross-platform.
+- `syncSiteLeadsToAudiences(siteSlug, userId)` : pull tous les FormSubmission emails (max 50k) + fan-out.
+- `createMetaLookalikeFromSeed(seedSyncId, countryCode, ratio)` : auto-création LLA Meta depuis un seed SYNCED.
+
+**Endpoints API** :
+- `POST /api/ads/audience-sync/customers` : body `{ shopId, lookalike?: { ratio?, countryCode? } }`. Auth session + ownership Shop. Crée la LLA après si demandée.
+- `POST /api/ads/audience-sync/leads` : body `{ siteSlug, lookalike? }`. Auth session + ownership site/shop.
+
+**Cron weekly** : `POST/GET /api/ads/cron/refresh-audiences` auth `CRON_SECRET`.
+- Refresh SYNCED audiences plus de 6 jours (rotation hebdo, best practice 2026)
+- Refresh FAILED de moins de 30j
+- Refresh LLA Meta plus de 12 jours (bi-mensuel)
+- Dedup : 1 seul refresh par (shopId/siteSlug) — le fan-out sync les 3 plateformes
+- Max 100 syncs + 50 LLA par run
+- À schedule : `0 3 * * 1` (lundi 3h UTC)
+
+**Dégradé gracieux** : si une plateforme manque (AdAccount non connecté, scope manquant), `ok: false` avec `error` explicite, les autres plateformes continuent.
+
 ### Points critiques Google Ads
 
 | Situation | Solution |

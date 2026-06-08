@@ -18,7 +18,9 @@ const API = "https://api.linkedin.com";
 const LI_VERSION = "202605";
 // rw_ads ajouté pour push — nécessite Marketing Developer Platform approval.
 // rw_conversions ajouté pour Conversions API (CAPI server-side).
-const SCOPES = ["r_ads", "r_ads_reporting", "rw_ads", "rw_conversions"];
+// rw_dmp_segments ajouté pour Matched Audiences / DMP Segments (Audience Sync).
+//   ⚠️ Audiences program separate — pas inclus automatiquement dans MDP.
+const SCOPES = ["r_ads", "r_ads_reporting", "rw_ads", "rw_conversions", "rw_dmp_segments"];
 
 function appCreds() {
   const id = process.env.LINKEDIN_ADS_CLIENT_ID ?? process.env.LINKEDIN_CLIENT_ID;
