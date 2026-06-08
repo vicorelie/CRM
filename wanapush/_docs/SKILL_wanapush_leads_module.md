@@ -111,13 +111,43 @@ model FormSubmission {
 - **Pas de CSRF token** côté form public — on se repose sur l'origin du browser
   et le honeypot. Acceptable car la BDD ne fait que stocker.
 
-## ⚠️ Limites et trous connus
+## 🚀 Upgrade pro 2026-06-08 — Auto-pilote complet
 
-- **Pas d'email de notification** au propriétaire à chaque soumission. Le seul
-  email service intégré est `lib/shop-email.ts` (Resend) utilisé pour les
-  confirmations de commande Shop — réutilisable mais pas câblé.
-- **Pas de webhook sortant** ni d'intégration CRM (HubSpot, Salesforce, etc.).
-  Le projet `CNK-DEM/cron/auto_transfer_leads.php` (VTiger) est un projet
+Pipeline `runLeadPipeline(submissionId)` (fire-and-forget depuis `/api/forms/submit`) :
+
+1. **Lead scoring hybride** (`lib/leads/scoring.ts`) : règles firmographic/demographic (email pro vs free, domaine jetable détecté, company/jobTitle/phone fields) + IA Claude pour analyser l'intent du message
+   - Score 0-100 → temperature HOT (≥75) / WARM (50-74) / COLD (25-49) / INVALID (<25)
+   - Behavioral signals = 60%+ du poids total (best practice 2026)
+   - Graceful degradation : si IA timeout, fallback sur règles seules
+2. **EmailContact auto-sync** : upsert dans le module Email (consent implicite — form submit volontaire) avec tags `lead`, `temp:hot|warm|cold`, `site:{slug}`, `type:{contact|newsletter}`. Source : `lead:{siteSlug}:{type}`. Permet le nurturing auto via séquences Email.
+3. **Notification owner** : email HTML via `lib/email.sendEmail()` avec badge couleur selon temperature (🔥 HOT rouge / 🌡️ WARM ambre / ❄️ COLD bleu) + score + reason + form data récap.
+4. **Webhooks sortants CRM** : fan-out vers tous les `LeadWebhook` actifs du user, filtrés par `siteSlug` + `minTemperature`. Signed HMAC-SHA256 via secret chiffré (header `X-WanaPush-Signature: sha256=...`). Timeout 10s. Stats (totalFires/totalFails/lastError) trackés.
+
+**Pas de traitement INVALID** : scoring < 25 (email jetable, malformé, spam pattern) → skip toute la chaîne 2/3/4.
+
+**Schéma DB étendu** (migration `add_leads_pipeline`) :
+- `FormSubmission.{leadScore, leadTemperature, leadScoreReason, leadStatus, enrichmentJson, notifiedAt, emailContactId}`
+- Enums `LeadTemperature` (HOT/WARM/COLD/INVALID) + `LeadStatus` (NEW/CONTACTED/QUALIFIED/CONVERTED/DISQUALIFIED) — workflow manuel pour les reps
+- Nouveau modèle `LeadWebhook` (userId, name, url, secret AES-256-GCM, siteSlug optional, minTemperature optional, stats)
+
+**Endpoints API supplémentaires** :
+- `POST /api/leads/rescore/[id]` : force re-scoring d'un lead
+- `GET/POST /api/leads/webhooks` : CRUD webhooks CRM
+- `PATCH/DELETE /api/leads/webhooks/[id]` : update/delete
+
+**Vars d'env** : `RESEND_API_KEY`, `EMAIL_FROM_DEFAULT`, `ANTHROPIC_API_KEY` ou `OPENAI_API_KEY`, `NEXT_PUBLIC_BASE_URL`, `NEXTAUTH_SECRET`
+
+**Sources scoring 2026** :
+- Warmly AI : Compound Score Method (rules+ML, behavioral 60%+)
+- Breadcrumbs : 4-buckets framework
+- TrailSpark : Hybrid is default for mature B2B SaaS
+- 138% ROI avec scoring vs 78% sans (Pintel.ai)
+
+## ⚠️ Limites restantes
+
+- **Pas d'enrichissement company auto** : Hunter.io / Apollo.io API pas branchés (optional, requires user API key + paid plans). Phase 2 si demande.
+- **Pas d'UI webhooks/scoring** : backend prêt, UI dashboard `/leads` reste à étendre pour CRUD webhooks + filtres temperature/status.
+- Le projet `CNK-DEM/cron/auto_transfer_leads.php` (VTiger) est un projet
   séparé, *pas* intégré dans WanaPush.
 - **Pas de gestion `multipart/form-data`** : le catalogue accepte le type
   `file` côté HTML mais `/api/forms/submit` ne parse que du JSON. Un upload

@@ -81,6 +81,7 @@ model User {
   emailContacts   EmailContact[]
   emailCampaigns  EmailCampaign[]
   gbpAccounts     GbpAccount[]
+  leadWebhooks    LeadWebhook[]
   shops           Shop[]
 }
 
@@ -137,11 +138,45 @@ model FormSubmission {
   ttSentAt DateTime?
   ttError  String?                   @db.Text
 
+  // ── Lead enrichment + scoring (pipeline auto-pilote 2026) ───────────────
+  /** Score lead 0-100 (firmographic + demographic + behavioral hybride IA) */
+  leadScore        Int?
+  /** Catégorie dérivée du score : HOT (≥75) / WARM (50-74) / COLD (25-49) / INVALID (<25) */
+  leadTemperature  LeadTemperature?
+  /** Justification scoring (text court fourni par l'IA / règles, pour transparence reps) */
+  leadScoreReason  String?                   @db.Text
+  /** Statut workflow : NEW → CONTACTED → QUALIFIED → CONVERTED / DISQUALIFIED */
+  leadStatus       LeadStatus                @default(NEW)
+  /** Données d'enrichissement (Hunter.io/Apollo si dispo + signaux IA) :
+   *  { company?, jobTitle?, industry?, employeeRange?, country?, linkedinUrl?, ... } */
+  enrichmentJson   Json?
+  /** Timestamp envoi de l'email de notif au owner du site (via lib/email) */
+  notifiedAt       DateTime?
+  /** Lien vers l'EmailContact créé automatiquement (sync nurturing) */
+  emailContactId   String?
+
   @@index([siteSlug, createdAt])
   @@index([siteSlug, read])
   @@index([ecStatus])
   @@index([liStatus])
   @@index([ttStatus])
+  @@index([leadStatus])
+  @@index([leadTemperature])
+}
+
+enum LeadTemperature {
+  HOT
+  WARM
+  COLD
+  INVALID
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  DISQUALIFIED
 }
 
 enum EnhancedConversionStatus {
@@ -1843,4 +1878,38 @@ model GbpInsight {
 
   @@unique([locationId, date])
   @@index([locationId, date])
+}
+
+// ─── Lead Webhooks (outbound CRM sync) ──────────────────────────────────────
+// Webhooks sortants déclenchés à chaque FormSubmission création.
+// Permet d'envoyer le lead vers un CRM externe (HubSpot, Pipedrive, Salesforce,
+// Zapier/Make custom). Auth via signing secret HMAC (le receiver vérifie).
+
+model LeadWebhook {
+  id           String   @id @default(cuid())
+  userId       String
+  /** Nom convivial (ex: "HubSpot CRM", "Pipedrive deals") */
+  name         String
+  /** URL de l'endpoint receiver */
+  url          String   @db.VarChar(500)
+  /** Secret HMAC-SHA256 partagé avec le receiver pour signer les requests.
+   *  Stocké chiffré AES-256-GCM via lib/crypto. */
+  secret       String   @db.Text
+  /** Filtre optionnel par siteSlug : si null, fire pour tous les sites du user */
+  siteSlug     String?
+  /** Filtre par leadTemperature minimum : si "WARM", ne fire pas pour COLD/INVALID */
+  minTemperature LeadTemperature?
+  enabled      Boolean  @default(true)
+  /** Compteur de fires (success + fail) */
+  totalFires   Int      @default(0)
+  totalFails   Int      @default(0)
+  lastFiredAt  DateTime?
+  lastError    String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+  @@index([siteSlug])
 }

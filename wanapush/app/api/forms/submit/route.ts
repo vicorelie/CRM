@@ -10,6 +10,7 @@ import {
   triggerLinkedInLeadForFormSubmission,
   triggerTikTokLeadForFormSubmission,
 } from "@/lib/ads/enhanced-conversions-pipeline";
+import { runLeadPipeline } from "@/lib/leads/sync";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -119,6 +120,12 @@ export async function POST(req: Request) {
         console.warn(`[forms/submit] TikTok Events trigger failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
       });
     }
+
+    // Pipeline auto-pilote leads : scoring IA + EmailContact sync + notif owner +
+    // webhooks CRM sortants. Fire-and-forget (ne bloque pas la réponse).
+    void runLeadPipeline(submission.id).catch((e) => {
+      console.warn(`[forms/submit] runLeadPipeline failed for ${submission.id}: ${e instanceof Error ? e.message : e}`);
+    });
 
     revalidatePath("/leads");
     return NextResponse.json({ ok: true });
