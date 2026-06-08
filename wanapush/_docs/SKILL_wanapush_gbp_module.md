@@ -12,9 +12,64 @@ last_reviewed: 2026-06-04
 
 # SKILL — WanaPush GBP Module (STUB)
 
-> ⚠️ **État juin 2026** : module non implémenté. UI = page stub de 17 lignes.
-> Aucune route API, aucun modèle Prisma, aucun connecteur Google. Cette skill
-> sert de cahier des charges pour l'implémentation à venir.
+> **État 2026-06-08 : Backend MVP shippé.** Schema Prisma + lib/gbp/ + 8 endpoints
+> API + cron daily. UI dashboard reste à brancher (squelette ModulePage existant).
+
+## ✅ Backend shippé (2026-06-08)
+
+**5 APIs Google utilisées (toutes actives juin 2026)** :
+- **Account Management v1** : `mybusinessaccountmanagement.googleapis.com/v1/accounts`
+- **Business Information v1** : `mybusinessbusinessinformation.googleapis.com/v1/{account}/locations`
+- **Performance v1** : `businessprofileperformance.googleapis.com/v1/{location}:fetchMultiDailyMetricsTimeSeries` (remplace ancien `reportInsights` v4 sunset)
+- **Reviews (v4 legacy actif)** : `mybusiness.googleapis.com/v4/accounts/{a}/locations/{l}/reviews` — list + reply
+- **Local Posts (v4 legacy actif)** : `mybusiness.googleapis.com/v4/accounts/{a}/locations/{l}/localPosts` — create
+
+**Scope OAuth** : `https://www.googleapis.com/auth/business.manage`
+
+⚠️ **Quota Google** : sans accès production (formulaire de vérification dans Google Cloud Console, 2-4 semaines), quota ≈ 10 req/jour.
+
+**Modèles Prisma** (migration `add_gbp_module`) :
+- `GbpAccount` (tokens AES-256-GCM, status CONNECTED/EXPIRED/REVOKED/ERROR)
+- `GbpLocation` (title, address, lat/lng, primaryCategory, regularHours JSON, reviewsCount, averageRating, auditScore /100)
+- `GbpPost` (topicType STANDARD/EVENT/OFFER/ALERT, summary ≤1500 chars, callToAction JSON, status DRAFT/SCHEDULED/PUBLISHED/FAILED, scheduledAt)
+- `GbpReview` (googleReviewId refresh 30j car migration 2026, starRating 1-5, replyText, replyStatus PENDING/AUTO_REPLIED/MANUAL_REPLIED, replyAiConfidence)
+- `GbpInsight` (date unique par location, impressions cumulés desktop/mobile maps/search + websiteClicks + callClicks + directionClicks + bookings)
+
+**Module core (`lib/gbp/`)** :
+- `types.ts` : types API Google
+- `index.ts` : OAuth (buildAuthorizeUrl, exchangeCode, refreshAccessToken, getValidAccessToken auto-refresh) + sub-API clients (listAccounts, listLocations, fetchInsights, listReviews, replyToReview, createLocalPost) + `syncGbpAccount(id)` orchestrator
+
+**Endpoints API (8)** :
+- `GET /api/gbp/oauth/google/start` : redirect Google consent + state HMAC
+- `GET /api/gbp/oauth/google/callback` : exchange code, upsert tous les GbpAccount fetché
+- `GET/POST /api/gbp/locations` : GET list DB, POST trigger sync all
+- `GET/POST /api/gbp/posts` : GET list, POST create (immédiat OU SCHEDULED si `scheduledAt` futur)
+- `GET /api/gbp/reviews` : list avec filtres (replyStatus, minStars, locationId)
+- `POST /api/gbp/reviews/[id]/reply` : `{ comment }` manuel ou `{ generate: true, tone: "professional"|"warm"|"apologetic", businessName? }` IA Claude
+- `GET /api/gbp/insights?locationId=&days=30` : fetch + upsert cache GbpInsight
+- `POST/GET /api/gbp/cron/sync` : auth CRON_SECRET. Sync all + publie SCHEDULED dont scheduledAt<now (max 50/run). Schedule `0 6 * * *`.
+
+**Auto-reply IA reviews** :
+- 3 tons : `professional` / `warm` / `apologetic`
+- Prompt adapté starRating ≤3 (reconnaître problème) vs ≥4 (remercier)
+- Max 400 chars (best practice Google : réponses courtes mieux lues)
+- Pas d'emoji (ton formel Google)
+- `replyAiConfidence` 0.9 normal, 0.5 si <50 chars
+
+**Vars d'env** : `GBP_GOOGLE_CLIENT_ID/SECRET` (peut réutiliser `GOOGLE_CLIENT_ID/SECRET`), `NEXT_PUBLIC_BASE_URL`, `NEXTAUTH_SECRET`, `CRON_SECRET`, `ANTHROPIC_API_KEY` ou `OPENAI_API_KEY`.
+
+⚠️ **Configurer Google Cloud Console** :
+1. Activer les 5 APIs
+2. OAuth consent screen avec scope `business.manage`
+3. Demander accès production (sinon quota ridicule)
+
+## 🚧 Restant phase 2
+
+- UI dashboard `/gbp` : checklist audit + tabs Posts/Reviews/Insights
+- Audit score /100 calculé (completeness photos/horaires/attributs/description, posts/mois)
+- Upload photos (media items v4)
+- Q&A management (mybusinessqanda v1)
+- Auto-reply IA en mode cron avec filtre confidence ≥ 0.85
 
 ## 🧭 Quand l'invoquer
 

@@ -80,6 +80,7 @@ model User {
   audienceSyncs   AudienceSync[]
   emailContacts   EmailContact[]
   emailCampaigns  EmailCampaign[]
+  gbpAccounts     GbpAccount[]
   shops           Shop[]
 }
 
@@ -1663,4 +1664,183 @@ enum EmailSendStatus {
   COMPLAINED
   UNSUBSCRIBED
   FAILED
+}
+
+// ─── Google Business Profile (GBP) Module ───────────────────────────────────
+// Gère les fiches Google Business Profile (ex-Google My Business) :
+// audit, posts hebdo, réponses IA aux avis, sync horaires/photos/insights.
+// API : https://developers.google.com/my-business
+
+model GbpAccount {
+  id              String        @id @default(cuid())
+  userId          String
+  /** ResourceName Google : "accounts/{numericId}" */
+  googleAccountId String        @db.VarChar(255)
+  /** Nom du compte (Business Profile) — affichage UI */
+  accountName     String?       @db.VarChar(255)
+  /** Type : PERSONAL | LOCATION_GROUP | USER_GROUP | ORGANIZATION */
+  accountType     String?       @db.VarChar(50)
+  /** Tokens AES-256-GCM chiffrés via lib/crypto.ts */
+  accessToken     String        @db.Text
+  refreshToken    String        @db.Text
+  expiresAt       DateTime
+  scopes          String        @db.Text
+  status          GbpStatus     @default(CONNECTED)
+  lastSyncAt      DateTime?
+  lastError       String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locations GbpLocation[]
+
+  @@unique([userId, googleAccountId])
+  @@index([userId, status])
+}
+
+enum GbpStatus {
+  CONNECTED
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
+model GbpLocation {
+  id              String     @id @default(cuid())
+  accountId       String
+  /** ResourceName Google : "locations/{id}" */
+  googleLocationId String    @db.VarChar(255)
+  /** Nom du lieu (title) */
+  title           String     @db.VarChar(255)
+  /** Adresse formatée (storefrontAddress.addressLines + locality + region + postalCode) */
+  address         String?    @db.Text
+  phoneNumber     String?    @db.VarChar(50)
+  websiteUri      String?    @db.VarChar(500)
+  /** Latitude/longitude pour cartographie */
+  lat             Float?
+  lng             Float?
+  /** Catégorie principale (primaryCategory.displayName) */
+  primaryCategory String?    @db.VarChar(255)
+  /** Score d'audit /100 calculé localement (completeness + photos + reviews etc.) */
+  auditScore      Int?
+  /** JSON brut des horaires (regularHours.periods[]) */
+  regularHours    Json?
+  /** Compteur d'avis (refreshé à chaque sync) */
+  reviewsCount    Int        @default(0)
+  /** Note moyenne /5 */
+  averageRating   Float?
+  lastSyncAt      DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  account  GbpAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  posts    GbpPost[]
+  reviews  GbpReview[]
+  insights GbpInsight[]
+
+  @@unique([accountId, googleLocationId])
+  @@index([accountId])
+}
+
+model GbpPost {
+  id              String        @id @default(cuid())
+  locationId      String
+  /** ResourceName Google : "accounts/{a}/locations/{l}/localPosts/{p}" — null si DRAFT */
+  googlePostId    String?       @db.VarChar(500)
+  /** Type : STANDARD | EVENT | OFFER | ALERT */
+  topicType       String        @db.VarChar(50)
+  /** Texte du post (≤1500 chars Google) */
+  summary         String        @db.Text
+  /** CTA : { actionType: "LEARN_MORE"|"CALL"|"ORDER"|"BOOK"|"SHOP"|"SIGN_UP", url? } */
+  callToAction    Json?
+  /** Pour EVENT/OFFER : { title, schedule: { startDate, endDate } } */
+  eventDetails    Json?
+  /** URL image (uploadée préalablement via mediaItems) */
+  imageUrl        String?       @db.Text
+  status          GbpPostStatus @default(DRAFT)
+  /** Si SCHEDULED : moment de publication automatique */
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  errorMessage    String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  location GbpLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId, status])
+  @@index([scheduledAt])
+}
+
+enum GbpPostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+model GbpReview {
+  id                String           @id @default(cuid())
+  locationId        String
+  /** ResourceName Google : "accounts/{a}/locations/{l}/reviews/{r}" — refresh tous les 30j (migration ID 2026) */
+  googleReviewId    String           @db.VarChar(500)
+  reviewerName      String?          @db.VarChar(255)
+  reviewerPhotoUrl  String?          @db.Text
+  /** Étoiles 1-5 (Google enum: ONE..FIVE → int) */
+  starRating        Int
+  comment           String?          @db.Text
+  createTime        DateTime
+  updateTime        DateTime
+  /** Réponse du gérant (objet reviewReply : { comment, updateTime }) */
+  replyText         String?          @db.Text
+  replyUpdateTime   DateTime?
+  /** Statut du reply : AUTO_REPLIED | MANUAL | PENDING (en attente IA ou modération) */
+  replyStatus       GbpReplyStatus?
+  /** ROI IA : si l'IA a généré la réponse, ce flag indique la confidence */
+  replyAiConfidence Float?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  location GbpLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, googleReviewId])
+  @@index([locationId, starRating])
+  @@index([locationId, replyStatus])
+}
+
+enum GbpReplyStatus {
+  PENDING
+  AUTO_REPLIED
+  MANUAL_REPLIED
+  SKIPPED
+}
+
+model GbpInsight {
+  id              String      @id @default(cuid())
+  locationId      String
+  /** Date des métriques (jour) */
+  date            DateTime
+  /** Métriques Performance API v1 :
+   *  - BUSINESS_IMPRESSIONS_DESKTOP_MAPS
+   *  - BUSINESS_IMPRESSIONS_DESKTOP_SEARCH
+   *  - BUSINESS_IMPRESSIONS_MOBILE_MAPS
+   *  - BUSINESS_IMPRESSIONS_MOBILE_SEARCH
+   *  - WEBSITE_CLICKS
+   *  - CALL_CLICKS
+   *  - BUSINESS_DIRECTION_REQUESTS
+   *  - BUSINESS_BOOKINGS
+   *  - BUSINESS_FOOD_ORDERS
+   *  - BUSINESS_CONVERSATIONS */
+  impressions     Int         @default(0)
+  websiteClicks   Int         @default(0)
+  callClicks      Int         @default(0)
+  directionClicks Int         @default(0)
+  bookings        Int         @default(0)
+  /** JSON brut avec tous les compteurs détaillés (split desktop/mobile, maps/search) */
+  raw             Json?
+  createdAt       DateTime    @default(now())
+
+  location GbpLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, date])
+  @@index([locationId, date])
 }
