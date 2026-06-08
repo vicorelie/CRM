@@ -11,11 +11,46 @@ version: 0.1
 last_reviewed: 2026-06-04
 ---
 
-# SKILL — WanaPush Analytics Module (STUB + agrégation)
+# SKILL — WanaPush Analytics Module
 
-> ⚠️ **État juin 2026** : module central non implémenté (UI stub 17 lignes).
-> MAIS : chaque module métier a ses propres analytics → la skill liste ce qui
-> existe déjà et qu'on doit agréger.
+> **État 2026-06-08 : Backend MVP shippé.** `lib/analytics/{aggregators,anomalies}.ts`
+> + 2 endpoints API. UI dashboard reste à brancher (squelette ModulePage existant).
+
+## ✅ Backend shippé (2026-06-08)
+
+**KPIs cross-modules agrégés** (best practices SaaS 2026) :
+
+| Section | KPIs | Source DB |
+|---|---|---|
+| **Leads Funnel** | total, byTemperature (HOT/WARM/COLD/INVALID), byStatus, conversionRate, averageScore | FormSubmission |
+| **Email Engagement** | campaignsSent, totalDelivered, uniqueOpens/Clicks, openRate/clickRate/bounceRate/unsubRate | EmailCampaign.stats |
+| **Ads ROI** | totalSpend/Impressions/Clicks/Conversions/Revenue, ROAS, CTR, CPA, **byPlatform** breakdown | AdMetrics + Campaign.adAccount.platform |
+| **Shop Revenue** | totalRevenue, paidOrders, AOV, refundedAmount, netRevenue, uniqueCustomers, repeatCustomersRate | Order + Refund + Customer |
+| **GBP Visibility** | totalImpressions, websiteClicks, callClicks, directionClicks, averageRating, totalReviews, averageAuditScore | GbpInsight + GbpLocation |
+| **Unit Economics** | CAC, LTV, **LTV:CAC ratio** (cible 3:1+), CAC Payback months, Lead Velocity Rate (LVR) | Calculé : Ads spend ÷ new customers Stripe |
+
+**Détection d'anomalies** (`anomalies.ts`) :
+- Algorithme : écart-type sur 30j glissants, comparaison dernier datapoint vs distribution baseline
+- Seuils : ±1.5σ (INFO), ±2σ (WARNING), ±3σ (CRITICAL)
+- 3 détecteurs : `ROAS_DROP` (chute ROAS Ads), `LEAD_INFLOW_DROP` (chute leads/jour), `AD_SPEND_SPIKE` (sur-dépense Ads — alerte scaling/auto-bidding)
+- `Promise.allSettled` → best-effort par détecteur
+
+**Endpoints API (2)** :
+- `GET /api/analytics/overview?days=30` : tout-en-un, charge les 6 sections en parallèle via `Promise.all`
+- `GET /api/analytics/anomalies` : liste les anomalies actuelles, triées CRITICAL → WARNING → INFO
+
+**Pattern d'architecture** :
+- 1 fonction `getX(userId, range)` par section dans `aggregators.ts`
+- Orchestrator `getOverview()` lance tout en parallèle
+- Best-effort par section : retourne zeros si pas de data (pas de throw)
+- Helper `defaultRange(days)` + `daysAgo(n)` + type `DateRange`
+
+**Sources benchmarks SaaS 2026** :
+- LTV:CAC ratio cible 3:1+ (Baremetrics, Phoenix Strategy Group)
+- CAC Payback : médian 15-18 mois, elite <12 mois
+- NRR (Net Revenue Retention) cible 106%+
+- Churn 3-5% target
+- 138% ROI avec scoring lead vs 78% sans
 
 ## 🧭 Quand l'invoquer
 
