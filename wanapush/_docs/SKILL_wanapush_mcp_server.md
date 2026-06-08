@@ -17,8 +17,11 @@ last_reviewed: 2026-06-08
 > exposer une plateforme SaaS à TOUT l'écosystème AI (Claude.ai, ChatGPT,
 > Cursor, IDE plugins, etc.) en un seul endpoint.
 >
-> **V1 shippée 2026-06-08** : JSON-RPC 2.0 sur Streamable HTTP, auth Bearer
-> token, 9 tools depuis lib/copilot/tools.ts.
+> **V2 shippée 2026-06-08** : JSON-RPC 2.0 sur Streamable HTTP, auth Bearer
+> token. **3 primitives complètes** :
+> - **9 Tools** depuis lib/copilot/tools.ts
+> - **2 Resources statiques** + **4 Resource Templates** (URIs `wanapush://...`)
+> - **5 Prompts** (templates founder pré-instanciés avec data live)
 
 ## 🧭 Quand l'invoquer
 
@@ -52,12 +55,19 @@ app/api/integrations/mcp/keys/
 - `tools/list` : retourne `{ tools: [{ name, description, inputSchema }] }`. Pagination cursor non implémentée (9 tools = tient dans 1 page).
 - `tools/call` : input `{ name, arguments }`. Retourne `{ content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result, isError: false }`. Truncate à 12k chars si trop long.
 
-**Pas implémenté V1** :
-- `resources/*` (read-only data exposé en URI scheme)
-- `prompts/*` (templates réutilisables)
+**V2 ajouts (2026-06-08)** :
+- `resources/list` : retourne 2 resources statiques + capabilities
+- `resources/templates/list` : 4 templates URIs paramétrées RFC 6570
+- `resources/read` : dispatch URI → contenu (Prisma scope strict)
+- `prompts/list` : 5 prompts founder
+- `prompts/get` : instancie un prompt avec arguments + injecte data live
+
+**Pas implémenté V2** :
 - `completion/*` (autocomplete arguments)
 - `sampling/createMessage` (LLM-as-server)
-- Server-side notifications (`notifications/tools/list_changed`)
+- `resources/subscribe` + notifications (subscribe live)
+- Server-side notifications (`list_changed`)
+- Pagination des listes (toutes les listes tiennent dans 1 page V2)
 
 ## 🔐 Auth — Bearer token format `wp_mcp_<random>`
 
@@ -101,6 +111,58 @@ app/api/integrations/mcp/keys/
 | -32001 | Unauthorized (custom : Bearer absent ou invalide) |
 
 **Tool execution errors** : pas un protocol error → renvoyés dans `result` avec `isError: true`, content text avec le message.
+
+## 📚 Resources V2 (`lib/mcp/resources.ts`)
+
+### Statiques (`wanapush://...`)
+
+| URI | MIME | Content |
+|---|---|---|
+| `wanapush://overview` | application/json | `getOverview(userId, 30d)` — KPIs cross-modules |
+| `wanapush://anomalies` | application/json | `detectAnomalies(userId)` — alertes actuelles |
+
+### Templates paramétrées (URI Template RFC 6570)
+
+| URI Template | Content |
+|---|---|
+| `wanapush://campaign/{id}` | Campaign + metrics 30j |
+| `wanapush://lead/{id}` | FormSubmission + scoring + status |
+| `wanapush://email-campaign/{id}` | EmailCampaign + stats |
+| `wanapush://order/{id}` | Order + items + shop |
+
+**Scope strict** : `readResource(userId, uri)` vérifie l'ownership via Prisma where chains :
+- campaign : `adAccount: { userId }`
+- lead : `siteSlug` → `GeneratedSite { userId }`
+- emailCampaign : `userId` direct
+- order : `shop: { userId }`
+
+Pas de leak cross-tenant possible.
+
+**Erreurs** :
+- URI non reconnue → null → JSON-RPC `-32002 Resource not found` avec `data: { uri }`
+- Internal → `-32603`
+
+**Annotations** : audience + priority (0.9 overview, 1.0 anomalies = critique)
+
+## 🎯 Prompts V2 (`lib/mcp/prompts.ts`)
+
+5 templates founder pré-instanciés avec data live :
+
+| Prompt | Arguments | Description |
+|---|---|---|
+| `diagnostic_roas` | — | Diagnostic ROAS complet : ads + anomalies + plan action |
+| `growth_plan_90d` | `objectif_mrr` (required) | Roadmap 3 sprints de 30j, basée KPIs + benchmarks SaaS 2026 |
+| `weekly_review` | — | Compare 7j vs 7j précédents, top wins/problèmes, 3 actions |
+| `lead_qualification` | `lead_id` (required) | Aide qualifier un lead (renvoie vers `wanapush://lead/{id}` resource) |
+| `anomaly_postmortem` | `anomaly_type` (required) | Root cause + actions correctives + plan prévention |
+
+**Pattern d'injection data** : chaque prompt fetch les data live via les aggregators (`getOverview`, `detectAnomalies`) et les injecte dans le `text` du message user au format markdown JSON. Le LLM client (Claude.ai) reçoit le snapshot déjà inclus → pas besoin d'appeler les tools en amont.
+
+**System note partagé** : tous les prompts incluent un préfixe qui impose :
+- Cite les chiffres exacts (pas de "à peu près")
+- Top 3 actions max, classées par Impact
+- KPI cible + impact estimé
+- Ton direct, pragmatique, fondateur-PME française
 
 ## 🔧 Tools exposés (9 — réutilisés depuis lib/copilot/tools.ts)
 
@@ -153,16 +215,16 @@ app/api/integrations/mcp/keys/
 - ✅ Revoke immédiat via DELETE (hard delete, pas soft)
 - ✅ Spec MCP exige "human in the loop" pour tool invocations → l'UI Claude.ai gère ça (pas notre responsabilité côté server)
 
-## 🚧 V2 phase 2
+## 🚧 V3 phase 3
 
-- **Streamable HTTP avec SSE** : GET endpoint pour notifications server → client (`notifications/tools/list_changed`, progress, logging)
+- **Streamable HTTP avec SSE** : GET endpoint pour notifications server → client (`notifications/{resources,tools,prompts}/list_changed`, progress, logging)
 - **Stateful sessions** : `Mcp-Session-Id` header avec state in-memory ou Redis
-- **Resources** : exposer GeneratedSite/Order/Campaign comme resources URI scheme `wanapush://...`
-- **Prompts** : templates "Diagnostic ROAS", "Plan croissance 90j", etc.
-- **Write tools** : créer campagnes, programmer posts, envoyer emails (avec confirmation user-side)
-- **Pagination** des tools/list si on dépasse N tools
+- **resources/subscribe** : push notifications quand resource change (ex: nouveau lead HOT)
+- **Write tools** : créer campagnes, programmer posts, envoyer emails (confirmation user-side via Claude.ai UI)
+- **Completion API** : `completion/complete` pour autocomplete arguments des prompts (ex: lead_id picker)
+- **Pagination** : si on dépasse N resources/tools/prompts par page
 - **Rate limit hard** : enforce per-token requests/min
-- **Audit log** : table `McpAuditLog` avec chaque tool_call (pour debug + compliance)
+- **Audit log** : table `McpAuditLog` avec chaque appel (debug + compliance)
 
 ## 📈 Sources
 

@@ -24,6 +24,8 @@
 // + `structuredContent` JSON pour clients modernes (Claude.ai parse les deux).
 
 import { TOOLS } from "@/lib/copilot/tools";
+import { listResources, listResourceTemplates, readResource } from "./resources";
+import { listPrompts, getPrompt } from "./prompts";
 
 const MCP_PROTOCOL_VERSION = "2025-06-18";
 
@@ -68,23 +70,24 @@ function rpcSuccess(id: string | number | null, result: unknown): JsonRpcSuccess
 
 /** initialize : retourne capabilities + protocolVersion + serverInfo */
 function handleInitialize(request: JsonRpcRequest): JsonRpcResponse {
-  // Les params contiennent client capabilities + protocolVersion — on les
-  // ignore en V1 (on accepte tous les clients respectant 2025-06-18+)
   return rpcSuccess(request.id ?? null, {
     protocolVersion: MCP_PROTOCOL_VERSION,
     capabilities: {
       tools: { listChanged: false },
-      // resources/prompts non implémentés en V1
+      resources: { subscribe: false, listChanged: false },
+      prompts: { listChanged: false },
     },
     serverInfo: {
       name: "wanapush-mcp",
       title: "WanaPush Marketing Copilot",
-      version: "1.0.0",
+      version: "2.0.0",
     },
     instructions:
-      "WanaPush MCP Server expose les tools analytics + connectors marketing du founder. " +
-      "Les tools renvoient des KPIs cross-modules (Ads, Leads, Email, Shop, GBP) + anomalies + unit economics. " +
-      "Auth requise : Bearer token format wp_mcp_<random>.",
+      "WanaPush MCP Server V2 expose 3 primitives :\n" +
+      "- 9 TOOLS : analytics + connectors marketing (get_overview, get_anomalies, ...)\n" +
+      "- 2 RESOURCES STATIQUES + 4 TEMPLATES : `wanapush://overview`, `wanapush://anomalies`, `wanapush://campaign/{id}`, `wanapush://lead/{id}`, `wanapush://email-campaign/{id}`, `wanapush://order/{id}`\n" +
+      "- 5 PROMPTS : diagnostic_roas, growth_plan_90d, weekly_review, lead_qualification, anomaly_postmortem\n" +
+      "Auth : Bearer token format wp_mcp_<random>.",
   });
 }
 
@@ -172,9 +175,67 @@ export async function handleMcpRequest(
       return handleToolsList(request);
     case "tools/call":
       return handleToolsCall(request, userId);
+    case "resources/list":
+      return rpcSuccess(request.id ?? null, { resources: listResources() });
+    case "resources/templates/list":
+      return rpcSuccess(request.id ?? null, { resourceTemplates: listResourceTemplates() });
+    case "resources/read":
+      return handleResourcesRead(request, userId);
+    case "prompts/list":
+      return rpcSuccess(request.id ?? null, { prompts: listPrompts() });
+    case "prompts/get":
+      return handlePromptsGet(request, userId);
     default:
       if (isNotification) return null; // ignore unknown notifications
       return rpcError(request.id ?? null, -32601, `Method not found: ${request.method}`);
+  }
+}
+
+/** resources/read : retourne le contenu d'une URI `wanapush://...`. */
+async function handleResourcesRead(
+  request: JsonRpcRequest,
+  userId: string,
+): Promise<JsonRpcResponse> {
+  const params = request.params as { uri?: string } | undefined;
+  if (!params?.uri) {
+    return rpcError(request.id ?? null, -32602, "Invalid params: 'uri' required");
+  }
+  try {
+    const contents = await readResource(userId, params.uri);
+    if (!contents) {
+      return rpcError(request.id ?? null, -32002, "Resource not found", { uri: params.uri });
+    }
+    return rpcSuccess(request.id ?? null, { contents: [contents] });
+  } catch (e) {
+    return rpcError(
+      request.id ?? null,
+      -32603,
+      `Internal error reading resource: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
+}
+
+/** prompts/get : instancie un template prompt avec les arguments. */
+async function handlePromptsGet(
+  request: JsonRpcRequest,
+  userId: string,
+): Promise<JsonRpcResponse> {
+  const params = request.params as { name?: string; arguments?: Record<string, string> } | undefined;
+  if (!params?.name) {
+    return rpcError(request.id ?? null, -32602, "Invalid params: 'name' required");
+  }
+  try {
+    const result = await getPrompt(userId, params.name, params.arguments ?? {});
+    if (!result) {
+      return rpcError(request.id ?? null, -32602, `Unknown prompt or missing required arguments: ${params.name}`);
+    }
+    return rpcSuccess(request.id ?? null, result);
+  } catch (e) {
+    return rpcError(
+      request.id ?? null,
+      -32603,
+      `Internal error: ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 
