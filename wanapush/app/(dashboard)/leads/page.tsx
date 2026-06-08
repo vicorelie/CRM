@@ -13,11 +13,11 @@ export default async function LeadsPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="flex items-center justify-between">
           <Link
-            href="/dashboard"
+            href="/cockpit"
             className="text-sm text-zinc-500 hover:text-brand-700 transition-colors inline-flex items-center gap-1.5"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Retour au dashboard
+            Retour au cockpit
           </Link>
         </header>
 

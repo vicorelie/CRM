@@ -16,7 +16,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-white text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Logo href="/dashboard" height={36} />
+          <Logo href="/cockpit" height={36} />
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-zinc-500 sm:inline">
               {session.user?.email}

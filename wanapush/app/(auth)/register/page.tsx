@@ -47,7 +47,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/cockpit");
       router.refresh();
     } catch {
       setError("Erreur réseau. Réessayez.");

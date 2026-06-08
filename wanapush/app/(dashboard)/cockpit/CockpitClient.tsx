@@ -136,9 +136,49 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
           <CopilotCard criticalCount={criticalCount} />
         </div>
       </section>
+
+      {/* Tous les modules (compact, progressive disclosure pattern 2026) */}
+      <section>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Tous les modules
+        </h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          {ALL_MODULES.map((m) => (
+            <Link
+              key={m.href}
+              href={m.href}
+              className="group flex items-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50"
+            >
+              <span className="text-base" aria-hidden>{m.emoji}</span>
+              <span className="font-medium text-zinc-900 group-hover:text-brand-700">
+                {m.name}
+              </span>
+              <span className="ml-auto text-xs text-zinc-400 group-hover:text-brand-700">
+                →
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
+
+// Liste compacte des 12 modules — drill-down depuis le Cockpit
+const ALL_MODULES = [
+  { name: "Mes sites", emoji: "🔌", href: "/sites" },
+  { name: "Générer un site", emoji: "🎨", href: "/generate" },
+  { name: "Sites générés", emoji: "🗂", href: "/generated-sites" },
+  { name: "Boutiques", emoji: "🛍️", href: "/shop" },
+  { name: "SEO", emoji: "🔍", href: "/seo" },
+  { name: "Social", emoji: "📱", href: "/social" },
+  { name: "Ads", emoji: "🎯", href: "/ads" },
+  { name: "GBP", emoji: "📍", href: "/gbp" },
+  { name: "Leads", emoji: "🧲", href: "/leads" },
+  { name: "Email", emoji: "✉️", href: "/email" },
+  { name: "ASO", emoji: "📲", href: "/aso" },
+  { name: "Analytics", emoji: "📊", href: "/analytics" },
+];
 
 // ─── Helpers format ────────────────────────────────────────────────────────
 

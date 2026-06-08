@@ -11,10 +11,10 @@ export async function ModulePage({ title, emoji, description, roadmap }: Props) 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
       <Link
-        href="/dashboard"
+        href="/cockpit"
         className="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-brand-700"
       >
-        <span aria-hidden>←</span> Retour au dashboard
+        <span aria-hidden>←</span> Retour au cockpit
       </Link>
 
       <section className="mt-8 space-y-4">

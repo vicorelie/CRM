@@ -38,18 +38,34 @@ app/(dashboard)/cockpit/
 - `?days=30` query string pour période (shareable URL)
 - Drawer pattern pour AI chat (vs page dédiée — réduit friction)
 
-## 🎨 Sections de la page
+## 🎨 Sections de la page (Progressive Disclosure pattern 2026)
 
 1. **Header** : Bonjour {firstName} + sélecteur période (7/30/90)
 2. **Anomalies banner** (si présentes) : 3 max visibles + dismiss UI side
 3. **Unit Economics cards** (4 KPIs en row) : CAC, LTV, LTV:CAC, Lead Velocity
-4. **Module grid** (3 cols sm:lg) : 6 cards
+   = **north star metrics** (PostHog/Linear pattern : top du dashboard)
+4. **Module grid business** (3 cols sm:lg) : 6 cards avec data live
    - Publicité 🎯 (Dépense / ROAS / Revenue / Top plateforme)
    - Leads 🧲 (Total / HOT-WARM / Score moyen / Conversion)
    - Boutique 🛍️ (CA brut / CA net / Commandes / AOV)
    - Email ✉️ (Campagnes / Destinataires / Open % / Click %)
    - Google Business 📍 (Impressions / Clics / Appels / Note ★)
    - Copilot 🤖 (call-to-action, ouvre drawer, badge count si CRITICAL)
+5. **Tous les modules** (4 cols compact) : 12 modules pour drill-down
+   - Pattern progressive disclosure 2026 : KPIs d'abord, accès complet ensuite
+   - Cards compactes (emoji + nom + flèche), pas de data
+
+## 🔄 Fusion /dashboard → /cockpit (2026-06-08)
+
+Best practice SaaS 2026 (PostHog, Linear, Vercel, Stripe) : **UNE seule home**.
+Avant : `/dashboard` (grille 12 modules) + `/cockpit` (KPIs) = 2 pages confuses.
+Après : `/cockpit` = home unique. `/dashboard` redirige permanent vers `/cockpit`.
+
+**Refactor effectué** :
+- `app/(dashboard)/dashboard/page.tsx` : `redirect("/cockpit")`
+- Tous les `href="/dashboard"` → `href="/cockpit"` (layout, ModulePage, 7 module pages)
+- Tous les "Retour au dashboard" → "Retour au cockpit" (8 pages)
+- `app/(auth)/login/page.tsx` + `register/page.tsx` : `router.push("/cockpit")` après auth
 
 **Cards cliquables** : chaque module card est un `<Link href="/ads">` etc. → drill-down vers le module détaillé.
 

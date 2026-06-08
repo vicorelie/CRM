@@ -16,13 +16,31 @@
 //  - Tools fournissent du JSON structuré → Claude raisonne dessus
 
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 import { TOOL_BY_NAME, getAnthropicTools } from "./tools";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const MODEL = process.env.COPILOT_MODEL ?? "claude-sonnet-4-20250514";
+// Sélection du provider : Anthropic prioritaire (tool use plus fiable),
+// fallback OpenAI function calling si seule OPENAI_API_KEY est configurée.
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY?.trim();
+const OPENAI_KEY = process.env.OPENAI_API_KEY?.trim();
+const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
+const openai = OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY }) : null;
+
+const PROVIDER: "anthropic" | "openai" | null = anthropic ? "anthropic" : openai ? "openai" : null;
+const ANTHROPIC_MODEL = process.env.COPILOT_MODEL ?? "claude-sonnet-4-20250514";
+const OPENAI_MODEL = process.env.COPILOT_OPENAI_MODEL ?? "gpt-4o";
 const MAX_ITERATIONS = 5;
 const MAX_TOKENS = 4000;
+
+function safeJsonParse(s: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(s);
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
 
 const SYSTEM_PROMPT = `Tu es WanaPush Copilot, l'assistant IA stratégique du fondateur d'une PME française qui utilise WanaPush (plateforme marketing SaaS).
 
@@ -85,6 +103,12 @@ export async function askCopilot(
   question: string,
   conversationId?: string,
 ): Promise<CopilotAnswer> {
+  if (!PROVIDER) {
+    throw new Error(
+      "Le Copilot IA n'est pas configuré : ajoute soit ANTHROPIC_API_KEY soit OPENAI_API_KEY dans .env.local.",
+    );
+  }
+
   // 1. Resolve or create conversation
   let conv;
   if (conversationId) {
@@ -143,88 +167,240 @@ export async function askCopilot(
     messages.push({ role: "user", content: pendingToolUses });
   }
 
-  // 4. Loop : call Claude → execute tools → re-call until pas de tool_use
-  const tools = getAnthropicTools();
+  // 4. Loop : call provider → execute tools → re-call until plus de tool_use
   let totalInput = 0;
   let totalOutput = 0;
   const allToolCalls: Array<{ name: string; input: Record<string, unknown> }> = [];
   let iterations = 0;
   let finalText = "";
 
-  while (iterations < MAX_ITERATIONS) {
-    iterations++;
-    const response = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
-      tools: tools as never,
-      messages: messages as never,
-    });
+  if (PROVIDER === "anthropic") {
+    // ─── Path Anthropic Claude (tool use) ─────────────────────────────────
+    const tools = getAnthropicTools();
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      const response = await anthropic!.messages.create({
+        model: ANTHROPIC_MODEL,
+        max_tokens: MAX_TOKENS,
+        system: SYSTEM_PROMPT,
+        tools: tools as never,
+        messages: messages as never,
+      });
 
-    totalInput += response.usage?.input_tokens ?? 0;
-    totalOutput += response.usage?.output_tokens ?? 0;
+      totalInput += response.usage?.input_tokens ?? 0;
+      totalOutput += response.usage?.output_tokens ?? 0;
 
-    // Extrait text + tool_use blocks
-    const textBlocks: string[] = [];
-    const toolUseBlocks: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
-    for (const block of response.content) {
-      if (block.type === "text") textBlocks.push(block.text);
-      else if (block.type === "tool_use") {
-        toolUseBlocks.push({ id: block.id, name: block.name, input: block.input as Record<string, unknown> });
-      }
-    }
-
-    // Save assistant message (text + tool_use refs)
-    await prisma.copilotMessage.create({
-      data: {
-        conversationId: conv.id,
-        role: "ASSISTANT",
-        content: textBlocks.length > 0 ? textBlocks.join("\n") : null,
-        toolUse: toolUseBlocks.length > 0 ? (toolUseBlocks as never) : undefined,
-        model: MODEL,
-        inputTokens: response.usage?.input_tokens,
-        outputTokens: response.usage?.output_tokens,
-      },
-    });
-
-    // Si pas de tool_use → réponse finale
-    if (response.stop_reason !== "tool_use" || toolUseBlocks.length === 0) {
-      finalText = textBlocks.join("\n");
-      break;
-    }
-
-    // Sinon : exécute tools + add results au message history
-    const assistantContent: AnthropicMessageContent[] = [];
-    if (textBlocks.length > 0) assistantContent.push({ type: "text", text: textBlocks.join("\n") });
-    for (const u of toolUseBlocks) assistantContent.push({ type: "tool_use", id: u.id, name: u.name, input: u.input });
-    messages.push({ role: "assistant", content: assistantContent });
-
-    const toolResults: AnthropicMessageContent[] = [];
-    for (const tu of toolUseBlocks) {
-      allToolCalls.push({ name: tu.name, input: tu.input });
-      const handler = TOOL_BY_NAME.get(tu.name);
-      let resultStr: string;
-      if (!handler) {
-        resultStr = JSON.stringify({ error: `Tool ${tu.name} inconnu` });
-      } else {
-        try {
-          const result = await handler.handler(userId, tu.input);
-          resultStr = JSON.stringify(result).slice(0, 8000); // garde-fou token
-        } catch (e) {
-          resultStr = JSON.stringify({ error: e instanceof Error ? e.message : String(e) });
+      const textBlocks: string[] = [];
+      const toolUseBlocks: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
+      for (const block of response.content) {
+        if (block.type === "text") textBlocks.push(block.text);
+        else if (block.type === "tool_use") {
+          toolUseBlocks.push({ id: block.id, name: block.name, input: block.input as Record<string, unknown> });
         }
       }
-      toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: resultStr });
-      // Save TOOL message
+
       await prisma.copilotMessage.create({
         data: {
           conversationId: conv.id,
-          role: "TOOL",
-          toolResult: { tool_use_id: tu.id, content: resultStr } as never,
+          role: "ASSISTANT",
+          content: textBlocks.length > 0 ? textBlocks.join("\n") : null,
+          toolUse: toolUseBlocks.length > 0 ? (toolUseBlocks as never) : undefined,
+          model: ANTHROPIC_MODEL,
+          inputTokens: response.usage?.input_tokens,
+          outputTokens: response.usage?.output_tokens,
         },
       });
+
+      if (response.stop_reason !== "tool_use" || toolUseBlocks.length === 0) {
+        finalText = textBlocks.join("\n");
+        break;
+      }
+
+      const assistantContent: AnthropicMessageContent[] = [];
+      if (textBlocks.length > 0) assistantContent.push({ type: "text", text: textBlocks.join("\n") });
+      for (const u of toolUseBlocks) assistantContent.push({ type: "tool_use", id: u.id, name: u.name, input: u.input });
+      messages.push({ role: "assistant", content: assistantContent });
+
+      const toolResults: AnthropicMessageContent[] = [];
+      for (const tu of toolUseBlocks) {
+        allToolCalls.push({ name: tu.name, input: tu.input });
+        const handler = TOOL_BY_NAME.get(tu.name);
+        let resultStr: string;
+        if (!handler) {
+          resultStr = JSON.stringify({ error: `Tool ${tu.name} inconnu` });
+        } else {
+          try {
+            const result = await handler.handler(userId, tu.input);
+            resultStr = JSON.stringify(result).slice(0, 8000);
+          } catch (e) {
+            resultStr = JSON.stringify({ error: e instanceof Error ? e.message : String(e) });
+          }
+        }
+        toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: resultStr });
+        await prisma.copilotMessage.create({
+          data: {
+            conversationId: conv.id,
+            role: "TOOL",
+            toolResult: { tool_use_id: tu.id, content: resultStr } as never,
+          },
+        });
+      }
+      messages.push({ role: "user", content: toolResults });
     }
-    messages.push({ role: "user", content: toolResults });
+  } else {
+    // ─── Path OpenAI Function Calling ─────────────────────────────────────
+    // OpenAI utilise un format différent : system = premier message, tools =
+    // { type: "function", function: { name, description, parameters } },
+    // tool_calls dans message.tool_calls (arguments en JSON string), tool
+    // result dans message { role: "tool", tool_call_id, content }.
+    type OpenAIMessage = {
+      role: "system" | "user" | "assistant" | "tool";
+      content?: string | null;
+      tool_calls?: Array<{ id: string; type: "function"; function: { name: string; arguments: string } }>;
+      tool_call_id?: string;
+    };
+
+    // Conversion messages Anthropic format → OpenAI format
+    const openaiMessages: OpenAIMessage[] = [{ role: "system", content: SYSTEM_PROMPT }];
+    for (const m of messages) {
+      if (m.role === "user") {
+        if (typeof m.content === "string") {
+          openaiMessages.push({ role: "user", content: m.content });
+        } else {
+          // Array de tool_result blocks
+          for (const block of m.content) {
+            if (block.type === "tool_result") {
+              openaiMessages.push({
+                role: "tool",
+                tool_call_id: block.tool_use_id,
+                content: block.content,
+              });
+            }
+          }
+        }
+      } else if (m.role === "assistant") {
+        if (typeof m.content === "string") {
+          openaiMessages.push({ role: "assistant", content: m.content });
+        } else {
+          let text = "";
+          const toolCalls: Array<{ id: string; type: "function"; function: { name: string; arguments: string } }> = [];
+          for (const block of m.content) {
+            if (block.type === "text") text += block.text;
+            else if (block.type === "tool_use") {
+              toolCalls.push({
+                id: block.id,
+                type: "function",
+                function: { name: block.name, arguments: JSON.stringify(block.input) },
+              });
+            }
+          }
+          openaiMessages.push({
+            role: "assistant",
+            content: text || null,
+            ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
+          });
+        }
+      }
+    }
+
+    // Convert tools Anthropic → OpenAI format
+    const openaiTools = getAnthropicTools().map((t) => ({
+      type: "function" as const,
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.input_schema,
+      },
+    }));
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      const response = await openai!.chat.completions.create({
+        model: OPENAI_MODEL,
+        max_completion_tokens: MAX_TOKENS,
+        messages: openaiMessages as never,
+        tools: openaiTools,
+      });
+
+      totalInput += response.usage?.prompt_tokens ?? 0;
+      totalOutput += response.usage?.completion_tokens ?? 0;
+
+      const choice = response.choices[0];
+      const msg = choice.message;
+      const text = msg.content ?? "";
+      const toolCalls = msg.tool_calls ?? [];
+
+      // Save ASSISTANT message en format DB Anthropic-compatible
+      const toolUseBlocksForDb = toolCalls
+        .filter((tc): tc is { id: string; type: "function"; function: { name: string; arguments: string } } => tc.type === "function")
+        .map((tc) => ({
+          id: tc.id,
+          name: tc.function.name,
+          input: safeJsonParse(tc.function.arguments),
+        }));
+      await prisma.copilotMessage.create({
+        data: {
+          conversationId: conv.id,
+          role: "ASSISTANT",
+          content: text || null,
+          toolUse: toolUseBlocksForDb.length > 0 ? (toolUseBlocksForDb as never) : undefined,
+          model: OPENAI_MODEL,
+          inputTokens: response.usage?.prompt_tokens,
+          outputTokens: response.usage?.completion_tokens,
+        },
+      });
+
+      // Si pas de tool calls → réponse finale
+      if (choice.finish_reason !== "tool_calls" || toolCalls.length === 0) {
+        finalText = text;
+        break;
+      }
+
+      // Add assistant message au history OpenAI
+      openaiMessages.push({
+        role: "assistant",
+        content: text || null,
+        tool_calls: toolCalls
+          .filter((tc) => tc.type === "function")
+          .map((tc) => {
+            // narrow type discriminé
+            const fc = tc as Extract<typeof tc, { type: "function" }>;
+            return {
+              id: fc.id,
+              type: "function" as const,
+              function: { name: fc.function.name, arguments: fc.function.arguments },
+            };
+          }),
+      });
+
+      // Execute tools + add tool messages
+      for (const tcRaw of toolCalls) {
+        if (tcRaw.type !== "function") continue;
+        const tc = tcRaw as Extract<typeof tcRaw, { type: "function" }>;
+        const input = safeJsonParse(tc.function.arguments);
+        allToolCalls.push({ name: tc.function.name, input });
+        const handler = TOOL_BY_NAME.get(tc.function.name);
+        let resultStr: string;
+        if (!handler) {
+          resultStr = JSON.stringify({ error: `Tool ${tc.function.name} inconnu` });
+        } else {
+          try {
+            const result = await handler.handler(userId, input);
+            resultStr = JSON.stringify(result).slice(0, 8000);
+          } catch (e) {
+            resultStr = JSON.stringify({ error: e instanceof Error ? e.message : String(e) });
+          }
+        }
+        openaiMessages.push({ role: "tool", tool_call_id: tc.id, content: resultStr });
+        await prisma.copilotMessage.create({
+          data: {
+            conversationId: conv.id,
+            role: "TOOL",
+            toolResult: { tool_use_id: tc.id, content: resultStr } as never,
+          },
+        });
+      }
+    }
   }
 
   // 5. Update conversation stats

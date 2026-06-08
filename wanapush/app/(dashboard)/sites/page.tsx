@@ -13,10 +13,10 @@ export default async function SitesPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex items-center justify-between">
           <Link
-            href="/dashboard"
+            href="/cockpit"
             className="text-sm text-zinc-500 hover:text-brand-700 transition-colors"
           >
-            ← Retour au dashboard
+            ← Retour au cockpit
           </Link>
         </header>
 
