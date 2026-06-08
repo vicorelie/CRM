@@ -52,6 +52,35 @@ last_reviewed: 2026-06-04
 - Churn 3-5% target
 - 138% ROI avec scoring lead vs 78% sans
 
+## 📧 Founder Digest auto-pilote (shippé 2026-06-08)
+
+**Module `lib/analytics/digest.ts`** — génère HTML markdown du récap + envoie via `lib/email.sendEmail()` (List-Unsubscribe RFC 8058 + footer RGPD).
+
+**2 fonctions exportées** :
+- `sendWeeklyDigest(ownerEmail, ownerName, overview, anomalies)` : récap complet 6 sections + bandeau anomalies. Skip auto si overview vide (pas de spam aux comptes inactifs).
+- `sendCriticalAnomalyAlert(ownerEmail, ownerName, anomalies)` : email court SEULEMENT si CRITICAL présent. Skip sinon.
+
+**Format digest weekly** : 7 sections markdown
+- 🚨 Anomalies (si présentes) — colorées 🔴 CRITICAL / 🟠 WARNING / 🟡 INFO
+- 📢 Publicité (Spend + Revenue + ROAS + CPA + top plateforme)
+- 🎯 Leads (total + byTemperature + score moyen + taux conversion)
+- ✉️ Email marketing (envois + open/click/unsub rates)
+- 🛒 Boutique (CA + AOV + net + repeat customers %)
+- 📍 Google Business Profile (impressions + clicks + appels + itinéraires + note ★)
+- 💰 Unit Economics (CAC + LTV + ratio + payback + LVR)
+
+**Cron crons (`app/api/analytics/cron/`) auth CRON_SECRET** :
+- `POST/GET /api/analytics/cron/weekly-digest` : Schedule `0 8 * * 1` (lundi 8h UTC). Sélectionne users avec ≥1 module actif (GeneratedSite OR AdAccount CONNECTED OR Shop OR EmailCampaign SENT). Skip si overview vide.
+- `POST/GET /api/analytics/cron/daily-anomalies` : Schedule `0 9 * * *` (9h UTC). Email ALERTE SEULEMENT si CRITICAL détecté. Sinon skip (pas de fatigue email).
+
+**Best practice 2026 cadence (sources Klipfolio, Eleken, Thoughtspot)** :
+- **Daily** : alertes CRITICAL only (fast-moving metrics : CAC, engagement, conversion)
+- **Weekly** : récap complet (sweet spot PME — pas trop bruyant)
+- **Monthly** : revenue + retention focus (à shipper phase 2)
+- **Quarterly** : performance + ROI strategic (à shipper phase 2)
+
+**Variables d'env** : `CRON_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM_DEFAULT` (défauts `analytics@wanapush.com` / `alerts@wanapush.com`).
+
 ## 🧭 Quand l'invoquer
 
 - L'user demande "dashboard global", "rapport mensuel PDF", "vue 360 business",
