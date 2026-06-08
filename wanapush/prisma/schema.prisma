@@ -82,6 +82,7 @@ model User {
   emailCampaigns  EmailCampaign[]
   gbpAccounts     GbpAccount[]
   leadWebhooks    LeadWebhook[]
+  copilotConversations CopilotConversation[]
   shops           Shop[]
 }
 
@@ -1912,4 +1913,57 @@ model LeadWebhook {
 
   @@index([userId, enabled])
   @@index([siteSlug])
+}
+
+// ─── AI Marketing Copilot ───────────────────────────────────────────────────
+// Assistant IA conversationnel qui exploite tous les modules WanaPush via
+// tool use Claude (Sonnet 4 / Opus). Le founder peut poser des questions
+// stratégiques et l'IA fetche les data depuis les aggregators analytics +
+// connectors ads/email/leads pour répondre de manière actionable.
+
+model CopilotConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  /** Titre auto-généré depuis le 1er message (max 100 chars) */
+  title     String   @db.VarChar(255)
+  /** Compte total de messages dans la conversation (cache pour list view) */
+  messageCount Int   @default(0)
+  /** Dernier message (timestamp + preview pour list view) */
+  lastMessageAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages CopilotMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model CopilotMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  /** Rôle : USER | ASSISTANT | TOOL */
+  role           CopilotRole
+  /** Contenu texte (pour USER/ASSISTANT) — null pour TOOL (utilise toolResult) */
+  content        String?  @db.MediumText
+  /** Si role=ASSISTANT : tool_use blocks demandés (JSON array of {id, name, input}) */
+  toolUse        Json?
+  /** Si role=TOOL : résultat d'un tool précédent (JSON {toolUseId, content}) */
+  toolResult     Json?
+  /** Modèle utilisé (Sonnet 4 / Opus 4.7) */
+  model          String?  @db.VarChar(100)
+  /** Tokens consommés (input + output) — pour analytics + facturation future */
+  inputTokens    Int?
+  outputTokens   Int?
+  createdAt      DateTime @default(now())
+
+  conversation CopilotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+enum CopilotRole {
+  USER
+  ASSISTANT
+  TOOL
 }
