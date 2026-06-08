@@ -169,7 +169,8 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
 // (Ads, Leads, Boutique, Email, GBP sont déjà dans la grid business → exclus ici)
 const OTHER_MODULES = [
   { name: "Mes sites", emoji: "🔌", href: "/sites" },
-  { name: "Générer un site", emoji: "🎨", href: "/generate" },
+  // "Générer un site" intentionnellement absent : /generated-sites a déjà un
+  // bouton "+ Nouveau site" qui mène au wizard /generate (pattern Vercel/Linear).
   { name: "Sites générés", emoji: "🗂", href: "/generated-sites" },
   { name: "SEO", emoji: "🔍", href: "/seo" },
   { name: "Social", emoji: "📱", href: "/social" },
