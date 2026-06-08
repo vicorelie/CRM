@@ -137,13 +137,14 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
         </div>
       </section>
 
-      {/* Tous les modules (compact, progressive disclosure pattern 2026) */}
+      {/* Autres modules — uniquement ceux SANS card data ci-dessus.
+          Pas de doublon avec la grid business. */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-          Tous les modules
+          Autres modules
         </h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {ALL_MODULES.map((m) => (
+          {OTHER_MODULES.map((m) => (
             <Link
               key={m.href}
               href={m.href}
@@ -164,18 +165,14 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
   );
 }
 
-// Liste compacte des 12 modules — drill-down depuis le Cockpit
-const ALL_MODULES = [
+// Modules SANS card data dans la section business ci-dessus.
+// (Ads, Leads, Boutique, Email, GBP sont déjà dans la grid business → exclus ici)
+const OTHER_MODULES = [
   { name: "Mes sites", emoji: "🔌", href: "/sites" },
   { name: "Générer un site", emoji: "🎨", href: "/generate" },
   { name: "Sites générés", emoji: "🗂", href: "/generated-sites" },
-  { name: "Boutiques", emoji: "🛍️", href: "/shop" },
   { name: "SEO", emoji: "🔍", href: "/seo" },
   { name: "Social", emoji: "📱", href: "/social" },
-  { name: "Ads", emoji: "🎯", href: "/ads" },
-  { name: "GBP", emoji: "📍", href: "/gbp" },
-  { name: "Leads", emoji: "🧲", href: "/leads" },
-  { name: "Email", emoji: "✉️", href: "/email" },
   { name: "ASO", emoji: "📲", href: "/aso" },
   { name: "Analytics", emoji: "📊", href: "/analytics" },
 ];
@@ -201,6 +198,19 @@ function fmtPct(n: number): string {
 // ─── Unit Economics cards (header style) ───────────────────────────────────
 
 function UnitEconomicsCards({ ue }: { ue: AnalyticsOverview["unitEconomics"] }) {
+  // Empty state pattern 2026 (Canva, Linear) : si rien de calculable,
+  // remplacer par un onboarding card avec actions concrètes (+75% conversion
+  // vs "No data" générique selon empty state UX studies).
+  const isEmpty =
+    ue.cac === null &&
+    ue.ltv === null &&
+    ue.ltvCacRatio === null &&
+    ue.leadVelocityRate === null;
+
+  if (isEmpty) {
+    return <UnitEconomicsOnboarding />;
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <Kpi
@@ -233,6 +243,48 @@ function UnitEconomicsCards({ ue }: { ue: AnalyticsOverview["unitEconomics"] }) 
         hint="vs période précédente"
         accent={ue.leadVelocityRate !== null ? (ue.leadVelocityRate >= 0 ? "good" : "warn") : "neutral"}
       />
+    </div>
+  );
+}
+
+function UnitEconomicsOnboarding() {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-gradient-to-br from-brand-50 via-white to-white p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-xl">
+          💡
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-zinc-950">
+            Connecte tes outils pour voir ton Unit Economics
+          </h3>
+          <p className="mt-1 text-sm text-zinc-600">
+            CAC, LTV, LTV/CAC et Lead Velocity se calculent automatiquement à
+            partir de tes <strong>dépenses publicitaires</strong> + tes{" "}
+            <strong>ventes Stripe</strong>. 2 connexions, 5 minutes.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/ads"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-800"
+            >
+              🎯 Connecter un compte pub
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+            >
+              🛍️ Setup boutique Stripe
+            </Link>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("wp:open-copilot"))}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+            >
+              🤖 Demander au Copilot
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -389,13 +441,13 @@ function ShopCard({ shop }: { shop: AnalyticsOverview["shop"] }) {
       <ModuleCard
         href="/shop"
         emoji="🛍️"
-        title="Boutique"
+        title="Boutiques"
         empty="Pas encore de ventes. Configure Stripe sur ta boutique."
       />
     );
   }
   return (
-    <ModuleCard href="/shop" emoji="🛍️" title="Boutique">
+    <ModuleCard href="/shop" emoji="🛍️" title="Boutiques">
       <MetricLine label="CA brut" value={fmtMoney(shop.totalRevenue)} />
       <MetricLine label="CA net" value={fmtMoney(shop.netRevenue)} />
       <MetricLine label="Commandes" value={fmtNum(shop.paidOrders)} />
