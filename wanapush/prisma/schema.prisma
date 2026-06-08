@@ -84,6 +84,7 @@ model User {
   leadWebhooks    LeadWebhook[]
   copilotConversations CopilotConversation[]
   slackIntegrations    SlackIntegration[]
+  mcpApiKeys           McpApiKey[]
   shops           Shop[]
 }
 
@@ -1994,4 +1995,35 @@ model SlackIntegration {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, enabled])
+}
+
+// ─── MCP Server (Model Context Protocol) — API keys ─────────────────────────
+// Permet aux clients IA externes (Claude.ai, ChatGPT, Cursor, IDE plugins)
+// d'invoquer les tools WanaPush via le protocole standard MCP.
+// Auth : Bearer token format "wp_mcp_<random>". Hashé SHA-256 en DB.
+
+model McpApiKey {
+  id           String   @id @default(cuid())
+  userId       String
+  /** Nom convivial (ex: "Claude Desktop", "Cursor IDE") */
+  name         String   @db.VarChar(100)
+  /** Hash SHA-256 du token (le token réel n'est jamais re-affiché après création) */
+  tokenHash    String   @unique @db.VarChar(64)
+  /** Préfixe lisible pour identifier le token sans le révéler (ex: "wp_mcp_abcd...") */
+  tokenPrefix  String   @db.VarChar(20)
+  /** Scopes : "read" (defaut) ou "read:write" (write tools, phase 2) */
+  scopes       String   @default("read") @db.VarChar(50)
+  enabled      Boolean  @default(true)
+  /** Stats usage */
+  totalCalls   Int      @default(0)
+  lastUsedAt   DateTime?
+  lastError    String?  @db.Text
+  /** TTL optionnel : si défini, la clé expire à cette date */
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+  @@index([tokenHash])
 }
