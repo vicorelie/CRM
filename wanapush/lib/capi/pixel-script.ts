@@ -66,6 +66,26 @@ export function buildPixelSnippet(config: PixelInjectionConfig): string {
   return `
 <!-- WanaPush Pixel + CAPI bridge — config: ${jsString(config.slug)} -->
 <script>
+// Google Consent Mode v2 — DOIT s'exécuter avant tout tag Google (bascule
+// ad_storage du 15/06/2026). Piloté par le MÊME opt-in que le Pixel Meta
+// (cookies wp-consent / wp-no-track) → un seul bandeau pour Meta + Google.
+// Forward-compatible : sans tag Google présent, ces appels sont des no-op sûrs.
+window.dataLayer = window.dataLayer || [];
+function gtag(){ dataLayer.push(arguments); }
+window.gtag = window.gtag || gtag;
+(function(){
+  var m = (document.cookie || '').match(/(?:^|; )wp-(consent|no-track)=1/);
+  var state = m ? (m[1] === 'consent' ? 'granted' : 'denied')
+                : ${config.consentRequired ? "'denied'" : "'granted'"};
+  gtag('consent', 'default', {
+    ad_storage: state,
+    ad_user_data: state,
+    ad_personalization: state,
+    analytics_storage: state,
+    wait_for_update: 500
+  });
+})();
+
 // Meta Pixel base code (officiel Meta — ne pas modifier)
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', ${jsString(config.pixelId)});
@@ -150,6 +170,16 @@ fbq('init', ${jsString(config.pixelId)});
 
   // API publique consent (peut être appelée par un bandeau tiers OU notre bandeau auto)
   window.wpConsent = function(granted) {
+    var g = granted === true ? 'granted' : 'denied';
+    // Google Consent Mode v2 — propage le choix aux 4 signaux (15/06/2026).
+    try {
+      window.gtag('consent', 'update', {
+        ad_storage: g,
+        ad_user_data: g,
+        ad_personalization: g,
+        analytics_storage: g
+      });
+    } catch (_) {}
     if (granted === true) {
       window.__wpCapi.consented = true;
       writeCookie('wp-consent', '1', 365);
@@ -173,7 +203,7 @@ fbq('init', ${jsString(config.pixelId)});
     div.setAttribute('role', 'dialog');
     div.setAttribute('aria-label', 'Consentement cookies');
     div.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:rgba(15,23,42,0.97);color:#fff;padding:16px 20px;font:14px/1.5 system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;box-shadow:0 -4px 24px rgba(0,0,0,0.2)';
-    div.innerHTML = '<span style="flex:1 1 auto;min-width:200px">Nous utilisons des cookies de mesure publicitaire (Meta Pixel) pour améliorer nos campagnes. Tu peux accepter ou refuser.</span><span style="display:flex;gap:8px;flex-shrink:0"><button id="wp-consent-refuse" type="button" style="background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit">Refuser</button><button id="wp-consent-accept" type="button" style="background:#7c3aed;border:none;color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600">Accepter</button></span>';
+    div.innerHTML = '<span style="flex:1 1 auto;min-width:200px">Nous utilisons des cookies de mesure publicitaire (Meta, Google) pour améliorer nos campagnes. Tu peux accepter ou refuser.</span><span style="display:flex;gap:8px;flex-shrink:0"><button id="wp-consent-refuse" type="button" style="background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit">Refuser</button><button id="wp-consent-accept" type="button" style="background:#7c3aed;border:none;color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600">Accepter</button></span>';
     document.body.appendChild(div);
     var ac = document.getElementById('wp-consent-accept');
     var rf = document.getElementById('wp-consent-refuse');

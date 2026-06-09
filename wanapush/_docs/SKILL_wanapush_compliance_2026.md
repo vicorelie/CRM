@@ -65,16 +65,18 @@ Conversions / Data Manager API + CAPI perdent le signal**, et le **ROAS se dégr
 obligatoire dans l'EEE.**
 
 **Ce que WanaPush DOIT faire :**
-- **Auto-injecter sur chaque site généré (`/preview/<slug>/`)** : un **bandeau de consentement** + le
-  **Consent Mode v2** (state par défaut `denied`, puis `update` au clic), AVANT que Pixel/CAPI/tags Google
-  ne firent. C'est le **maillon manquant** : la chaîne Ads→Site→Conversion n'est mesurable que si le
-  consentement est câblé.
-- **Propager l'état de consentement** vers : Pixel client, **CAPI serveur** (LDU/consent), uploads
-  **Data Manager / Enhanced Conversions**, connecteur `ga4.ts` (lire `gcs/gcd`).
-- **CAPI / Meta** : passer le flag **Limited Data Use (LDU)** pour les users EEA/UK/Californie.
+- ✅ **FAIT (client-side)** — `lib/capi/pixel-script.ts` injecte désormais le **Consent Mode v2**
+  (`gtag('consent','default',{denied×4, wait_for_update:500})` AVANT le Pixel, `update` au clic du
+  bandeau), piloté par le **même opt-in** que le Pixel Meta (cookies `wp-consent`/`wp-no-track`).
+  Default `denied` si `SitePixel.consentRequired=true`, `granted` sinon. Forward-compatible (no-op
+  si aucun tag Google présent). ⚠️ **`consentRequired` doit être passé à `true` pour les sites EU**
+  (défaut `false` = phase test). Re-injecter les sites déjà générés pour propager le nouveau snippet.
+- ⏳ **Reste (server-side)** : propager l'état de consentement vers les uploads **CAPI (flag LDU
+  EEA/UK/Californie)** et **Google Enhanced Conversions / Data Manager** (aujourd'hui déclenchés sur
+  commande sans lecture du consentement). Connecteur `ga4.ts` : lire `gcs/gcd` quand il existera.
 
-**À faire :** [ ] module bandeau consentement + Consent Mode v2 injecté par le Site-gen ; [ ] propagation
-du signal à Pixel/CAPI/Data Manager/`ga4.ts` ; [ ] LDU sur les events CAPI EEA/UK/CA.
+**À faire :** [ ] forcer `consentRequired=true` + re-injection pour les sites EU ; [ ] LDU sur les
+events CAPI selon le consentement ; [ ] gate des Enhanced Conversions server-side sur le consentement.
 
 > Rappel deadline voisine (Google Ads API) : **v20 sunset 10/06/2026**, Enhanced Conversions offline/leads
 > **migrent vers Data Manager API et sont bloquées dans l'Ads API à partir du 15/06/2026**. Cf. skill Ads.
