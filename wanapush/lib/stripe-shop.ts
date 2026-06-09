@@ -3,7 +3,7 @@
 // AES-256-GCM dans la BDD via lib/crypto.ts.
 
 import Stripe from "stripe";
-import type { Shop } from "@prisma/client";
+import type { Shop } from "@/lib/generated/prisma/client";
 import { decrypt } from "@/lib/crypto";
 
 /**

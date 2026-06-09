@@ -27,8 +27,6 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { decrypt } from "@/lib/crypto";
 import { trackTikTokEvent, type TikTokStandardEvent } from "@/lib/ads/tiktok-events";
 
 export const runtime = "nodejs";
@@ -71,24 +69,20 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
-  // Résoudre le Access-Token TikTok depuis la DB si adAccountId fourni,
-  // sinon utiliser la variable d'env TIKTOK_EVENTS_ACCESS_TOKEN (fallback)
-  let accessToken = process.env.TIKTOK_EVENTS_ACCESS_TOKEN ?? "";
-
-  if (data.adAccountId) {
-    const account = await prisma.adAccount.findFirst({
-      where: { id: data.adAccountId, platform: "TIKTOK_ADS" },
-      select: { accessToken: true },
-    });
-    if (account?.accessToken) {
-      accessToken = decrypt(account.accessToken);
-    }
-  }
+  // ⚠️ DÉPRÉCIÉ (audit C2) — utiliser /api/ads/tiktok/[slug]/events.
+  // L'ancien comportement (résoudre le token depuis `adAccountId` du body) était
+  // une faille BOLA : un appelant anonyme pouvait utiliser le token TikTok de
+  // N'IMPORTE QUEL marchand. On NE résout plus de token par body : seul le token
+  // d'environnement (non lié à un marchand) est accepté ici. `adAccountId` est ignoré.
+  const accessToken = process.env.TIKTOK_EVENTS_ACCESS_TOKEN ?? "";
 
   if (!accessToken) {
     return NextResponse.json(
-      { error: "Access-Token TikTok non configuré (adAccountId requis ou TIKTOK_EVENTS_ACCESS_TOKEN)" },
-      { status: 422 },
+      {
+        error:
+          "Endpoint déprécié. Utiliser POST /api/ads/tiktok/[slug]/events (token résolu server-side via le propriétaire du site).",
+      },
+      { status: 410 },
     );
   }
 

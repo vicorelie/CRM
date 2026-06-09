@@ -16,6 +16,20 @@ last_reviewed: 2026-06-03
 
 # SKILL — WanaPush Site Generator
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**Core Web Vitals (confirme la skill) :** LCP ≤ 2,5 s · **INP ≤ 200 ms** (le piège, JS qui bloque le main thread) · CLS ≤ 0,1. Bounce +90 % à 5 s ; <1 s convertit ~3× mieux. → appliquer `startTransition` sur les state lourds, **lazy-load Pixel/CAPI/analytics après interaction**, budgéter le JS tiers (1ʳᵉ cause d'INP dégradé sur sites générés). ([web.dev/INP])
+
+**CRO 2026 (complète la skill) :** mobile-first dur → **tap targets ≥ 44×44 px**, pas de scroll horizontal, <2 s en 4G ; **message-match** : le H1 confirme la promesse de l'ad en mots quasi-identiques → **passer le copy de l'ad (module Ads) au prompt du generator** (boucle Ads→Site manquante) ; **0 navigation distrayante** en mode landing-ads (header minimal) ; formulaires 3 champs ; CTA bénéfice ; social proof près du form. ([Apexure](https://www.apexure.com/blog/the-complete-guide-to-high-converting-landing-page-design))
+
+**Accessibilité (gap quasi-total) :** WCAG AA (contraste 4.5:1), `alt` sur images hero, labels de form associés, focus visible, nav clavier, landmarks ARIA. **EAA en vigueur UE depuis 2025** → risque légal + perte de conversion. À encoder dans les compositions/style-presets.
+
+**🔴 Tracking & consentement sur sites générés (maillon manquant) :** **Consent Mode v2 — bascule 15/06/2026** : Pixel/CAPI + tags Google doivent respecter `ad_storage`. **Auto-injecter un bandeau consentement + Consent Mode v2** (default `denied` → update) sur chaque `/preview/<slug>/`, sinon Pixel/CAPI/Enhanced Conversions perdent le signal et le ROAS se dégrade **silencieusement**. La skill mentionne le Pixel auto mais **pas le consentement**. Cf. `SKILL_wanapush_compliance_2026.md`.
+
+**🔴 EU AI Act Art. 50 (02/08/2026) :** mention "rédigé avec assistance IA, revu par [Nom]" (couvre le texte, aligné E-E-A-T) + label/metadata sur les **visuels IA** (hero).
+
+**À faire :** [ ] lazy-load tracking + budget JS tiers ; [ ] contraintes mobile (44px, no-scroll-h) ; [ ] boucle Ads→Site (message-match auto) ; [ ] header minimal landing-ads ; [ ] accessibilité AA dans les compositions ; [ ] bandeau + Consent Mode v2 auto ; [ ] A/B test de sections (archi "stable section" déjà là).
+
 > Module **central** de WanaPush. Génère des landing pages et multi-pages
 > sectorielles via IA + compositions pré-définies, hébergées sur
 > `wanapush.com/preview/<slug>/`, avec Pixel Meta auto-installé et éditeur

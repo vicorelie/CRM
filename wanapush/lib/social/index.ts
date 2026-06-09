@@ -1,5 +1,5 @@
 // Registry des connecteurs social + helpers DB.
-import type { Platform, SocialAccount } from "@prisma/client";
+import type { Platform, SocialAccount } from "@/lib/generated/prisma/client";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { facebookConnector } from "./facebook";

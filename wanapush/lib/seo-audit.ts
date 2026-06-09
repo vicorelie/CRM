@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import type { CoreWebVitals } from "@/lib/pagespeed";
+import { safeFetch } from "@/lib/ssrf";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -82,9 +83,10 @@ export async function crawl(targetUrl: string): Promise<Audit> {
   const timer = setTimeout(() => ctrl.abort(), 15_000);
   let res: Response;
   try {
-    res = await fetch(targetUrl, {
+    // safeFetch (audit H2) : valide l'URL + chaque hop de redirection contre les
+    // IP privées/loopback/metadata avant tout fetch (anti-SSRF).
+    res = await safeFetch(targetUrl, {
       signal: ctrl.signal,
-      redirect: "follow",
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; WanaPushBot/1.0; +https://wanapush.com/bot)",

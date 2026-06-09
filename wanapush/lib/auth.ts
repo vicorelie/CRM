@@ -5,8 +5,32 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 
+// Adapter durci (audit C3) : NE PAS persister les tokens OAuth en clair dans la
+// table NextAuth `Account`. L'app n'en a aucun usage (les tokens d'API vivent
+// chiffrés AES-256-GCM dans SocialAccount/AdAccount/GbpAccount) ; les y stocker
+// en clair était le seul secret non chiffré au repos. On strippe les champs
+// porteurs de secret avant l'insert ; le reste (provider, providerAccountId…) reste.
+// Le type du paramètre est dérivé de l'adapter de base pour éviter tout conflit
+// entre les types `AdapterAccount` de `next-auth` et `@auth/core`.
+function makeSafeAdapter() {
+  const base = PrismaAdapter(prisma);
+  const baseLink = base.linkAccount!;
+  type LinkArg = Parameters<typeof baseLink>[0];
+  return {
+    ...base,
+    linkAccount: (account: LinkArg) => {
+      const { access_token, refresh_token, id_token, ...safe } =
+        account as LinkArg & Record<string, unknown>;
+      void access_token;
+      void refresh_token;
+      void id_token;
+      return baseLink(safe as LinkArg);
+    },
+  };
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: makeSafeAdapter(),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",

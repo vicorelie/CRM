@@ -1,5 +1,5 @@
 // Registry des connecteurs Ads + helpers DB.
-import type { AdAccount, AdPlatform } from "@prisma/client";
+import type { AdAccount, AdPlatform } from "@/lib/generated/prisma/client";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { googleAdsConnector } from "./google";

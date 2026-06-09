@@ -16,6 +16,21 @@ last_reviewed: 2026-06-03
 
 # SKILL — WanaPush Social Module
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**Versions API actuelles (la skill cite des versions obsolètes) :**
+- **Meta Graph API : v25.0** (18 fév 2026) → bumper `lib/social/{facebook,instagram}.ts`. ([blog v25](https://developers.facebook.com/blog/post/2026/02/18/introducing-graph-api-v25-and-marketing-api-v25/))
+- **LinkedIn : versionné mensuel `YYYYMM`, dernière `202605`**, header `LinkedIn-Version` obligatoire. `UGC Posts v202310` est **mort** → migrer vers **Posts API**. ([recent-changes](https://learn.microsoft.com/en-us/linkedin/marketing/integrations/recent-changes?view=li-lms-2026-05))
+- **YouTube `videos.insert` = ~100 unités/upload** (déc 2025, plus 1 600) → corriger le gotcha quota dans la skill + `social-oauth.md`. ([quota](https://developers.google.com/youtube/v3/determine_quota_cost))
+
+**Déprécations métriques 2026 :** Meta Reach/Video/Story Impressions dépréciées juin 2026 ; IG `impressions`/`plays` déjà supprimés → adopter `views`, `reposts_count`, `saved_count`, `shares_count`. Réécrire `fetchMetrics`/`PostAnalytics`. ([changelog IG](https://developers.facebook.com/docs/instagram-platform/changelog/))
+
+**TikTok — divergence majeure :** app non auditée = **tout post forcé en `SELF_ONLY`** (pas juste DRAFT) ; audit requis pour publier public. Rate limit 6 req/min. **Flag `is_ai_generated` requis** dans l'init publish (sinon shadow-ban). ([content-sharing](https://developers.tiktok.com/doc/content-sharing-guidelines))
+
+**X/Twitter :** free tier supprimé (fév 2026), pay-per-use, post avec URL = 0,20 $ (+1900 %) → pénaliser l'auto-post de liens si on branche X.
+
+**À faire :** [ ] bump Graph v25 + LinkedIn Posts API ; [ ] corriger quota YouTube ; [ ] refondre métriques Meta/IG ; [ ] `is_ai_generated` TikTok ; [ ] **label IA par plateforme** (EU AI Act Art. 50, en vigueur 2 août 2026 — cf. `SKILL_wanapush_compliance_2026.md`) ; [ ] poll container IG (`status_code=FINISHED`) + backoff expo + idempotency-key par target.
+
 > Skill **tactique** complémentaire à `SKILL_digital_marketing_wanapush.md` (stratégique).
 > Couvre les conventions code + specs techniques 2026 + algorithmes par plateforme.
 

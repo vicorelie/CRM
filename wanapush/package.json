@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "sh -c 'tsx --test lib/__tests__/*.test.ts lib/**/__tests__/*.test.ts'",
     "test:capi": "sh -c 'tsx --test lib/capi/__tests__/*.test.ts'"
   },
@@ -16,7 +18,8 @@
     "@aws-sdk/client-s3": "^3.1041.0",
     "@aws-sdk/s3-request-presigner": "^3.1041.0",
     "@hookform/resolvers": "^5.2.2",
-    "@prisma/client": "^6.19.3",
+    "@prisma/adapter-mariadb": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -60,7 +63,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "postcss": "^8",
-    "prisma": "^6.19.3",
+    "prisma": "^7.8.0",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.22.4",
     "typescript": "^5"

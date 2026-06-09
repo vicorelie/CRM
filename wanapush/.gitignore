@@ -37,6 +37,8 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+# Prisma 7 : client généré (régénéré au build/CI via `prisma generate`)
+/lib/generated/prisma
 
 # Third-party skills clonés depuis GitHub avec leur propre .git/
 # (à transformer en submodule plus tard si on les utilise vraiment).

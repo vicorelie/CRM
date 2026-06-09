@@ -5,16 +5,24 @@ import { ensureFreshAccount, getConnector, toConnectorAccount } from "@/lib/soci
 import type { Media } from "./types";
 
 export async function runScheduledPost(postId: string) {
+  // Claim ATOMIQUE : on ne traite le post que si on réussit à le passer d'un
+  // état "à publier" (DRAFT manuel / SCHEDULED cron / FAILED retry) → PUBLISHING.
+  // Si count === 0, le post est déjà PUBLISHING/PUBLISHED → un autre run (cron
+  // concurrent, multi-instance, publication manuelle simultanée) l'a déjà pris :
+  // on s'arrête pour éviter une DOUBLE PUBLICATION sur les comptes du client. (Audit C4)
+  const claim = await prisma.scheduledPost.updateMany({
+    where: { id: postId, status: { in: ["DRAFT", "SCHEDULED", "FAILED"] } },
+    data: { status: "PUBLISHING" },
+  });
+  if (claim.count === 0) {
+    return { ok: true, okCount: 0, failCount: 0, skipped: true as const };
+  }
+
   const post = await prisma.scheduledPost.findUnique({
     where: { id: postId },
     include: { targets: { include: { account: true } } },
   });
   if (!post) throw new Error("Post introuvable");
-
-  await prisma.scheduledPost.update({
-    where: { id: postId },
-    data: { status: "PUBLISHING" },
-  });
 
   const media = (post.mediaUrls as unknown as Media[]) ?? [];
   const options = (post.options as Record<string, unknown> | null) ?? {};

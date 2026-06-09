@@ -55,9 +55,9 @@ export async function POST(req: Request) {
   let response: JsonRpcResponse | JsonRpcResponse[];
   try {
     if (Array.isArray(body)) {
-      response = await handleMcpBatch(body as never, auth.userId);
+      response = await handleMcpBatch(body as never, auth.userId, auth.scopes);
     } else {
-      response = await handleMcpRequest(body as never, auth.userId);
+      response = await handleMcpRequest(body as never, auth.userId, auth.scopes);
     }
     // Fire-and-forget usage tracking
     void trackMcpUsage(auth.keyId).catch(() => undefined);

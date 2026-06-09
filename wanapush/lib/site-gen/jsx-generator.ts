@@ -55,7 +55,7 @@ export type JsxValidationResult =
  */
 export function validateGeneratedJsx(rawCode: string): JsxValidationResult {
   // Strip markdown fences si l'IA en a mis
-  let code = rawCode
+  const code = rawCode
     .trim()
     .replace(/^```(?:tsx|typescript|jsx)?\s*\n?/i, "")
     .replace(/\n?```\s*$/i, "")

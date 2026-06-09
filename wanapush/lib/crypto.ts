@@ -2,7 +2,6 @@ import {
   createCipheriv,
   createDecipheriv,
   randomBytes,
-  scryptSync,
 } from "node:crypto";
 
 // Chiffrement AES-256-GCM des credentials stockés en DB.
@@ -19,9 +18,17 @@ function getKey(): Buffer {
       "ENCRYPTION_KEY non définie dans .env.local (générer : openssl rand -hex 32)",
     );
   }
-  // Si fourni en hex 64 chars, on l'utilise directement, sinon on dérive.
+  // Format attendu : 32 octets, soit en hex (64 chars), soit en base64 (44 chars).
+  // Audit H3 : on REFUSE de dériver via scrypt avec un sel constant en clair
+  // (`"wanapush-salt"`) — ça réduirait l'entropie effective de la clé. La clé
+  // de prod actuelle est en hex 64 → chemin inchangé, aucune donnée existante n'est affectée.
   if (/^[0-9a-f]{64}$/i.test(raw)) return Buffer.from(raw, "hex");
-  return scryptSync(raw, "wanapush-salt", 32);
+  const b64 = Buffer.from(raw, "base64");
+  if (b64.length === 32) return b64;
+  throw new Error(
+    "ENCRYPTION_KEY invalide : attendu 32 octets en hex (64 chars) ou base64 (44 chars). " +
+      "Générer : openssl rand -hex 32",
+  );
 }
 
 export function encrypt(plaintext: string): string {

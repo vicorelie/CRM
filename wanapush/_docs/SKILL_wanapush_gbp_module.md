@@ -12,6 +12,18 @@ last_reviewed: 2026-06-04
 
 # SKILL — WanaPush GBP Module (STUB)
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**APIs GBP (juin 2026) :** les 8 APIs de 2021 restent **actives**, pas de nouveau sunset 2025-2026. Performance v1 (`fetchMultiDailyMetricsTimeSeries`) remplace bien `reportInsights` v4 ✅. **🔴 GAP CRITIQUE : l'API Q&A (`mybusinessqanda`) a été arrêtée le 3 nov 2025**, sans remplacement (Google bascule vers Ask Maps + Gemini) → **retirer Q&A du scope phase 2**. ([Q&A change log](https://developers.google.com/my-business/content/qanda/change-log))
+
+**Quota :** post-validation prod = **300 QPM** (~5 req/s), Business Information 10 edits/min/fiche. La note "≈10 req/jour" n'est vraie qu'**avant** validation (sandbox). ([limits](https://developers.google.com/my-business/content/limits))
+
+**Réponses IA aux avis :** non pénalisées **si validées/autorisées par le titulaire** → garder un **human-in-the-loop / opt-in explicite** sur le cron auto-reply (filtre confidence ≥ 0.85). **Nouveaux interdits (policy avr 2026) :** demander de **citer un employé par nom**, solliciter un avis **on-premise**, **review gating** (filtrage par sentiment), **incitation** (cadeaux/remises). Bannir ces patterns des templates de sollicitation. ([review policy 2026](https://www.threechaptermedia.com/blog/google-review-policy-2026))
+
+**Local SEO 2026 :** poids GBP 32 % / on-page 19 % / avis 16 % / liens 15 %. **Review velocity > volume** (10 avis frais/mois > 200 vieux) ; seuil de citation IA (AI Overviews) ≈ **150+ avis/établissement**. FTC : faux avis jusqu'à 51 744 $/infraction.
+
+**À faire :** [ ] retirer Q&A du scope (API morte) ; [ ] ajouter `reviewVelocity` (avis/30j) à `GbpLocation` + flag "<150 avis = invisible AI Overviews" ; [ ] corriger note quota (300 QPM) ; [ ] guardrails policy avis dans les templates ; [ ] validation humaine/opt-in sur l'auto-reply IA.
+
 > **État 2026-06-08 : Backend MVP shippé.** Schema Prisma + lib/gbp/ + 8 endpoints
 > API + cron daily. UI dashboard reste à brancher (squelette ModulePage existant).
 

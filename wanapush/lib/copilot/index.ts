@@ -28,7 +28,9 @@ const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : nul
 const openai = OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY }) : null;
 
 const PROVIDER: "anthropic" | "openai" | null = anthropic ? "anthropic" : openai ? "openai" : null;
-const ANTHROPIC_MODEL = process.env.COPILOT_MODEL ?? "claude-sonnet-4-20250514";
+// IDs Claude actuels (juin 2026). Le copilot fait du tool-use multi-tours → Opus 4.8 idéal ;
+// Sonnet 4.6 par défaut pour le coût. claude-sonnet-4-20250514 est retiré le 2026-06-15 (404).
+const ANTHROPIC_MODEL = process.env.COPILOT_MODEL ?? "claude-sonnet-4-6";
 const OPENAI_MODEL = process.env.COPILOT_OPENAI_MODEL ?? "gpt-4o";
 const MAX_ITERATIONS = 5;
 const MAX_TOKENS = 4000;

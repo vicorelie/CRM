@@ -103,14 +103,36 @@ function handleToolsList(request: JsonRpcRequest): JsonRpcResponse {
   return rpcSuccess(request.id ?? null, { tools });
 }
 
+// Registre des tools MUTANTS (audit H9). Vide en V1 (tous les tools sont read-only),
+// mais TOUT tool de la spec V2 qui crée/modifie/envoie (créer campagne, programmer
+// post, envoyer email…) DOIT être ajouté ici : il ne sera alors appelable qu'avec
+// une clé MCP de scope `read:write`. Sans ce gate, le scope stocké était décoratif.
+const WRITE_TOOLS = new Set<string>([
+  // ex. V2 : "create_campaign", "schedule_post", "send_email"
+]);
+
+function hasWriteScope(scopes: string): boolean {
+  return scopes.split(/[,\s]+/).includes("read:write");
+}
+
 /** tools/call : invoque un tool avec userId du caller (scope strict) */
 async function handleToolsCall(
   request: JsonRpcRequest,
   userId: string,
+  scopes: string,
 ): Promise<JsonRpcResponse> {
   const params = request.params as { name?: string; arguments?: Record<string, unknown> } | undefined;
   if (!params?.name) {
     return rpcError(request.id ?? null, -32602, "Invalid params: 'name' required");
+  }
+
+  // Enforce le scope avant d'invoquer un tool mutant.
+  if (WRITE_TOOLS.has(params.name) && !hasWriteScope(scopes)) {
+    return rpcError(
+      request.id ?? null,
+      -32002,
+      `Forbidden: le tool '${params.name}' nécessite une clé MCP de scope 'read:write'`,
+    );
   }
 
   const tool = TOOLS.find((t) => t.tool.name === params.name);
@@ -153,6 +175,7 @@ async function handleToolsCall(
 export async function handleMcpRequest(
   request: JsonRpcRequest,
   userId: string,
+  scopes: string = "read",
 ): Promise<JsonRpcResponse> {
   // Validate JSON-RPC 2.0 envelope
   if (request.jsonrpc !== "2.0") {
@@ -174,7 +197,7 @@ export async function handleMcpRequest(
     case "tools/list":
       return handleToolsList(request);
     case "tools/call":
-      return handleToolsCall(request, userId);
+      return handleToolsCall(request, userId, scopes);
     case "resources/list":
       return rpcSuccess(request.id ?? null, { resources: listResources() });
     case "resources/templates/list":
@@ -244,7 +267,8 @@ async function handlePromptsGet(
 export async function handleMcpBatch(
   requests: JsonRpcRequest[],
   userId: string,
+  scopes: string = "read",
 ): Promise<JsonRpcResponse[]> {
-  const responses = await Promise.all(requests.map((r) => handleMcpRequest(r, userId)));
+  const responses = await Promise.all(requests.map((r) => handleMcpRequest(r, userId, scopes)));
   return responses.filter((r): r is JsonRpcSuccess | JsonRpcError => r !== null);
 }

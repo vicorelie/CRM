@@ -16,6 +16,20 @@ last_reviewed: 2026-06-03
 
 # SKILL — WanaPush SEO Module
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**Google = recherche générative par défaut (AI Overviews + AI Mode).** La CTR organique a chuté sur les requêtes AIO mais **être cité dans l'AIO = +35 % de clics**. La bataille est passée des liens aux **citations**. ([Search Engine Land](https://searchengineland.com/google-ai-overviews-ctr-recovery-study-475566))
+
+**GEO/AEO — ce qui marche (Google + Princeton) :** answer-first (chaque H2/H3 démarre par une réponse directe 1-2 phrases, énoncés autoportants + dates explicites → +40 % de citation) ; **information gain** (data originale, chiffres nommés, expertise first-hand) ; **earned media >> owned** (82-89 % des citations IA viennent de tiers : Reddit/Wikipedia) ; **FAQPage schema = 3,2× de présence AIO**. ([Google AI guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide)) → discipline distincte, détaillée dans `SKILL_wanapush_geo_aeo.md`.
+
+**INP = signal de ranking à part entière depuis 18-mars-2026** (égal à LCP/CLS, plus supplémentaire). Seuil 200 ms ; 43 % des sites échouent.
+
+**Scaled content abuse = priorité d'enforcement mars-2026.** L'IA n'est pas pénalisée en soi ; ce sont les pages thin sans valeur/review (-50 à -80 % trafic). Le SEO programmatique survit **uniquement** avec data différenciée réelle/page + `dateModified` rendu HTML+schema + lastmod sitemap fiables. ([gen-AI content policy](https://developers.google.com/search/docs/fundamentals/using-gen-ai-content))
+
+**`llms.txt` = aucune valeur SEO** (Google ne le supporte pas, guide 15-mai-2026) → ne jamais le vendre comme levier. Exception : docs API agent-facing.
+
+**À faire :** [ ] section GEO/AEO ; [ ] check audit `faq-schema` + scorer la présence de réponses directes en tête de section ; [ ] `/suggest-content` answer-first chiffré (anti-commodity) ; [ ] garde-fou anti-scaled-content sur les fixes IA bulk (`enrich-content`/`rewrite-content`) + injecter `dateModified` HTML+schema ; [ ] marquer INP comme signal de ranking égal.
+
 > Skill **tactique** pour le module `/seo`. Complémentaire à :
 > - `SKILL_digital_marketing_wanapush.md` (stratégie SEO globale + outils)
 > - `SKILL_wanapush_site_generator.md` (SEO baked-in à la génération)

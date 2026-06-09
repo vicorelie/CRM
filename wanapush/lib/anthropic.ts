@@ -4,8 +4,10 @@ export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// Modèle par défaut — voir CLAUDE.md
-export const WANAPUSH_MODEL = "claude-sonnet-4-20250514";
+// Modèle par défaut — voir CLAUDE.md.
+// IDs Claude actuels (juin 2026) : claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5.
+// NE PAS utiliser claude-sonnet-4-20250514 (retiré le 2026-06-15 → 404 not_found_error).
+export const WANAPUSH_MODEL = "claude-sonnet-4-6";
 
 // Prompt système de l'agent WanaPush (cf. CLAUDE.md).
 export const WANAPUSH_SYSTEM_PROMPT = `Tu es WanaPush, un expert senior en marketing digital full-stack. Tu opères au sein d'une plateforme SaaS dédiée aux professionnels qui souhaitent construire, optimiser ou accélérer leur présence digitale.

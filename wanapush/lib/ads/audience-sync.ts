@@ -24,7 +24,7 @@
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
-import type { AdPlatform } from "@prisma/client";
+import type { AdPlatform } from "@/lib/generated/prisma/client";
 
 const META_GRAPH = "https://graph.facebook.com/v25.0";
 const LINKEDIN_API = "https://api.linkedin.com";

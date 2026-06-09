@@ -13,6 +13,18 @@ last_reviewed: 2026-06-04
 
 # SKILL — WanaPush Analytics Module
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**🔴 GAP de framing — "cookieless" :** les cookies tiers **ne sont PAS dépréciés** sur Chrome (Google a fait marche arrière en 2024). MAIS efficacité en déclin (Safari/Firefox bloquent) et **Google a déprécié les 10 dernières APIs Privacy Sandbox en oct 2025** (Topics, Protected Audience…). → corriger tout wording "fin des cookies" ; stratégie = **first-party + server-side**, pas attendre une deadline qui n'arrivera pas. ([Jentis](https://www.jentis.com/blog/google-will-not-deprecate-third-party-cookies))
+
+**GA4 + sGTM + Consent Mode v2 (standard 2026) :** sGTM = infra de prod. **Consent Mode v2 Advanced + modeling récupère 15-40 % des conversions** perdues au refus (conditions : ≥700 clics/7j/pays, taux consent ≥~20 %). **CMP certifiée Google obligatoire en EEE.** 🟠 GAP : le connecteur `ga4.ts` doit lire l'état de consentement (`gcs/gcd`) sinon data EU non conforme. ([Google consent SS](https://developers.google.com/tag-platform/tag-manager/server-side/consent-mode))
+
+**Attribution 2026 — le modèle unique est mort :** norme = **dual model** (data-driven/MTA pour le tactique + **MMM** pour l'allocation budget). Adoption MMM ×3 (boostée par **Meridian**, le MMM open-source de Google). MMM = nativement privacy-safe (données agrégées) → idéal PME EU. 🟠 GAP : la skill agrège des KPIs mais n'a pas de couche attribution/incrementality. ([Deducive](https://www.deducive.com/blog/2025/12/12/our-guide-to-marketing-attribution-incrementality-and-mmm-for-2026))
+
+**Détection d'anomalies :** l'écart-type 30j (±1.5/2/3σ) est sain ✅ — ajouter un **ajustement saisonnier (jour de semaine)** pour éviter les faux CRITICAL le week-end.
+
+**À faire :** [ ] corriger le framing "cookieless" ; [ ] lecture Consent Mode v2 dans `ga4.ts` + note CMP certifiée EEE ; [ ] documenter dual-model (DDA + MMM open-source Meridian) ; [ ] note privacy-safe (mesure agrégée/server-side pour users EU) ; [ ] saisonnalité dans `anomalies.ts`. Voir `SKILL_wanapush_compliance_2026.md` (Consent Mode v2).
+
 > **État 2026-06-08 : Backend MVP shippé.** `lib/analytics/{aggregators,anomalies}.ts`
 > + 2 endpoints API. UI dashboard reste à brancher (squelette ModulePage existant).
 

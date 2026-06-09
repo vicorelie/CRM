@@ -19,6 +19,28 @@ last_reviewed: 2026-06-03
 > Documente les conventions, patterns recommandés et anti-patterns du stack
 > actuel + roadmap d'upgrade vers React 19 / Next.js 15.
 
+## ⚠️ MàJ benchmark mi-2026 (sources officielles, audit 2026-06-09)
+
+Deux choix du stack sont désormais **officiellement périmés** — à planifier (détails + risques
+dans `_docs/AUDIT_REPORT_2026-06-09.md`) :
+
+- **✅ Prisma 7.8.0 — MIGRATION FAITE** (2026-06-09). Client Rust-free `queryCompiler` + driver
+  adapter `@prisma/adapter-mariadb` (`new PrismaMariaDb(DATABASE_URL)` dans `lib/prisma.ts`).
+  Generator `provider = "prisma-client"` + `output = "../lib/generated/prisma"` + `moduleFormat = "cjs"`
+  (projet CommonJS → pas de switch ESM). Config CLI dans `prisma.config.ts` (l'URL n'est plus dans
+  le bloc `datasource`). Imports : `@/lib/generated/prisma/client` (jamais `@prisma/client`).
+  `prisma generate` n'est plus auto → lancé via `build`/`postinstall`/CI. ⚠️ **NE PAS** downgrader
+  l'adapter en `7.5.0` (fuite prepared-statement, fixée en 7.6.0+) ; pinner client+adapter à la même version.
+  Migrations existantes intactes. Validé : tsc 0, 141 tests, requête live + tx interactive, `next build` OK.
+- **NextAuth v4.24 → maintenance/sécurité seulement** depuis sept. 2025 ; les mainteneurs
+  pointent vers **Better Auth**. Court terme OK, mais : **vérifier CVE-2025-29927** (bypass auth
+  par header middleware) → faire les checks d'auth au **niveau data/route**, jamais middleware seul.
+
+Autres : **Next 16.2** dispo (Turbopack défaut, Cache Components `"use cache"`, React Compiler →
+gains INP) — upgrade 14→16 via `@next/codemod`. Tailwind v4 dispo (non urgent). **Zod 4 déjà en place** (bien).
+Self-host : nginx avec `proxy_buffering off;` requis pour le streaming/Suspense, + headers de
+sécurité (CSP/HSTS/X-Frame-Options — actuellement absents de `next.config.mjs`).
+
 ## 🧭 Quand l'invoquer
 
 - Nouveau composant React (Server ou Client)

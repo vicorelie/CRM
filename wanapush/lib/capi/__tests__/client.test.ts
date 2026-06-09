@@ -38,7 +38,7 @@ function mockFetch(
 describe("buildEventsUrl", () => {
   it("constructs Meta Graph URL with pixelId and access_token", () => {
     const url = __testing.buildEventsUrl("1234567890", "EAAtoken123");
-    assert.match(url, /^https:\/\/graph\.facebook\.com\/v24\.0\/1234567890\/events\?access_token=/);
+    assert.match(url, /^https:\/\/graph\.facebook\.com\/v25\.0\/1234567890\/events\?access_token=/);
     assert.ok(url.includes("EAAtoken123"));
   });
 });

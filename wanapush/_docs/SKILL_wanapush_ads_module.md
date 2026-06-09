@@ -15,6 +15,19 @@ last_reviewed: 2026-06-06
 
 # SKILL — WanaPush Ads Module
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**Versions & deadlines :** Meta Marketing API **v24.0 = plancher** (versions < v24 dépréciées le 09/06/2026) ; viser v25. Google Ads API en **releases mensuelles depuis janv 2026**, **v20 sunset le 10/06/2026** (demain) → automatiser un check de version. **🔴 Consent Mode — bascule 15/06/2026 (dans 6 j) :** `ad_storage` devient le **contrôle exclusif** des données ad côté Google ; sans signal consenti propagé, Smart Bidding + Enhanced Conversions/Data Manager perdent le signal. ([uniconsent](https://www.uniconsent.com/blog/google-ads-consent-mode-change-2026)) Cf. `SKILL_wanapush_compliance_2026.md`.
+
+**Ce qu'un auto-pilote best-in-class doit FAIRE (gaps) :**
+- **Volume + vélocité créa = levier #1.** Top annonceurs Meta ~395 pubs actives ; >5 000 €/mois = **5-15 créas/semaine**. La skill détecte la fatigue mais **ne génère pas un pipeline de variantes** → ajouter un générateur de batch créa + **scoring prédictif avant dépense**.
+- **Advantage+ Creative = vidéo depuis statique** (jusqu'à 20 photos → vidéos multi-scènes), variations groupées, enhancements par défaut → exposer dans le PushModal (music, image expansion par placement, video-from-image), pas un flag on/off. ([AdMove](https://www.admove.ai/blog/meta-advantage-creative-best-practices-for-2026))
+- **Format par placement** : exiger 9:16 (Reels/Stories/Shorts) + 1:1 + 1.91:1, plus un seul 1:1.
+- **Réallocation budget cross-plateforme** (ROAS/CPA blended) : le Smart Bidding optimise *dans* une campagne, pas *entre* Google/Meta/TikTok. La skill a un RoasOptimizer mono-compte → faire un optimizer cross-plateforme.
+- **Automatisations plateformes à brancher :** TikTok **Smart+** modulaire, LinkedIn **Predictive Audiences** (GA) + **Accelerate**, Google **AI Max for Search** (GA défaut 15/04/2026). **PMax A/B testing au niveau asset = GA généralisé (janv 2026)** via `experiments` → tester les asset-groups générés et scaler les gagnants. ([Google Ads Help](https://support.google.com/google-ads/answer/16807329?hl=en))
+
+**🔴 Conformité — EU AI Act Art. 50 (02/08/2026) :** tout visuel/vidéo IA marqué (métadonnées C2PA + watermark), deepfakes label visible. Amendes 7,5 M€ / 1,5 % CA → tagguer tous les assets `generate-image`/video IA. Cf. `SKILL_wanapush_compliance_2026.md`.
+
 > Module Ads : connecteurs pub pour Meta, Google, TikTok, LinkedIn.
 > Meta Ads v25 = push E2E production + Creative Fatigue. Google Ads v24 = push Search + Pmax (negative kw PMax inclus). TikTok v1.3 = push + sync + Events API serveur. LinkedIn v202605 = push + sync.
 

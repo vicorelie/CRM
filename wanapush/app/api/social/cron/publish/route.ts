@@ -1,5 +1,6 @@
 // Cron : publie tous les ScheduledPost dont scheduledAt <= now et status=SCHEDULED.
 // Auth : header X-Cron-Secret = process.env.CRON_SECRET (à définir).
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { runScheduledPost } from "@/lib/social/publisher";
@@ -7,11 +8,18 @@ import { runScheduledPost } from "@/lib/social/publisher";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
+// Auth cron à temps constant (audit H10 : `===` = timing oracle sur le secret).
+// Pattern de référence à répliquer sur les autres routes app/api/*/cron/*.
+// On privilégie le header ; la query-string `?secret=` reste tolérée en fallback
+// mais elle atterrit dans les logs nginx → préférer le header X-Cron-Secret.
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
   const got = req.headers.get("x-cron-secret") ?? new URL(req.url).searchParams.get("secret");
-  return got === secret;
+  if (!got) return false;
+  const a = Buffer.from(got);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 async function tick() {

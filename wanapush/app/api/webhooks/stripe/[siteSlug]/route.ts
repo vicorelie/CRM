@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { stripeForShop, webhookSecretForShop } from "@/lib/stripe-shop";
-import { sendOrderConfirmation } from "@/lib/shop-email";
+import { createPaidOrderFromCart } from "@/lib/shop-order";
 
 export const runtime = "nodejs";
 
@@ -102,233 +102,48 @@ async function handleCheckoutCompleted(shopId: string, session: Stripe.Checkout.
     return;
   }
 
-  // Charge le panier complet
-  const cart = await prisma.cart.findUnique({
-    where: { id: cartId },
-    include: {
-      items: {
-        include: {
-          variant: {
-            include: { product: { include: { images: { take: 1, orderBy: { position: "asc" } } } } },
-          },
-        },
-      },
-    },
-  });
-  if (!cart) {
-    console.warn("[webhook] cart introuvable", cartId);
-    return;
-  }
-  if (cart.status === "COMPLETED") {
-    // Idempotence (déjà traité par un retry du même webhook)
-    return;
-  }
-
-  // Génère le numéro de commande séquentiel
-  const shop = await prisma.shop.update({
-    where: { id: shopId },
-    data: { orderNumberSeq: { increment: 1 } },
-  });
-  const orderNumber = `#${shop.orderNumberSeq}`;
-
-  // Crée l'Order avec snapshots
-  const customerEmail = session.customer_email ?? session.customer_details?.email ?? "";
-  const customerName = session.customer_details?.name ?? null;
-  const customerPhone = session.customer_details?.phone ?? null;
-  // Note : Stripe a renommé shipping_details → collected_information.shipping_details
-  // dans certaines versions. On caste pour rester compatible.
-  const sessionAny = session as unknown as { shipping_details?: { address?: unknown }; collected_information?: { shipping_details?: { address?: unknown } } };
+  // Adresses (Stripe a renommé shipping_details → collected_information.shipping_details
+  // selon la version → on caste pour rester compatible).
+  const sessionAny = session as unknown as {
+    shipping_details?: { address?: unknown };
+    collected_information?: { shipping_details?: { address?: unknown } };
+  };
   const shippingAddr = sessionAny.shipping_details?.address
     ?? sessionAny.collected_information?.shipping_details?.address
     ?? null;
-  const billingAddr = session.customer_details?.address ?? null;
 
-  const subtotal = cart.items.reduce((s, it) => s + Number(it.unitPrice) * it.quantity, 0);
-  const shippingCost = session.shipping_cost?.amount_total
-    ? session.shipping_cost.amount_total / 100
-    : Number(cart.shipping ?? 0);
-  const taxAmount = session.total_details?.amount_tax ? session.total_details.amount_tax / 100 : 0;
-  const discountAmount = session.total_details?.amount_discount
-    ? session.total_details.amount_discount / 100
-    : 0;
-  const total = (session.amount_total ?? 0) / 100;
+  const meta = (session.metadata ?? {}) as Record<string, string>;
 
-  // Upsert / Find existing customer
-  let customerId: string | null = null;
-  if (customerEmail) {
-    const [first = "", ...rest] = (customerName ?? "").split(" ");
-    const lastName = rest.join(" ");
-    const customer = await prisma.customer.upsert({
-      where: { shopId_email: { shopId, email: customerEmail } },
-      create: {
-        shopId,
-        email: customerEmail,
-        firstName: first || null,
-        lastName: lastName || null,
-        phone: customerPhone,
-        totalSpent: total,
-        ordersCount: 1,
-        lastOrderAt: new Date(),
-      },
-      update: {
-        firstName: first || undefined,
-        lastName: lastName || undefined,
-        phone: customerPhone ?? undefined,
-        totalSpent: { increment: total },
-        ordersCount: { increment: 1 },
-        lastOrderAt: new Date(),
-      },
-    });
-    customerId = customer.id;
-  }
-
-  // Click identifiers Google + liFatId LinkedIn + ttclid TikTok propagés depuis
-  // le checkout via session.metadata → stockés sur l'Order pour upload des 3
-  // Conversions APIs server-side (Google Data Manager + LinkedIn + TikTok Events).
-  const sessionMeta = (session.metadata ?? {}) as Record<string, string>;
-  const gclid = sessionMeta.gclid?.slice(0, 255) || null;
-  const gbraid = sessionMeta.gbraid?.slice(0, 255) || null;
-  const wbraid = sessionMeta.wbraid?.slice(0, 255) || null;
-  const liFatId = sessionMeta.liFatId?.slice(0, 255) || null;
-  const ttclid = sessionMeta.ttclid?.slice(0, 255) || null;
-
-  const order = await prisma.order.create({
-    data: {
-      shopId,
-      customerId,
-      orderNumber,
-      status: "CONFIRMED",
-      financialStatus: "PAID",
-      fulfillmentStatus: "UNFULFILLED",
-      customerEmail,
-      customerName,
-      customerPhone,
-      shippingAddressJson: shippingAddr as never,
-      billingAddressJson: billingAddr as never,
-      currency: cart.currency,
-      subtotal,
-      shippingCost,
-      taxAmount,
-      discountAmount,
-      total,
-      paymentMethod: "stripe",
-      paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
-      paidAt: new Date(),
-      shippingMethod: session.shipping_cost?.shipping_rate
-        ? typeof session.shipping_cost.shipping_rate === "string"
-          ? null
-          : session.shipping_cost.shipping_rate.display_name ?? null
-        : null,
-      gclid,
-      gbraid,
-      wbraid,
-      liFatId,
-      ttclid,
-      ecStatus: gclid || gbraid || wbraid ? "PENDING" : null,
-      liStatus: liFatId || customerEmail ? "PENDING" : null,
-      ttStatus: ttclid || customerEmail ? "PENDING" : null,
-      items: {
-        create: cart.items.map((it) => ({
-          variantId: it.variantId,
-          productTitle: it.variant.product.title,
-          variantTitle: it.variant.title !== "Default" ? it.variant.title : null,
-          sku: it.variant.sku,
-          imageUrl: it.variant.product.images[0]?.url ?? null,
-          quantity: it.quantity,
-          unitPrice: it.unitPrice,
-          totalPrice: Number(it.unitPrice) * it.quantity,
-          weight: it.variant.weight,
-        })),
-      },
+  // Toute la création order/customer/stock/discount est désormais atomique et
+  // partagée avec PayPal via createPaidOrderFromCart (audit H5).
+  const res = await createPaidOrderFromCart({
+    shopId,
+    cartId,
+    provider: "stripe",
+    paymentRef: typeof session.payment_intent === "string" ? session.payment_intent : null,
+    customerEmail: session.customer_email ?? session.customer_details?.email ?? "",
+    customerName: session.customer_details?.name ?? null,
+    customerPhone: session.customer_details?.phone ?? null,
+    shippingAddress: shippingAddr,
+    billingAddress: session.customer_details?.address ?? null,
+    shippingMethod: session.shipping_cost?.shipping_rate && typeof session.shipping_cost.shipping_rate !== "string"
+      ? session.shipping_cost.shipping_rate.display_name ?? null
+      : null,
+    amounts: {
+      // Montants autoritatifs venant de Stripe (en minor unit → €).
+      shippingCost: session.shipping_cost?.amount_total ? session.shipping_cost.amount_total / 100 : undefined,
+      taxAmount: session.total_details?.amount_tax ? session.total_details.amount_tax / 100 : 0,
+      discountAmount: session.total_details?.amount_discount ? session.total_details.amount_discount / 100 : 0,
+      total: session.amount_total != null ? session.amount_total / 100 : undefined,
     },
-  });
-
-  // Fire-and-forget : upload conversions vers Google (Data Manager API) +
-  // LinkedIn (Conversions API) en parallèle. Pas bloquant pour le webhook.
-  if (gclid || gbraid || wbraid || customerEmail) {
-    const { triggerSaleConversionForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
-    void triggerSaleConversionForOrder(order.id).catch((e) => {
-      console.warn(`[stripe-webhook] Google EC trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
-    });
-  }
-  if (liFatId || customerEmail) {
-    const { triggerLinkedInSaleForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
-    void triggerLinkedInSaleForOrder(order.id).catch((e) => {
-      console.warn(`[stripe-webhook] LinkedIn CAPI trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
-    });
-  }
-  if (ttclid || customerEmail) {
-    const { triggerTikTokSaleForOrder } = await import("@/lib/ads/enhanced-conversions-pipeline");
-    void triggerTikTokSaleForOrder(order.id).catch((e) => {
-      console.warn(`[stripe-webhook] TikTok Events trigger failed for order ${order.id}: ${e instanceof Error ? e.message : e}`);
-    });
-  }
-
-  // Marque le panier COMPLETED + vide pour repartir d'un panier vide
-  await prisma.cart.update({
-    where: { id: cart.id },
-    data: { status: "COMPLETED" },
-  });
-
-  // Décrémente le stock (par variante, dans le default location)
-  const defaultLoc = await prisma.stockLocation.findFirst({ where: { shopId, isDefault: true } });
-  if (defaultLoc) {
-    for (const it of cart.items) {
-      await prisma.stockLevel.updateMany({
-        where: { variantId: it.variantId, locationId: defaultLoc.id },
-        data: { quantity: { decrement: it.quantity } },
-      });
-    }
-  }
-
-  // Incrémente DiscountUsage si un code promo a été utilisé
-  const discountCode = session.metadata?.discountCode;
-  if (discountCode) {
-    const d = await prisma.discount.findFirst({
-      where: { shopId, code: discountCode },
-    });
-    if (d) {
-      await prisma.discount.update({
-        where: { id: d.id },
-        data: { usageCount: { increment: 1 } },
-      });
-      await prisma.discountUsage.create({
-        data: {
-          discountId: d.id,
-          customerId,
-          orderId: order.id,
-          amount: order.discountAmount,
-        },
-      });
-      // Met à jour aussi l'order avec le code
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { discountCode },
-      });
-    }
-  }
-
-  await prisma.auditLog.create({
-    data: {
-      shopId,
-      action: "order.create",
-      resource: order.id,
-      details: { orderNumber, total, customerEmail },
+    clickIds: {
+      gclid: meta.gclid, gbraid: meta.gbraid, wbraid: meta.wbraid,
+      liFatId: meta.liFatId, ttclid: meta.ttclid,
     },
+    discountCode: session.metadata?.discountCode || null,
   });
-
-  // Email de confirmation au client (non-bloquant)
-  const orderFull = await prisma.order.findUnique({
-    where: { id: order.id },
-    include: { items: true },
-  });
-  if (orderFull) {
-    const shopFull = await prisma.shop.findUnique({ where: { id: shopId } });
-    if (shopFull) {
-      sendOrderConfirmation(shopFull, orderFull).catch((e) =>
-        console.error("[webhook] order confirmation email failed:", e),
-      );
-    }
+  if (!res.ok && res.reason === "cart_not_found") {
+    console.warn("[webhook] cart introuvable", cartId);
   }
 }
 

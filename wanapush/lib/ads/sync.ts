@@ -1,6 +1,6 @@
 // Sync : pull les campagnes + les KPIs daily depuis chaque Ad Account connecté.
 // Upsert dans Campaign + AdMetrics.
-import type { AdAccount } from "@prisma/client";
+import type { AdAccount } from "@/lib/generated/prisma/client";
 import { ensureFreshAdAccount, getAdsConnector, toAdAccountInfo } from "@/lib/ads";
 import { prisma } from "@/lib/prisma";
 

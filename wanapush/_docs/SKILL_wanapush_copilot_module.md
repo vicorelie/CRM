@@ -16,6 +16,23 @@ last_reviewed: 2026-06-08
 > en exploitant les **vraies données** via tool use Claude. Backend MVP
 > shippé 2026-06-08.
 
+## ⚠️ MàJ IA mi-2026 (corrige des findings d'audit)
+
+- **Model IDs** : `claude-opus-4-8` (idéal pour la boucle tool-use multi-tours du copilot),
+  `claude-sonnet-4-6` (défaut coût), `claude-haiku-4-5` (rapide). ⚠️ `claude-sonnet-4-20250514`
+  est **retiré le 2026-06-15** → corrigé en `claude-sonnet-4-6` dans `lib/copilot/index.ts`.
+  **Plus de `budget_tokens`** sur 4.7/4.8 (400) → adaptive thinking + `output_config.effort`.
+- **Structured outputs** (`output_config.format`, GA) : remplacer le `safeJsonParse`/regex fragile
+  par un schéma validé — fiabilise la sortie des tools et du parsing.
+- **Prompt caching** : le system prompt (stable) doit porter `cache_control` (reads 0.1×).
+  Ordre `tools → system → messages`, breakpoint sur le dernier bloc stable. Pré-warm au boot.
+- **Tool Search** (`defer_loading`) : garder 3-5 tools chauds, défer le reste → contexte préservé.
+- **Sécurité (cf. `SKILL_wanapush_security_hardening.md`)** : ajouter **rate-limit + budget
+  tokens/jour** par user (DoS facture), **résumer l'historique** (pas de replay intégral =
+  coût quadratique), et **fencer** tout input user passé au modèle.
+- **Auto-pilote (vision produit)** : pour des agents long-horizon, évaluer **Managed Agents**
+  (Anthropic héberge la boucle + Outcomes gradés par rubric).
+
 ## 🧭 Quand l'invoquer
 
 - L'user demande "ajoute un copilot IA", "chat assistant", "AI marketing strategist"

@@ -12,6 +12,22 @@ last_reviewed: 2026-06-04
 
 # SKILL — WanaPush ASO Module (STUB)
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**Apple — algorithme sémantique LLM (2026) :** l'App Store interprète l'intention → optimiser le **champ sémantique** (synonymes/intention), pas le keyword-stuffing. ([Demircode](https://www.demircode.com/en/blog/app-store-optimization-aso-guide))
+
+**Custom Product Pages (iOS) = levier conversion #1 :** limite 35 → **70 CPP** (oct 2025), **discoverables** via keywords assignés (sans re-review), Apple annonce **+156 % de conversion** vs page par défaut. ([RespectASO](https://respectaso.com/blog/custom-product-pages-app-store-guide-2026/))
+
+**Métadonnées Apple :** title 30 / subtitle 30 / keywords 100 / description 4000 / **promo text 170 (modifiable sans nouvelle version)**. **Nouveau 2026 : Apple extrait les keywords des captions de screenshots** → les screenshots font de la découverte. ([char limits](https://www.appconnecttranslate.com/tools/app-store-character-limits/))
+
+**Screenshots iOS — specs à jour (la skill liste du 6.7" obsolète) :** 6,9" = 1290×2796 **ou** 1320×2868 ; 6,5" = 1284×2778 ou 1242×2688. ([Apple specs](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/))
+
+**Google Play — I/O 2026 :** **Custom Store Listings générées par Gemini** (1 clic + localisation auto) ; **Gemini App Discovery + "Ask Play"** → copy lisible humain **ET** LLM. Les CSL ne donnent **aucun boost ASO** (pertinence/conversion seulement). ([Android Dev Blog](https://android-developers.googleblog.com/2026/05/io-2026-whats-new-in-google-play.html))
+
+**Policy Q2-2026 :** features IA-assistées = cadrage user-facing clair ; cohérence privacy/comportement in-app ; localisation reviewée plus agressivement.
+
+**À faire :** [ ] corriger ratios screenshots ; [ ] CPP iOS + CSL Play comme features first-class ; [ ] scorer "keywords dans captions screenshots" ; [ ] `suggestKeywords()` matching sémantique (pas exact-match) ; [ ] copy humain+LLM ; [ ] checklist policy Q2-2026. Label IA des visuels générés → cf. `SKILL_wanapush_compliance_2026.md`.
+
 > ⚠️ **État juin 2026** : module non implémenté (UI stub 17 lignes). Module de
 > niche : ne concerne que les users avec une app mobile (publiée App Store
 > et/ou Play Store).

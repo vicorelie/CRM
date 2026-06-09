@@ -1,5 +1,5 @@
 // Types partagés des connecteurs réseaux sociaux.
-import type { Platform } from "@prisma/client";
+import type { Platform } from "@/lib/generated/prisma/client";
 
 export type Media = {
   url: string;

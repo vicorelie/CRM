@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import puppeteer, { type Browser } from "puppeteer";
 import { authOptions } from "@/lib/auth";
+import { assertPublicUrl, SsrfError } from "@/lib/ssrf";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -41,9 +42,15 @@ export async function GET(req: Request) {
   if (!url) {
     return NextResponse.json({ error: "Param 'url' requis" }, { status: 400 });
   }
+  // Garde anti-SSRF (audit H2) : on bloque localhost / IP privées / metadata
+  // AVANT de lancer Puppeteer. (Résiduel : DNS-rebinding TOCTOU possible côté
+  // navigation Puppeteer → durcir via interception de requêtes si besoin.)
   try {
-    new URL(url);
-  } catch {
+    await assertPublicUrl(url);
+  } catch (e) {
+    if (e instanceof SsrfError) {
+      return NextResponse.json({ error: `URL refusée : ${e.message}` }, { status: 400 });
+    }
     return NextResponse.json({ error: "URL invalide" }, { status: 400 });
   }
 

@@ -2,9 +2,19 @@
 // Magic link via email : on signe un token HMAC-SHA256 contenant
 // { customerId, shopId, exp } et on le pose en cookie HTTP-only.
 
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
-const SECRET = process.env.NEXTAUTH_SECRET || process.env.ENCRYPTION_KEY || "wanapush-customer-secret";
+// Secret de signature des tokens customer. PAS de fallback en dur (audit H4) :
+// un secret constant connu permettrait de forger { customerId, shopId } et
+// d'usurper n'importe quel client. On garde l'ordre NEXTAUTH_SECRET → ENCRYPTION_KEY
+// pour ne pas invalider les sessions existantes ; throw si aucun n'est défini.
+function getSecret(): string {
+  const s = process.env.NEXTAUTH_SECRET || process.env.ENCRYPTION_KEY;
+  if (!s) {
+    throw new Error("NEXTAUTH_SECRET (ou ENCRYPTION_KEY) requis pour signer les tokens customer");
+  }
+  return s;
+}
 
 export type CustomerToken = {
   customerId: string;
@@ -25,7 +35,7 @@ function fromBase64url(input: string): string {
 export function signCustomerToken(payload: Omit<CustomerToken, "exp">, ttlSeconds: number): string {
   const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
   const body = base64url(JSON.stringify({ ...payload, exp }));
-  const sig = base64url(createHmac("sha256", SECRET).update(body).digest());
+  const sig = base64url(createHmac("sha256", getSecret()).update(body).digest());
   return `${body}.${sig}`;
 }
 
@@ -33,8 +43,11 @@ export function verifyCustomerToken(token: string): CustomerToken | null {
   try {
     const [body, sig] = token.split(".");
     if (!body || !sig) return null;
-    const expected = base64url(createHmac("sha256", SECRET).update(body).digest());
-    if (sig !== expected) return null;
+    const expected = base64url(createHmac("sha256", getSecret()).update(body).digest());
+    // Comparaison à temps constant (audit H4 : `!==` = timing oracle sur la signature).
+    const sigBuf = Buffer.from(sig);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) return null;
     const data = JSON.parse(fromBase64url(body)) as CustomerToken;
     if (data.exp < Math.floor(Date.now() / 1000)) return null;
     return data;

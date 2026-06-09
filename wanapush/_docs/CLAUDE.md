@@ -14,7 +14,7 @@ Application SaaS B2B de marketing digital full-stack. Permet à des professionne
 - **Stockage** : AWS S3 ou Cloudflare R2
 - **Emails** : Resend
 - **Paiement** : Stripe (abonnements SaaS)
-- **IA** : Anthropic Claude API (claude-sonnet-4-20250514)
+- **IA** : Anthropic Claude API — IDs actuels juin 2026 : `claude-opus-4-8` / `claude-sonnet-4-6` (défaut) / `claude-haiku-4-5`. ⚠️ `claude-sonnet-4-20250514` retiré le 2026-06-15 (ce doc est legacy ; cf. `/var/www/wanapush/CLAUDE.md`)
 - **Déploiement** : serveur dédié `wanatest.com` derrière nginx, `basePath: "/wanapush"` (cf `next.config.mjs`). Sites générés servis sur `https://wanatest.com/preview/{slug}/`.
 
 ## Structure du projet

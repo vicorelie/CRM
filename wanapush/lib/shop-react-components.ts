@@ -1402,7 +1402,7 @@ export default function CartButton() {
 
 export function cartDrawerFile(): string {
   return `import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCart } from "../../contexts/CartContext";
 import { API_BASE, fmtMoney, getSessionId } from "../../shop-config";
 
@@ -1414,6 +1414,89 @@ export default function CartDrawer() {
   const [code, setCode] = useState("");
   const [codeApplying, setCodeApplying] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+  const paypalCfgRef = useRef<{ enabled: boolean; clientId?: string; currency?: string } | null>(null);
+  const paypalRenderedRef = useRef(false);
+  const [paypalEnabled, setPaypalEnabled] = useState(false);
+
+  function collectClickIds() {
+    const url = new URL(window.location.href);
+    const cookies = Object.fromEntries(
+      document.cookie.split("; ").filter(Boolean).map((c) => {
+        const idx = c.indexOf("=");
+        return [c.slice(0, idx), decodeURIComponent(c.slice(idx + 1))];
+      }),
+    );
+    return {
+      gclid: url.searchParams.get("gclid") || cookies.wp_gclid || undefined,
+      gbraid: url.searchParams.get("gbraid") || cookies.wp_gbraid || undefined,
+      wbraid: url.searchParams.get("wbraid") || cookies.wp_wbraid || undefined,
+      liFatId: cookies.li_fat_id || cookies.wp_li_fat_id || undefined,
+      ttclid: url.searchParams.get("ttclid") || cookies.wp_ttclid || undefined,
+    };
+  }
+
+  // PayPal JS SDK : createOrder/onApprove appellent notre serveur (jamais de
+  // montant côté client). Rendu une fois le drawer ouvert avec des articles.
+  useEffect(() => {
+    if (!drawerOpen) { paypalRenderedRef.current = false; return; }
+    if (!cart || cart.items.length === 0) return;
+    let cancelled = false;
+
+    function renderButtons() {
+      const paypal = (window as any).paypal;
+      const container = document.getElementById("paypal-button-container");
+      if (!paypal || !container || paypalRenderedRef.current) return;
+      paypalRenderedRef.current = true;
+      paypal.Buttons({
+        style: { layout: "horizontal", height: 45, tagline: false },
+        createOrder: async () => {
+          const r = await fetch(API_BASE + "/paypal/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: getSessionId() }),
+          });
+          const d = await r.json();
+          if (!r.ok) { setCheckoutError(d?.error || "Erreur PayPal"); throw new Error("paypal create"); }
+          return d.orderID;
+        },
+        onApprove: async (data: any) => {
+          const r = await fetch(API_BASE + "/paypal/capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderID: data.orderID, ...collectClickIds() }),
+          });
+          const d = await r.json();
+          if (!r.ok) { setCheckoutError(d?.error || "Paiement PayPal échoué"); return; }
+          window.location.href = window.location.pathname + "?order=success";
+        },
+        onError: () => setCheckoutError("Erreur PayPal"),
+      }).render("#paypal-button-container");
+    }
+
+    async function setup() {
+      if (!paypalCfgRef.current) {
+        try {
+          const r = await fetch(API_BASE + "/paypal/config");
+          paypalCfgRef.current = await r.json();
+        } catch { return; }
+      }
+      const cfg = paypalCfgRef.current;
+      if (cancelled || !cfg || !cfg.enabled || !cfg.clientId) return;
+      setPaypalEnabled(true);
+      if ((window as any).paypal) { renderButtons(); return; }
+      if (!document.getElementById("paypal-sdk")) {
+        const s = document.createElement("script");
+        s.id = "paypal-sdk";
+        s.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(cfg.clientId) + "&currency=" + encodeURIComponent(cfg.currency || "EUR") + "&intent=capture";
+        s.onload = () => { if (!cancelled) renderButtons(); };
+        document.body.appendChild(s);
+      } else {
+        renderButtons();
+      }
+    }
+    setup();
+    return () => { cancelled = true; };
+  }, [drawerOpen, cart]);
 
   async function applyCode() {
     if (!code.trim()) return;
@@ -1645,7 +1728,17 @@ export default function CartDrawer() {
                 >
                   {checkoutLoading ? "Préparation…" : "Procéder au paiement"}
                 </button>
-                <p className="mt-2 text-[10px] text-gray-400 text-center">Paiement sécurisé via Stripe</p>
+                {paypalEnabled && (
+                  <div className="my-3 flex items-center gap-3">
+                    <span className="flex-1 h-px bg-gray-200" />
+                    <span className="text-[10px] text-gray-400">ou</span>
+                    <span className="flex-1 h-px bg-gray-200" />
+                  </div>
+                )}
+                <div id="paypal-button-container" style={{ display: paypalEnabled ? "block" : "none" }} />
+                <p className="mt-2 text-[10px] text-gray-400 text-center">
+                  {paypalEnabled ? "Paiement sécurisé via Stripe ou PayPal" : "Paiement sécurisé via Stripe"}
+                </p>
               </footer>
             )}
           </motion.aside>

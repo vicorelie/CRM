@@ -9,7 +9,7 @@
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
-import type { AdAudienceType } from "@prisma/client";
+import type { AdAudienceType } from "@/lib/generated/prisma/client";
 
 const GRAPH = "https://graph.facebook.com/v24.0";
 

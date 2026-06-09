@@ -1,5 +1,5 @@
 // Types partagés des connecteurs Ad Manager.
-import type { AdPlatform } from "@prisma/client";
+import type { AdPlatform } from "@/lib/generated/prisma/client";
 export type { AdPlatform };
 
 export type AdAccountInfo = {

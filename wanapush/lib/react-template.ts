@@ -1,7 +1,7 @@
 // Génère un projet Vite + React + TypeScript + Tailwind buildable.
 // Le résultat est un Map<filename, content> qui peut être ZIPé et déployé.
 
-import { searchPhoto, searchPhotos } from "@/lib/unsplash";
+import { searchPhotos } from "@/lib/unsplash";
 import { editorScript } from "@/lib/site-editor";
 import {
   shopConfigFile, cartContextFile, useShopProductsFile,

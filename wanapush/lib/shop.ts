@@ -2,7 +2,7 @@
 // Tous les modèles e-commerce sont scopés à un Shop (1 par siteSlug).
 
 import { prisma } from "@/lib/prisma";
-import type { Shop } from "@prisma/client";
+import type { Shop } from "@/lib/generated/prisma/client";
 
 /**
  * Récupère le Shop d'un utilisateur via le siteSlug, en vérifiant que

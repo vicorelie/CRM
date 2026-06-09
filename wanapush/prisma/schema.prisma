@@ -1,14 +1,18 @@
 // Schéma Prisma WanaPush — MySQL/MariaDB
 
 generator client {
-  provider   = "prisma-client-js"
-  engineType = "binary"
+  // Prisma 7 : client Rust-free (queryCompiler). Le binary engine est supprimé
+  // → driver adapter @prisma/adapter-mariadb obligatoire (cf. lib/prisma.ts).
+  provider     = "prisma-client"
+  output       = "../lib/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs" // projet CommonJS (pas de "type":"module") → évite le switch ESM
 }
 
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  // L'URL de connexion runtime passe par l'adapter (lib/prisma.ts). Pour les
+  // commandes CLI (migrate), l'URL est lue depuis prisma.config.ts.
+  provider = "mysql"
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -598,9 +602,10 @@ model Shop {
   stripeMode           String  @default("test") // "test" | "live"
 
   // PayPal (clés chiffrées)
-  paypalClientId String?
-  paypalSecret   String? @db.Text
-  paypalMode     String  @default("sandbox") // "sandbox" | "live"
+  paypalClientId  String?
+  paypalSecret    String? @db.Text
+  paypalMode      String  @default("sandbox") // "sandbox" | "live"
+  paypalWebhookId String? // ID du webhook PayPal (Dashboard) — requis pour la vérif de signature
 
   // Settings
   taxesIncluded      Boolean @default(false) // prix TTC affichés ?
@@ -633,6 +638,7 @@ model Shop {
   discounts      Discount[]
   reviews        Review[]
   stripeEvents   StripeEvent[]
+  paypalEvents   PayPalEvent[]
   auditLogs      AuditLog[]
   shopOptions    ShopOption[]
 
@@ -1479,6 +1485,25 @@ model StripeEvent {
   shopId      String
   eventId     String    @unique // Stripe event.id
   eventType   String // ex: "checkout.session.completed"
+  payload     Json
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  error       String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, eventType])
+  @@index([processed])
+}
+
+// Idempotence des webhooks PayPal (miroir de StripeEvent). Dédup sur l'id d'event
+// PayPal (WH-…), persistant → survit à toute la fenêtre de retry PayPal (≈3j).
+model PayPalEvent {
+  id          String    @id @default(cuid())
+  shopId      String
+  eventId     String    @unique // PayPal webhook event.id (ex: "WH-...")
+  eventType   String // ex: "PAYMENT.CAPTURE.REFUNDED"
   payload     Json
   processed   Boolean   @default(false)
   processedAt DateTime?

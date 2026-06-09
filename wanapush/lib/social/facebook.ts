@@ -2,6 +2,7 @@
 // Une connexion Facebook génère 1 compte par Page administrée.
 // Pour Instagram, voir lib/social/instagram.ts (Instagram Business Login direct).
 // Doc : https://developers.facebook.com/docs/pages-api/
+import { encrypt } from "@/lib/crypto";
 import type {
   ConnectorAccount,
   Metrics,
@@ -183,7 +184,10 @@ export async function fbExchangeCode(
     avatarUrl: p.picture?.data?.url,
     accessToken: p.access_token,
     scopes: FB_SCOPES.join(","),
-    meta: { kind: "page", pageId: p.id, userToken },
+    // userToken chiffré au repos (audit H6) : meta n'est PAS chiffré globalement,
+    // et un user token FB peut générer des page tokens / lire le portfolio. Champ
+    // suffixé `Enc` pour signaler aux lecteurs futurs qu'il faut decrypt() avant usage.
+    meta: { kind: "page", pageId: p.id, userTokenEnc: encrypt(userToken) },
   }));
 }
 

@@ -13,6 +13,16 @@ last_reviewed: 2026-06-04
 
 # SKILL — WanaPush Email Module
 
+## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
+
+**Deliverability (Google/Yahoo/Microsoft) :** bulk = 5 000/j/domaine → classification *permanente*. Requis : SPF+DKIM+DMARC **alignés** (From aligné SPF ou DKIM), DKIM ≥ 1024 bits. **Taux plaintes < 0,30 %** (viser < 0,1 %). Durcissement nov 2025→2026 : non-conforme = **rejet SMTP 550** (plus juste spam). Microsoft (>5 000/j depuis 5 mai 2025) : mêmes règles, `550 5.7.515`. ([Google](https://support.google.com/a/answer/81126?hl=en), [Microsoft](https://techcommunity.microsoft.com/blog/microsoftdefenderforoffice365blog/strengthening-email-ecosystem-outlook%e2%80%99s-new-requirements-for-high%e2%80%90volume-senders/4399730))
+
+**Nouveautés :** **BIMI+CMC** (Gmail accepte les CMC sans marque déposée ; checkmark bleu = VMC seulement ; prérequis **DMARC p=quarantine/reject + pct=100**). **Postmaster Tools v2** = dashboard Compliance, mais **l'API reste v1** → monitoring auto via API v1. **AMP email** : Outlook l'a désactivé → ne pas prioriser, fallback HTML. **Dark mode + AA** : contraste ≥ 4,5:1, texte réel (pas image de texte) dans `wrapHtmlTemplate()`. ([Redsift BIMI](https://redsift.com/guides/bimi-in-2026-verified-logos-cmcs-and-the-fastest-path-to-inbox-display))
+
+**Écarts vs skill :** ❌ pas de monitoring deliverability ni de **kill-switch auto si spam > 0,3 %** ; ❌ **warmup domaine/IP** non documenté (sous-domaine partagé `<slug>@wanapush.com` = **réputation mutualisée** entre clients = risque) ; ❌ dark mode/accessibilité absents ; ⚠️ copies générées par IA = contenu synthétique → marquage Art. 50 (cf. `SKILL_wanapush_compliance_2026.md`).
+
+**À faire :** [ ] Postmaster v1 API + alerte/pause si spam approche 0,3 % ; [ ] forcer DMARC p=quarantine/reject pct=100 ; [ ] warmup progressif + documenter risque réputation mutualisée ; [ ] honorer désabos **< 48 h** (vérifier `sendCampaign`) ; [ ] `wrapHtmlTemplate()` dark-mode-safe + AA ; [ ] double opt-in (DE).
+
 > **État 2026-06-08 : MVP backend complet shippé.** Schema Prisma + lib/email/
 > + 5 endpoints API. UI dashboard reste à brancher (squelette ModulePage existant).
 > Base transactionnelle Shop (`lib/shop-email.ts`) reste séparée pour les

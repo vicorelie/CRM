@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
+import { safeFetch } from "@/lib/ssrf";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -32,7 +33,9 @@ export async function POST(req: Request) {
 
   let html: string;
   try {
-    const r = await fetch(url, {
+    // safeFetch (audit H2) : garde anti-SSRF (un user authentifié pourrait viser
+    // localhost / 169.254.169.254 / IP internes via cette route).
+    const r = await safeFetch(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; WanaPushPixelVerifier/1.0; +https://wanapush.com)",

@@ -3,7 +3,7 @@
 // toutes les boutiques. L'expéditeur vient de shop.fromEmail / shop.fromName.
 
 import { Resend } from "resend";
-import type { Order, Shop } from "@prisma/client";
+import type { Order, Shop } from "@/lib/generated/prisma/client";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 

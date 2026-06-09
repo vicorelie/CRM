@@ -17,6 +17,20 @@ last_reviewed: 2026-06-06
 > Tracking double Pixel + Conversions API pour les sites WanaPush. Production-ready,
 > 60+ tests unitaires, encryption AES-256-GCM des tokens, RGPD compliant.
 
+## ⚠️ MàJ plateforme mi-2026 (à respecter / surveiller)
+
+- **Graph/Marketing API v25** (sortie 18 fév. 2026). Ne pas pinner < ~v22. v26 (~sept. 2026)
+  mettra en pause les campagnes ASC/AAC restantes.
+- **Dédup `event_id`** Pixel↔CAPI obligatoire (fenêtre 48 h) quand les deux tournent. ✅ déjà fait.
+- **Event Match Quality (EMQ)** : viser **≥ 8.0**. Envoyer email+phone+`external_id` **hashés**
+  SHA-256, + IP/UA/`fbp`/`fbc` **en CLAIR** (jamais hashés — erreur fatale fréquente). ✅ conforme.
+  → **À construire** : monitoring EMQ via Dataset Quality API + alerting si une dataset < 8.0.
+- **Limited Data Use (LDU)** : passer le flag pour les users EEA/UK/Californie selon le consentement.
+- **Concurrent SMB** : Meta a lancé un **CAPI one-click** (27 avr. 2026), web-only & non
+  configurable. L'avantage WanaPush = events offline/CRM/lead + contrôle des paramètres → garder ce cap.
+- **Conformité** : EU AI Act Art. 50 (2 août 2026) — si des créas IA sont poussées, les marquer
+  comme générées par IA. Consent Mode v2 : `ad_storage` devient le contrôle unique le 15 juin 2026.
+
 ## 🧭 Quand l'invoquer
 
 Cette skill est pertinente quand on travaille sur :
