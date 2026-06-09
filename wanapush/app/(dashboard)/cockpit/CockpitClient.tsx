@@ -40,7 +40,6 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
   }
 
   const visibleAnomalies = anomalies.filter((a, i) => !dismissedAnomalies.has(`${a.type}_${i}`));
-  const criticalCount = visibleAnomalies.filter((a) => a.severity === "CRITICAL").length;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
@@ -122,8 +121,10 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
         <UnitEconomicsCards ue={overview.unitEconomics} />
       </section>
 
-      {/* KPI grid : 5 modules cards cliquables */}
-      <section className="mb-8">
+      {/* Grille unifiée — TOUS les modules au même niveau visuel.
+          L'emphase vient des données (metrics si dispo, empty state sinon),
+          pas d'une hiérarchie arbitraire. Pattern Linear/Vercel/Notion 2026. */}
+      <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Modules
         </h2>
@@ -133,52 +134,35 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
           <ShopCard shop={overview.shop} />
           <EmailCard email={overview.email} />
           <GbpCard gbp={overview.gbp} />
-          {/* Card Copilot retirée : doublon avec le bouton flottant qui porte
-              maintenant le badge `criticalCount` */}
-        </div>
-      </section>
-
-      {/* Autres modules — uniquement ceux SANS card data ci-dessus.
-          Pas de doublon avec la grid business. */}
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-          Autres modules
-        </h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {OTHER_MODULES.map((m) => (
-            <Link
-              key={m.href}
-              href={m.href}
-              className="group flex items-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50"
-            >
-              <span className="text-base" aria-hidden>{m.emoji}</span>
-              <span className="font-medium text-zinc-900 group-hover:text-brand-700">
-                {m.name}
-              </span>
-              <span className="ml-auto text-xs text-zinc-400 group-hover:text-brand-700">
-                →
-              </span>
-            </Link>
-          ))}
+          <ModuleCard
+            href="/sites"
+            emoji="🗂"
+            title="Sites"
+            empty="Sites générés + sites connectés (audit SEO)."
+          />
+          <ModuleCard
+            href="/seo"
+            emoji="🔍"
+            title="SEO"
+            empty="Audit + optimizer pour tes sites connectés."
+          />
+          <ModuleCard
+            href="/social"
+            emoji="📱"
+            title="Social"
+            empty="Facebook, Instagram, TikTok, LinkedIn, YouTube."
+          />
+          <ModuleCard
+            href="/aso"
+            emoji="📲"
+            title="ASO"
+            empty="Optimisation App Store iOS + Android."
+          />
         </div>
       </section>
     </div>
   );
 }
-
-// Modules SANS card data dans la section business ci-dessus.
-// (Ads, Leads, Boutique, Email, GBP sont déjà dans la grid business → exclus ici)
-const OTHER_MODULES = [
-  // UNE seule entrée "Sites" — hub avec tabs Générés | Connectés (pattern
-  // Vercel Projects / Linear Issues : une entité = un endroit).
-  { name: "Sites", emoji: "🗂", href: "/sites" },
-  { name: "SEO", emoji: "🔍", href: "/seo" },
-  { name: "Social", emoji: "📱", href: "/social" },
-  { name: "ASO", emoji: "📲", href: "/aso" },
-  // "Analytics" intentionnellement absent : LE COCKPIT EST Analytics. Le module
-  // /analytics est devenu redondant — son backend (overview, anomalies) est
-  // déjà consommé par cette page.
-];
 
 // ─── Helpers format ────────────────────────────────────────────────────────
 
