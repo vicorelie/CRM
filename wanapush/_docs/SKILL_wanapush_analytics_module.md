@@ -23,6 +23,12 @@ last_reviewed: 2026-06-04
 
 **Détection d'anomalies :** l'écart-type 30j (±1.5/2/3σ) est sain ✅ — ajouter un **ajustement saisonnier (jour de semaine)** pour éviter les faux CRITICAL le week-end.
 
+**✅ Rétention DB (2026-06-09)** : `app/api/cron/retention/route.ts` purge les tables non bornées
+avec des durées justifiées RGPD — PostAnalytics 90j, AdMetrics/GbpInsight 400j (YoY), EmailSend 365j,
+Stripe/PayPalEvent 180j, AuditLog 365j. CopilotMessage non purgé (user-driven). Planifier le cron 4h.
+**Tout nouveau modèle à croissance non bornée DOIT y être ajouté.** (PostAnalytics append-per-fetch :
+la vraie correction reste de garder le dernier snapshot par post plutôt qu'append — TODO.)
+
 **À faire :** [ ] corriger le framing "cookieless" ; [ ] lecture Consent Mode v2 dans `ga4.ts` + note CMP certifiée EEE ; [ ] documenter dual-model (DDA + MMM open-source Meridian) ; [ ] note privacy-safe (mesure agrégée/server-side pour users EU) ; [ ] saisonnalité dans `anomalies.ts`. Voir `SKILL_wanapush_compliance_2026.md` (Consent Mode v2).
 
 > **État 2026-06-08 : Backend MVP shippé.** `lib/analytics/{aggregators,anomalies}.ts`
