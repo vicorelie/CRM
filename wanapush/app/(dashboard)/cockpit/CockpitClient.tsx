@@ -133,7 +133,8 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
           <ShopCard shop={overview.shop} />
           <EmailCard email={overview.email} />
           <GbpCard gbp={overview.gbp} />
-          <CopilotCard criticalCount={criticalCount} />
+          {/* Card Copilot retirée : doublon avec le bouton flottant qui porte
+              maintenant le badge `criticalCount` */}
         </div>
       </section>
 
@@ -175,7 +176,9 @@ const OTHER_MODULES = [
   { name: "SEO", emoji: "🔍", href: "/seo" },
   { name: "Social", emoji: "📱", href: "/social" },
   { name: "ASO", emoji: "📲", href: "/aso" },
-  { name: "Analytics", emoji: "📊", href: "/analytics" },
+  // "Analytics" intentionnellement absent : LE COCKPIT EST Analytics. Le module
+  // /analytics est devenu redondant — son backend (overview, anomalies) est
+  // déjà consommé par cette page.
 ];
 
 // ─── Helpers format ────────────────────────────────────────────────────────
@@ -512,30 +515,3 @@ function GbpCard({ gbp }: { gbp: AnalyticsOverview["gbp"] }) {
   );
 }
 
-function CopilotCard({ criticalCount }: { criticalCount: number }) {
-  return (
-    <button
-      onClick={() => {
-        // Trigger l'ouverture du drawer (event custom écouté par CopilotDrawer)
-        window.dispatchEvent(new CustomEvent("wp:open-copilot"));
-      }}
-      className="group rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 text-left transition-all hover:border-brand-400 hover:shadow-md"
-    >
-      <div className="mb-3 flex items-center gap-2">
-        <span className="text-xl" aria-hidden>🤖</span>
-        <h3 className="font-semibold text-zinc-950">Copilot IA</h3>
-        {criticalCount > 0 && (
-          <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
-            {criticalCount}
-          </span>
-        )}
-      </div>
-      <p className="text-sm text-zinc-600">
-        Pose une question sur ton business. L&apos;IA exploite tes vraies données pour répondre.
-      </p>
-      <p className="mt-3 text-xs font-medium text-brand-700 group-hover:underline">
-        Ouvrir le chat →
-      </p>
-    </button>
-  );
-}

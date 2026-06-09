@@ -15,7 +15,12 @@ const SUGGESTIONS = [
   "Fais ma revue hebdo founder",
 ];
 
-export function CopilotDrawer() {
+type Props = {
+  /** Nombre d'anomalies CRITICAL — affichées en badge rouge sur le bouton flottant */
+  criticalCount?: number;
+};
+
+export function CopilotDrawer({ criticalCount = 0 }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -83,13 +88,25 @@ export function CopilotDrawer() {
 
   return (
     <>
-      {/* Bouton flottant (toujours visible) */}
+      {/* Bouton flottant (toujours visible) avec badge anomalies CRITICAL */}
       <button
         onClick={() => setOpen(true)}
         className={`fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-700 text-2xl text-white shadow-lg transition-all hover:scale-110 hover:bg-brand-800 ${open ? "scale-0 opacity-0" : ""}`}
-        aria-label="Ouvrir le Copilot IA"
+        aria-label={
+          criticalCount > 0
+            ? `Ouvrir le Copilot IA — ${criticalCount} alerte${criticalCount > 1 ? "s" : ""} critique${criticalCount > 1 ? "s" : ""}`
+            : "Ouvrir le Copilot IA"
+        }
       >
         🤖
+        {criticalCount > 0 && (
+          <span
+            className="absolute -top-1 -right-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white ring-2 ring-white animate-pulse"
+            aria-hidden
+          >
+            {criticalCount}
+          </span>
+        )}
       </button>
 
       {/* Backdrop */}

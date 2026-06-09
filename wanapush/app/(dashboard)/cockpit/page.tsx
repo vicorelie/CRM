@@ -41,6 +41,7 @@ export default async function CockpitPage({ searchParams }: { searchParams: Sear
   ]);
 
   const firstName = user.name?.split(" ")[0] ?? user.email.split("@")[0];
+  const criticalCount = anomalies.filter((a) => a.severity === "CRITICAL").length;
 
   return (
     <>
@@ -50,7 +51,7 @@ export default async function CockpitPage({ searchParams }: { searchParams: Sear
         overview={overview}
         anomalies={anomalies}
       />
-      <CopilotDrawer />
+      <CopilotDrawer criticalCount={criticalCount} />
     </>
   );
 }
