@@ -169,10 +169,9 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
 // Modules SANS card data dans la section business ci-dessus.
 // (Ads, Leads, Boutique, Email, GBP sont déjà dans la grid business → exclus ici)
 const OTHER_MODULES = [
-  { name: "Mes sites", emoji: "🔌", href: "/sites" },
-  // "Générer un site" intentionnellement absent : /generated-sites a déjà un
-  // bouton "+ Nouveau site" qui mène au wizard /generate (pattern Vercel/Linear).
-  { name: "Sites générés", emoji: "🗂", href: "/generated-sites" },
+  // UNE seule entrée "Sites" — hub avec tabs Générés | Connectés (pattern
+  // Vercel Projects / Linear Issues : une entité = un endroit).
+  { name: "Sites", emoji: "🗂", href: "/sites" },
   { name: "SEO", emoji: "🔍", href: "/seo" },
   { name: "Social", emoji: "📱", href: "/social" },
   { name: "ASO", emoji: "📲", href: "/aso" },
