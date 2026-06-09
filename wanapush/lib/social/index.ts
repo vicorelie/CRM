@@ -2,6 +2,7 @@
 import type { Platform, SocialAccount } from "@/lib/generated/prisma/client";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
+import { singleFlight } from "@/lib/single-flight";
 import { facebookConnector } from "./facebook";
 import { instagramConnector } from "./instagram";
 import { linkedinConnector } from "./linkedin";
@@ -115,25 +116,30 @@ export async function ensureFreshAccount(row: SocialAccount): Promise<SocialAcco
   const margin = 5 * 60 * 1000;
   if (row.tokenExpiresAt.getTime() - Date.now() > margin) return row;
   const conn = getConnector(row.platform);
-  if (!conn.refreshToken) return row;
-  try {
-    const updated = await conn.refreshToken(toConnectorAccount(row));
-    return prisma.socialAccount.update({
-      where: { id: row.id },
-      data: {
-        accessToken: encrypt(updated.accessToken),
-        refreshToken: updated.refreshToken ? encrypt(updated.refreshToken) : row.refreshToken,
-        tokenExpiresAt: updated.tokenExpiresAt ?? null,
-      },
-    });
-  } catch (e) {
-    await prisma.socialAccount.update({
-      where: { id: row.id },
-      data: {
-        status: "EXPIRED",
-        lastError: e instanceof Error ? e.message : String(e),
-      },
-    });
-    return row;
-  }
+  const refresh = conn.refreshToken;
+  if (!refresh) return row;
+  // Single-flight (audit H7) : un seul refresh en vol par compte → évite que deux
+  // appels concurrents (cron + UI) rotent le refresh_token et s'invalident mutuellement.
+  return singleFlight(`social-refresh:${row.id}`, async () => {
+    try {
+      const updated = await refresh(toConnectorAccount(row));
+      return prisma.socialAccount.update({
+        where: { id: row.id },
+        data: {
+          accessToken: encrypt(updated.accessToken),
+          refreshToken: updated.refreshToken ? encrypt(updated.refreshToken) : row.refreshToken,
+          tokenExpiresAt: updated.tokenExpiresAt ?? null,
+        },
+      });
+    } catch (e) {
+      await prisma.socialAccount.update({
+        where: { id: row.id },
+        data: {
+          status: "EXPIRED",
+          lastError: e instanceof Error ? e.message : String(e),
+        },
+      });
+      return row;
+    }
+  });
 }

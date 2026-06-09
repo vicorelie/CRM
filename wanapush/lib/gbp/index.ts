@@ -15,6 +15,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { encrypt, decrypt } from "@/lib/crypto";
+import { singleFlight } from "@/lib/single-flight";
 import type {
   GbpAccountAPI,
   GbpLocationAPI,
@@ -122,13 +123,17 @@ export async function getValidAccessToken(gbpAccountId: string): Promise<string>
   if (acc.expiresAt > new Date(Date.now() + 60_000)) {
     return decrypt(acc.accessToken);
   }
-  const refreshed = await refreshAccessToken(decrypt(acc.refreshToken));
-  const newExp = new Date(Date.now() + refreshed.expiresIn * 1000);
-  await prisma.gbpAccount.update({
-    where: { id: acc.id },
-    data: { accessToken: encrypt(refreshed.accessToken), expiresAt: newExp },
+  // Single-flight (audit H7) : un seul refresh en vol par compte GBP → évite que
+  // deux appels concurrents (cron sync + requête UI) rotent/clobberent le token.
+  return singleFlight(`gbp-refresh:${acc.id}`, async () => {
+    const refreshed = await refreshAccessToken(decrypt(acc.refreshToken));
+    const newExp = new Date(Date.now() + refreshed.expiresIn * 1000);
+    await prisma.gbpAccount.update({
+      where: { id: acc.id },
+      data: { accessToken: encrypt(refreshed.accessToken), expiresAt: newExp },
+    });
+    return refreshed.accessToken;
   });
-  return refreshed.accessToken;
 }
 
 // ─── HTTP wrapper ──────────────────────────────────────────────────────────

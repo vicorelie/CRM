@@ -94,9 +94,10 @@ const { count } = await prisma.scheduledPost.updateMany({
   where: { id, status: "SCHEDULED" }, data: { status: "PUBLISHING" } });
 if (count === 0) return; // déjà pris par un autre run
 ```
-- ❌ Pièges : `lib/social/publisher.ts` (read→update non atomique → double-post réseaux sociaux) ;
-  `getOrCreateCart` (findFirst+create sans contrainte unique → carts dupliqués) ;
-  refresh OAuth concurrent GBP/social (single-flight manquant).
+- **Refresh OAuth concurrent** : utiliser **`singleFlight(key, fn)`** (`lib/single-flight.ts`, audit H7)
+  pour garantir un seul refresh en vol par compte → évite que deux appels (cron + UI) rotent le
+  `refresh_token` et s'invalident. ✅ appliqué à `ensureFreshAccount` (social) + `getValidAccessToken` (GBP).
+- ❌ Pièges restants : `getOrCreateCart` (findFirst+create sans contrainte unique → carts dupliqués).
 
 ## 9. MCP — enforcer les scopes
 `McpApiKey.scopes` (read / read:write) doit être **vérifié dans `handleToolsCall`** avant
