@@ -21,6 +21,8 @@ last_reviewed: 2026-06-04
 
 **Écarts vs skill :** ❌ pas de monitoring deliverability ni de **kill-switch auto si spam > 0,3 %** ; ❌ **warmup domaine/IP** non documenté (sous-domaine partagé `<slug>@wanapush.com` = **réputation mutualisée** entre clients = risque) ; ❌ dark mode/accessibilité absents ; ⚠️ copies générées par IA = contenu synthétique → marquage Art. 50 (cf. `SKILL_wanapush_compliance_2026.md`).
 
+**✅ Idempotence webhook (audit M6, 2026-06-09)** : `lib/email/webhooks.ts` ne double-compte plus opens/clicks sur retry Svix — incrément atomique via `updateMany` conditionnel sur `firstOpenedAt`/`firstClickedAt` null (compteurs = ouvertures/clics **uniques**).
+
 **À faire :** [ ] Postmaster v1 API + alerte/pause si spam approche 0,3 % ; [ ] forcer DMARC p=quarantine/reject pct=100 ; [ ] warmup progressif + documenter risque réputation mutualisée ; [ ] honorer désabos **< 48 h** (vérifier `sendCampaign`) ; [ ] `wrapHtmlTemplate()` dark-mode-safe + AA ; [ ] double opt-in (DE).
 
 > **État 2026-06-08 : MVP backend complet shippé.** Schema Prisma + lib/email/

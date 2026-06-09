@@ -93,8 +93,9 @@ const TYPE_TO_STATUS: Record<string, "SENT" | "DELIVERED" | "OPENED" | "CLICKED"
 };
 
 /** Applique un event Resend webhook : update EmailSend + EmailContact + agrège
- *  stats EmailCampaign. Idempotent : on incrémente openCount/clickCount, on
- *  ne pas refait setter firstOpenedAt si déjà défini. */
+ *  stats EmailCampaign. IDEMPOTENT (audit M6) : open/clickCount comptent les
+ *  ouvertures/clics UNIQUES (incrément atomique à la 1re seulement) → un retry
+ *  Svix (livraison at-least-once) ne double-compte pas. */
 export async function applyResendEvent(event: ResendEvent): Promise<{ matched: boolean }> {
   const resendId = event.data.email_id;
   if (!resendId) return { matched: false };
@@ -108,7 +109,7 @@ export async function applyResendEvent(event: ResendEvent): Promise<{ matched: b
   const now = new Date();
   const newStatus = TYPE_TO_STATUS[event.type];
 
-  // Update EmailSend
+  // Update EmailSend — champs non-compteurs
   const updates: Record<string, unknown> = {};
   if (newStatus) updates.status = newStatus;
   if (event.type === "email.delivered") updates.deliveredAt = now;
@@ -116,16 +117,25 @@ export async function applyResendEvent(event: ResendEvent): Promise<{ matched: b
     updates.bouncedAt = now;
     updates.errorMessage = event.data.bounce?.message?.slice(0, 500);
   }
-  if (event.type === "email.opened") {
-    updates.openCount = { increment: 1 };
-    if (!send.firstOpenedAt) updates.firstOpenedAt = now;
-  }
-  if (event.type === "email.clicked") {
-    updates.clickCount = { increment: 1 };
-    if (!send.firstClickedAt) updates.firstClickedAt = now;
-  }
   if (Object.keys(updates).length > 0) {
     await prisma.emailSend.update({ where: { id: send.id }, data: updates as never });
+  }
+
+  // Compteurs open/click — IDEMPOTENT + race-safe (audit M6). On incrémente
+  // uniquement à la 1re ouverture/clic, de façon ATOMIQUE (updateMany conditionnel
+  // sur firstOpenedAt/firstClickedAt null) : deux events concurrents OU un retry
+  // Svix ne re-comptent pas. openCount/clickCount = ouvertures/clics UNIQUES.
+  if (event.type === "email.opened") {
+    await prisma.emailSend.updateMany({
+      where: { id: send.id, firstOpenedAt: null },
+      data: { openCount: { increment: 1 }, firstOpenedAt: now },
+    });
+  }
+  if (event.type === "email.clicked") {
+    await prisma.emailSend.updateMany({
+      where: { id: send.id, firstClickedAt: null },
+      data: { clickCount: { increment: 1 }, firstClickedAt: now },
+    });
   }
 
   // Update EmailContact (engagement + status)
