@@ -27,9 +27,10 @@ last_reviewed: 2026-06-08
 - **Prompt caching** : le system prompt (stable) doit porter `cache_control` (reads 0.1×).
   Ordre `tools → system → messages`, breakpoint sur le dernier bloc stable. Pré-warm au boot.
 - **Tool Search** (`defer_loading`) : garder 3-5 tools chauds, défer le reste → contexte préservé.
-- **Sécurité (cf. `SKILL_wanapush_security_hardening.md`)** : ajouter **rate-limit + budget
-  tokens/jour** par user (DoS facture), **résumer l'historique** (pas de replay intégral =
-  coût quadratique), et **fencer** tout input user passé au modèle.
+- **Sécurité (cf. `SKILL_wanapush_security_hardening.md`)** : ✅ **rate-limit (20/min) + budget
+  tokens/jour** par user posés dans `app/api/copilot/ask/route.ts` (audit H8 — `DAILY_TOKEN_BUDGET`
+  via env, somme des `CopilotMessage` sur 24h). Restent : **résumer l'historique** (pas de replay
+  intégral = coût quadratique), et **fencer** tout input user passé au modèle.
 - **Auto-pilote (vision produit)** : pour des agents long-horizon, évaluer **Managed Agents**
   (Anthropic héberge la boucle + Outcomes gradés par rubric).
 
