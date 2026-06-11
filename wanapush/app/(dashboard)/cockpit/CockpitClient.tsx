@@ -33,6 +33,7 @@ export function CockpitClient({ firstName, days, overview, actions }: Props) {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [showAllActions, setShowAllActions] = useState(false);
 
   function changeDays(newDays: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -100,8 +101,9 @@ export function CockpitClient({ firstName, days, overview, actions }: Props) {
             ✓ Rien d&apos;urgent — tout tourne. La plateforme surveille et préparera une action dès qu&apos;il y a un levier à activer.
           </div>
         ) : (
+          <>
           <div className="space-y-3">
-            {actions.map((a) => (
+            {(showAllActions ? actions : actions.slice(0, 6)).map((a) => (
               <div key={a.id} className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
                   <span className={`rounded px-1.5 py-0.5 ${TIER_BADGE[a.autonomyTier] ?? "bg-zinc-100 text-zinc-700"}`}>
@@ -135,6 +137,17 @@ export function CockpitClient({ firstName, days, overview, actions }: Props) {
               </div>
             ))}
           </div>
+          {actions.length > 6 && (
+            <button
+              onClick={() => setShowAllActions((s) => !s)}
+              className="mt-3 text-sm font-medium text-brand-700 hover:text-brand-800"
+            >
+              {showAllActions
+                ? "Réduire"
+                : `Voir les ${actions.length - 6} autres action${actions.length - 6 > 1 ? "s" : ""}`}
+            </button>
+          )}
+          </>
         )}
       </section>
 
