@@ -159,17 +159,30 @@ export async function syncActionsForUser(userId: string): Promise<AgentAction[]>
   for (const o of opps) {
     const existing = await prisma.agentAction.findUnique({
       where: { userId_dedupKey: { userId, dedupKey: o.dedupKey } },
-      select: { id: true },
+      select: { id: true, status: true },
     });
-    if (existing) continue; // déjà proposé OU tranché → respecter
-    await prisma.agentAction.create({
-      data: {
-        userId, dedupKey: o.dedupKey, type: o.type, source: "opportunity",
-        title: o.title, rationale: o.rationale, deepLink: o.deepLink,
-        impactScore: o.impact, effortScore: o.effort, confidence: o.confidence,
-        priority: computePriority(o.impact, o.effort, o.confidence), autonomyTier: o.tier,
-      },
-    });
+    if (!existing) {
+      await prisma.agentAction.create({
+        data: {
+          userId, dedupKey: o.dedupKey, type: o.type, source: "opportunity",
+          title: o.title, rationale: o.rationale, deepLink: o.deepLink,
+          impactScore: o.impact, effortScore: o.effort, confidence: o.confidence,
+          priority: computePriority(o.impact, o.effort, o.confidence), autonomyTier: o.tier,
+        },
+      });
+      continue;
+    }
+    // L'opportunité existe ET la condition tient toujours :
+    //  - DISMISSED → on respecte le choix (l'user l'a masquée).
+    //  - PROPOSED → rien à faire.
+    //  - APPROVED/EXECUTED/FAILED → la condition n'est PAS réellement levée (une
+    //    carte d'activation ne s'exécute pas via "Approuver") → on la re-propose.
+    if (existing.status === "APPROVED" || existing.status === "EXECUTED" || existing.status === "FAILED") {
+      await prisma.agentAction.update({
+        where: { id: existing.id },
+        data: { status: "PROPOSED", resolvedAt: null, resolvedBy: null },
+      });
+    }
   }
   // Auto-résolution : opportunités PROPOSED dont la condition n'existe plus.
   const open = await prisma.agentAction.findMany({

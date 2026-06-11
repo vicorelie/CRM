@@ -114,25 +114,48 @@ export function CockpitClient({ firstName, days, overview, actions }: Props) {
                 <div className="mt-1.5 text-base font-bold text-zinc-950">{a.title}</div>
                 <div className="mt-1 text-sm text-zinc-600">{a.rationale}</div>
                 <div className="mt-4 flex items-center gap-2">
-                  <button
-                    onClick={() => resolveAction(a.id, "approve")}
-                    disabled={resolvingId === a.id || isPending}
-                    className="rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
-                  >
-                    {resolvingId === a.id ? "…" : "Approuver"}
-                  </button>
-                  {a.deepLink && (
-                    <Link href={a.deepLink} className="rounded-lg border border-zinc-200 px-3.5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
-                      Voir
-                    </Link>
+                  {a.source === "opportunity" ? (
+                    // Carte d'activation : c'est à TOI d'agir (la plateforme n'a pas
+                    // tes identifiants) → "Configurer" deep-link, pas "Approuver".
+                    // La carte disparaîtra toute seule une fois la config faite.
+                    <>
+                      {a.deepLink && (
+                        <Link href={a.deepLink} className="rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+                          Configurer →
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => resolveAction(a.id, "dismiss")}
+                        disabled={resolvingId === a.id || isPending}
+                        className="ml-auto text-sm text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
+                      >
+                        Plus tard
+                      </button>
+                    </>
+                  ) : (
+                    // Carte exécutable (anomalie) : la plateforme peut agir → "Approuver".
+                    <>
+                      <button
+                        onClick={() => resolveAction(a.id, "approve")}
+                        disabled={resolvingId === a.id || isPending}
+                        className="rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
+                      >
+                        {resolvingId === a.id ? "…" : "Approuver"}
+                      </button>
+                      {a.deepLink && (
+                        <Link href={a.deepLink} className="rounded-lg border border-zinc-200 px-3.5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+                          Voir
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => resolveAction(a.id, "dismiss")}
+                        disabled={resolvingId === a.id || isPending}
+                        className="ml-auto text-sm text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
+                      >
+                        Ignorer
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => resolveAction(a.id, "dismiss")}
-                    disabled={resolvingId === a.id || isPending}
-                    className="ml-auto text-sm text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
-                  >
-                    Ignorer
-                  </button>
                 </div>
               </div>
             ))}
