@@ -22,7 +22,7 @@ const patchSchema = z.object({
   timezone: z.string().trim().max(64).optional(),
   weightUnit: z.string().trim().max(8).optional(),
   // Contact
-  email: z.email().trim().toLowerCase().max(255).optional(),
+  email: z.email().trim().toLowerCase().max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional(),
   legalName: z.string().trim().max(200).optional(),
   legalAddress: z.string().trim().max(500).optional(),
@@ -37,14 +37,14 @@ const patchSchema = z.object({
   stripeWebhookSecret: z.string().max(255).optional(),
   // PayPal
   paypalClientId: z.string().trim().max(255).optional(),
-  paypalMode: z.enum(["test", "live"]).optional(),
+  paypalMode: z.enum(["sandbox", "live"]).optional(),
   paypalSecret: z.string().max(255).optional(),
   // Settings
   taxesIncluded: z.boolean().optional(),
   requireShipping: z.boolean().optional(),
   allowGuestCheckout: z.boolean().optional(),
   orderNumberFormat: z.string().trim().max(64).optional(),
-  fromEmail: z.email().trim().toLowerCase().max(255).optional(),
+  fromEmail: z.email().trim().toLowerCase().max(255).optional().or(z.literal("")),
   fromName: z.string().trim().max(120).optional(),
   // Setup
   setupCompleted: z.boolean().optional(),
