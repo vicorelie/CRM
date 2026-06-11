@@ -216,7 +216,7 @@ export function SettingsClient({ siteSlug, initial }: { siteSlug: string; initia
               <input type="password" className={inp} value={stripeSecret} onChange={(e) => setStripeSecret(e.target.value)} placeholder={state.hasStripeSecret ? "•••••••• (déjà défini)" : "sk_test_..."} />
             </Field>
             <WebhookUrlCopy siteSlug={siteSlug} />
-            <Field label="Webhook Signing Secret (whsec_...)" hint={state.hasStripeWebhook ? "✓ Déjà défini." : "Copié depuis Stripe Dashboard > Webhooks > [Reveal signing secret]."}>
+            <Field label="Webhook Signing Secret (whsec_...)" hint={state.hasStripeWebhook ? "✓ Configuré." : "Rempli automatiquement à l'enregistrement de ta clé secrète — laisse vide."}>
               <input type="password" className={inp} value={stripeWebhook} onChange={(e) => setStripeWebhook(e.target.value)} placeholder={state.hasStripeWebhook ? "•••••••• (déjà défini)" : "whsec_..."} />
             </Field>
             <Field label="Stripe Account ID (optionnel)" hint="Pour Stripe Connect, plateformes multi-vendeurs.">
@@ -328,7 +328,8 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 function WebhookUrlCopy({ siteSlug }: { siteSlug: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `${typeof window !== "undefined" ? window.location.origin : "https://wanatest.com"}/api/webhooks/stripe/${siteSlug}`;
+  const [showManual, setShowManual] = useState(false);
+  const url = `${typeof window !== "undefined" ? window.location.origin : "https://wanapush.com"}/api/webhooks/stripe/${siteSlug}`;
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
@@ -337,19 +338,28 @@ function WebhookUrlCopy({ siteSlug }: { siteSlug: string }) {
     } catch { /* ignore */ }
   }
   return (
-    <div className="rounded-lg bg-brand/10 border border-brand/30 p-3 space-y-2">
-      <div className="text-xs font-semibold text-brand-700 uppercase tracking-widest">URL Webhook à coller dans Stripe</div>
-      <div className="flex gap-2">
-        <code className="flex-1 px-3 py-2 rounded bg-white border border-zinc-200 text-[11px] font-mono text-zinc-800 break-all">{url}</code>
-        <button onClick={copy} className="px-3 py-2 rounded bg-brand hover:bg-brand-400 text-white text-xs font-semibold whitespace-nowrap">
-          {copied ? "✓ Copié" : "Copier"}
-        </button>
+    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+      <div className="text-sm text-emerald-900">
+        <strong>✓ Webhook automatique.</strong> Quand tu enregistres ta clé secrète Stripe, WanaPush
+        configure le webhook tout seul dans ton compte Stripe — tu n&apos;as <strong>rien</strong> à faire ici.
       </div>
-      <p className="text-[11px] text-brand-200/80">
-        Crée un endpoint dans <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noreferrer" className="underline">Stripe Dashboard → Webhooks</a> avec cette URL.
-        Active les événements <code className="text-brand-700">checkout.session.completed</code>, <code className="text-brand-700">payment_intent.payment_failed</code>, <code className="text-brand-700">charge.refunded</code>.
-        Puis copie le « Signing secret » ci-dessous.
-      </p>
+      <button type="button" onClick={() => setShowManual((s) => !s)} className="text-[11px] text-emerald-700 underline">
+        {showManual ? "Masquer la configuration manuelle" : "Configuration manuelle (avancé)"}
+      </button>
+      {showManual && (
+        <div className="space-y-2 pt-1">
+          <div className="flex gap-2">
+            <code className="flex-1 px-3 py-2 rounded bg-white border border-zinc-200 text-[11px] font-mono text-zinc-800 break-all">{url}</code>
+            <button onClick={copy} className="px-3 py-2 rounded bg-zinc-700 hover:bg-zinc-800 text-white text-xs font-semibold whitespace-nowrap">
+              {copied ? "✓ Copié" : "Copier"}
+            </button>
+          </div>
+          <p className="text-[11px] text-zinc-500">
+            Manuel : crée un endpoint dans <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noreferrer" className="underline">Stripe → Webhooks</a> avec cette URL,
+            événements <code>checkout.session.completed</code>, <code>payment_intent.payment_failed</code>, <code>charge.refunded</code>, puis colle le « Signing secret » ci-dessous.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

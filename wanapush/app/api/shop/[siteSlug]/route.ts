@@ -1,6 +1,7 @@
 // GET   /api/shop/[siteSlug]  → détail + stats agrégées
 // PATCH /api/shop/[siteSlug]  → update settings (nom, devise, paiement, shipping...)
 
+import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -123,14 +124,21 @@ export async function PATCH(req: Request, { params }: Params) {
   // Construit data avec uniquement les champs présents (Zod garantit le typage)
   const data: Record<string, unknown> = { ...parsed.data };
 
-  // Champs sensibles : on chiffre AVANT de stocker
-  if (typeof data.stripeSecretKey === "string" && data.stripeSecretKey.length > 0) {
-    data.stripeSecretKey = encrypt(data.stripeSecretKey);
+  // Champs sensibles : on chiffre AVANT de stocker. On capture la clé secrète
+  // Stripe en clair pour pouvoir auto-créer le webhook juste après (cf. ci-dessous).
+  const plainStripeSecret =
+    typeof data.stripeSecretKey === "string" && data.stripeSecretKey.length > 0
+      ? (data.stripeSecretKey as string)
+      : null;
+  if (plainStripeSecret) {
+    data.stripeSecretKey = encrypt(plainStripeSecret);
   } else {
     delete data.stripeSecretKey;
   }
-  if (typeof data.stripeWebhookSecret === "string" && data.stripeWebhookSecret.length > 0) {
-    data.stripeWebhookSecret = encrypt(data.stripeWebhookSecret);
+  const userProvidedWebhook =
+    typeof data.stripeWebhookSecret === "string" && data.stripeWebhookSecret.length > 0;
+  if (userProvidedWebhook) {
+    data.stripeWebhookSecret = encrypt(data.stripeWebhookSecret as string);
   } else {
     delete data.stripeWebhookSecret;
   }
@@ -138,6 +146,31 @@ export async function PATCH(req: Request, { params }: Params) {
     data.paypalSecret = encrypt(data.paypalSecret);
   } else {
     delete data.paypalSecret;
+  }
+
+  // 🪄 Auto-création du webhook Stripe : si l'user vient d'entrer sa clé secrète
+  // et qu'aucun webhook n'est configuré, on crée l'endpoint POUR LUI dans son
+  // compte Stripe (via l'API) et on récupère le signing secret automatiquement.
+  // → zéro action côté webhook pour l'utilisateur. Best-effort (ne bloque pas le save).
+  if (plainStripeSecret && !userProvidedWebhook && !shop.stripeWebhookSecret) {
+    try {
+      const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://wanapush.com";
+      const url = `${base}/api/webhooks/stripe/${siteSlug}`;
+      const stripe = new Stripe(plainStripeSecret, { apiVersion: "2026-04-22.dahlia", typescript: true });
+      // Nettoie un éventuel endpoint déjà posé sur la même URL (on ne peut pas relire son secret).
+      const existing = await stripe.webhookEndpoints.list({ limit: 100 });
+      for (const ep of existing.data) {
+        if (ep.url === url) await stripe.webhookEndpoints.del(ep.id);
+      }
+      const created = await stripe.webhookEndpoints.create({
+        url,
+        enabled_events: ["checkout.session.completed", "payment_intent.payment_failed", "charge.refunded"],
+        description: "WanaPush (auto)",
+      });
+      if (created.secret) data.stripeWebhookSecret = encrypt(created.secret);
+    } catch (e) {
+      console.warn(`[shop] auto-webhook Stripe échoué pour ${siteSlug}: ${e instanceof Error ? e.message : e}`);
+    }
   }
 
   const [updated] = await prisma.$transaction([
