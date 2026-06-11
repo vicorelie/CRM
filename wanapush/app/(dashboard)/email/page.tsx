@@ -16,6 +16,13 @@ export default async function EmailPage() {
   });
   if (!user) redirect("/login");
 
+  // Domaine d'envoi vérifié WanaPush (le même que l'optimizer/rapports hebdo).
+  // → l'utilisateur n'a AUCUN domaine à vérifier : ça marche d'emblée.
+  // On dérive le domaine depuis l'adresse vérifiée existante pour rester synchro.
+  const verifiedFrom = process.env.OPTIMIZER_EMAIL_FROM ?? "autopilote@wanapush.com";
+  const verifiedDomain = (verifiedFrom.match(/@([^>\s]+)/)?.[1] ?? "wanapush.com").trim();
+  const defaultFromEmail = `newsletters@${verifiedDomain}`;
+
   const [activeContacts, totalContacts, sentCampaigns, campaigns] = await Promise.all([
     prisma.emailContact.count({ where: { userId: user.id, status: "ACTIVE" } }),
     prisma.emailContact.count({ where: { userId: user.id } }),
@@ -34,6 +41,8 @@ export default async function EmailPage() {
       totalContacts={totalContacts}
       sentCampaigns={sentCampaigns}
       defaultFromName={user.name ?? "WanaPush"}
+      defaultFromEmail={defaultFromEmail}
+      replyTo={user.email}
       campaigns={campaigns.map((c) => ({
         id: c.id,
         name: c.name,

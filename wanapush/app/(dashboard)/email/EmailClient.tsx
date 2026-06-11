@@ -26,12 +26,16 @@ export function EmailClient({
   totalContacts,
   sentCampaigns,
   defaultFromName,
+  defaultFromEmail,
+  replyTo,
   campaigns,
 }: {
   activeContacts: number;
   totalContacts: number;
   sentCampaigns: number;
   defaultFromName: string;
+  defaultFromEmail: string;
+  replyTo: string;
   campaigns: Campaign[];
 }) {
   const router = useRouter();
@@ -57,7 +61,13 @@ export function EmailClient({
       <ImportContacts router={router} highlight={noContacts} />
 
       {/* Étape 2 — composer */}
-      <Composer router={router} defaultFromName={defaultFromName} disabled={noContacts} />
+      <Composer
+        router={router}
+        defaultFromName={defaultFromName}
+        defaultFromEmail={defaultFromEmail}
+        replyTo={replyTo}
+        disabled={noContacts}
+      />
 
       {/* Historique */}
       <section>
@@ -191,16 +201,21 @@ function ImportContacts({ router, highlight }: { router: ReturnType<typeof useRo
 function Composer({
   router,
   defaultFromName,
+  defaultFromEmail,
+  replyTo,
   disabled,
 }: {
   router: ReturnType<typeof useRouter>;
   defaultFromName: string;
+  defaultFromEmail: string;
+  replyTo: string;
   disabled: boolean;
 }) {
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [fromName, setFromName] = useState(defaultFromName);
-  const [fromEmail, setFromEmail] = useState("");
+  const [fromEmail, setFromEmail] = useState(defaultFromEmail);
+  const [customDomain, setCustomDomain] = useState(false);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -221,7 +236,8 @@ function Composer({
           name: name.trim() || subject.trim().slice(0, 80),
           subject: subject.trim(),
           fromName: fromName.trim() || "WanaPush",
-          fromEmail: fromEmail.trim().toLowerCase(),
+          fromEmail: (fromEmail.trim() || defaultFromEmail).toLowerCase(),
+          replyTo,
           bodyMarkdown: body,
         }),
       });
@@ -273,13 +289,44 @@ function Composer({
               className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </Field>
-          <Field label="Email expéditeur (domaine vérifié)">
-            <input
-              value={fromEmail}
-              onChange={(e) => setFromEmail(e.target.value)}
-              placeholder="contact@tondomaine.com"
-              className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
+          <Field label="Email expéditeur">
+            {!customDomain ? (
+              <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <span className="truncate text-sm text-emerald-900">
+                  ✓ <strong>{defaultFromEmail}</strong>
+                  <span className="ml-1 text-xs text-emerald-700">(domaine vérifié, prêt)</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomDomain(true);
+                    setFromEmail("");
+                  }}
+                  className="shrink-0 text-xs font-medium text-emerald-700 underline hover:text-emerald-900"
+                >
+                  Utiliser mon domaine
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <input
+                  value={fromEmail}
+                  onChange={(e) => setFromEmail(e.target.value)}
+                  placeholder="contact@tondomaine.com"
+                  className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomDomain(false);
+                    setFromEmail(defaultFromEmail);
+                  }}
+                  className="text-xs text-zinc-500 underline hover:text-zinc-700"
+                >
+                  ← Revenir à l&apos;adresse WanaPush (recommandé)
+                </button>
+              </div>
+            )}
           </Field>
         </div>
         <Field label="Sujet">
@@ -319,8 +366,8 @@ function Composer({
           {msg && <span className="text-xs text-zinc-600">{msg}</span>}
         </div>
         <p className="text-xs text-zinc-400">
-          L&apos;email expéditeur doit être sur un domaine vérifié côté délivrabilité (SPF/DKIM). Un lien de
-          désinscription conforme RFC 8058 est ajouté automatiquement.
+          Envoyé depuis le domaine vérifié WanaPush (délivrabilité optimale, SPF/DKIM gérés) — les réponses arrivent
+          sur <strong>{replyTo}</strong>. Un lien de désinscription conforme RFC 8058 est ajouté automatiquement.
         </p>
       </div>
     </section>
