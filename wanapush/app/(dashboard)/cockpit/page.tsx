@@ -13,6 +13,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getOverview, defaultRange } from "@/lib/analytics/aggregators";
 import { detectAnomalies } from "@/lib/analytics/anomalies";
+import { syncActionsForUser } from "@/lib/agent/actions";
 import { CockpitClient } from "./CockpitClient";
 import { CopilotDrawer } from "./CopilotDrawer";
 
@@ -34,10 +35,12 @@ export default async function CockpitPage({ searchParams }: { searchParams: Sear
   const days = Math.max(1, Math.min(365, Number(params.days ?? "30")));
   const range = defaultRange(days);
 
-  // Fetch parallèle (Promise.all) — best practice 2026
-  const [overview, anomalies] = await Promise.all([
+  // Fetch parallèle (Promise.all) — best practice 2026.
+  // `syncActionsForUser` génère/rafraîchit la file d'actions priorisées depuis les anomalies.
+  const [overview, anomalies, actions] = await Promise.all([
     getOverview(user.id, range),
     detectAnomalies(user.id),
+    syncActionsForUser(user.id),
   ]);
 
   const firstName = user.name?.split(" ")[0] ?? user.email.split("@")[0];
@@ -50,6 +53,7 @@ export default async function CockpitPage({ searchParams }: { searchParams: Sear
         days={days}
         overview={overview}
         anomalies={anomalies}
+        actions={actions}
       />
       <CopilotDrawer criticalCount={criticalCount} />
     </>

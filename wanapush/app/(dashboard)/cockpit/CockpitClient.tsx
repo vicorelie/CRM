@@ -5,31 +5,34 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { AnalyticsOverview } from "@/lib/analytics/aggregators";
 import type { Anomaly } from "@/lib/analytics/anomalies";
+import type { AgentAction } from "@/lib/generated/prisma/client";
 
 type Props = {
   firstName: string;
   days: number;
   overview: AnalyticsOverview;
   anomalies: Anomaly[];
+  actions: AgentAction[];
 };
 
-const SEVERITY_STYLE: Record<Anomaly["severity"], string> = {
-  CRITICAL: "border-rose-200 bg-rose-50 text-rose-900",
-  WARNING: "border-amber-200 bg-amber-50 text-amber-900",
-  INFO: "border-yellow-200 bg-yellow-50 text-yellow-900",
+const TIER_LABEL: Record<string, string> = {
+  autopilot: "Auto",
+  batch: "Lot",
+  one_by_one: "À valider",
+  human_only: "Manuel",
+};
+const TIER_BADGE: Record<string, string> = {
+  autopilot: "bg-emerald-100 text-emerald-800",
+  batch: "bg-sky-100 text-sky-800",
+  one_by_one: "bg-amber-100 text-amber-800",
+  human_only: "bg-zinc-200 text-zinc-700",
 };
 
-const SEVERITY_EMOJI: Record<Anomaly["severity"], string> = {
-  CRITICAL: "🔴",
-  WARNING: "🟠",
-  INFO: "🟡",
-};
-
-export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
+export function CockpitClient({ firstName, days, overview, actions }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [dismissedAnomalies, setDismissedAnomalies] = useState<Set<string>>(new Set());
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   function changeDays(newDays: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -39,7 +42,19 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
     });
   }
 
-  const visibleAnomalies = anomalies.filter((a, i) => !dismissedAnomalies.has(`${a.type}_${i}`));
+  async function resolveAction(id: string, decision: "approve" | "dismiss") {
+    setResolvingId(id);
+    try {
+      await fetch(`/api/agent/actions/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision }),
+      });
+      startTransition(() => router.refresh());
+    } finally {
+      setResolvingId(null);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
@@ -72,46 +87,56 @@ export function CockpitClient({ firstName, days, overview, anomalies }: Props) {
         </div>
       </header>
 
-      {/* Anomalies banner (si présentes) */}
-      {visibleAnomalies.length > 0 && (
-        <section className="mb-8 space-y-2">
-          {visibleAnomalies.slice(0, 3).map((a, i) => {
-            const key = `${a.type}_${i}`;
-            return (
-              <div
-                key={key}
-                className={`flex items-start gap-3 rounded-xl border p-4 ${SEVERITY_STYLE[a.severity]}`}
-              >
-                <span className="text-lg" aria-hidden>{SEVERITY_EMOJI[a.severity]}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold uppercase tracking-wide">
-                    {a.severity} · {a.type.replace(/_/g, " ").toLowerCase()}
-                  </div>
-                  <div className="mt-1 text-sm">{a.message}</div>
-                </div>
-                <button
-                  onClick={() =>
-                    setDismissedAnomalies((s) => {
-                      const next = new Set(s);
-                      next.add(key);
-                      return next;
-                    })
-                  }
-                  className="text-zinc-500 hover:text-zinc-900"
-                  aria-label="Masquer"
-                >
-                  ✕
-                </button>
-              </div>
-            );
-          })}
-          {visibleAnomalies.length > 3 && (
-            <p className="text-xs text-zinc-500">
-              + {visibleAnomalies.length - 3} autre{visibleAnomalies.length - 3 > 1 ? "s" : ""} anomalie{visibleAnomalies.length - 3 > 1 ? "s" : ""}
-            </p>
+      {/* File d'actions prioritaires — "l'IA prépare, tu approuves" (Phase 1 auto-pilote) */}
+      <section className="mb-8">
+        <div className="mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500">Actions prioritaires</h2>
+          {actions.length > 0 && (
+            <span className="rounded-full bg-brand-700 px-2 py-0.5 text-[11px] font-bold text-white">{actions.length}</span>
           )}
-        </section>
-      )}
+        </div>
+        {actions.length === 0 ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
+            ✓ Rien d&apos;urgent — tout tourne. La plateforme surveille et préparera une action dès qu&apos;il y a un levier à activer.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {actions.map((a) => (
+              <div key={a.id} className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                  <span className={`rounded px-1.5 py-0.5 ${TIER_BADGE[a.autonomyTier] ?? "bg-zinc-100 text-zinc-700"}`}>
+                    {TIER_LABEL[a.autonomyTier] ?? a.autonomyTier}
+                  </span>
+                  <span>Impact {a.impactScore}/100 · confiance {a.confidence}%</span>
+                </div>
+                <div className="mt-1.5 text-base font-bold text-zinc-950">{a.title}</div>
+                <div className="mt-1 text-sm text-zinc-600">{a.rationale}</div>
+                <div className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={() => resolveAction(a.id, "approve")}
+                    disabled={resolvingId === a.id || isPending}
+                    className="rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
+                  >
+                    {resolvingId === a.id ? "…" : "Approuver"}
+                  </button>
+                  {a.deepLink && (
+                    <Link href={a.deepLink} className="rounded-lg border border-zinc-200 px-3.5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+                      Voir
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => resolveAction(a.id, "dismiss")}
+                    disabled={resolvingId === a.id || isPending}
+                    className="ml-auto text-sm text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
+                  >
+                    Ignorer
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Unit Economics (cards header) */}
       <section className="mb-8">
