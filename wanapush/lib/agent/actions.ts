@@ -91,7 +91,7 @@ async function detectOpportunities(userId: string): Promise<Opportunity[]> {
   }
   for (const s of shops) {
     if (!s.stripeSecretKey && !s.paypalClientId) {
-      opps.push({ dedupKey: `opp:payment:${s.id}`, type: "SHOP_PAYMENT", title: `Configure un paiement sur « ${s.name} »`, rationale: "Sans Stripe ni PayPal, la boutique ne peut pas encaisser.", deepLink: `/shop/${s.siteSlug}/settings`, impact: 75, effort: 25, confidence: 90, tier: "one_by_one" });
+      opps.push({ dedupKey: `opp:payment:${s.id}`, type: "SHOP_PAYMENT", title: `Configure un paiement sur « ${s.name} »`, rationale: "Sans Stripe ni PayPal, la boutique ne peut pas encaisser.", deepLink: `/shop/${s.siteSlug}/settings?tab=payments`, impact: 75, effort: 25, confidence: 90, tier: "one_by_one" });
     }
   }
   for (const site of sites) {

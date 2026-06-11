@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { getShopForUser } from "@/lib/shop";
 import { SettingsClient } from "./SettingsClient";
 
+// useSearchParams (onglet via ?tab=) → rendu dynamique (pas de static-gen).
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage({
   params,
 }: { params: Promise<{ siteSlug: string }> }) {

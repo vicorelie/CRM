@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Initial = {
   name: string;
@@ -39,7 +40,10 @@ const TABS = [
 ] as const;
 
 export function SettingsClient({ siteSlug, initial }: { siteSlug: string; initial: Initial }) {
-  const [tab, setTab] = useState<typeof TABS[number]["id"]>("general");
+  // Onglet initial depuis l'URL (?tab=payments…) pour les deep-links du cockpit.
+  const searchParams = useSearchParams();
+  const initialTab = TABS.find((t) => t.id === searchParams.get("tab"))?.id ?? "general";
+  const [tab, setTab] = useState<typeof TABS[number]["id"]>(initialTab);
   const [state, setState] = useState(initial);
   const [stripeSecret, setStripeSecret] = useState("");
   const [stripeWebhook, setStripeWebhook] = useState("");
