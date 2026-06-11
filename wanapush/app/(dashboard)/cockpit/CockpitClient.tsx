@@ -106,8 +106,8 @@ export function CockpitClient({ firstName, days, overview, actions }: Props) {
             {(showAllActions ? actions : actions.slice(0, 6)).map((a) => (
               <div key={a.id} className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-                  <span className={`rounded px-1.5 py-0.5 ${TIER_BADGE[a.autonomyTier] ?? "bg-zinc-100 text-zinc-700"}`}>
-                    {TIER_LABEL[a.autonomyTier] ?? a.autonomyTier}
+                  <span className={`rounded px-1.5 py-0.5 ${a.source === "opportunity" ? "bg-sky-100 text-sky-800" : (TIER_BADGE[a.autonomyTier] ?? "bg-zinc-100 text-zinc-700")}`}>
+                    {a.source === "opportunity" ? "À faire" : (TIER_LABEL[a.autonomyTier] ?? a.autonomyTier)}
                   </span>
                   <span>Impact {a.impactScore}/100 · confiance {a.confidence}%</span>
                 </div>
