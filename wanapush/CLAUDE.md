@@ -74,6 +74,8 @@ de chaque module. **Toujours lire la skill pertinente avant de modifier un modul
 | `SKILL_wanapush_ai_engineering.md` | **IA production transversale** (prompt caching, structured outputs, tool use avancé, agent design, evals, guardrails, coût/routing, RAG) — lire avant tout appel Claude |
 | `SKILL_wanapush_compliance_2026.md` | **Conformité 2026 transversale** (EU AI Act Art. 50 labellisation IA 02/08 · Consent Mode v2 15/06 · email auth) — lire avant de générer du contenu IA / poser un tag / envoyer de l'email |
 | `SKILL_wanapush_geo_aeo.md` | **GEO/AEO transversal** — être cité par les moteurs IA (AI Overviews/ChatGPT/Perplexity), distinct du ranking SEO |
+| `SKILL_wanapush_onboarding_activation.md` | **Vision auto-pilote** — artefact-en-60s, profilage just-in-time, file d'actions priorisées, north-star = résultats livrés |
+| `SKILL_wanapush_agentic_approval_ux.md` | **UX agentique "l'IA fait, tu approuves"** — 4 niveaux d'autonomie, carte d'approbation, gouvernance correction-rate |
 | `SKILL_wanapush_payments.md` | **Paiements** (Stripe + PayPal) — helper de commande atomique partagé, flux PayPal Orders v2, règles sécu paiement |
 | `SKILL_wanapush_copilot_module.md` | Copilot IA |
 | `SKILL_wanapush_mcp_server.md` | MCP server |

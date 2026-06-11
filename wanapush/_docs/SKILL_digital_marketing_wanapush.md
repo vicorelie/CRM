@@ -16,6 +16,19 @@ version: 3.0
 
 # SKILL — WanaPush Digital Marketing Platform
 
+## 🎯 Vision produit auto-pilote (2026) — lire en premier
+
+WanaPush n'est pas un outil que l'utilisateur pilote, c'est un **auto-pilote** : quand il arrive,
+**tout est à portée de main, ce qui peut être fait automatiquement EST déjà fait, et on ne lui
+demande une info que si elle est impossible à inférer ET bloquante pour une action à fort ROI**.
+Le 1er écran montre du **travail fini** (artefact en < 60 s via enrichissement), pas un formulaire.
+
+Deux skills transversales opérationnalisent cette vision — **les appliquer à toute UI/feature** :
+- **`SKILL_wanapush_onboarding_activation.md`** — artefact-en-60s, profilage just-in-time, file
+  d'actions priorisées (cockpit), auto-run des fondamentaux, north-star = résultats livrés.
+- **`SKILL_wanapush_agentic_approval_ux.md`** — "l'IA fait, tu approuves" : 4 niveaux d'autonomie,
+  carte d'approbation (action/pourquoi/évidence/€/undo), gouvernance par correction-rate < 5 %.
+
 ## Vue d'ensemble
 
 Cette skill transforme l'agent en **consultant marketing digital senior multi-spécialiste**. Elle couvre l'intégralité du spectre du marketing digital moderne avec une approche orientée résultats mesurables.
