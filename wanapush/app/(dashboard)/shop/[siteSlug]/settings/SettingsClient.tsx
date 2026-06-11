@@ -179,7 +179,30 @@ export function SettingsClient({ siteSlug, initial }: { siteSlug: string; initia
 
       {tab === "payments" && (
         <>
-          <Card title="Stripe" hint="Pour encaisser des paiements. Crée un compte sur stripe.com et copie tes clés API ici.">
+          <Card title="Stripe" hint="Pour encaisser les paiements par carte. ~2 minutes, on te guide pas à pas.">
+            {/* Guide pas-à-pas : on ne laisse pas l'utilisateur deviner où trouver ses clés. */}
+            <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+              <p className="font-semibold">📍 Où trouver tes clés (2 min) :</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>
+                  Ouvre{" "}
+                  <a
+                    href={`https://dashboard.stripe.com/${state.stripeMode === "test" ? "test/" : ""}apikeys`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-sky-700 underline"
+                  >
+                    Stripe → Développeurs → Clés API
+                  </a>{" "}
+                  (crée un compte gratuit si besoin).
+                  {state.stripeMode === "test" && " Vérifie que le mode Test est activé (interrupteur en haut à droite)."}
+                </li>
+                <li>Copie la <strong>Clé publiable</strong> (<code>pk_…</code>) → colle-la dans « Publishable Key » ci-dessous.</li>
+                <li>Clique <strong>Révéler la clé secrète</strong>, copie-la (<code>sk_…</code>) → colle-la dans « Secret Key ».</li>
+                <li>Clique <strong>Enregistrer</strong> (vert, en haut). C'est tout — tu peux déjà encaisser. ✅</li>
+              </ol>
+              <p className="mt-2 text-xs text-sky-700">Le « Webhook » plus bas est optionnel au début, mais recommandé pour que tes commandes se créent automatiquement après paiement.</p>
+            </div>
             <Field label="Mode">
               <select className={inp} value={state.stripeMode} onChange={(e) => set("stripeMode", e.target.value)}>
                 <option value="test">Test (sandbox)</option>
@@ -201,7 +224,21 @@ export function SettingsClient({ siteSlug, initial }: { siteSlug: string; initia
             </Field>
           </Card>
 
-          <Card title="PayPal" hint="Configuration optionnelle pour PayPal en deuxième méthode de paiement.">
+          <Card title="PayPal" hint="Optionnel — 2ᵉ méthode de paiement.">
+            <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+              <p className="font-semibold">📍 Où trouver tes identifiants :</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>
+                  Ouvre{" "}
+                  <a href="https://developer.paypal.com/dashboard/applications/sandbox" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 underline">
+                    PayPal Developer → Apps &amp; Credentials
+                  </a>{" "}
+                  ({state.paypalMode === "sandbox" ? "onglet Sandbox" : "onglet Live"}).
+                </li>
+                <li>Crée une app (ou ouvre l&apos;app par défaut) → copie le <strong>Client ID</strong> et le <strong>Secret</strong> ci-dessous.</li>
+                <li><strong>Enregistrer</strong>. ✅</li>
+              </ol>
+            </div>
             <Field label="Mode">
               <select className={inp} value={state.paypalMode} onChange={(e) => set("paypalMode", e.target.value)}>
                 <option value="sandbox">Sandbox (test)</option>
