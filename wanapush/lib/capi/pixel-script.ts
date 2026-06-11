@@ -88,7 +88,12 @@ window.gtag = window.gtag || gtag;
 
 // Meta Pixel base code (officiel Meta — ne pas modifier)
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', ${jsString(config.pixelId)});
+${config.consentRequired ? `// Meta Consent Mode : tant que le consentement n'est pas accordé, on RÉVOQUE
+// (le Pixel ne pose pas de cookies et ne fire pas). Sur refus, Meta modélise les
+// conversions (Aggregated Event Measurement) au lieu de tomber à zéro — c'est le
+// pendant des "cookieless pings" Google. On signale grant/revoke au clic du bandeau.
+if (!(document.cookie || '').match(/(?:^|; )wp-consent=1/)) { try { fbq('consent', 'revoke'); } catch(e){} }
+` : ""}fbq('init', ${jsString(config.pixelId)});
 
 // WanaPush bridge — dedup Pixel client + CAPI serveur via event_id partagé
 (function(){
@@ -180,6 +185,8 @@ fbq('init', ${jsString(config.pixelId)});
         analytics_storage: g
       });
     } catch (_) {}
+    // Meta : signale grant/revoke → sur revoke, Meta modélise (AEM) au lieu de zéro.
+    try { fbq('consent', granted === true ? 'grant' : 'revoke'); } catch (_) {}
     if (granted === true) {
       window.__wpCapi.consented = true;
       writeCookie('wp-consent', '1', 365);

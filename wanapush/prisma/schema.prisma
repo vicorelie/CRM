@@ -1552,7 +1552,7 @@ model SitePixel {
 
   enabled         Boolean  @default(true)
   events          Json // ["PageView","ViewContent","Lead","AddToCart","InitiateCheckout","Purchase","Schedule"]
-  consentRequired Boolean  @default(false) // RGPD : false en phase test, à passer à true en prod EU
+  consentRequired Boolean  @default(true) // RGPD : bandeau requis en prod EU (default true depuis 2026-06-09)
 
   lastEventAt     DateTime?
   lastErrorAt     DateTime?

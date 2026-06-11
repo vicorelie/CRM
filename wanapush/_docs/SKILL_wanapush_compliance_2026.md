@@ -65,12 +65,21 @@ Conversions / Data Manager API + CAPI perdent le signal**, et le **ROAS se dégr
 obligatoire dans l'EEE.**
 
 **Ce que WanaPush DOIT faire :**
-- ✅ **FAIT (client-side)** — `lib/capi/pixel-script.ts` injecte désormais le **Consent Mode v2**
-  (`gtag('consent','default',{denied×4, wait_for_update:500})` AVANT le Pixel, `update` au clic du
-  bandeau), piloté par le **même opt-in** que le Pixel Meta (cookies `wp-consent`/`wp-no-track`).
-  Default `denied` si `SitePixel.consentRequired=true`, `granted` sinon. Forward-compatible (no-op
-  si aucun tag Google présent). ⚠️ **`consentRequired` doit être passé à `true` pour les sites EU**
-  (défaut `false` = phase test). Re-injecter les sites déjà générés pour propager le nouveau snippet.
+- ✅ **FAIT (mode ADVANCED — ne pénalise pas sur « Non »)** — `lib/capi/pixel-script.ts` :
+  - **Google** : `gtag('consent','default',{denied×4, wait_for_update:500})` AVANT le Pixel + `update`
+    au clic → sur refus, *cookieless pings* + **modélisation** (récupère 30-50 %+ là où le trafic
+    atteint les seuils Google : ≥700 clics ad/7j, ≥1000 events/7j). Forward-compatible (no-op sans tag Google).
+  - **Meta** : `fbq('consent','revoke')` avant `init` tant que pas de consentement, `fbq('consent','grant'|'revoke')`
+    au clic → sur refus, Meta **modélise** (Aggregated Event Measurement) au lieu de zéro. ✅ **Conforme** :
+    on n'envoie **aucune** donnée perso à Meta sur refus (la route CAPI drop sur `wp-no-track`) — le « non-pénalisé »
+    vient de la modélisation, pas d'events refusés.
+  - **`SitePixel.consentRequired` défaut = `true`** (migration `20260611…`) + tous les SitePixels existants
+    passés à `true` → bandeau sur tous les sites. Le snippet est injecté **dynamiquement** par
+    `app/sites/[slug]/[[...page]]/route.ts` → les sites servis par cette route prennent le nouveau snippet
+    au prochain chargement. ⚠️ Les sites servis en **statique `/preview/`** (via `lib/capi/inject-built-site.ts`)
+    nécessitent une **re-injection** pour propager le bandeau.
+  - Caveat honnête : sous les seuils de modélisation (petits sites), un refus réduit quand même la mesure —
+    c'est inévitable sous RGPD (on ne piste pas qui dit non). La modélisation minimise la perte, pas plus.
 - ⏳ **Reste (server-side)** : propager l'état de consentement vers les uploads **CAPI (flag LDU
   EEA/UK/Californie)** et **Google Enhanced Conversions / Data Manager** (aujourd'hui déclenchés sur
   commande sans lecture du consentement). Connecteur `ga4.ts` : lire `gcs/gcd` quand il existera.
