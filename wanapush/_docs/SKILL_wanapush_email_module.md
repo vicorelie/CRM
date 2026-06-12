@@ -66,9 +66,29 @@ Compose impose un **sender vérifié Brevo** (`getSenders`, jamais un email tap�
   bodyMarkdown}`, contexte `Business` (name/sector/website) injecté, `extractJson` tolère les
   fences. API `POST /api/email/providers/draft`. UI : bloc « ✨ Rédiger avec l'IA ».
 
-**Incrément 3 (à venir)** : rapatrier les stats Brevo dans le module Analytics ;
-cron de sync quotidien des audiences ; carte auto-pilote qui propose une campagne IA
-prête à valider sur une anomalie (ex: clients inactifs).
+**Incrément 3 (shippé 2026-06-12)** :
+- **Win-back auto-pilote** : `detectOpportunities` (lib/agent/actions.ts) pousse
+  `WINBACK_CAMPAIGN` quand ≥10 clients ont leur dernière commande **PAYÉE > 90 j**
+  (`order.groupBy(by:[customerEmail], _max:createdAt)`), uniquement si Brevo connecté.
+  Deep-link `/email?intent=winback` → `page.tsx` préremplit `WINBACK_BRIEF` (best practice
+  ci-dessous) → l'utilisateur clique « ✨ Rédiger » → relit → envoie. JAMAIS d'envoi auto.
+- **Cron** `/api/email/providers/cron/sync` (GET, `x-cron-secret` timing-safe, maxDuration 300) :
+  pour chaque connexion CONNECTED → `syncAudiencesToBrevo` + `snapshotProviderStats`. Erreur
+  par-user → status=ERROR + lastError. **Planifier** `0 5 * * *`.
+- **Stats Analytics** : `lib/email-providers/stats.ts` `snapshotProviderStats(userId)` écrit
+  un agrégat 30j dans `EmailProviderConnection.statsJson`. `getEmailEngagement` (aggregators.ts)
+  le fusionne **uniquement si la range demandée ≈ 30 j** (overview) — lecture DB, AUCUN appel
+  API live (anti-latence). Pour des ranges custom → stats natives seules.
+
+**Best practices win-back 2026** (MailerLite/Omnisend/Iterable, vérifié 2026-06-11) :
+seuil inactivité **90 j** (ajuster au cycle produit) ; séquence 3 temps « we miss you »
+→ offre de retour → dernière chance/suppression ; **« tu nous manques » > « reviens »** ;
+**livraison gratuite > % de remise** (+8% open, +12% conv) ; supprimer les inactifs
+chroniques **protège la délivrabilité**. Récupération typique 20–40 %, 3–5× ROI.
+
+**Incrément 4 (idées)** : séquence win-back multi-emails (J0/J+5/J+10) au lieu d'un envoi
+unique ; A/B subject via Brevo ; carte auto-pilote sur d'autres signaux (panier abandonné,
+post-achat cross-sell) ; labelliser le contenu IA (Art. 50, cf. [[wanapush-compliance]]).
 
 **Extension d'un nouveau provider** : implémenter `EmailProvider` dans
 `lib/email-providers/<x>.ts`, l'enregistrer dans `PROVIDERS` (index.ts), ajouter l'id
