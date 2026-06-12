@@ -55,9 +55,20 @@ Compose impose un **sender vérifié Brevo** (`getSenders`, jamais un email tap�
 - Les listes vivent dans des **folders** (folderId 1 = défaut) à la création.
 - Stats dans `campaign.statistics.globalStats` (sent/delivered/uniqueViews/uniqueClicks).
 
-**Incrément 2 (à venir)** : sync auto des audiences WanaPush (leads + clients Shop)
-→ listes Brevo via `importContacts` ; rédaction IA des campagnes (askAi) ; rapatriement
-des stats Brevo dans le module Analytics.
+**Incrément 2 (shippé 2026-06-12)** :
+- `lib/email-providers/sync.ts` → `syncAudiencesToBrevo(userId)` : pousse `EmailContact`
+  (status ACTIVE = prospects) + `Customer` (clients boutique, `where: { shop: { userId } }`,
+  `distinct: ["email"]`) dans 2 listes Brevo dédiées (« WanaPush — Prospects » / « … Clients
+  boutique »), upsert idempotent (listes retrouvées par nom sinon créées, chunks 500).
+  API `POST /api/email/providers/sync-audiences`. UI : bouton « 🔄 Synchroniser mes audiences ».
+- `lib/email-providers/ai-draft.ts` → `draftCampaign(userId, brief)` : `askAi` (lib/ai.ts,
+  provider réel = OpenAI cf [[wanapush-ai-provider]]) renvoie JSON `{subject, preheader,
+  bodyMarkdown}`, contexte `Business` (name/sector/website) injecté, `extractJson` tolère les
+  fences. API `POST /api/email/providers/draft`. UI : bloc « ✨ Rédiger avec l'IA ».
+
+**Incrément 3 (à venir)** : rapatrier les stats Brevo dans le module Analytics ;
+cron de sync quotidien des audiences ; carte auto-pilote qui propose une campagne IA
+prête à valider sur une anomalie (ex: clients inactifs).
 
 **Extension d'un nouveau provider** : implémenter `EmailProvider` dans
 `lib/email-providers/<x>.ts`, l'enregistrer dans `PROVIDERS` (index.ts), ajouter l'id
