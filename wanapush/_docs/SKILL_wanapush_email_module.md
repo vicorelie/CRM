@@ -2,16 +2,80 @@
 name: wanapush-email-module
 description: >
   Utilise cette skill quand l'utilisateur travaille sur le module Email marketing
-  de WanaPush : campagnes broadcast, séquences (welcome, abandoned cart, re-engagement),
-  templates, segmentation, A/B testing. Module STUB en juin 2026 — mais une base
-  Resend existe déjà pour les emails transactionnels Shop. Cette skill décrit
-  comment construire le module marketing par-dessus.
+  de WanaPush. ARCHITECTURE 2026 : WanaPush ORCHESTRE une plateforme pro (Brevo en
+  premier) via une couche provider ouverte (lib/email-providers/), il ne réenvoie
+  plus lui-même les campagnes marketing. Le module Resend natif (lib/email/) reste
+  pour le transactionnel Shop + base historique. Couvre : connexion provider,
+  audiences, compose/envoi via Brevo, deliverability, conformité.
 license: proprietary
-version: 0.1
-last_reviewed: 2026-06-04
+version: 0.2
+last_reviewed: 2026-06-12
 ---
 
 # SKILL — WanaPush Email Module
+
+## 🧭 Architecture 2026 — orchestration d'une plateforme pro (pivot 2026-06-12)
+
+**Décision produit (fondateur) :** ne PAS reconstruire un Brevo/Mailchimp maison.
+WanaPush **orchestre** une plateforme d'emailing pro et devient le cerveau au-dessus
+(sync audiences + rédaction IA + analytics). Brevo en premier, archi ouverte.
+
+**Couche provider — `lib/email-providers/`** :
+- `types.ts` : interface `EmailProvider` (validate, getLists, getSenders, importContacts,
+  getCampaigns, createCampaign, sendCampaign) + types (`ProviderList`, `ProviderSender`,
+  `ProviderCampaign`, `CreateCampaignInput`). `ProviderError` = message lisible user.
+- `brevo.ts` : connecteur Brevo **API v3** (base `https://api.brevo.com/v3`, header `api-key`).
+  Endpoints clés : `GET /account`, `GET /contacts/lists`, `GET /senders`, `POST /contacts/import`,
+  `GET|POST /emailCampaigns`, `POST /emailCampaigns/{id}/sendNow`.
+- `index.ts` : registre `getProvider(id)` + `getUserEmailConnection(userId)` (déchiffre la clé).
+- `html.ts` : `wrapProviderCampaignHtml()` — footer avec **`{{ unsubscribe }}`** (tag Brevo,
+  PAS le lien WanaPush). Brevo gère le désabo + List-Unsubscribe RFC 8058.
+
+**DB** : `EmailProviderConnection` (userId, provider, **apiKey chiffrée AES-256-GCM**,
+accountEmail/Name/plan, status CONNECTED|ERROR, `@@unique([userId, provider])`).
+JAMAIS renvoyer la clé en clair.
+
+**API** : `/api/email/providers` (GET status / DELETE disconnect) · `/connect`
+(POST {provider, apiKey} → valide via `provider.validate()` PUIS chiffre) ·
+`/campaigns` (POST → createCampaign + sendNow, Markdown→HTML via `renderMarkdownToHtml`).
+
+**UI** `app/(dashboard)/email/` : `page.tsx` (server, `getUserEmailConnection` →
+`EmailConnect` si non connecté, sinon fetch lists/senders/campaigns Brevo →
+`EmailDashboard`). Connect-first **guidé** (lien direct `app.brevo.com/settings/keys/api`).
+Compose impose un **sender vérifié Brevo** (`getSenders`, jamais un email tapé au hasard)
++ sélection d'audiences (listes Brevo). Bouton « brouillon » ET « créer + envoyer ».
+
+**Auto-pilote** : opportunité `CONNECT_EMAIL` (`lib/agent/actions.ts`) quand
+`emailProviderConnection.count(CONNECTED) === 0` → deep-link `/email`.
+
+**Pièges Brevo** :
+- L'**import contacts est asynchrone** (`POST /contacts/import` renvoie un processId, pas un count).
+- Le **sender doit être vérifié** côté Brevo sinon création campagne refusée → on liste `GET /senders`.
+- `createCampaign` crée un **brouillon** (status draft) ; l'envoi nécessite `/sendNow` séparé.
+- Les listes vivent dans des **folders** (folderId 1 = défaut) à la création.
+- Stats dans `campaign.statistics.globalStats` (sent/delivered/uniqueViews/uniqueClicks).
+
+**Incrément 2 (à venir)** : sync auto des audiences WanaPush (leads + clients Shop)
+→ listes Brevo via `importContacts` ; rédaction IA des campagnes (askAi) ; rapatriement
+des stats Brevo dans le module Analytics.
+
+**Extension d'un nouveau provider** : implémenter `EmailProvider` dans
+`lib/email-providers/<x>.ts`, l'enregistrer dans `PROVIDERS` (index.ts), ajouter l'id
+au type `ProviderId`. Le reste (UI, API, auto-pilote) est agnostique.
+
+> Note deliverability : avec Brevo, SPF/DKIM/DMARC, warmup, List-Unsubscribe et
+> suppression list sont **gérés par Brevo** → la majorité des « À faire » deliverability
+> ci-dessous (réputation mutualisée, warmup, kill-switch spam) ne concernent QUE le
+> module Resend natif. Côté Brevo : vérifier le domaine d'envoi + activer le double
+> opt-in dans Brevo. La conformité Art. 50 (copies IA) reste à notre charge.
+
+---
+
+## 📦 Module Resend natif (lib/email/) — transactionnel Shop + historique
+
+> ⚠️ La section ci-dessous décrit le module d'envoi **maison** (Resend). Il n'est plus
+> la voie principale pour les campagnes marketing (→ Brevo). Il sert encore aux emails
+> transactionnels et reste documenté pour maintenance.
 
 ## ⚠️ MàJ 2026 best practices (sources officielles, audit 2026-06-09)
 
