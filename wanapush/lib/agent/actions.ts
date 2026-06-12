@@ -71,10 +71,10 @@ type Opportunity = {
 };
 
 async function detectOpportunities(userId: string): Promise<Opportunity[]> {
-  const [adCount, gbpCount, emailCampCount, shops, sites] = await Promise.all([
+  const [adCount, gbpCount, emailProviderCount, shops, sites] = await Promise.all([
     prisma.adAccount.count({ where: { userId } }),
     prisma.gbpAccount.count({ where: { userId } }),
-    prisma.emailCampaign.count({ where: { userId } }),
+    prisma.emailProviderConnection.count({ where: { userId, status: "CONNECTED" } }),
     prisma.shop.findMany({ where: { userId }, select: { id: true, name: true, siteSlug: true, stripeSecretKey: true, paypalClientId: true } }),
     prisma.generatedSite.findMany({ where: { userId }, select: { id: true, slug: true, sitePixel: { select: { id: true } } } }),
   ]);
@@ -86,8 +86,8 @@ async function detectOpportunities(userId: string): Promise<Opportunity[]> {
   if (gbpCount === 0) {
     opps.push({ dedupKey: "opp:connect_gbp", type: "CONNECT_GBP", title: "Connecte ta fiche Google Business Profile", rationale: "Le GBP est le 1er levier de visibilité locale (posts + avis). Branche-le pour automatiser.", deepLink: "/gbp", impact: 65, effort: 20, confidence: 90, tier: "batch" });
   }
-  if (emailCampCount === 0) {
-    opps.push({ dedupKey: "opp:first_email", type: "FIRST_EMAIL", title: "Crée ta première newsletter", rationale: "L'email segmenté est le levier ROI #1. Lance une 1re campagne pour activer le canal.", deepLink: "/email", impact: 60, effort: 30, confidence: 85, tier: "batch" });
+  if (emailProviderCount === 0) {
+    opps.push({ dedupKey: "opp:connect_email", type: "CONNECT_EMAIL", title: "Connecte ta plateforme email (Brevo)", rationale: "L'email est le levier ROI #1. Connecte Brevo : WanaPush synchronise tes audiences et rédige tes campagnes.", deepLink: "/email", impact: 60, effort: 20, confidence: 85, tier: "batch" });
   }
   for (const s of shops) {
     if (!s.stripeSecretKey && !s.paypalClientId) {

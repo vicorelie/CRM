@@ -91,6 +91,7 @@ model User {
   mcpApiKeys           McpApiKey[]
   shops           Shop[]
   agentActions    AgentAction[]
+  emailProviders  EmailProviderConnection[]
 }
 
 // Connexion à un site web tiers (WordPress, Shopify, custom HTML, etc.).
@@ -1728,6 +1729,34 @@ enum EmailSendStatus {
   COMPLAINED
   UNSUBSCRIBED
   FAILED
+}
+
+// ─── Email Provider Connections (Brevo, etc.) ───────────────────────────────
+// WanaPush orchestre une plateforme d'email pro (Brevo en premier) plutôt que
+// de réenvoyer lui-même. La clé API est chiffrée AES-256-GCM (lib/crypto.ts).
+// Couche provider : lib/email-providers/.
+model EmailProviderConnection {
+  id           String    @id @default(cuid())
+  userId       String
+  /** Identifiant du fournisseur : "brevo" (extensible) */
+  provider     String    @db.VarChar(40)
+  /** Clé API chiffrée AES-256-GCM — JAMAIS renvoyée en clair */
+  apiKey       String    @db.Text
+  /** Infos compte (affichage, mises à jour à chaque validate) */
+  accountEmail String?   @db.VarChar(255)
+  accountName  String?   @db.VarChar(255)
+  plan         String?   @db.VarChar(120)
+  /** CONNECTED | ERROR */
+  status       String    @db.VarChar(20) @default("CONNECTED")
+  lastSyncAt   DateTime?
+  lastError    String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId, status])
 }
 
 // ─── Google Business Profile (GBP) Module ───────────────────────────────────
