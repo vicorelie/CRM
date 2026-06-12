@@ -85,9 +85,12 @@ export function EmailDashboard({
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-800">Tes audiences Brevo</h2>
-          <a href="https://app.brevo.com/contact/list-listing" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-brand-700 hover:text-brand-800">
-            Gérer dans Brevo →
-          </a>
+          <div className="flex items-center gap-3">
+            <SyncButton router={router} />
+            <a href="https://app.brevo.com/contact/list-listing" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-brand-700 hover:text-brand-800">
+              Gérer dans Brevo →
+            </a>
+          </div>
         </div>
         {lists.length === 0 ? (
           <p className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
@@ -142,6 +145,45 @@ export function EmailDashboard({
   );
 }
 
+function SyncButton({ router }: { router: ReturnType<typeof useRouter> }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function sync() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/email/providers/sync-audiences", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg(json.error ?? "Échec.");
+      } else {
+        setMsg(`✓ ${json.prospects} prospects · ${json.clients} clients synchronisés`);
+        router.refresh();
+      }
+    } catch {
+      setMsg("Erreur réseau.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      {msg && <span className="text-xs text-zinc-500">{msg}</span>}
+      <button
+        type="button"
+        onClick={sync}
+        disabled={busy}
+        className="rounded-lg border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+        title="Pousse tes prospects (WanaPush) et clients boutique dans des listes Brevo"
+      >
+        {busy ? "Sync…" : "🔄 Synchroniser mes audiences"}
+      </button>
+    </span>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -169,6 +211,34 @@ function Composer({
   const [selectedLists, setSelectedLists] = useState<number[]>([]);
   const [busy, setBusy] = useState<null | "draft" | "send">(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [brief, setBrief] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState<string | null>(null);
+
+  async function aiDraft() {
+    setAiMsg(null);
+    if (brief.trim().length < 3) return setAiMsg("Décris l'objectif de l'email (ex: « relancer les clients inactifs »).");
+    setAiBusy(true);
+    try {
+      const res = await fetch("/api/email/providers/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brief: brief.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.draft) {
+        setAiMsg(json.error ?? "Échec de la rédaction IA.");
+      } else {
+        setSubject(json.draft.subject);
+        setBody(json.draft.bodyMarkdown);
+        setAiMsg("✓ Brouillon rédigé — relis et ajuste avant d'envoyer.");
+      }
+    } catch {
+      setAiMsg("Erreur réseau.");
+    } finally {
+      setAiBusy(false);
+    }
+  }
 
   const canCompose = activeSenders.length > 0 && lists.length > 0;
 
@@ -220,6 +290,31 @@ function Composer({
   return (
     <section className="rounded-2xl border border-zinc-200 bg-white p-5">
       <h2 className="text-sm font-semibold text-zinc-900">Composer une campagne</h2>
+
+      {/* Rédaction IA */}
+      <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50 p-4">
+        <div className="text-xs font-semibold text-brand-800">✨ Laisse l&apos;IA rédiger pour toi</div>
+        <p className="mt-0.5 text-xs text-brand-700/80">
+          Décris l&apos;objectif, l&apos;IA propose un sujet + un contenu (que tu peux ajuster avant l&apos;envoi).
+        </p>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            placeholder="Ex: annoncer -20% sur la collection été aux clients fidèles"
+            className="flex-1 rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+          <button
+            type="button"
+            onClick={aiDraft}
+            disabled={aiBusy}
+            className="shrink-0 rounded-xl bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
+          >
+            {aiBusy ? "Rédaction…" : "✨ Rédiger"}
+          </button>
+        </div>
+        {aiMsg && <p className="mt-2 text-xs text-brand-800">{aiMsg}</p>}
+      </div>
 
       {!canCompose && (
         <div className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
