@@ -142,9 +142,30 @@ export async function getEmailEngagement(userId: string, range: DateRange): Prom
     unsubscribes += s.unsubscribes ?? 0;
   }
 
+  let campaignsSent = campaigns.length;
+
+  // Merge du snapshot fournisseur externe (Brevo) écrit par le cron. Le snapshot
+  // couvre 30j → on ne le fusionne que si la range demandée est ~30j (overview),
+  // pour rester cohérent côté dates (sinon stats natives uniquement).
+  const rangeDays = Math.round((range.end.getTime() - range.start.getTime()) / 86_400_000);
+  if (Math.abs(rangeDays - 30) <= 7) {
+    const conn = await prisma.emailProviderConnection.findFirst({
+      where: { userId, status: "CONNECTED" },
+      select: { statsJson: true },
+    });
+    const snap = conn?.statsJson as Record<string, number> | null;
+    if (snap) {
+      campaignsSent += snap.campaignsSent ?? 0;
+      totalSent += snap.sent ?? 0;
+      totalDelivered += snap.delivered ?? 0;
+      uniqueOpens += snap.opens ?? 0;
+      uniqueClicks += snap.clicks ?? 0;
+    }
+  }
+
   const safeDiv = (a: number, b: number) => (b > 0 ? a / b : 0);
   return {
-    campaignsSent: campaigns.length,
+    campaignsSent,
     totalRecipients,
     totalSent,
     totalDelivered,

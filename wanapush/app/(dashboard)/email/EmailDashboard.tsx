@@ -22,6 +22,7 @@ export function EmailDashboard({
   senders,
   campaigns,
   providerError,
+  initialBrief,
 }: {
   providerLabel: string;
   accountEmail: string | null;
@@ -32,6 +33,7 @@ export function EmailDashboard({
   senders: ProviderSender[];
   campaigns: ProviderCampaign[];
   providerError: string | null;
+  initialBrief: string;
 }) {
   const router = useRouter();
   const totalSubs = lists.reduce((s, l) => s + l.totalSubscribers, 0);
@@ -78,8 +80,15 @@ export function EmailDashboard({
         <Stat label="Campagnes envoyées" value={sentCount} />
       </div>
 
+      {initialBrief && (
+        <div className="rounded-xl border border-brand-300 bg-brand-50 p-4 text-sm text-brand-900">
+          🎯 <strong>Campagne de réengagement préparée.</strong> Le brief « clients inactifs » est prérempli
+          ci-dessous — clique sur <strong>✨ Rédiger</strong>, relis, choisis ton audience, puis envoie.
+        </div>
+      )}
+
       {/* Compose via Brevo */}
-      <Composer router={router} lists={lists} senders={senders} replyTo={replyTo} />
+      <Composer router={router} lists={lists} senders={senders} replyTo={replyTo} initialBrief={initialBrief} />
 
       {/* Audiences */}
       <section>
@@ -198,11 +207,13 @@ function Composer({
   lists,
   senders,
   replyTo,
+  initialBrief,
 }: {
   router: ReturnType<typeof useRouter>;
   lists: ProviderList[];
   senders: ProviderSender[];
   replyTo: string;
+  initialBrief: string;
 }) {
   const activeSenders = senders.filter((s) => s.active);
   const [subject, setSubject] = useState("");
@@ -211,7 +222,7 @@ function Composer({
   const [selectedLists, setSelectedLists] = useState<number[]>([]);
   const [busy, setBusy] = useState<null | "draft" | "send">(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const [brief, setBrief] = useState("");
+  const [brief, setBrief] = useState(initialBrief);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiMsg, setAiMsg] = useState<string | null>(null);
 

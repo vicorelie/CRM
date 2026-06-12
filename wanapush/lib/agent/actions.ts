@@ -99,6 +99,34 @@ async function detectOpportunities(userId: string): Promise<Opportunity[]> {
       opps.push({ dedupKey: `opp:tracking:${site.id}`, type: "SITE_TRACKING", title: `Active le tracking sur « ${site.slug ?? site.id} »`, rationale: "Sans Pixel + CAPI, impossible de mesurer les conversions ni d'optimiser les pubs.", deepLink: `/generated-sites/${site.id}/pixel`, impact: 60, effort: 25, confidence: 85, tier: "batch" });
     }
   }
+
+  // Win-back : clients dont la dernière commande PAYÉE remonte à > 90j (best practice
+  // 2026 : seuil 90j, séquence « we miss you » + offre). Proposé seulement si Brevo
+  // connecté (sinon la carte CONNECT_EMAIL couvre déjà l'amorçage).
+  if (emailProviderCount > 0) {
+    const WINBACK_DAYS = 90;
+    const cutoff = new Date(Date.now() - WINBACK_DAYS * 86_400_000);
+    const byCustomer = await prisma.order.groupBy({
+      by: ["customerEmail"],
+      where: { shop: { userId }, financialStatus: "PAID", customerEmail: { not: "" } },
+      _max: { createdAt: true },
+    });
+    const lapsed = byCustomer.filter((g) => g._max.createdAt && g._max.createdAt < cutoff).length;
+    if (lapsed >= 10) {
+      opps.push({
+        dedupKey: "opp:winback",
+        type: "WINBACK_CAMPAIGN",
+        title: `Relance ${lapsed} clients inactifs (> 90 j)`,
+        rationale: `${lapsed} clients n'ont pas commandé depuis 90 j. Une campagne « tu nous manques » + offre récupère typiquement 20–40 % d'entre eux (3–5× ROI). L'IA la rédige, tu valides.`,
+        deepLink: "/email?intent=winback",
+        impact: 80,
+        effort: 15,
+        confidence: 80,
+        tier: "batch",
+      });
+    }
+  }
+
   return opps;
 }
 

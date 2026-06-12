@@ -1750,6 +1750,10 @@ model EmailProviderConnection {
   status       String    @db.VarChar(20) @default("CONNECTED")
   lastSyncAt   DateTime?
   lastError    String?   @db.Text
+  /** Snapshot agrégé des stats campagnes (30 derniers jours) écrit par le cron —
+   *  évite tout appel API live dans le module Analytics. */
+  statsJson    Json?
+  statsSyncedAt DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

@@ -12,7 +12,22 @@ import { EmailDashboard } from "./EmailDashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function EmailPage() {
+// Brief prérempli quand on arrive via la carte auto-pilote « Relance tes clients
+// inactifs ». Best practice win-back 2026 : ton « tu nous manques », offre de retour
+// (livraison gratuite > % remise), CTA clair, bref et chaleureux.
+const WINBACK_BRIEF =
+  "Campagne de réengagement pour des clients qui n'ont pas commandé depuis 90 jours. " +
+  "Ton chaleureux « tu nous manques » (pas « reviens »), rappelle la valeur de la marque, " +
+  "propose une offre de retour attractive (idéalement la livraison gratuite, plus efficace qu'un % de remise), " +
+  "un seul appel à l'action clair, et reste bref.";
+
+export default async function EmailPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ intent?: string }>;
+}) {
+  const { intent } = await searchParams;
+  const initialBrief = intent === "winback" ? WINBACK_BRIEF : "";
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect("/login");
   const user = await prisma.user.findUnique({
@@ -53,6 +68,7 @@ export default async function EmailPage() {
       senders={senders}
       campaigns={campaigns}
       providerError={providerError}
+      initialBrief={initialBrief}
     />
   );
 }
